@@ -1,14 +1,18 @@
-const Ratom = {};
+export let warnOnUndefined = true;
 
-Ratom.warnOnUndefined = true;
+// colors for garbage collection / change detection
 
-const RED = 0;
-const BLACK = 1;
-const WHITE = 2;
-const GREEN = 3;
+const RED = Symbol("red"),
+      BLACK = Symbol("black"),
+      WHITE = Symbol("white"),
+      GREEN = Symbol("green");
+
+// helpers
 
 function eq(a, b) {
-  return a === b || (a && a.is && a.is(b));
+  return a === b
+         || Object.is && Object.is(a, b)
+         || (a && a.equals && a.equals(b));
 }
 
 function removeFromArray (array, value) {
@@ -17,6 +21,7 @@ function removeFromArray (array, value) {
     array.splice(idx, 1);
   }
 }
+
 function addToArray (array, value) {
   if (array.indexOf(value) === -1) {
     array.push(value)
@@ -24,6 +29,8 @@ function addToArray (array, value) {
 }
 
 /*
+
+GC/change algorithm
 
 Root nodes start white, all derived nodes start green.
 When a root node is altered, it is turned red. Then the tree is traversed, with
@@ -36,7 +43,6 @@ if it is changed, it marks itself as red, otherwise it marks itself as white.
 If not red parents are encountered, we set ourself to white and return our current state.
 
 */
-
 
 class DerivableValue {
   constructor () {
@@ -77,10 +83,10 @@ class DerivableValue {
    * value
    */
   derive (f) {
-    return Ratom.derive(this, f);
+    return derive(this, f);
   }
   react (f) {
-    return Ratom.react(this, f);
+    return react(this, f);
   }
 
   get () {
@@ -91,46 +97,141 @@ class DerivableValue {
   }
 }
 
-const transactionStack = [];
+const ROOT_CTX = {
+  childTxns: []
+};
 
-const inTransaction = () => transactionStack.length > 0;
-const getCurrentTransaction = () => transactionStack[transactionStack.length - 1];
+let CURRENT_TXN = ROOT_CTX;
 
-Ratom.transaction = function () {
-  let transaction = {
-    reactionQueue: [],
-    changedAtoms: []
-  };
-  transactionStack.push(transaction.changedAtoms);
-  let commit = () => {
-    if (transactionStack.pop() !== transaction.changedAtoms) {
+function inTxn () {
+  return CURRENT_TXN !== ROOT_CTX;
+}
+
+const RUNNING = Symbol("running"),
+      SUSPENDED = Symbol("suspended"),
+      COMPLETED = Symbol("completed"),
+      FAILED = Symbol("failed"),
+      ABORTED = Symbol("aborted");
+
+/*
+
+Transactions are created in the SUSPENDED state. In order to enter them and start
+doing work in them, .enter must be called. Its opposite number is .suspend which
+pops the transaction without aborting it, leaving its state in tact and still
+being informed of changes since it began.
+
+When .enter is called, the txn enters the RUNNING state. If atoms have been previously
+modified by the transaction, they are marked red and their children are marked BLACK.
+This is to allow .get()s to pick up on the latest in-txn values.
+
+When an atom is modified within a transaciton, it is turned red and its children are
+marked black. The atom stores its new in-transaction value separate from its root context value.
+It also makes the relevant transaction aware of its having changed.
+
+When .suspend is called, the txn enters the SUSPENDED state. If atoms have been
+modified by the transaction, they should have been marked red with black children.
+Any of them which have not been modified by the parent txn are swept white.
+If the txn has no parent, all are swept white.
+
+When .abort is called, the same steps taken for .suspend are taken if the txn
+is in the RUNNING state. If it is in the SUSPENDED state no action required.
+The txn enters the ABORTED state, and it's local data is discarded. Any child txns are
+also aborted.
+
+when .commit is called, the set of atoms modified by this txn is compared with
+the set of atoms modified by sibling txns who comitted. If there is any overlap,
+the commit fails and the transaction enters the FAILED state.
+Otherwise the commit succeeds. Any changed atoms have their in-txn states propogated to
+the parent txn or root context. In addition, they notify sibling txns of the set of
+atoms they have changed. If the parent is the root context, all modified atoms are
+marked and swept together, with reactions being evaluated.
+
+*/
+
+/**
+ * Returns but does not enter a new transaction
+ * Transactions apply over all atoms created from this module changed during
+ * the transaction.
+ */
+export function transaction () {
+
+  let parent = CURRENT_TXN,
+      TXN = {
+        myChangedAtoms: [],
+        siblingChangedAtoms: [],
+        childTxns: [],
+        state: SUSPENDED
+      };
+
+  function assertState(state, failMsg) {
+    if (TXN.state !== state) {
+      throw new Error(failMsg);
+    }
+  }
+
+  CURRENT_TXN = transaction;
+
+  function commit () {
+    if (CURRENT_TXN !== transaction) {
       throw new Error("Improperly nested transactions!");
     }
+    if (transaction.state !== "running") {
+      throw new Error(`Cannot commit in state '${transaction.state}'`);
+    }
 
-    if (inTransaction()) {
+    CURRENT_TXN = parent;
 
+    if (parent) {
+      parent.reactionQueue = parent.reactionQueue.concat(reactionQueue);
+      for (let atom of changedAtoms) {
+        let idx = atom._inTransactionValues.indexOf(transaction);
+        let val = atom._inTransactionValues[idx + 1];
+        atom._inTransactionValues.splice(idx, 2);
+        atom.set(val);
+      }
     } else {
       // change root state and run reactions.
-      transaction.changedAtoms.forEach(atom => {
-        var idx = atom._inTansactionValues.indexOf(transaction);
+      changedAtoms.forEach(atom => {
+        let idx = atom._inTansactionValues.indexOf(transaction);
         atom._state = atom._inTansactionValues[idx + 1];
         atom._inTansactionValues = [];
       });
-      transaction.reactionQueue.forEach(r => r._maybeReact());
-      transaction.changedAtoms.forEach(atom => {
+      reactionQueue.forEach(r => r._maybeReact());
+      changedAtoms.forEach(atom => {
         atom._sweep();
         atom._color = WHITE;
       });
     }
-  };
 
-  return commit;
+    transaction.state = "complete";
+  }
+
+  function abort () {
+    if (transaction.state !== "running") {
+      throw new Error(`Cannot abort in state '${transaction.state}'`);
+    }
+    removeFromArray(transactionStack, transaction);
+    // remove atom changes
+    let idx = transactionStack.indexOf(transaction);
+    if (idx >= 0) {
+      transactionStack.splice(idx, 1);
+
+    }
+  }
+
+  return {commit, abort};
 };
 
-Ratom.transact = function (f) {
-  let commit = Ratom.transaction();
-  f()
-  commit();
+/**
+ * Runs f in a transaction. f should be synchronous
+ */
+export function transact (f) {
+  let {commit} = transaction();
+  try {
+    f()
+  } finally {
+    commit();
+  }
 };
 
 class ReactiveAtom extends DerivableValue {
@@ -142,13 +243,13 @@ class ReactiveAtom extends DerivableValue {
   }
 
   set (value) {
-    if (typeof value === 'undefined' && Ratom.warnOnUndefined) {
+    if (typeof value === 'undefined' && warnOnUndefined) {
       console.warn("atomic root set as undefined. This probably is whack.");
     }
     if (!eq(value, this._state)) {
       this._color = RED;
 
-      if (inTransaction()) {
+      if (inTxn()) {
         let ct = getCurrentTransaction();
         let idx = this._inTansactionValues.indexOf(ct);
         if (idx >= 0) {
@@ -183,7 +284,7 @@ class ReactiveAtom extends DerivableValue {
   }
 
   _get () {
-    if (inTransaction()) {
+    if (inTxn()) {
       let idx = this._inTansactionValues.indexOf(getCurrentTransaction());
       if (idx >= 0) {
         return this._inTansactionValues[idx + 1];
@@ -250,9 +351,6 @@ class DerivativeValue extends DerivableValue {
     case GREEN:
       this._forceGet();
       break;
-    case WHITE:
-    case RED:
-      break;
     case BLACK:
       for (let parent of this._parents) {
         if (parent._color === BLACK || parent._color === GREEN) {
@@ -304,13 +402,15 @@ class Reaction {
   }
 
   _maybeReact () {
-    for (let parent of this._parents) {
-      if (parent._color === BLACK || parent._color === GREEN) {
-        parent.get();
-      }
-      if (parent._color === RED) {
-        this.forceEvaluation();
-        break;
+    if (this._color === BLACK) {
+      for (let parent of this._parents) {
+        if (parent._color === BLACK || parent._color === GREEN) {
+          parent._get();
+        }
+        if (parent._color === RED) {
+          this.forceEvaluation();
+          break;
+        }
       }
     }
   }
