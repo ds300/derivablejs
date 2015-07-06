@@ -54,8 +54,11 @@ class DerivableValue {
   }
 
   _mark (reactionQueue) {
-    this._color = BLACK;
-    this._markChildren(reactionQueue);
+    // stop marking if we were already here
+    if (this._color !== BLACK) {
+      this._color = BLACK;
+      this._markChildren(reactionQueue);
+    }
   }
 
   _sweep () {
@@ -84,61 +87,112 @@ class DerivableValue {
   }
 }
 
-class AtomicValue extends DerivableValue {
+const transactionStack = [];
+
+const inTransaction = () => transactionStack.length > 0;
+const getCurrentTransaction = () => transactionStack[transactionStack.length - 1];
+
+Ratom.transaction = function () {
+  let transaction = {
+    reactionQueue: [],
+    changedAtoms: []
+  };
+  transactionStack.push(transaction.changedAtoms);
+  let commit = () => {
+    if (transactionStack.pop() !== transaction.changedAtoms) {
+      throw new Error("Improperly nested transactions!");
+    }
+
+    if (inTransaction()) {
+
+    } else {
+      // change root state and run reactions.
+      transaction.changedAtoms.forEach(atom => {
+        var idx = atom._inTansactionValues.indexOf(transaction);
+        atom._state = atom._inTansactionValues[idx + 1];
+        atom._inTansactionValues = [];
+      });
+      transaction.reactionQueue.forEach(r => r._maybeReact());
+      transaction.changedAtoms.forEach(atom => {
+        atom._sweep();
+        atom._color = WHITE;
+      });
+    }
+  };
+
+  return commit;
+};
+
+Ratom.transact = function (f) {
+  let commit = Ratom.transaction();
+  f()
+  commit();
+};
+
+class ReactiveAtom extends DerivableValue {
   constructor (value) {
     super();
     this._state = value;
+    this._inTansactionValues = [];
     this._color = WHITE;
   }
 
-  reset (value) {
+  set (value) {
     if (typeof value === 'undefined' && Ratom.warnOnUndefined) {
       console.warn("atomic root set as undefined. This probably is whack.");
     }
-    if (this._color !== WHITE) {
-      this._nextState = value;
-    } else if (!eq(value, this._state)) {
-      this._state = value;
+    if (!eq(value, this._state)) {
       this._color = RED;
 
-      var reactionQueue = [];
-      this._markChildren(reactionQueue);
-      reactionQueue.forEach(r => r._maybeReact());
-      this._sweep();
+      if (inTransaction()) {
+        let ct = getCurrentTransaction();
+        let idx = this._inTansactionValues.indexOf(ct);
+        if (idx >= 0) {
+          this._inTansactionValues[idx + 1] = value;
+        } else {
+          this._inTansactionValues.push(ct, value);
+          ct.changedAtoms.push(this);
+        }
 
-      this._color = WHITE;
-      if (Object.hasOwnProperty(this, "_nextState")) {
-        let nextState = this._nextState;
-        delete this._nextState;
-        this.reset(nextState);
+        this._markChildren(ct.reactionQueue);
+      } else {
+        this._state = value;
+
+        var reactionQueue = [];
+        this._markChildren(reactionQueue);
+        reactionQueue.forEach(r => r._maybeReact());
+        this._sweep();
+
+        this._color = WHITE;
       }
     }
   }
 
-  compareAndSet(expected, value) {
-    if (eq(expected, this._value)) {
-      this.reset(value);
-      return true;
-    } else {
-      return false;
-    }
-  }
   swap (f, ...args) {
     // todo: switch(args.length) for efficiency
-    let value = f.apply(null, [this._state].concat(args));
+    let value = f.apply(null, [this._get()].concat(args));
     if (typeof value === 'undefined' && Ratom.warnOnUndefined) {
       console.warn(`atomic root set as undefined by function `
                      + `'${f.name}'. This probably is whack.`);
     }
-    this.reset(value);
-    return this;
+    this.set(value);
+  }
+
+  _get () {
+    if (inTransaction()) {
+      let idx = this._inTansactionValues.indexOf(getCurrentTransaction());
+      if (idx >= 0) {
+        return this._inTansactionValues[idx + 1];
+      }
+    }
+    return this._state;
   }
 
   get () {
     if (parentsStack.length > 0) {
       parentsStack[parentsStack.length-1].push(this);
     }
-    return this._state;
+    return this._get();
   }
 }
 
@@ -226,15 +280,24 @@ class DerivativeValue extends DerivableValue {
 }
 
 class Reaction {
-  constructor (reactFn) {
+  constructor (reactFn, quiet) {
     this._reactFn = reactFn;
     this._parents = [];
+    this._reacting = true;
     this._active = false;
     this._release = false;
-    this.forceEvaluation();
+    this._color = GREEN;
+    if (!quiet) {
+      this.forceEvaluation();
+    }
   }
   _mark (reactionQueue) {
-    reactionQueue.push(this);
+    // if this reaction has been placed on any queue anywhere, it doesn't need
+    // to add itself to this one.
+    if (this._color !== black) {
+      this._color = BLACK;
+      reactionQueue.push(this);
+    }
   }
   _maybeReact () {
     for (let parent of this._parents) {
@@ -252,23 +315,29 @@ class Reaction {
       this._active = true;
       this._reactFn();
       this._active = false;
-      if (this._release) {
-        this.release();
+      this._color = WHITE;
+      if (this._release || !this._reacting) {
+        this.stop();
         this._release = false;
       }
     });
   }
-  release () {
+  stop () {
     if (!this._active) {
       this._parents.forEach(p => p._removeChild(this));
     } else {
       this._release = true;
     }
   }
+
+  start () {
+    this.forceEvaluation();
+    this._reacting = true;
+  }
 }
 
 Ratom.atom = function (value) {
-  return new AtomicValue(value);
+  return new ReactiveAtom(value);
 };
 
 Ratom.derive = function (a, b, c, d, e) {
@@ -324,55 +393,6 @@ Ratom.wrapOldState = function (f, init) {
   };
   ret.name = f.name;
   return ret;
-};
-
-class App {
-  constructor (rootAtom) {
-    this._root = rootAtom;
-    this._eventQueue = [];
-    this._active = false;
-    this._flush = false;
-  }
-
-  dispatch (handler, ...args) {
-    return new Promise((resolve, _) => {
-      this._eventQueue.push([handler, args, resolve]);
-      this._tick();
-    });
-  }
-
-  _tick () {
-    if (!this._active) {
-      this._tock();
-    }
-  }
-
-  _tock () {
-    if (this._eventQueue.length > 0) {
-      this._active = true;
-      let [handler, args, resolve] = this._eventQueue.unshift();
-      let update = state => handler.apply(this, [state].concat(args));
-      update.name = handler.name;
-      this._root.swap(update);
-      this._active = false;
-      let timeout = this._flush ? 20 : 0;
-      this._flush = false;
-      setTimeout(() => resolve() && this._tick(), timeout);
-    }
-  }
-
-  wrapDomFlush (handler) {
-    let h = (...args) => {
-      handler.apply(this, args);
-      this._flush = true;
-    };
-    h.name = handler.name;
-    return h;
-  }
-}
-
-Ratom.app = function (root) {
-  return new App(root);
 };
 
 module.exports = Ratom;
