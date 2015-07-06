@@ -93,6 +93,9 @@ class DerivableValue {
     if (parentsStack.length > 0) {
       parentsStack[parentsStack.length-1].push(this);
     }
+    if (inTxn()) {
+      addToArray(CURRENT_TXN.myDerefedValues, this);
+    }
     return this._get(); // abstract method
   }
 }
@@ -128,6 +131,8 @@ When an atom is modified within a transaciton, it is turned red and its children
 marked black. The atom stores its new in-transaction value separate from its root context value.
 It also makes the relevant transaction aware of its having changed.
 
+When a value is dereferenced within a txn, it is added to a special set.
+
 When .suspend is called, the txn enters the SUSPENDED state. If atoms have been
 modified by the transaction, they should have been marked red with black children.
 Any of them which have not been modified by the parent txn are swept white.
@@ -141,6 +146,7 @@ also aborted.
 when .commit is called, the set of atoms modified by this txn is compared with
 the set of atoms modified by sibling txns who comitted. If there is any overlap,
 the commit fails and the transaction enters the FAILED state.
+Likewise, the set of values dereferenced by this transaction is TODO
 Otherwise the commit succeeds. Any changed atoms have their in-txn states propogated to
 the parent txn or root context. In addition, they notify sibling txns of the set of
 atoms they have changed. If the parent is the root context, all modified atoms are
@@ -158,6 +164,7 @@ export function transaction () {
   let parent = CURRENT_TXN,
       TXN = {
         myChangedAtoms: [],
+        myDerefedValues: [],
         siblingChangedAtoms: [],
         childTxns: [],
         state: SUSPENDED
