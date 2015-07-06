@@ -85,6 +85,13 @@ class DerivableValue {
   react (f) {
     return Ratom.react(this, f);
   }
+
+  get () {
+    if (parentsStack.length > 0) {
+      parentsStack[parentsStack.length-1].push(this);
+    }
+    return this._get(); // abstract method
+  }
 }
 
 const transactionStack = [];
@@ -187,13 +194,6 @@ class ReactiveAtom extends DerivableValue {
     }
     return this._state;
   }
-
-  get () {
-    if (parentsStack.length > 0) {
-      parentsStack[parentsStack.length-1].push(this);
-    }
-    return this._get();
-  }
 }
 
 var parentsStack = [];
@@ -249,10 +249,7 @@ class DerivativeValue extends DerivableValue {
       this._state = newState;
     });
   }
-  get () {
-    if (parentsStack.length > 0) {
-      parentsStack[parentsStack.length-1].push(this);
-    }
+  _get () {
     switch (this._color) {
     case GREEN:
       this._forceGet();
@@ -265,7 +262,7 @@ class DerivativeValue extends DerivableValue {
         if (parent._color === BLACK || parent._color === GREEN) {
           // green shouldn't be possible, because then this node would be green
           // ... i think.
-          parent.get();
+          parent._get();
         }
         if (parent._color === RED) {
           this._forceGet();
