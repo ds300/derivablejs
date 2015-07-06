@@ -65,13 +65,10 @@ class DerivableValue {
     this._color = WHITE;
     for (let i = this._children.length - 1; i >= 0; i--) {
       let child = this._children[i];
-      if (child instanceof DerivableValue) {
-        if (child._color === BLACK) {
-          this._children.splice(i, 1);
-          child._orphaned = true;
-        } else {
-          child._sweep();
-        }
+      if (child._color === BLACK) {
+        this._children.splice(i, 1);
+      } else {
+        child._sweep();
       }
     }
   }
@@ -235,7 +232,6 @@ class DerivativeValue extends DerivableValue {
     this._deriver = deriver;
     this._state = Symbol("null");
     this._color = GREEN;
-    this._orphaned = true;
     this._parents = [];
   }
   _forceGet () {
@@ -276,26 +272,37 @@ class DerivativeValue extends DerivableValue {
   }
 }
 
+// reactions start out white.
+// When an upstream atom changes, the reaction is marked black and placed in a
+// reaction queue. Once all nodes affected by the change have been marked black
+// the reaction is evaluated and turned white again.
+// if a reaction is disabled via .stop(), it will be marked black but not placed
+// in a reaction queue. During the next sweep phase it will be orphaned.
+
+// TODO: There is some code duplication between this and DerivativeValue. Find
+// some way to share.
 class Reaction {
   constructor (reactFn, quiet) {
     this._reactFn = reactFn;
     this._parents = [];
-    this._reacting = true;
-    this._active = false;
-    this._release = false;
-    this._color = GREEN;
+    this._enabed = true;
+    this._color = WHITE;
     if (!quiet) {
       this.forceEvaluation();
     }
   }
+
   _mark (reactionQueue) {
     // if this reaction has been placed on any queue anywhere, it doesn't need
     // to add itself to this one.
-    if (this._color !== black) {
+    if (this._color !== BLACK) {
       this._color = BLACK;
-      reactionQueue.push(this);
+      if (this._enabled) {
+        reactionQueue.push(this);
+      }
     }
   }
+
   _maybeReact () {
     for (let parent of this._parents) {
       if (parent._color === BLACK || parent._color === GREEN) {
@@ -307,29 +314,29 @@ class Reaction {
       }
     }
   }
+
   forceEvaluation () {
     this._parents = capturingParents(this, () => {
-      this._active = true;
       this._reactFn();
-      this._active = false;
-      this._color = WHITE;
-      if (this._release || !this._reacting) {
-        this.stop();
-        this._release = false;
-      }
     });
-  }
-  stop () {
-    if (!this._active) {
-      this._parents.forEach(p => p._removeChild(this));
-    } else {
-      this._release = true;
+    this._color = WHITE;
+    if (!this._enabled) {
+      this.stop();
     }
   }
 
+  stop () {
+    this._enabled = false;
+    this._parents.forEach(p => p._removeChild(this));
+  }
+
   start () {
+    this._enabled = true;
     this.forceEvaluation();
-    this._reacting = true;
+  }
+
+  _sweep () {
+    // no-op
   }
 }
 
