@@ -69,42 +69,61 @@ describe("a reaction", () => {
   let counter = atom(0);
   let inc = n => n+1
   let history = imut.List();
+  let action = null;
+  let reaction = counter.react(function (n) {
+    reaction && assert.equal(this, reaction, "`this` is bound to the reaction");
+    history = history.push(n);
+    action && action();
+  });
+
+  function checkHistory(expected, msg) {
+    expected = imut.List(expected);
+    if (!history.equals(expected)) {
+      assert.fail(history.toString(), expected.toString(), msg);
+    }
+  }
+
   it("is like a derivation with no value, only reacting to changes", done => {
-    counter.react(function (val) {
-      history = history.push(val);
+    checkHistory([0], "it is evaluated at construction time");
+
+    action = () => {
       if (history.size === 3) {
-        assert(history.equals(imut.List([0, 1, 2])));
-        assert(!history.equals(imut.List([1, 2, 3])));
+        checkHistory(imut.List([0, 1, 2]), "history is generated sequentially");
         done();
-        this.stop();
       }
-    });
+    }
 
-    counter.swap(inc);
     counter.swap(inc);
     counter.swap(inc);
   });
 
-  it("can be suspended via the .stop method", done => {
-    assert(history.equals(imut.List([0, 1, 2])), "history hasn't changed");
-    // make sure the old one is not still active.
+  it("can be suspended via the .stop method", () => {
+    checkHistory(imut.List([0, 1, 2]), "history hasn't changed");
+    // make sure it still works
     counter.swap(inc);
-    assert(history.equals(imut.List([0, 1, 2])), "it still hasn't changed");
-    // good news
-    counter.react(function (val) {
-      history = history.push(val);
-      if (history.size === 6) {
-        let expected = imut.List([0, 1, 2, 4, 5, 6]);
-        if (!history.equals(expected)) {
-          assert.fail(history.toString(), expected.toString(), "wrong history list man");
-        }
-        done();
-        this.stop();
-      }
-    });
+    checkHistory(imut.List([0, 1, 2, 3]), "history has changed");
+    // now check it stops
+    reaction.stop();
+    counter.swap(inc); // now 4 but shouldn't get put in history
 
-    counter.swap(inc);
-    counter.swap(inc);
-    counter.swap(inc);
+    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changud again");
   });
-})
+
+  it("can be restarted again via the .start method", () => {
+    // check it hasn't changed
+    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again");
+    // check it still isn't changing
+    counter.swap(inc); // now 5 but shouldn't get put in history
+    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again 2");
+    reaction.start(); // 5 does get put in the history now
+    checkHistory(imut.List([0, 1, 2, 3, 5]), "history changed! at last!");
+    counter.swap(inc); // now 6 but should get put in history
+    checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "history changed again!");
+  });
+
+  // TODO
+  // note to self: the issue of quietly beginning a reaction is a thorny one.
+  // The reaction needs to know about it's parents a priori for it to work.
+  // This can be done easily with .react methods, but not the react(f) function.
+  // It is actually just an api issue. I can sort it out.
+});

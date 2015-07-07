@@ -347,14 +347,12 @@ export class Derivation extends DerivableValue {
 // TODO: There is some code duplication between this and Derivation. Find
 // some way to share.
 export class Reaction {
-  constructor (reactFn, quiet) {
+  constructor (reactFn) {
     this._reactFn = reactFn;
     this._parents = [];
     this._enabled = true;
     this._color = GREEN;
-    if (!quiet) {
-      this.forceEvaluation();
-    }
+    this.forceEvaluation();
   }
 
   _mark (reactionQueue) {
@@ -483,3 +481,14 @@ export function wrapOldState (f, init) {
   ret.name = f.name;
   return ret;
 };
+
+export function wrapNoInitialEval (f) {
+  let good = false;
+  return function () {
+    if (good) {
+      return f.apply(this, arguments);
+    } else {
+      good = true;
+    }
+  }
+}
