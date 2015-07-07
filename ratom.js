@@ -73,6 +73,8 @@ class DerivableValue {
       let child = this._children[i];
       if (child._color === BLACK) {
         this._children.splice(i, 1);
+        // orphan the child
+        child._color = GREEN;
       } else {
         child._sweep();
       }
@@ -114,20 +116,12 @@ const RUNNING = Symbol("running"),
       COMPLETED = Symbol("completed"),
       ABORTED = Symbol("aborted");
 
-/*
-
-Transactions are created in the RUNNING state.
-
-
-
-*/
-
 /**
  * Returns but does not enter a new transaction
  * Transactions apply over all atoms created from this module changed during
  * the transaction.
  */
-export function transaction () {
+function transaction () {
 
   let parent = CURRENT_TXN,
       TXN = {
@@ -294,11 +288,7 @@ function capturingParents(ctx, f) {
     }
   }
 
-  // only need to tell parents about children if they are actually new parents
-  if (extantParentCount !== ctx._parents.length
-    || ctx._parents.length !== newParents.length) {
-    newParents.forEach(p => p._addChild(ctx));
-  }
+  newParents.forEach(p => p._addChild(ctx));
 
   return newParents;
 }
@@ -346,7 +336,8 @@ class DerivativeValue extends DerivableValue {
   }
 }
 
-// reactions start out white.
+// reactions start out GREEN. if it is evaluated once to begin with then it
+// is turned WHITE.
 // When an upstream atom changes, the reaction is marked black and placed in a
 // reaction queue. Once all nodes affected by the change have been marked black
 // the reaction is evaluated and turned white again.
@@ -360,7 +351,7 @@ class Reaction {
     this._reactFn = reactFn;
     this._parents = [];
     this._enabed = true;
-    this._color = WHITE;
+    this._color = GREEN;
     if (!quiet) {
       this.forceEvaluation();
     }
@@ -416,12 +407,15 @@ class Reaction {
   }
 }
 
-export default function atom (value) {
+export function atom (value) {
   return new ReactiveAtom(value);
 };
 
 export function derive (a, b, c, d, e) {
-  const n = arguments.length;
+  if (a instanceof Array) {
+    return deriveString.apply(null, arguments);
+  }
+  var n = arguments.length;
   switch (n) {
     case 0:
       throw new Error("Wrong arity for derive. Expecting 1+ args");
@@ -436,8 +430,8 @@ export function derive (a, b, c, d, e) {
     case 5:
       return derive(() => e(a.get(), b.get(), c.get(), d.get()));
     default:
-      let args = Array.prototype.slice.call(arguments, 0, n-1);
-      let f = arguments[n-1];
+      var args = Array.prototype.slice.call(arguments, 0, n-1);
+      var f = arguments[n-1];
       return derive(() => f.apply(null, args.map(a => a.get())));
   }
 };
@@ -463,6 +457,21 @@ export function react (a, b, c, d, e) {
       return react(() => f.apply(null, args.map(a => a.get())));
   }
 };
+
+function deriveString (parts, ...args) {
+  return derive(() => {
+    let s = "";
+    for (let i=0; i<parts.length; i++) {
+      s += parts[i];
+      if (args[i] instanceof DerivableValue) {
+        s += args[i].get();
+      } else if (i < args.length) {
+        s += args[i];
+      }
+    }
+    return s;
+  });
+}
 
 export function wrapOldState (f, init) {
   let state = init;
