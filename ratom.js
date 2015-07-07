@@ -205,7 +205,7 @@ export function transact (f) {
   }
 };
 
-class ReactiveAtom extends DerivableValue {
+class Atom extends DerivableValue {
   constructor (value) {
     super();
     this._state = value;
@@ -293,7 +293,7 @@ function capturingParents(ctx, f) {
   return newParents;
 }
 
-class DerivativeValue extends DerivableValue {
+export class Derivation extends DerivableValue {
   constructor (deriver) {
     super();
     this._deriver = deriver;
@@ -344,13 +344,13 @@ class DerivativeValue extends DerivableValue {
 // if a reaction is disabled via .stop(), it will be marked black but not placed
 // in a reaction queue. During the next sweep phase it will be orphaned.
 
-// TODO: There is some code duplication between this and DerivativeValue. Find
+// TODO: There is some code duplication between this and Derivation. Find
 // some way to share.
-class Reaction {
+export class Reaction {
   constructor (reactFn, quiet) {
     this._reactFn = reactFn;
     this._parents = [];
-    this._enabed = true;
+    this._enabled = true;
     this._color = GREEN;
     if (!quiet) {
       this.forceEvaluation();
@@ -408,7 +408,7 @@ class Reaction {
 }
 
 export function atom (value) {
-  return new ReactiveAtom(value);
+  return new Atom(value);
 };
 
 export function derive (a, b, c, d, e) {
@@ -420,7 +420,7 @@ export function derive (a, b, c, d, e) {
     case 0:
       throw new Error("Wrong arity for derive. Expecting 1+ args");
     case 1:
-      return new DerivativeValue(a)
+      return new Derivation(a)
     case 2:
       return derive(() => b(a.get()));
     case 3:
@@ -444,17 +444,17 @@ export function react (a, b, c, d, e) {
     case 1:
       return new Reaction(a)
     case 2:
-      return react(() => b(a.get()));
+      return react(function () { b.call(this, a.get()); });
     case 3:
-      return react(() => c(a.get(), b.get()));
+      return react(function () { c.call(this, a.get(), b.get()); });
     case 4:
-      return react(() => d(a.get(), b.get(), c.get()));
+      return react(function () { d.call(this, a.get(), b.get(), c.get()); });
     case 5:
-      return react(() => e(a.get(), b.get(), c.get(), d.get()));
+      return react(function () { e.call(this, a.get(), b.get(), c.get(), d.get()); });
     default:
       let args = Array.prototype.slice.call(arguments, 0, n-1);
       let f = arguments[n-1];
-      return react(() => f.apply(null, args.map(a => a.get())));
+      return react(function () { f.apply(this, args.map(a => a.get())); });
   }
 };
 

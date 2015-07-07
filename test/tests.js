@@ -28,19 +28,20 @@ describe("the humble atom", () => {
 describe("a derivation", () => {
   const oneGigabyte = 1024 * 1024 * 1024;
   const bytes = atom(oneGigabyte);
-  function orderUp(n, order=1) {
-    if (order === 0) return n;
-    else return orderUp(n / 1024, order-1);
-  }
   let kiloBytes, megaBytes;
+
+  const orderUp = (n, order=1) => order > 0 ? orderUp(n / 1024, order-1) : n;
+
   it("can be created via the Atom.derive(f) method", () => {
     kiloBytes = bytes.derive(orderUp);
     assert.equal(kiloBytes.get(), 1024 * 1024)
   });
+
   it("can also be created via the derive function in the ratom package", () => {
     megaBytes = derive(() => orderUp(kiloBytes.get()));
     assert.equal(megaBytes.get(), 1024);
   });
+
   it("can derive from more than one atom", () => {
     const order = atom(0);
     const orderName = order.derive(order => {
@@ -62,3 +63,48 @@ describe("a derivation", () => {
     assert.equal(sizeString.get(), "1 gigabytes");
   });
 });
+
+
+describe("a reaction", () => {
+  let counter = atom(0);
+  let inc = n => n+1
+  let history = imut.List();
+  it("is like a derivation with no value, only reacting to changes", done => {
+    counter.react(function (val) {
+      history = history.push(val);
+      if (history.size === 3) {
+        assert(history.equals(imut.List([0, 1, 2])));
+        assert(!history.equals(imut.List([1, 2, 3])));
+        done();
+        this.stop();
+      }
+    });
+
+    counter.swap(inc);
+    counter.swap(inc);
+    counter.swap(inc);
+  });
+
+  it("can be suspended via the .stop method", done => {
+    assert(history.equals(imut.List([0, 1, 2])), "history hasn't changed");
+    // make sure the old one is not still active.
+    counter.swap(inc);
+    assert(history.equals(imut.List([0, 1, 2])), "it still hasn't changed");
+    // good news
+    counter.react(function (val) {
+      history = history.push(val);
+      if (history.size === 6) {
+        let expected = imut.List([0, 1, 2, 4, 5, 6]);
+        if (!history.equals(expected)) {
+          assert.fail(history.toString(), expected.toString(), "wrong history list man");
+        }
+        done();
+        this.stop();
+      }
+    });
+
+    counter.swap(inc);
+    counter.swap(inc);
+    counter.swap(inc);
+  });
+})
