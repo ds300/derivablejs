@@ -28,6 +28,10 @@ function addToArray (array, value) {
   }
 }
 
+function symbolEntries (obj) {
+  return Object.getOwnPropertySymbols(obj).map(s => [s, obj[s]]);
+}
+
 /*
 
 GC/change algorithm
@@ -125,8 +129,9 @@ function transaction () {
 
   let parent = CURRENT_TXN,
       TXN = {
-        changedAtoms: [],
-        state: RUNNING
+        reactionQueue: [],
+        state: RUNNING,
+        inTxnValues: {}
       };
 
   CURRENT_TXN = TXN;
@@ -143,27 +148,26 @@ function transaction () {
     CURRENT_TXN = parent;
 
     if (inTxn()) {
-      for (let atom of TXN.changedAtoms) {
-        let idx = atom._inTransactionValues.indexOf(TXN);
-        let val = atom._inTransactionValues[idx + 1];
-        atom._inTransactionValues.splice(idx, 2);
-        atom.set(val);
+      // push in-txn vals up to current txn
+      for (let [_, {atom, value}] of symbolEntries(TXN.inTxnValues)) {
+        atom.set(value);
       }
     } else {
       // change root state and run reactions.
-      changedAtoms.forEach(atom => {
-        let idx = atom._inTansactionValues.indexOf(TXN);
-        atom._state = atom._inTansactionValues[idx + 1];
-        atom._inTansactionValues = [];
-      });
-      reactionQueue.forEach(r => r._maybeReact());
-      changedAtoms.forEach(atom => {
-        atom._sweep();
+      for (let [_, {atom, value}] of symbolEntries(TXN.inTxnValues)) {
+        atom._state = value;
+      }
+
+      TXN.reactionQueue.forEach(r => r._maybeReact());
+
+      // then sweep for a clean finish
+      for (let [_, {atom}] of symbolEntries(TXN.inTxnValues)) {
         atom._color = WHITE;
-      });
+        atom._sweep();
+      }
     }
 
-    transaction.state = "complete";
+    TXN.state = COMPLETED;
   }
 
   function abort () {
@@ -171,19 +175,17 @@ function transaction () {
 
     CURRENT_TXN = parent;
 
-    if (inTxn()) {
-      for (let atom of TXN.changedAtoms) {
-        let idx = atom._inTransactionValues.indexOf(TXN);
-        let val = atom._inTransactionValues[idx + 1];
-        atom._inTransactionValues.splice(idx, 2);
-      }
-    } else {
-      changedAtoms.forEach(atom => {
-        atom._inTansactionValues = [];
-        atom._sweep();
+    if (!inTxn()) {
+      for (let [_, {atom}] of symbolEntries(TXN.inTxnValues)) {
         atom._color = WHITE;
-      });
+        atom._sweep();
+      }
     }
+    
+    delete TXN.inTxnValues;
+    delete TXN.reactionQueue;
+
+    TXN.state = ABORTED;
   }
 
   return {commit, abort};
@@ -208,8 +210,8 @@ export function transact (f) {
 class Atom extends DerivableValue {
   constructor (value) {
     super();
+    this._uid = Symbol("my uid");
     this._state = value;
-    this._inTansactionValues = [];
     this._color = WHITE;
   }
 
@@ -221,15 +223,14 @@ class Atom extends DerivableValue {
       this._color = RED;
 
       if (inTxn()) {
-        let idx = this._inTansactionValues.indexOf(CURRENT_TXN);
-        if (idx >= 0) {
-          this._inTansactionValues[idx + 1] = value;
+        let record = CURRENT_TXN.inTxnValues[this._uid];
+        if (record) {
+          record.value = value;
         } else {
-          this._inTansactionValues.push(CURRENT_TXN, value);
-          CURRENT_TXN.changedAtoms.push(this);
+          CURRENT_TXN.inTxnValues[this._uid] = {value, atom: this};
         }
 
-        this._markChildren({push: (_) => null});
+        this._markChildren(CURRENT_TXN.reactionQueue);
       } else {
         this._state = value;
 
@@ -255,9 +256,9 @@ class Atom extends DerivableValue {
 
   _get () {
     if (inTxn()) {
-      let idx = this._inTansactionValues.indexOf(CURRENT_TXN);
-      if (idx >= 0) {
-        return this._inTansactionValues[idx + 1];
+      let record = CURRENT_TXN.inTxnValues[this._uid];
+      if (record) {
+        return record.value;
       }
     }
     return this._state;

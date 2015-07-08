@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import {atom, derive, react, foo} from '../ratom.js';
+import {atom, derive, react, transact} from '../ratom.js';
 import assert from 'assert';
 
 describe("the humble atom", () => {
@@ -119,6 +119,19 @@ describe("a reaction", () => {
     checkHistory(imut.List([0, 1, 2, 3, 5]), "history changed! at last!");
     counter.swap(inc); // now 6 but should get put in history
     checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "history changed again!");
+  });
+
+  it("won't be evaluated in a transaction", () => {
+    checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 1");
+    transact(() => {
+      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 2");
+      counter.swap(inc); // now 7
+      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 3");
+      counter.swap(inc); // now 8
+      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 4");
+    });
+    // now transaction commits and 8 gets added
+    checkHistory(imut.List([0, 1, 2, 3, 5, 6, 8]), "eight");
   });
 
   // TODO
