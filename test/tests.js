@@ -134,9 +134,4 @@ describe("a reaction", () => {
     checkHistory(imut.List([0, 1, 2, 3, 5, 6, 8]), "eight");
   });
 
-  // TODO
-  // note to self: the issue of quietly beginning a reaction is a thorny one.
-  // The reaction needs to know about it's parents a priori for it to work.
-  // This can be done easily with .react methods, but not the react(f) function.
-  // It is actually just an api issue. I can sort it out.
 });

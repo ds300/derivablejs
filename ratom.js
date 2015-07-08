@@ -318,7 +318,6 @@ export class Derivation extends DerivableValue {
     this._state = Symbol("null");
     this._color = GREEN;
     this._parents = {};
-    this._validator = null;
   }
 
   _clone () {
