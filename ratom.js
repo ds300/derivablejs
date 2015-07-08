@@ -1,5 +1,3 @@
-export let warnOnUndefined = true;
-
 // colors for garbage collection / change detection
 
 const RED = Symbol("red"),
@@ -15,21 +13,17 @@ function eq(a, b) {
          || (a && a.equals && a.equals(b));
 }
 
-function removeFromArray (array, value) {
-  let idx = array.indexOf(value);
-  if (idx > -1) {
-    array.splice(idx, 1);
+function extend(obj, ...others) {
+  for (let other of others) {
+    for (let prop of Object.keys(other)) {
+      obj[prop] = other[prop];
+    }
   }
+  return obj;
 }
 
-function addToArray (array, value) {
-  if (array.indexOf(value) === -1) {
-    array.push(value)
-  }
-}
-
-function symbolEntries (obj) {
-  return Object.getOwnPropertySymbols(obj).map(s => [s, obj[s]]);
+function symbolValues (obj) {
+  return Object.getOwnPropertySymbols(obj).map(s => obj[s]);
 }
 
 /*
@@ -48,19 +42,46 @@ If not red parents are encountered, we set ourself to white and return our curre
 
 */
 
+
 class DerivableValue {
   constructor () {
-    this._children = [];
+    this._uid = Symbol("my uid");
+    this._children = {};
+    this._validator = null;
   }
+
+  withValidator (f) {
+    if (f == null || (typeof f === funtion)) {
+      let result = this._clone();
+      result._validator = f;
+      return result;
+    } else {
+      throw new Error(".withValidator expects function or null");
+    }
+  }
+
+  _validate (value) {
+    let validationResult = this._validator && this._validator(value);
+    if (this._validator && validationResult !== true) {
+      throw new Error(`Failed validation with value: '${value}'.`
+                      +` Validator returned '${validationResult}' `);
+    }
+  }
+
   _addChild (child) {
-    addToArray(this._children, child);
+    this._children[child._uid] = child;
   }
+
   _removeChild (child) {
-    removeFromArray(this._children, child);
+    delete this._children[child._uid];
+  }
+
+  _getChildren () {
+    return symbolValues(this._children);
   }
 
   _markChildren (reactionQueue) {
-    this._children.forEach(child => child._mark(reactionQueue));
+    this._getChildren().forEach(child => child._mark(reactionQueue));
   }
 
   _mark (reactionQueue) {
@@ -73,17 +94,17 @@ class DerivableValue {
 
   _sweep () {
     this._color = WHITE;
-    for (let i = this._children.length - 1; i >= 0; i--) {
-      let child = this._children[i];
+    this._getChildren().forEach(child => {
       if (child._color === BLACK) {
-        this._children.splice(i, 1);
-        // orphan the child
+        // white parents disowning black children? Hawkward...
+        this._removeChild(child);
         child._color = GREEN;
       } else {
         child._sweep();
       }
-    }
+    });
   }
+
   /**
    * Creates a derived value whose state will always be f applied to this
    * value
@@ -91,18 +112,26 @@ class DerivableValue {
   derive (f) {
     return derive(this, f);
   }
+
+  reaction (f) {
+    if (typeof f === 'function') {
+      return new Reaction().setReactor(f).setInput(this);
+    } else if (f instanceof Reaction) {
+      return f.setInput(this);
+    } else if (f.react) {
+      return extend(new Reaction().setInput(this), f);
+    }
+  }
+
   react (f) {
-    return react(this, f);
+    return this.reaction(f).start();
   }
 
   get () {
     if (parentsStack.length > 0) {
-      parentsStack[parentsStack.length-1].push(this);
+      parentsStack[parentsStack.length-1][this._uid] = this;
     }
-    if (inTxn()) {
-      addToArray(CURRENT_TXN.myDerefedValues, this);
-    }
-    return this._get(); // abstract method
+    return this._get(); // abstract protected method, in Java parlance
   }
 }
 
@@ -149,19 +178,19 @@ function transaction () {
 
     if (inTxn()) {
       // push in-txn vals up to current txn
-      for (let [_, {atom, value}] of symbolEntries(TXN.inTxnValues)) {
+      for (let {atom, value} of symbolValues(TXN.inTxnValues)) {
         atom.set(value);
       }
     } else {
       // change root state and run reactions.
-      for (let [_, {atom, value}] of symbolEntries(TXN.inTxnValues)) {
+      for (let {atom, value} of symbolValues(TXN.inTxnValues)) {
         atom._state = value;
       }
 
       TXN.reactionQueue.forEach(r => r._maybeReact());
 
       // then sweep for a clean finish
-      for (let [_, {atom}] of symbolEntries(TXN.inTxnValues)) {
+      for (let {atom} of symbolValues(TXN.inTxnValues)) {
         atom._color = WHITE;
         atom._sweep();
       }
@@ -176,12 +205,12 @@ function transaction () {
     CURRENT_TXN = parent;
 
     if (!inTxn()) {
-      for (let [_, {atom}] of symbolEntries(TXN.inTxnValues)) {
+      for (let {atom} of symbolValues(TXN.inTxnValues)) {
         atom._color = WHITE;
         atom._sweep();
       }
     }
-    
+
     delete TXN.inTxnValues;
     delete TXN.reactionQueue;
 
@@ -207,18 +236,22 @@ export function transact (f) {
   }
 };
 
+
+
+
 class Atom extends DerivableValue {
   constructor (value) {
     super();
-    this._uid = Symbol("my uid");
     this._state = value;
     this._color = WHITE;
   }
 
+  _clone () {
+    return new Atom(this._state);
+  }
+
   set (value) {
-    if (typeof value === 'undefined' && warnOnUndefined) {
-      console.warn("atomic root set as undefined. This probably is whack.");
-    }
+    this._validate(value);
     if (!eq(value, this._state)) {
       this._color = RED;
 
@@ -242,16 +275,14 @@ class Atom extends DerivableValue {
         this._color = WHITE;
       }
     }
+    return this;
   }
 
   swap (f, ...args) {
     // todo: switch(args.length) for efficiency
     let value = f.apply(null, [this._get()].concat(args));
-    if (typeof value === 'undefined' && warnOnUndefined) {
-      console.warn(`atomic root set as undefined by function `
-                     + `'${f.name}'. This probably is whack.`);
-    }
     this.set(value);
+    return value;
   }
 
   _get () {
@@ -267,8 +298,8 @@ class Atom extends DerivableValue {
 
 var parentsStack = [];
 
-function capturingParents(ctx, f) {
-  var newParents = [];
+function capturingParents(child, f) {
+  var newParents = {};
   parentsStack.push(newParents);
 
   f();
@@ -276,20 +307,6 @@ function capturingParents(ctx, f) {
   if (newParents !== parentsStack.pop()) {
     throw new Error("parents stack mismanagement");
   }
-
-  var extantParentCount = 0;
-
-  for (let possiblyFormerParent of ctx._parents) {
-    if (newParents.indexOf(possiblyFormerParent) === -1) {
-      // definitely former parent
-      possiblyFormerParent._removeChild(ctx);
-    } else {
-      // definitely extant parent
-      extantParentCount++;
-    }
-  }
-
-  newParents.forEach(p => p._addChild(ctx));
 
   return newParents;
 }
@@ -300,30 +317,53 @@ export class Derivation extends DerivableValue {
     this._deriver = deriver;
     this._state = Symbol("null");
     this._color = GREEN;
-    this._parents = [];
+    this._parents = {};
+    this._validator = null;
   }
+
+  _clone () {
+    return new Derivation(this._deriver);
+  }
+
+  _getParents () {
+    return symbolValues(this._parents);
+  }
+
   _forceGet () {
-    this._parents = capturingParents(this, () => {
+    let newParents = capturingParents(this, () => {
       let newState = this._deriver();
-      if (typeof newState === 'undefined' && warnOnUndefined) {
-        console.warn(`atomic root set as undefined by function `
-                     + `'${this._deriver.name}'. This probably is whack.`);
-      }
+      this._validate(newState);
       this._color = eq(newState, this._state) ? WHITE : RED;
       this._state = newState;
     });
+
+    // organise parents
+    this._getParents().forEach(possiblyFormerParent => {
+      if (!newParents[possiblyFormerParent._uid]) {
+        // definitely former parent
+        possiblyFormerParent._removeChild(this);
+      }
+    });
+
+    this._parents = newParents;
+
+    this._getParents().forEach(p => p._addChild(this));
   }
+
   _get () {
     switch (this._color) {
     case GREEN:
       this._forceGet();
       break;
     case BLACK:
-      for (let parent of this._parents) {
+      for (let parent of this._getParents()) {
         if (parent._color === BLACK || parent._color === GREEN) {
-          // green shouldn't be possible, because then this node would be green
-          // ... i think.
           parent._get();
+        }
+        // die on undefined
+        if (parent._state === void 0) {
+          this._state = void 0;
+          break;
         }
         if (parent._color === RED) {
           this._forceGet();
@@ -348,12 +388,30 @@ export class Derivation extends DerivableValue {
 // TODO: There is some code duplication between this and Derivation. Find
 // some way to share.
 export class Reaction {
-  constructor (reactFn) {
-    this._reactFn = reactFn;
-    this._parents = [];
+  constructor () {
+    this._parent = null;
     this._enabled = true;
     this._color = GREEN;
-    this.forceEvaluation();
+    this._uid = Symbol("reaction_uid");
+  }
+
+  setInput (parent) {
+    if (this._parent) {
+      this._parent._removeChild(this);
+    }
+    this._parent = parent;
+    if (this._parent) {
+      this._parent._addChild(this);
+    } else if (this._enabled) {
+      this._enabled = false;
+      this.onStop && this.onStop();
+    }
+    return this;
+  }
+
+  setReactor (react) {
+    this.react = react;
+    return this;
   }
 
   _mark (reactionQueue) {
@@ -369,36 +427,47 @@ export class Reaction {
 
   _maybeReact () {
     if (this._color === BLACK) {
-      for (let parent of this._parents) {
-        if (parent._color === BLACK || parent._color === GREEN) {
-          parent._get();
-        }
-        if (parent._color === RED) {
-          this.forceEvaluation();
-          break;
-        }
+      if (this._parent._color === BLACK || this._parent._color === GREEN) {
+        this._parent._get();
+      }
+      if (this._parent._get() === void 0) {
+        this.stop();
+      } else if (this._parent._color === RED) {
+        this.force();
       }
     }
   }
 
-  forceEvaluation () {
-    this._parents = capturingParents(this, () => {
-      this._reactFn();
-    });
+  _react () {
+    if (this.react) {
+      this.react(this._parent._get());
+    } else {
+      throw new Error("No reaction function available.");
+    }
+  }
+
+  force () {
+    this._react();
     this._color = WHITE;
     if (!this._enabled) {
       this.stop();
     }
+    return this;
   }
 
   stop () {
+    this._parent._removeChild(this);
     this._enabled = false;
-    this._parents.forEach(p => p._removeChild(this));
+    this.onStop && this.onStop();
+    return this;
   }
 
   start () {
+    this._parent._addChild(this);
     this._enabled = true;
-    this.forceEvaluation();
+    this.onStart && this.onStart();
+    this.force();
+    return this;
   }
 
   _sweep () {
@@ -435,28 +504,6 @@ export function derive (a, b, c, d, e) {
   }
 };
 
-export function react (a, b, c, d, e) {
-  const n = arguments.length;
-  switch (n) {
-    case 0:
-      throw new Error("Wrong arity for derive. Expecting 1+ args");
-    case 1:
-      return new Reaction(a)
-    case 2:
-      return react(function () { b.call(this, a.get()); });
-    case 3:
-      return react(function () { c.call(this, a.get(), b.get()); });
-    case 4:
-      return react(function () { d.call(this, a.get(), b.get(), c.get()); });
-    case 5:
-      return react(function () { e.call(this, a.get(), b.get(), c.get(), d.get()); });
-    default:
-      let args = Array.prototype.slice.call(arguments, 0, n-1);
-      let f = arguments[n-1];
-      return react(function () { f.apply(this, args.map(a => a.get())); });
-  }
-};
-
 function deriveString (parts, ...args) {
   return derive(() => {
     let s = "";
@@ -482,14 +529,3 @@ export function wrapOldState (f, init) {
   ret.name = f.name;
   return ret;
 };
-
-export function wrapNoInitialEval (f) {
-  let good = false;
-  return function () {
-    if (good) {
-      return f.apply(this, arguments);
-    } else {
-      good = true;
-    }
-  }
-}
