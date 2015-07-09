@@ -21,9 +21,9 @@ name.set("Julian");
 // $> Hello Julian!
 ```
 
-### Great, so you've changed `.observe(callback)` to `.react(callback)`, what's new? Where are the superpowers? What the heck is DDATWD?
+##### Great, so you've changed `.observe(callback)` to `.react(callback)`, what's new? Where are the superpowers? What the heck is DDATWD?
 
-Forget about observing and reacting to changing data for a minute. That *is* what this library does, but the good stuff --- the stuff nobody else does --- is going to require a little background.
+Forget about observing and reacting to changing data for a minute. That *is* what this library does, but the good stuff -- the stuff nobody else does -- is going to require a little background.
 
 
 ### Rationale
