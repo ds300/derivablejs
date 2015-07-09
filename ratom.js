@@ -430,7 +430,10 @@ export class Reaction {
         this._parent._get();
       }
       if (this._parent._get() === void 0) {
-        this.stop();
+        // simply don't react if one of our parents is undefined. Wait until
+        // the become defined again.
+        this._color = WHITE;
+        return;
       } else if (this._parent._color === RED) {
         this.force();
       }
