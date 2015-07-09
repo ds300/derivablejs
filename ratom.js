@@ -96,7 +96,7 @@ class DerivableValue {
     this._color = WHITE;
     this._getChildren().forEach(child => {
       if (child._color === BLACK) {
-        // white parents disowning black children? Hawkward...
+        // white parents disowning black children? What have I done!
         this._removeChild(child);
         child._color = GREEN;
       } else {
@@ -149,90 +149,90 @@ const RUNNING = Symbol("running"),
       COMPLETED = Symbol("completed"),
       ABORTED = Symbol("aborted");
 
-/**
- * Returns but does not enter a new transaction
- * Transactions apply over all atoms created from this module changed during
- * the transaction.
- */
-function transaction () {
+class Transaction {
+  constructor () {
+    this.parent = CURRENT_TXN;
+    CURRENT_TXN = this;
+    this.reactionQueue = [];
+    this.state = RUNNING;
+    this.inTxnValues = {};
+  }
 
-  let parent = CURRENT_TXN,
-      TXN = {
-        reactionQueue: [],
-        state: RUNNING,
-        inTxnValues: {}
-      };
-
-  CURRENT_TXN = TXN;
-
-  function assertState(state, failMsg) {
-    if (TXN.state !== state) {
+  assertState (state, failMsg) {
+    if (this.state !== state) {
       throw new Error(failMsg);
     }
   }
 
-  function commit () {
-    assertState(RUNNING, "Must be in running state to commit transaction");
+  commit () {
+    this.assertState(RUNNING, "Must be in running state to commit transaction");
 
-    CURRENT_TXN = parent;
+    CURRENT_TXN = this.parent;
 
     if (inTxn()) {
       // push in-txn vals up to current txn
-      for (let {atom, value} of symbolValues(TXN.inTxnValues)) {
+      for (let {atom, value} of symbolValues(this.inTxnValues)) {
         atom.set(value);
       }
     } else {
       // change root state and run reactions.
-      for (let {atom, value} of symbolValues(TXN.inTxnValues)) {
+      for (let {atom, value} of symbolValues(this.inTxnValues)) {
         atom._state = value;
       }
 
-      TXN.reactionQueue.forEach(r => r._maybeReact());
+      this.reactionQueue.forEach(r => r._maybeReact());
 
       // then sweep for a clean finish
-      for (let {atom} of symbolValues(TXN.inTxnValues)) {
+      for (let {atom} of symbolValues(this.inTxnValues)) {
         atom._color = WHITE;
         atom._sweep();
       }
     }
 
-    TXN.state = COMPLETED;
+    this.state = COMPLETED;
   }
 
-  function abort () {
-    assertState(RUNNING, "Must be in running state to abort transaction");
+  abort () {
+    this.assertState(RUNNING, "Must be in running state to abort transaction");
 
-    CURRENT_TXN = parent;
+    CURRENT_TXN = this.parent;
 
     if (!inTxn()) {
-      for (let {atom} of symbolValues(TXN.inTxnValues)) {
+      for (let {atom} of symbolValues(this.inTxnValues)) {
         atom._color = WHITE;
         atom._sweep();
       }
     }
 
-    delete TXN.inTxnValues;
-    delete TXN.reactionQueue;
+    delete this.inTxnValues;
+    delete this.reactionQueue;
 
-    TXN.state = ABORTED;
+    this.state = ABORTED;
   }
+}
 
-  return {commit, abort};
-};
+class TransactionFailedException {}
+
+export function abortTransaction() {
+  throw new TransactionFailedException();
+}
 
 /**
  * Runs f in a transaction. f should be synchronous
  */
 export function transact (f) {
-  let {commit, abort} = transaction();
-  let error = false;
+  let txn = new Transaction();
+  let abortion = false;
   try {
     f()
   } catch (e) {
-    abort();
-    error = true;
+    txn.abort();
+    abortion = true;
+    if (!(e instanceof TransactionFailedException)) {
+      throw e;
+    }
   } finally {
-    !error && commit();
+    !abortion && txn.commit();
   }
 };
 
