@@ -3,9 +3,9 @@ Reactive values for Derived Data All The Way Down (DDATWD). A reimagining of [Re
 
 ### Rationale
 
-Monolithic MV[whatever] frameworks tend to encourage one to keep application state tightly coupled to the V[whatever] bits of one's framework in disparate little mutable chunks (think `$scope`s in angular and so on), while keeping the M safe and secure behind some method-heavy API wall. This is fine if your app is relatively small and simple. Actually it's often wonderful.
+Monolithic MV[whatever] frameworks tend to encourage keeping application state in disparate little mutable chunks, tightly coupled to the V[whatever] bits (think `$scope`s in angular and so on), while keeping the M safe and secure behind some method-heavy (or worse: REST-heavy) API wall. This is fine and entirely straightforward to manage if your app is relatively small and simple.
 
-Some apps, alas, are big and complex. One might find oneself coming to the conclusion that orchestrating state consistency across dozens of mutable interdependent components in the face of asynchronous everything and the inevitable ad-hoc cross-cutting concerns which don't jibe with the rigid authoritarian architectures you once imagined to be boundlessly flexible is extremely extremely extremely difficult. Difficult. Lemon difficult.
+Alas many small and simple apps eventually become large and complex apps over time. Likewise, large and complex apps invariably become larger and more complex. Working on such a project, one might find oneself coming to the conclusion that orchestrating state consistency across dozens of mutable interdependent components in the face of asynchronous everything and the inevitable ad-hoc cross-cutting concerns which don't jibe with the rigid authoritarian architectures you once imagined to be boundlessly flexible is extremely difficult difficult lemon difficult.
 
 The solution to this problem seems to be something involving 'unidirectional data flow', as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture.
 
