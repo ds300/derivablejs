@@ -1,11 +1,33 @@
 # ratom.js
 Reactive values for Derived Data All The Way Down (DDATWD). A reimagining of [Reagent's](http://github.com/reagent-project/reagent) `atom` + `reaction` for everyone to enjoy.
 
+### Rationale
+
+Monolithic MV[whatever] frameworks tend to encourage one to keep application state tightly coupled to the [whatever] bit of your framework in little disparate mutable chunks (think `$scope`s in angular and so on). This is fine if your app is relatively small and simple. Actually it's often wonderful.
+
+Some apps, alas, are big and complex. One might find oneself (and I speak from personal experience here) coming to the conclusion that orchestrating state consistency across dozens of mutable interdependent components in the face of asynchronous everything and the inevitable ad-hoc cross-cutting concerns which don't jibe with the rigid authoritarian architectures you once imagined to be boundlessly flexible is extremely extremely extremely difficult.
+
+The solution to this problem seems to be something involving unidirectional data flow, as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture.
+
+However, the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README, which is, in part, a remarkable and compelling discourse on the particular brand of Flux-ishness this library aims to serve. So if you want to know the why of ratom.js: **go read the re-frame README**. I seriously can't endorse it enough.
+
+But because you're a busy person and I'm all about brevity, here's the tl;dr:
+
+> Keeping disparate pieces of local mutable state in check is hard. Keeping one piece of global immutable state in check is a matter of course. Let's do the latter.
+
+### Reimagining
+
+ratom.js actually extends Reagents model one step, providing `Atom`s, `Derivation`s, and `Reaction`s.
+
+`Atom`s are the roots of a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I'm pretty sure it'll catch on). They are supposed to hold immutable or effectively immutable data. `Derivation`s are the inner nodes which represent pure transformations of the atomic roots. `Reaction`s are side-effecting computations associated with a single `Derivation` or `Atom`. When an atom is changed, the DDATWDDAG is traversed and reactions are notified. The `Reaction`s then traverse the graph backwards, evaluating only those nodes which it is utterly necessary to evaluate in order to decide whether the `Reaction` must be re-run in response to changed input.
+
+### Picture
+
+Without `Reaction`s, the DDATWDDAG is a simple lifeless description of data. This design lets us do some pretty nuts stuff like implement true boolean logic in terms of `Derivation`s.
+
 ### Reactive?
 
-Indeed. If you've used 'observable' values in libraries like [mercury](https://github.com/Raynos/mercury) or [knockout](http://knockoutjs.com) think of it as a generalization of that with super powers.
-
-This kind of thing might look familiar:
+Yup. If you've used 'observable' values in libraries like [mercury](https://github.com/Raynos/mercury) or [knockout](http://knockoutjs.com), it looks a bit like that at first glance.
 
 ```javascript
 import {atom} from 'ratom'
@@ -21,7 +43,9 @@ name.set("Julian");
 // $> Hello Julian!
 ```
 
-##### Great, so you've changed `.observe(callback)` to `.react(callback)`, what's new? Where are the superpowers? What the heck is DDATWD?
+But this is only scratching the surface. What lies beneath is, I believe, far more powerful.
+
+###
 
 Forget about observing and reacting to changing data for a minute. That *is* what this library does, but the good stuff -- the stuff nobody else does -- is going to require a little background.
 
@@ -30,15 +54,8 @@ Forget about observing and reacting to changing data for a minute. That *is* wha
 
 Let's talk about how we structure application state.
 
-In modern MV* frameworks like Angular and Ember your app state is dotted all over the place, often tightly coupled to the views and business logic that render and manipulate it. This seems like a great idea until your components need to talk to each other and agree on things. If you've never worked on a project like this, just trust me: orchestrating state consistency across mutable interdependent components in the face of asynchronous everything and the inevitable ad-hoc cross-cutting concerns which don't make sense for the rigid authoritarian architectures you once imagined to be boundlessly flexible... Not fun stuff. Not fun stuff at all.
+ However,
 
-The solution to this problem seems to be something involving unidirectional data flow, as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. However, the most direct source of inspiration for this library is [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README, which is, in part, a remarkable and compelling discourse on their particular brand of Flux-ishness and its rationale, to which this library is a response. So **go read that**.
-
-TL;DR:
-
-> Keeping disparate pieces of local mutable state consistent is hard. Keeping one piece of global immutable state consistent is a matter of course.
-
-So if ratom.js has an elevator pitch it might be that it helps JS developers to keep app state neatly bundled in one place, while allowing them the easily create derivations of that state which are kept up-to-date lazily and automatically.
 
 ### Derived Data All The Way Down
 
