@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import {atom, derive, react, transact} from '../ratom.js';
+import {atom, derive, react, transact, struct} from '../ratom.js';
 import assert from 'assert';
 
 describe("the humble atom", () => {
@@ -115,23 +115,229 @@ describe("a reaction", () => {
     // check it still isn't changing
     counter.swap(inc); // now 5 but shouldn't get put in history
     checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again 2");
-    reaction.start(); // 5 does get put in the history now
-    checkHistory(imut.List([0, 1, 2, 3, 5]), "history changed! at last!");
+    reaction.start(); // restart but don't force
+    checkHistory(imut.List([0, 1, 2, 3]), "no history change 3");
     counter.swap(inc); // now 6 but should get put in history
-    checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "history changed again!");
+    checkHistory(imut.List([0, 1, 2, 3, 6]), "history changed again!");
   });
 
   it("won't be evaluated in a transaction", () => {
-    checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 1");
+    checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 1");
     transact(() => {
-      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 2");
+      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 2");
       counter.swap(inc); // now 7
-      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 3");
+      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 3");
       counter.swap(inc); // now 8
-      checkHistory(imut.List([0, 1, 2, 3, 5, 6]), "no change 4");
+      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 4");
     });
     // now transaction commits and 8 gets added
-    checkHistory(imut.List([0, 1, 2, 3, 5, 6, 8]), "eight");
+    checkHistory(imut.List([0, 1, 2, 3, 6, 8]), "eight");
+  });
+});
+
+describe("the `struct` function", () => {
+  it("turns an array of derivables into a derivable", () => {
+    let fib1 = atom(0),
+        fib2 = atom(1),
+        fib = derive(() => fib1.get() + fib2.get());
+
+    let grouped = struct([fib1, fib2, fib]);
+    assert.deepEqual([0,1,1], grouped.get());
+
+    fib1.set(1);
+    assert.deepEqual([1,1,2], grouped.get());
   });
 
+  it("turns a map of derivables into a derivable", () => {
+    let name = atom("wilbur"),
+        telephone = atom("0987654321");
+
+    let grouped = struct({name, telephone});
+
+    assert.deepEqual({name: "wilbur", telephone: "0987654321"}, grouped.get());
+
+    name.set("Jemimah");
+    telephone.set("n/a");
+
+    assert.deepEqual({name: "Jemimah", telephone: "n/a"}, grouped.get());
+  });
+
+  it("actually turns any arbitrarily nested structure of"
+     +" maybe-derivables into a derivable", () => {
+    let name = atom("wilbur"),
+        telephone = atom("0987654321"),
+        friend1Name = atom("Sylvester"),
+        friend1Telephone = atom("blub");
+
+    let grouped = struct({
+      name, telephone,
+      blood_type: "AB Negative",
+      age: 75,
+      friends: [{name: friend1Name, telephone: friend1Telephone}, "others"]
+    });
+
+    let expected1 = {
+      name: "wilbur",
+      telephone: "0987654321",
+      blood_type: "AB Negative",
+      age: 75,
+      friends: [{name: "Sylvester", telephone: "blub"}, "others"]
+    };
+
+    assert.deepEqual(expected1, grouped.get());
+
+    friend1Name.set("Brittany");
+
+    let expected2 = {
+      name: "wilbur",
+      telephone: "0987654321",
+      blood_type: "AB Negative",
+      age: 75,
+      friends: [{name: "Brittany", telephone: "blub"}, "others"]
+    };
+
+    assert.deepEqual(expected2, grouped.get());
+  });
+});
+
+describe("boolean logic", () => {
+  it("is well understood", () => {
+    let a = atom(true),
+        b = atom(true),
+        aANDb = a.and(b),
+        aORb = a.or(b),
+        NOTa = a.not();
+
+    assert.equal(aANDb.get(), true, "true & true = true");
+    assert.equal(aORb.get(), true, "true | true = true");
+    assert.equal(NOTa.get(), false, "!true = false")
+
+    b.set(false);
+
+    assert.equal(aANDb.get(), false, "true & false = false");
+    assert.equal(aORb.get(), true, "true | false = true");
+
+    a.set(false);
+
+    assert.equal(aANDb.get(), false, "false & false = false");
+    assert.equal(aORb.get(), false, "false | false = false");
+    assert.equal(NOTa.get(), true, "!false = true");
+  });
+});
+
+describe("control flow", () => {
+  it ("allows different paths to be taken depending on conditions", () => {
+    let number = atom(0);
+    let even = number.derive(n => n % 2 === 0);
+
+    let message = even.then("even", "odd");
+
+    assert.equal(message.get(), "even");
+
+    number.set(1);
+
+    assert.equal(message.get(), "odd");
+  });
+
+  it("doesn't evaluate untaken paths", () => {
+    let number = atom(0);
+    let even = number.derive(n => n % 2 === 0);
+
+    let dideven = false;
+    let didodd = false;
+
+    let chooseAPath = even.then(
+      derive(() => {
+        dideven = true;
+      }),
+      derive(() => {
+        didodd = true;
+      })
+    );
+
+    chooseAPath.get();
+
+    assert(dideven && !didodd, "didnt eval odd path");
+
+    dideven = false;
+
+    assert(!dideven && !didodd, "didnt eval anything yet1");
+
+    number.set(1);
+
+    assert(!dideven && !didodd, "didnt eval anything yet2");
+
+    chooseAPath.get();
+
+    assert(!dideven && didodd, "didnt eval even path");
+  });
+
+  it("same goes for the switch statement", () => {
+    let thing = atom("Tigran");
+
+    let result = thing.switch(
+      "Banana", "YUMMY",
+      532,      "FiveThreeTwo",
+      "Tigran", "Hamasayan"
+    );
+
+    assert.equal("Hamasayan", result.get());
+
+    thing.set("Banana");
+
+    assert.equal("YUMMY", result.get());
+
+    thing.set(532);
+
+    assert.equal("FiveThreeTwo", result.get());
+
+    thing.set("nonsense");
+
+    assert(result.get() === void 0);
+
+    let switcheroo = atom("a");
+
+    let dida = false,
+        didb = false,
+        didc = false,
+        didx = false;
+
+    let conda = atom("a"),
+        condb = atom("b"),
+        condc = atom("c");
+
+    let chooseAPath = switcheroo.switch(
+      conda, derive(() => dida = true),
+      condb, derive(() => didb = true),
+      condc, derive(() => didc = true),
+      //else
+      derive(() => didx = true)
+    );
+
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 1");
+
+    chooseAPath.get();
+    assert(dida && !didb && !didc && !didx, "did a");
+
+    dida = false;
+    switcheroo.set("b");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 2");
+
+    chooseAPath.get();
+    assert(!dida && didb && !didc && !didx, "did b");
+
+    didb = false;
+    switcheroo.set("c");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 3");
+
+    chooseAPath.get();
+    assert(!dida && !didb && didc && !didx, "did b");
+
+    didc = false;
+    switcheroo.set("blubr");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 4");
+
+    chooseAPath.get();
+    assert(!dida && !didb && !didc && didx, "did else");
+  });
 });

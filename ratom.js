@@ -124,7 +124,7 @@ class DerivableValue {
   }
 
   react (f) {
-    return this.reaction(f).start();
+    return this.reaction(f).start().force();
   }
 
   get () {
@@ -244,6 +244,7 @@ class Atom extends DerivableValue {
     super();
     this._state = value;
     this._color = WHITE;
+    this._active = false;
   }
 
   _clone () {
@@ -251,6 +252,10 @@ class Atom extends DerivableValue {
   }
 
   set (value) {
+    if (this._active) {
+      throw new Error("Trying to set atom state during reaction phase. This is"
+                      + " an error. Use middleware for cascading changes.");
+    }
     this._validate(value);
     if (!eq(value, this._state)) {
       this._color = RED;
@@ -269,7 +274,9 @@ class Atom extends DerivableValue {
 
         var reactionQueue = [];
         this._markChildren(reactionQueue);
+        this._active = true;
         reactionQueue.forEach(r => r._maybeReact());
+        this._active = false;
         this._sweep();
 
         this._color = WHITE;
@@ -279,6 +286,10 @@ class Atom extends DerivableValue {
   }
 
   swap (f, ...args) {
+    if (this._active) {
+      throw new Error("Trying to swap atom state during reaction phase. This is"
+                      + " an error. Use middleware for cascading changes.");
+    }
     // todo: switch(args.length) for efficiency
     let value = f.apply(null, [this._get()].concat(args));
     this.set(value);
@@ -468,7 +479,7 @@ export class Reaction {
     this._parent._addChild(this);
     this._enabled = true;
     this.onStart && this.onStart();
-    this.force();
+    this._parent.get();
     return this;
   }
 
@@ -505,6 +516,103 @@ export function derive (a, b, c, d, e) {
       return derive(() => f.apply(null, args.map(a => a.get())));
   }
 };
+
+function maybeDeref (thing) {
+  if (thing instanceof DerivableValue) {
+    return thing.get();
+  } else {
+    return thing;
+  }
+}
+
+function deepDeref (thing) {
+  if (thing instanceof Array) {
+    return thing.map(deepDeref);
+  } else if (thing.constructor === Object || thing.constructor === void 0) {
+    let result = {};
+    for (let prop of Object.keys(thing)) {
+      result[prop] = deepDeref(thing[prop]);
+    }
+    return result;
+  } else {
+    return maybeDeref(thing);
+  }
+}
+
+export function struct (arg) {
+  return derive(() => deepDeref(arg));
+}
+
+export function _if (test, then, otherwise) {
+  return derive(() => test.get() ? maybeDeref(then) : maybeDeref(otherwise))
+}
+
+DerivableValue.prototype.then = function (then, otherwise) {
+  return _if(this, then, otherwise);
+};
+
+export function or (...args) {
+  return derive(() => {
+    let val;
+    for (let arg of args) {
+      val = maybeDeref(arg);
+      if (val) {
+        break;
+      }
+    }
+    return val;
+  });
+}
+
+DerivableValue.prototype.or = function (...others) {
+  return or.apply(null, [this].concat(others));
+}
+
+export function not (x) {
+  return x.derive(x => !x);
+}
+
+DerivableValue.prototype.not = function () {
+  return not(this);
+}
+
+export function and (...args) {
+  return derive(() => {
+    let val;
+    for (let arg of args) {
+      val = maybeDeref(arg);
+      if (!val) {
+        break;
+      }
+    }
+    return val;
+  });
+}
+
+DerivableValue.prototype.and = function (...others) {
+  return and.apply(null, [this].concat(others));
+}
+
+export function _switch (arg, ...clauses) {
+  return derive(() => {
+    let a = maybeDeref(arg);
+    let i = 0;
+    for (; i<clauses.length-1; i+=2) {
+      let _case = maybeDeref(clauses[i]);
+      if (eq(a, _case)) {
+        return maybeDeref(clauses[i+1]);
+      }
+    }
+    if (i < clauses.length) {
+      return maybeDeref(clauses[clauses.length - 1]);
+    }
+  });
+}
+
+
+DerivableValue.prototype.switch = function (...clauses) {
+  return _switch.apply(null, [this].concat(clauses));
+}
 
 function deriveString (parts, ...args) {
   return derive(() => {
