@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import {atom, derive, react, transact, struct} from '../ratom.js';
+import _, {atom, derive, transact} from '../ratom.js';
 import assert from 'assert';
 
 describe("the humble atom", () => {
@@ -141,7 +141,7 @@ describe("the `struct` function", () => {
         fib2 = atom(1),
         fib = derive(() => fib1.get() + fib2.get());
 
-    let grouped = struct([fib1, fib2, fib]);
+    let grouped = _.struct([fib1, fib2, fib]);
     assert.deepEqual([0,1,1], grouped.get());
 
     fib1.set(1);
@@ -152,7 +152,7 @@ describe("the `struct` function", () => {
     let name = atom("wilbur"),
         telephone = atom("0987654321");
 
-    let grouped = struct({name, telephone});
+    let grouped = _.struct({name, telephone});
 
     assert.deepEqual({name: "wilbur", telephone: "0987654321"}, grouped.get());
 
@@ -169,7 +169,7 @@ describe("the `struct` function", () => {
         friend1Name = atom("Sylvester"),
         friend1Telephone = atom("blub");
 
-    let grouped = struct({
+    let grouped = _.struct({
       name, telephone,
       blood_type: "AB Negative",
       age: 75,
@@ -204,9 +204,9 @@ describe("boolean logic", () => {
   it("is well understood", () => {
     let a = atom(true),
         b = atom(true),
-        aANDb = a.and(b),
-        aORb = a.or(b),
-        NOTa = a.not();
+        aANDb = _.and(a, b),
+        aORb = _.or(a, b),
+        NOTa = _.not(a);
 
     assert.equal(aANDb.get(), true, "true & true = true");
     assert.equal(aORb.get(), true, "true | true = true");
@@ -230,7 +230,7 @@ describe("control flow", () => {
     let number = atom(0);
     let even = number.derive(n => n % 2 === 0);
 
-    let message = even.then("even", "odd");
+    let message = _.if(even, "even", "odd");
 
     assert.equal(message.get(), "even");
 
@@ -246,7 +246,7 @@ describe("control flow", () => {
     let dideven = false;
     let didodd = false;
 
-    let chooseAPath = even.then(
+    let chooseAPath = _.if(even,
       derive(() => {
         dideven = true;
       }),
@@ -275,7 +275,7 @@ describe("control flow", () => {
   it("same goes for the switch statement", () => {
     let thing = atom("Tigran");
 
-    let result = thing.switch(
+    let result = _.switch(thing,
       "Banana", "YUMMY",
       532,      "FiveThreeTwo",
       "Tigran", "Hamasayan"
@@ -306,7 +306,7 @@ describe("control flow", () => {
         condb = atom("b"),
         condc = atom("c");
 
-    let chooseAPath = switcheroo.switch(
+    let chooseAPath = _.switch(switcheroo,
       conda, derive(() => dida = true),
       condb, derive(() => didb = true),
       condc, derive(() => didc = true),

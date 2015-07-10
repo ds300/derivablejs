@@ -1,4 +1,7 @@
 // colors for garbage collection / change detection
+const Ratom = {};
+
+export default Ratom;
 
 const RED = Symbol("red"),
       BLACK = Symbol("black"),
@@ -217,6 +220,8 @@ export function abortTransaction() {
   throw new TransactionFailedException();
 }
 
+Ratom.abortTransaction = abortTransaction;
+
 /**
  * Runs f in a transaction. f should be synchronous
  */
@@ -236,6 +241,7 @@ export function transact (f) {
   }
 };
 
+Ratom.transact = transact;
 
 
 
@@ -386,6 +392,7 @@ export class Derivation extends DerivableValue {
     return this._state;
   }
 }
+Ratom.Derivation = Derivation;
 
 // reactions start out GREEN. if it is evaluated once to begin with then it
 // is turned WHITE.
@@ -488,9 +495,13 @@ export class Reaction {
   }
 }
 
+Ratom.Atom = Atom;
+
 export function atom (value) {
   return new Atom(value);
 };
+
+Ratom.atom = atom;
 
 export function derive (a, b, c, d, e) {
   if (a instanceof Array) {
@@ -517,6 +528,8 @@ export function derive (a, b, c, d, e) {
   }
 };
 
+Ratom.derive = derive;
+
 function maybeDeref (thing) {
   if (thing instanceof DerivableValue) {
     return thing.get();
@@ -542,13 +555,10 @@ function deepDeref (thing) {
 export function struct (arg) {
   return derive(() => deepDeref(arg));
 }
+Ratom.struct = struct;
 
-export function _if (test, then, otherwise) {
+Ratom.if = function (test, then, otherwise) {
   return derive(() => test.get() ? maybeDeref(then) : maybeDeref(otherwise))
-}
-
-DerivableValue.prototype.then = function (then, otherwise) {
-  return _if(this, then, otherwise);
 };
 
 export function or (...args) {
@@ -564,17 +574,13 @@ export function or (...args) {
   });
 }
 
-DerivableValue.prototype.or = function (...others) {
-  return or.apply(null, [this].concat(others));
-}
+Ratom.or = or;
 
 export function not (x) {
   return x.derive(x => !x);
 }
 
-DerivableValue.prototype.not = function () {
-  return not(this);
-}
+Ratom.not = not;
 
 export function and (...args) {
   return derive(() => {
@@ -589,11 +595,9 @@ export function and (...args) {
   });
 }
 
-DerivableValue.prototype.and = function (...others) {
-  return and.apply(null, [this].concat(others));
-}
+Ratom.and = and;
 
-export function _switch (arg, ...clauses) {
+Ratom.switch = function (arg, ...clauses) {
   return derive(() => {
     let a = maybeDeref(arg);
     let i = 0;
@@ -607,12 +611,7 @@ export function _switch (arg, ...clauses) {
       return maybeDeref(clauses[clauses.length - 1]);
     }
   });
-}
-
-
-DerivableValue.prototype.switch = function (...clauses) {
-  return _switch.apply(null, [this].concat(clauses));
-}
+};
 
 function deriveString (parts, ...args) {
   return derive(() => {
@@ -639,3 +638,23 @@ export function wrapOldState (f, init) {
   ret.name = f.name;
   return ret;
 };
+
+Ratom.wrapOldState = wrapOldState;
+
+export function get (a) {
+  return a.get();
+};
+
+Ratom.get = get;
+
+export function set (a, v) {
+  return a.set(v);
+}
+
+Ratom.set = set;
+
+export function swap (a, ...args) {
+  Atom.prototype.swap.apply(a, args);
+}
+
+Ratom.swap = swap;

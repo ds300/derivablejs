@@ -55,30 +55,25 @@ const app = atom({})
 add lifecycle stuff as derivation pattern?
 
 ```javascript
-function dvClass (...args) {
-  if (args.length === 1) {
-    return dvClass("", args[0]);
-  } else {
-    const [staticClasses, map] = args;
-    const derivation = derive(() => {
-      let dynamicClasses = [];
-      for (let prop of Object.keys(map)) {
-        if (map[prop].get()) {
-          dynamicClasses.push(prop);
-        }
+function dvClass (map) {
+  const derivation = derive(() => {
+    let classes = [];
+    for (let prop of Object.keys(map)) {
+      if (map[prop].get()) {
+        classes.push(prop);
       }
-      return staticClasses.concat(dynamicClasses).join(" ");
-    });
+    }
+    return classes.join(" ");
+  });
 
-    let reaction;
+  let reaction;
 
-    return comp(
-      willMount(node => {
-        reaction = derivation.react(klass => node.className = klass);
-      }),
-      willUnmount(() => reaction.stop())
-    );
-  }
+  return comp(
+    willMount(node => {
+      reaction = derivation.react(klass => node.className = klass);
+    }),
+    willUnmount(() => reaction.stop())
+  );
 }
 
 function dvShow (flag) {
@@ -95,10 +90,8 @@ function dvShow (flag) {
   )
 }
 
-
-
 function dvHide (flag) {
-  return dvShow(flag.derive(x => !x));
+  return dvShow(flag.not());
 }
 
 
