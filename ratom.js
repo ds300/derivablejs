@@ -298,14 +298,14 @@ class Atom extends DerivableValue {
   }
 
   swap (f, ...args) {
-    if (inReactCycle) {
-      throw new Error("Trying to swap atom state during reaction phase. This is"
-                      + " an error. Use middleware for cascading changes.");
-    }
     // todo: switch(args.length) for efficiency
     let value = f.apply(null, [this._get()].concat(args));
     this.set(value);
     return value;
+  }
+
+  lens (lens) {
+    return new Lens(this, lens);
   }
 
   _get () {
@@ -399,6 +399,38 @@ export class Derivation extends DerivableValue {
   }
 }
 Ratom.Derivation = Derivation;
+
+export class Lens extends DerivableValue {
+  constructor (parent, {get, set}) {
+    super();
+    this._parent = parent;
+    this._getter = get;
+    this._setter = set;
+  }
+
+  _clone () {
+    return new Lens(this._state);
+  }
+
+  _get () {
+    return this._getter(this._parent._get());
+  }
+
+  set (value) {
+    this._parent.set(this._setter(this._parent._get(), value));
+  }
+
+  lens (lens) {
+    return new Lens(this, lens);
+  }
+
+  swap (f, ...args) {
+    // todo: switch(args.length) for efficiency
+    let value = f.apply(null, [this._get()].concat(args));
+    this.set(value);
+    return value;
+  }
+}
 
 // reactions start out GREEN. if it is evaluated once to begin with then it
 // is turned WHITE.

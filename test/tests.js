@@ -353,4 +353,45 @@ describe("the lift function", () => {
 
     assert.equal(15, c.get());
   });
+});
+
+
+describe("lenses", () => {
+  let cursor = (lensable, ...path) => lensable.lens({
+    get (state) {
+      return state.getIn(path);
+    },
+    set (state, val) {
+      return state.setIn(path, val);
+    }
+  });
+
+  it("makes a functional lens over an atom", () => {
+    let root = atom(imut.fromJS({things: ["zero", "one", "three"]}));
+
+    let two = cursor(root, "things", 2);
+    assert.equal("three", two.get());
+
+    two.set("two");
+
+    assert(imut.fromJS({things: ["zero", "one", "two"]}).equals(root.get()));
+
+    let things = cursor(root, "things");
+
+    assert(imut.fromJS(["zero", "one", "two"]).equals(things.get()));
+
+    let one = cursor(things, 1);
+
+    assert.equal("one", one.get());
+
+
+    let reactions = 0;
+
+    one.react(() => reactions++);
+
+    one.set("five");
+
+    assert.equal(1, reactions);
+    assert(imut.fromJS(["zero", "five", "two"]).equals(things.get()));
+  });
 })
