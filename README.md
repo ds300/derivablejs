@@ -58,7 +58,7 @@ Rx Observables and FRP are traditionally associated with *event streams*. It mig
 
 ### Comparison with Previous Work
 
-The idea, name, and api nomenclature of this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent), though Reagent credits the idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
+The idea, name, and api nomenclature of this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent), though Reagent credits the idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
 
 The key advantage ratom.js has over all the above is that it uses a 4-color mark-and-sweep algorithm which enables fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
 

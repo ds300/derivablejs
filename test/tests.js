@@ -341,3 +341,16 @@ describe("control flow", () => {
     assert(!dida && !didb && !didc && didx, "did else");
   });
 });
+
+describe("the lift function", () => {
+  it("lifts a function which operates on values to operate on derivables", () => {
+    let plus = (a, b) => a + b;
+    let dPlus = _.lift(plus);
+
+    let a = atom(5);
+    let b = atom(10);
+    let c = dPlus(a, b);
+
+    assert.equal(15, c.get());
+  });
+})

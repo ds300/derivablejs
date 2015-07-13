@@ -664,3 +664,14 @@ export function swap (a, ...args) {
 }
 
 Ratom.swap = swap;
+
+export function lift (f) {
+  return function () {
+    let args = arguments;
+    return derive(function () {
+      return f.apply(this, Array.prototype.map.call(args, maybeDeref));
+    });
+  }
+}
+
+Ratom.lift = lift;
