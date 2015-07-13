@@ -56,7 +56,7 @@ So the goal of ratom.js is to make this easy.
 
 The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
 
-The key advantage ratom.js has over all the above is that it uses a novel\* 4-color mark-and-sweep algorithm which enables fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
+The key advantage ratom.js has over all the above, its one significant contribution to the state of the art, is that it uses a GC-style mark-and-sweep algorithm to provide fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than only as part of a framework.
 
 Other advantages which may or may not apply to every project mentioned above include:
 
