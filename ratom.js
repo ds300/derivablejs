@@ -400,24 +400,20 @@ export class Derivation extends DerivableValue {
 }
 Ratom.Derivation = Derivation;
 
-export class Lens extends DerivableValue {
+export class Lens extends Derivation {
   constructor (parent, {get, set}) {
-    super();
+    super(() => get(parent.get()));
+    this._setter = set;
     this._parent = parent;
     this._getter = get;
-    this._setter = set;
   }
 
   _clone () {
-    return new Lens(this._state);
-  }
-
-  _get () {
-    return this._getter(this._parent._get());
+    return new Lens(this._parent, {get: this._getter, set: this._setter});
   }
 
   set (value) {
-    this._parent.set(this._setter(this._parent._get(), value));
+    return this._parent.set(this._setter(this._parent._get(), value));
   }
 
   lens (lens) {

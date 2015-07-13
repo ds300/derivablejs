@@ -389,9 +389,10 @@ describe("lenses", () => {
 
     one.react(() => reactions++);
 
-    one.set("five");
-
     assert.equal(1, reactions);
+    one.set("five");
+    assert.equal(2, reactions);
+
     assert(imut.fromJS(["zero", "five", "two"]).equals(things.get()));
   });
 })
