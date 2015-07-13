@@ -1,5 +1,5 @@
 # ratom.js
-Reactive values for Derived Data All The Way Down (DDATWD?).
+Consistent Reactive Values for Derived Data All The Way Down
 
 ### {greeting}, {name}!
 
@@ -50,19 +50,13 @@ But because you're a busy person and I'm all about brevity, here's the tl;dr:
 
 > Keeping disparate pieces of local mutable state in check is hard. Keeping one piece of global immutable state in check is a matter of course. Let's do the latter.
 
-Hear hear! But how? By deriving [materialized views](http://www.confluent.io/blog/2015/03/04/turning-the-database-inside-out-with-apache-samza/) from the global immutable state which are kept up-to-date atomically and automatically, of course! This is what ratom.js is for.
-
-### Not Rx or FRP, but Complementary
-
-Rx Observables and FRP are traditionally associated with *event streams*. It might be tempting to think that Reactive Values as exposed by ratom.js can be modeled on top of event streams by simply inserting `.dedupe` everywhere. This is not so, and the devil is in the details. The simplest contradiction to this notion involves consistency and is as follows: you have two values, B and C which are derived from some upstream value A, but B is not downstream of C or vice-versa. How can we know, at any given point in time, whether B's and C's current states are *consistent*, i.e. deriving from the same A state? Without changing our notions about what streams are by introducing some kind of multiplexed metadata—or worse: metacommunication—we simply can't. And this is a valuable property to have.
-
 ### Comparison with Previous Work
 
-The idea, name, and api nomenclature of this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent), though Reagent credits the idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
+The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
 
 The key advantage ratom.js has over all the above is that it uses a 4-color mark-and-sweep algorithm which enables fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
 
-Other advantages which may not apply to every project mentioned above include:
+Other advantages which may or may not apply to every project mentioned above include:
 
 - It has total laziness. *No values are computed unless absolutely necessary*. This allows derivation graphs to incorporate short-circuiting boolean logic.
 - It is a standalone library (jumping on the 'unix philosophy' bandwagon), not tied to a UI framework.
