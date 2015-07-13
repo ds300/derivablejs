@@ -183,7 +183,7 @@ class Transaction {
         atom._state = value;
       }
 
-      this.reactionQueue.forEach(r => r._maybeReact());
+      processReactionQueue(this.reactionQueue);
 
       // then sweep for a clean finish
       for (let {atom} of symbolValues(this.inTxnValues)) {
@@ -193,6 +193,9 @@ class Transaction {
     }
 
     this.state = COMPLETED;
+
+    delete this.reactionQueue;
+    delete this.inTxnValues;
   }
 
   abort () {
@@ -243,14 +246,19 @@ export function transact (f) {
 
 Ratom.transact = transact;
 
+let inReactCycle = false;
 
+function processReactionQueue (rq) {
+  inReactCycle = true;
+  rq.forEach(r => r._maybeReact());
+  inReactCycle = false;
+}
 
 class Atom extends DerivableValue {
   constructor (value) {
     super();
     this._state = value;
     this._color = WHITE;
-    this._active = false;
   }
 
   _clone () {
@@ -258,7 +266,7 @@ class Atom extends DerivableValue {
   }
 
   set (value) {
-    if (this._active) {
+    if (inReactCycle) {
       throw new Error("Trying to set atom state during reaction phase. This is"
                       + " an error. Use middleware for cascading changes.");
     }
@@ -280,9 +288,7 @@ class Atom extends DerivableValue {
 
         var reactionQueue = [];
         this._markChildren(reactionQueue);
-        this._active = true;
-        reactionQueue.forEach(r => r._maybeReact());
-        this._active = false;
+        processReactionQueue(reactionQueue);
         this._sweep();
 
         this._color = WHITE;
@@ -292,7 +298,7 @@ class Atom extends DerivableValue {
   }
 
   swap (f, ...args) {
-    if (this._active) {
+    if (inReactCycle) {
       throw new Error("Trying to swap atom state during reaction phase. This is"
                       + " an error. Use middleware for cascading changes.");
     }
