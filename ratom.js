@@ -96,16 +96,18 @@ class DerivableValue {
   }
 
   _sweep () {
-    this._color = WHITE;
-    this._getChildren().forEach(child => {
-      if (child._color === BLACK) {
-        // white parents disowning black children? What have I done!
-        this._removeChild(child);
-        child._color = GREEN;
-      } else {
-        child._sweep();
-      }
-    });
+    if (this._color !== WHITE) {
+      this._color = WHITE;
+      this._getChildren().forEach(child => {
+        if (child._color === BLACK) {
+          // white parents disowning black children? What have I done!
+          child._getParents().forEach(p => p._removeChild(child));
+          child._color = GREEN;
+        } else {
+          child._sweep();
+        }
+      });
+    }
   }
 
   /**

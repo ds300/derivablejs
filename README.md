@@ -1,7 +1,7 @@
 # ratom.js
 Reactive values for Derived Data All The Way Down
 
-### {greeting}, {name}!
+## {greeting}, {name}!
 
 ```javascript
 import {atom, derive, transact} from 'ratom'
@@ -38,7 +38,7 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
-### Rationale
+## Rationale
 
 Monolithic MV[whatever] frameworks tend to encourage keeping application state in disparate little mutable chunks, tightly coupled to the [whatever] bits. Think Angular Scopes, Ember Models, Knockout View Models, etc. Such frameworks typically have no story for keeping these little mutable state chunks in sync with each other, or even with the ground-truth M which is often behind some callback-heavy API wall. This is fine if your app is small and simple.
 
@@ -52,14 +52,14 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 
 The goal of ratom.js is to make it easy to build complex applications around global immutable state.
 
-### Comparison with Previous Work
+## Comparison with Previous Work
 
 The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
 
-The key advantage ratom.js has over all the above is that it uses a novel\* GC-style mark-and-sweep algorithm which provides two significant benefits:
+The key advantage ratom.js has over all the above is that it uses a novel\* mark-and-sweep algorithm for change propagation which provides two significant benefits:
 
 - Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
-- Total laziness. *No values are computed unless absolutely necessary*. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
+- Extreme laziness. *Upstream of active reactions, no values are computed unless absolutely necessary*. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
 
 Other advantages which may not each apply to every project mentioned above include:
 
@@ -67,9 +67,9 @@ Other advantages which may not each apply to every project mentioned above inclu
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
 - It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), dealing gracefully with 'dead' derivation branches, etc.
 
-\* I'm pretty sure. I did a lot of digging.
+\* Well, the fact that a GC-esque mark-and-sweep algorithm is being used to propagate change in a FRP-ish value graph is novel, I'm pretty sure. I did a lot of digging.
 
-### Model
+## Model
 
 There are three main types exposed by ratom.js:
 
@@ -85,13 +85,13 @@ It is often inappropriate for reactions to persist for the entire lifetime of yo
 
 The one remaining type is **Lenses** which enable [Om](https://github.com/omcljs/om)-ish [cursors](https://github.com/omcljs/om/wiki/Cursors), among other fancy transformations. Lenses are derivations with one parent: either an atom or another lens. They abstract over the `get` and `set` operations of their parent, allowing one to modify part of a root atom without explicitly knowing the particulars of it's structure (that knowledge is encoded in the lenses themselves).
 
-### Algorithms and Data Structures
+## Algorithms and Data Structures
 
-##### Colors
+#### Colors
 
-All nodes in a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I think it'll catch on) have an associated color. There are 4 colors: **black**, **white**, **red**, and **green**.
+All nodes in a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I think it'll catch on) have an associated color. There are four colors: **black**, **white**, **red**, and **green**.
 
-Broadly speaking these 4 colors mean the following:
+Broadly speaking these mean the following:
 
 * **Green:** This node needs evaluating.
 * **White:** This node's value is up to date.
@@ -100,7 +100,7 @@ Broadly speaking these 4 colors mean the following:
 
 But there are some extra subtleties so do read on.
 
-##### Structures At Rest
+#### Structures At Rest
 
 An **atom** encapsulates the following data:
 
@@ -120,7 +120,7 @@ A **derivation** encapsulates the following data:
 
 New derivations are **green** with empty child and parent sets.
 
-A **reaction** encapsulates the following information:
+A **reaction** encapsulates the following data:
 
 - Its color.
 - Its parent.
@@ -129,28 +129,45 @@ A **reaction** encapsulates the following information:
 
 New reactions are **green** and inactive with their parent assigned.
 
-##### Query
+#### Query
 
 When an **atom** is dereferenced it simply returns its current state.
 
 When a **derivation** is dereferenced its color is taken into consideration:
 
 - **White** or **red**: Its current state is returned.
-- **green**: The derivation's deriving function is evaluated.
+- **Green**: The derivation's deriving function is evaluated.
 
-  This is done in a context which allows dereferences of direct parents to be monitored. Parent-child relationships are then set up by insterting the derivation into the child sets of the captured parents. Likewise, the set of captured parents becomes the derivation's parent set.
+  This is done in a context which allows dereferences of direct parents to be monitored. Parent-child relationships are then set up by inserting the derivation into the child sets of the captured parents. Likewise, the set of captured parents becomes the derivation's parent set.
 
   If the derived value is equal to the derivation's current state, the derivation becomes **white** and it's current state is returned. Otherwise it becomes **red** while its current state becomes the newly-derived value. This value is then returned.
 
-- **black**: The child's parents are interrogated. If any of them are **red** the derivation must be re-evaluated as above. If any of the parents are **black** or **green** they are  dereferenced. If they then become **red**, the derivation must be re-evaluated as above. Otherwise all parents are **white** and therefore this derivation is set to **white** and it's current state is returned.
+- **Black**: The child's parents are interrogated.
 
-##### In Motion
+  If any of them are **red** the derivation must be re-evaluated as above. If any of the parents are **black** or **green** they are  dereferenced. If they then become **red**, the derivation must be re-evaluated as above. Otherwise all parents are **white** and therefore this derivation is set to **white** and it's current state is returned.
+
+#### In Action
 
 When a **reaction** is started, it becomes active and places itself in its parent's child set. It then dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
 
 When a reaction is stopped, it becomes inactive and removes itself from its parent's child set in order to sever this link.
 
+#### In Action 2: Marking and Sweeping
+
+When an **atom** is set, if the new value is equal to the current state, nothing happens.
+
+Otherwise, the atom becomes **red**.
+
+The atom's children are then traversed for the mark phase. If any of them are **white** or **red**, they are set to **black** and recursively traversed. Already-**black** children are not traversed. Any **reactions** which are encountered are placed in a queue. It is not possible to encounter **green** nodes at this stage, as **green** children have no consensual parents.
+
+Once the mark phase is complete, the reaction queue is consumed, notifying the reactions that they may need to re-run themselves.
+
+A reaction decides whether or not it needs to re-run by considering its parent's color. If the parent is **black** it is first dereferenced. Then, if the parent is **white**, it does not need to re-run. If the parent is **red** it does. It is not possible for the parent to be **green** at this stage, as **green** children have no consensual parents and atoms are never **green**.
+
+Once all reactions have had a chance to re-run, the atom's children are again traversed in the sweep phase. If any encountered nodes are **white**, its children are not traversed. If any encountered nodes are **red**, they become **white** and traversal continues with their children. If any encountered nodes are **black**, they are removed from their parents' child sets and turned **green**. It is not possible to encounter **green** nodes during the sweep phase for the same reason as during the mark phase.
+
+#### In Transaction
 
 
 
-### API
+## API
