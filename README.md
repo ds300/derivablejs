@@ -1,3 +1,50 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [ratom.js](#ratomjs)
+  - [{greeting}, {name}!](#greeting-name)
+  - [Rationale](#rationale)
+  - [Comparison with Previous Work](#comparison-with-previous-work)
+  - [Model](#model)
+  - [Algorithms and Data Structures](#algorithms-and-data-structures)
+      - [Colors](#colors)
+      - [Data At Rest](#data-at-rest)
+      - [Query](#query)
+      - [In Motion](#in-motion)
+      - [Mark and Sweep](#mark-and-sweep)
+      - [In Transaction](#in-transaction)
+  - [API](#api)
+    - [Types](#types)
+  - [### Types](#-types)
+      - [`Atom`](#atom)
+        - [Methods](#methods)
+          - [`.set(newValue)`](#setnewvalue)
+          - [`.get()`](#get)
+          - [`.derive(fn)`](#derivefn)
+          - [`.reaction(fn)`](#reactionfn)
+          - [`.react(fn)`](#reactfn)
+          - [`.swap(fn, ...args)`](#swapfn-args)
+          - [`.lens(lensDescriptor)`](#lenslensdescriptor)
+  - [](#)
+      - [`Lens`](#lens)
+        - [Lens Descriptors](#lens-descriptors)
+        - [Methods](#methods-1)
+          - [`.set(newValue)`](#setnewvalue-1)
+          - [`.get()`](#get-1)
+          - [`.derive(fn)`](#derivefn-1)
+          - [`.reaction(fn)`](#reactionfn-1)
+          - [`.react(fn)`](#reactfn-1)
+          - [`.swap(fn, ...args)`](#swapfn-args-1)
+          - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
+  - [](#-1)
+      - [`Derivation`](#derivation)
+    - [Top-level functions](#top-level-functions)
+      - [`atom`](#atom)
+  - [Hire Me](#hire-me)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # ratom.js
 Reactive values for Derived Data All The Way Down
 
@@ -37,6 +84,7 @@ transact(() => {
 
 // $> Bonjour, Étienne!
 ```
+
 
 ## Rationale
 
@@ -287,8 +335,10 @@ Returns a new `Lens` based on `lensDescriptor`.
 
 ---
 
-#### `Lens`
+#### `Derivation`
 Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
+
+
 
 ### Top-level functions
 #### `atom`
@@ -299,4 +349,4 @@ If this project is useful to you, consider supporting the author by giving him a
 
 I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you are based in western Europe, please get in touch.
 
-A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to eat is eggs. My favourite thing to do in a hammock is think.
+A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to eat is eggs. My favourite thing to do in a hammock is close my eyes.
