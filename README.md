@@ -238,12 +238,16 @@ Returns the current state of the atom.
 ###### `.derive(fn)`
 Returns a new derivation representing the state of this atom applied to `fn`.
 
-###### `.reaction(fn)`
+###### `.reaction(fn [, lifecycle])`
 Returns a new reaction which calls `fn` with the value of this atom every time it (this atom) changes.
 
-###### `.react(fn)`
+For lifecycle format see [Lifecycles](#lifecycles).
+
+###### `.react(fn [, lifecycle])`
 Returns a new *running* reaction which calls `fn` with the value of this atom every time it (this atom) changes.
 Equivalent to `.reaction(fn).start().force()`
+
+For lifecycle format see [Lifecycles](#lifecycles).
 
 ###### `.swap(fn, ...args)`
 Sets the current state of the atom to be `fn` applied to its (the atom's) current state and `args`.
@@ -254,6 +258,71 @@ Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
 Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
+
+#### `Derivation`
+Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
+
+##### Methods
+
+###### `.get()`
+Returns the current state of the derivation.
+
+###### `.derive(fn)`
+Returns a new derivation representing the state of this derivation applied to `fn`.
+
+###### `.reaction(fn [, lifecycle])`
+Returns a new reaction which calls `fn` with the value of this derivation every time it (this derivation) changes.
+
+For lifecycle format see [Lifecycles](#lifecycles).
+
+###### `.react(fn [, lifecycle])`
+Returns a new *running* reaction which calls `fn` with the value of this derivation every time it (this derivation) changes.
+Equivalent to `.reaction(fn).start().force()`
+
+For lifecycle format see [Lifecycles](#lifecycles).
+
+#### `Reaction`
+Construct using the `.reaction(fn [, lifecycle])` and `.react(fn [, lifecycle])` methods of the [`Atom`](#atom), [`Derivation`](#atom), and [`Lens`](#atom) classes.
+
+##### Lifecycles
+
+Reactions can be created with an optional `lifecycle` parameter. This lets the user specify start-up and tear-down behaviour by providing an object with `.onStart` and `.onStop` methods.
+
+The methods are called with `this` bound the reaction itself, but state should be stored in closures.
+
+
+```javascript
+let error = ... some derivation;
+let elem = $("<span class='error'></span>");
+
+
+```
+
+##### Methods
+
+###### `Reaction::**start()**`
+Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
+
+Returns this reaction.
+
+###### `Reaction::stop()`
+Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
+
+Returns this reaction.
+
+###### `Reaction::force()`
+Forces the re-running of this reaction.
+
+Returns this reaction.
+
+###### `Reaction::setInput(parent)`
+
+Returns this reaction.
+
+###### `Reaction::setReactor(fn)`
+Sets the side-effecting function associated with this reaction to be `fn`.
+
+Returns this reaction.
 
 
 #### `Lens`
@@ -314,9 +383,13 @@ Returns a new derivation representing the state of this lens applied to `fn`.
 ###### `.reaction(fn)`
 Returns a new reaction which calls `fn` with the value of this lens every time it (this lens) changes.
 
+For lifecycle format see [Lifecycles](#lifecycles).
+
 ###### `.react(fn)`
 Returns a new *running* reaction which calls `fn` with the value of this lens every time it (this lens) changes.
 Equivalent to `.reaction(fn).start().force()`
+
+For lifecycle format see [Lifecycles](#lifecycles).
 
 ###### `.swap(fn, ...args)`
 Sets the current state of the lens to be `fn` applied to its (the lens') current state and `args`.
@@ -329,8 +402,6 @@ Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
 Returns a new `Lens` based on `lensDescriptor`.
 
 
-#### `Derivation`
-Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
 
 
 
@@ -339,8 +410,8 @@ Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`
 
 ## Hire Me
 
-If this project is useful to you, consider supporting the author by giving him a job!
+If this project is useful to you, consider supporting the author by giving him a new job!
 
-I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you are based in western Europe, please get in touch.
+I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you're based in western Europe, please get in touch.
 
-A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to eat is eggs. My favourite thing to do in a hammock is close my eyes.
+A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to do in a hammock is close my eyes.
