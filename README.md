@@ -1,50 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [ratom.js](#ratomjs)
-  - [{greeting}, {name}!](#greeting-name)
-  - [Rationale](#rationale)
-  - [Comparison with Previous Work](#comparison-with-previous-work)
-  - [Model](#model)
-  - [Algorithms and Data Structures](#algorithms-and-data-structures)
-      - [Colors](#colors)
-      - [Data At Rest](#data-at-rest)
-      - [Query](#query)
-      - [In Motion](#in-motion)
-      - [Mark and Sweep](#mark-and-sweep)
-      - [In Transaction](#in-transaction)
-  - [API](#api)
-    - [Types](#types)
-  - [### Types](#-types)
-      - [`Atom`](#atom)
-        - [Methods](#methods)
-          - [`.set(newValue)`](#setnewvalue)
-          - [`.get()`](#get)
-          - [`.derive(fn)`](#derivefn)
-          - [`.reaction(fn)`](#reactionfn)
-          - [`.react(fn)`](#reactfn)
-          - [`.swap(fn, ...args)`](#swapfn-args)
-          - [`.lens(lensDescriptor)`](#lenslensdescriptor)
-  - [](#)
-      - [`Lens`](#lens)
-        - [Lens Descriptors](#lens-descriptors)
-        - [Methods](#methods-1)
-          - [`.set(newValue)`](#setnewvalue-1)
-          - [`.get()`](#get-1)
-          - [`.derive(fn)`](#derivefn-1)
-          - [`.reaction(fn)`](#reactionfn-1)
-          - [`.react(fn)`](#reactfn-1)
-          - [`.swap(fn, ...args)`](#swapfn-args-1)
-          - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
-  - [](#-1)
-      - [`Derivation`](#derivation)
-    - [Top-level functions](#top-level-functions)
-      - [`atom`](#atom)
-  - [Hire Me](#hire-me)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # ratom.js
 Reactive values for Derived Data All The Way Down
 
@@ -85,6 +38,50 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Rationale](#rationale)
+- [Comparison with Previous Work](#comparison-with-previous-work)
+- [Model](#model)
+- [Algorithms and Data Structures](#algorithms-and-data-structures)
+    - [Colors](#colors)
+    - [Data At Rest](#data-at-rest)
+    - [Query](#query)
+    - [In Motion](#in-motion)
+    - [Mark and Sweep](#mark-and-sweep)
+    - [In Transaction](#in-transaction)
+- [API](#api)
+- [### Types](#-types)
+  - [Types](#types)
+    - [`Atom`](#atom)
+      - [Methods](#methods)
+        - [`.set(newValue)`](#setnewvalue)
+        - [`.get()`](#get)
+        - [`.derive(fn)`](#derivefn)
+        - [`.reaction(fn)`](#reactionfn)
+        - [`.react(fn)`](#reactfn)
+        - [`.swap(fn, ...args)`](#swapfn-args)
+        - [`.lens(lensDescriptor)`](#lenslensdescriptor)
+- [](#)
+    - [`Lens`](#lens)
+      - [Lens Descriptors](#lens-descriptors)
+      - [Methods](#methods-1)
+        - [`.set(newValue)`](#setnewvalue-1)
+        - [`.get()`](#get-1)
+        - [`.derive(fn)`](#derivefn-1)
+        - [`.reaction(fn)`](#reactionfn-1)
+        - [`.react(fn)`](#reactfn-1)
+        - [`.swap(fn, ...args)`](#swapfn-args-1)
+        - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
+- [](#-1)
+    - [`Derivation`](#derivation)
+  - [Top-level functions](#top-level-functions)
+    - [`atom`](#atom)
+- [Hire Me](#hire-me)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Rationale
 
