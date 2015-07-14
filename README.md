@@ -300,24 +300,24 @@ let elem = $("<span class='error'></span>");
 
 ##### Methods
 
-###### `Reaction::**start()**`
-Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
+- `Reaction::start()`
+  Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
 
-Returns this reaction.
+  Returns this reaction.
 
-###### `Reaction::stop()`
-Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
+- `Reaction::stop()`
+  Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
 
-Returns this reaction.
+  Returns this reaction.
 
-###### `Reaction::force()`
-Forces the re-running of this reaction.
+- `Reaction::force()`
+  Forces the re-running of this reaction.
 
-Returns this reaction.
+  Returns this reaction.
 
-###### `Reaction::setInput(parent)`
+- `Reaction::setInput(parent)`
 
-Returns this reaction.
+  Returns this reaction.
 
 ###### `Reaction::setReactor(fn)`
 Sets the side-effecting function associated with this reaction to be `fn`.
