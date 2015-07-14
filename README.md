@@ -69,24 +69,71 @@ Other advantages which may not each apply to every project mentioned above inclu
 
 \* I'm pretty sure. I did a lot of digging.
 
-### How
+### Model
 
 There are three main types exposed by ratom.js:
 
-- Atoms
-  The roots of the derivation graphs. They are mutable references, but are intended to hold immutable, or effectively immutable, data.
-- Derivations
-  The inner nodes of a derivation graph. They represent applications of pure functions to upstream values.
-- Reactions
-  The leaves of a derivation graph. Unlike the above, they do not encapsulate a value. Rather, they are passive observers of upstream values which run some side-effecting computation when a change is detected.
+- **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
+- **Derivations** represent applications of pure functions to upstream values.
+- **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects.
 
-The example at the top of this document can be depicted as follows:
+These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
 
-<img src="https://raw.github.com/ds300/ratom.js/master/img/example.svg"
-align="center" width="89%"/>
+<img src="https://raw.github.com/ds300/ratom.js/master/img/example.svg" align="center" width="89%"/>
 
-Atoms are mutable references at the roots of a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I'm pretty sure it'll catch on). Despite being mutable themselves, they are intended to hold immutable or effectively immutable data. Derivations branch from atoms and other derivations, describing a pure transformation of the root data into more useful forms, just like a materialized view in a database. `Reaction`s are side-effecting computations associated with a single `Derivation` or `Atom`. When an atom is changed, the DDATWDDAG is traversed and reactions are notified. The `Reaction`s then traverse the graph backwards, evaluating only those nodes which it is utterly necessary to evaluate in order to decide whether the `Reaction` must be re-run in response to changed input.
+It is often inappropriate for reactions to persist for the entire lifetime of your application. As such they can be manually started and stopped, and have two overridable lifecycle methods: `.onStart()` and `.onStop()` which can be used as hooks for acquiring and releasing resources associated with the reaction.
 
-### Picture
+The one remaining type is **Lenses** which enable [Om](https://github.com/omcljs/om)-ish [cursors](https://github.com/omcljs/om/wiki/Cursors), among other fancy transformations. Lenses are derivations with one parent: either an atom or another lens. They abstract over the `get` and `set` operations of their parent, allowing one to modify part of a root atom without explicitly knowing the particulars of it's structure (that knowledge is encoded in the lenses themselves).
 
-Without `Reaction`s, the DDATWDDAG is a simple lifeless description of data. This design lets us do some pretty nuts stuff like implement true boolean logic in terms of `Derivation`s.
+### Algorithms and Data Structures
+
+All nodes in a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I think it'll catch on) have an associated color. There are 4 colors: **black**, **white**, **red**, and **green**.
+
+Broadly speaking these 4 colors mean the following:
+
+* **Green:** This node needs evaluating.
+* **White:** This node's value is up to date.
+* **Red:** This node's value is up to date, but has changed during the current mark/sweep cycle.
+* **Black:** This node's value is out of date.
+
+But there are some extra subtleties involved in the full algorithm which is described below.
+
+An **atom** encapsulates the following data:
+
+- Its color.
+- Its current state.
+- A set of direct children.
+
+Atoms are always **white**, except during a mark and sweep phase when they are **red**. New atoms have empty child sets.
+
+A **derivation** encapsulates the following data:
+
+- Its color.
+- Its current state.
+- A set of direct children.
+- A set of direct parents.
+- A deriving function. This calculates the derivation's current state in terms of one or more atoms or other derivations.
+
+New derivations are **green** with empty child and parent sets.
+
+A **reaction** encapsulates the following information:
+
+- Its color.
+- Its parent.
+- A reacting function.
+
+New reactions are **green** with their parent assigned.
+
+When a reaction is started, it places itself in its parent's child set and dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
+
+When a reaction is stopped, it removes itself from its parent's child set in order to sever this link.
+
+New atoms are **white** with empty child sets. New derivations are **green** with empty parent sets. New reactions are **green** with a parent.
+
+When an atom is dereferenced, it simply returns its state, regardless of color.
+
+Derivations encapsulate an evaluation function which dereferences one or more atoms or other derivations. Whenever this function is called, these dereferences are intercepted so that the parent-child relationships can be established via population of the child sets in the dereferencees and parent set in the dereferencer (the derivation). If the value produced by this function is identical to the derivation's current state, it becomes white, otherwise its state is set to be the new value and it becomes red.
+
+When a derivation is dereferenced its color is taken into consideration: when green, it calls its evaluation function and returns its state; when white or red, it returns its state,
+
+### API
