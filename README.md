@@ -207,12 +207,12 @@ Returns the atom.
 Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
-Returns a [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors](#Lens_Descriptors)
+Returns a [Lens](#lens) based on lensDescriptor. See [Lens Descriptors](#lens-descriptors)
 
 ---
 
 #### `Lens`
-Construct using the `.lens(lensDescriptor)` methods of this class and [`Atom`](#Atom).
+Construct using the `.lens(lensDescriptor)` methods of this class and [`Atom`](#atom).
 
 ##### Lens Descriptors
 
@@ -281,7 +281,7 @@ Returns the lens.
 Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
-Returns a new [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors](#Lens_Descriptors)
+Returns a new [Lens](#lens) based on lensDescriptor. See [Lens Descriptors](#lens-descriptors)
 
 
 ### Top-level functions
