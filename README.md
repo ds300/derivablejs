@@ -38,6 +38,8 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
+## Contents
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -54,7 +56,6 @@ transact(() => {
     - [In Transaction](#in-transaction)
 - [API](#api)
   - [Types](#types)
-- [](#)
     - [`Atom`](#atom)
       - [Methods](#methods)
         - [`.set(newValue)`](#setnewvalue)
@@ -64,7 +65,6 @@ transact(() => {
         - [`.react(fn)`](#reactfn)
         - [`.swap(fn, ...args)`](#swapfn-args)
         - [`.lens(lensDescriptor)`](#lenslensdescriptor)
-- [](#-1)
     - [`Lens`](#lens)
       - [Lens Descriptors](#lens-descriptors)
       - [Methods](#methods-1)
@@ -75,7 +75,6 @@ transact(() => {
         - [`.react(fn)`](#reactfn-1)
         - [`.swap(fn, ...args)`](#swapfn-args-1)
         - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
-- [](#-2)
     - [`Derivation`](#derivation)
   - [Top-level functions](#top-level-functions)
     - [`atom`](#atom)
@@ -99,11 +98,11 @@ The goal of ratom.js is to make it easy to build complex applications around glo
 
 ## Comparison with Previous Work
 
-The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it isn't publicly available AFAICT.
+The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it doesn't seem to be publicly available.
 
-The key advantage ratom.js has over all the above is that it uses a novel\* mark-and-sweep algorithm for change propagation which provides two significant benefits:
+The key advantage ratom.js has over all the above is that it uses a novel approach for change propagation\* which invloves a GC-inspired 3-phase mark-react-sweep algorithm. It provides two significant benefits:
 
-- Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
+- Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework. *Nobody else does this, AFAICT*
 - Almost total laziness\*\*. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
 
 Other advantages which may not each apply to every project mentioned above include:
@@ -112,11 +111,9 @@ Other advantages which may not each apply to every project mentioned above inclu
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
 - It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), dealing gracefully with 'dead' derivation branches, etc.
 
-Drawbacks? Benchmark this shit.
+\* I'm pretty sure. I did a lot of digging.
 
-\* Well, the fact that a GC-esque mark-and-sweep algorithm is being used to propagate change in a FRP-ish value graph is novel, I'm pretty sure. I did a lot of digging.
-
-\*\* Potentially-wasteful recomputations are a necessary side effect of fully automatic memory management. In normal usage, however, they should be extremely rare.
+\*\* Potentially-wasteful recomputations seem to be a necessary side effect of fully automatic memory management. In normal usage, however, they should be extremely rare.
 
 ## Model
 
@@ -225,7 +222,6 @@ During transactions, if an **atom** is modified, it becomes **red** and its new 
 
 ### Types
 
----
 
 #### `Atom`
 Construct using the [`atom`](#atom-1) top level function.
@@ -259,7 +255,6 @@ Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
 ###### `.lens(lensDescriptor)`
 Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
 
----
 
 #### `Lens`
 Construct using the `.lens(lensDescriptor)` methods of this class and [`Atom`](#atom).
@@ -333,7 +328,6 @@ Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
 ###### `.lens(lensDescriptor)`
 Returns a new `Lens` based on `lensDescriptor`.
 
----
 
 #### `Derivation`
 Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
