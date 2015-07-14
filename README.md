@@ -100,7 +100,7 @@ Broadly speaking these mean the following:
 
 But there are some extra subtleties so do read on.
 
-#### Structures At Rest
+#### Data At Rest
 
 An **atom** encapsulates the following data:
 
@@ -146,13 +146,13 @@ When a **derivation** is dereferenced its color is taken into consideration:
 
   If any of them are **red** the derivation must be re-evaluated as above. If any of the parents are **black** or **green** they are  dereferenced. If they then become **red**, the derivation must be re-evaluated as above. Otherwise all parents are **white** and therefore this derivation is set to **white** and it's current state is returned.
 
-#### In Action
+#### In Motion
 
 When a **reaction** is started, it becomes active and places itself in its parent's child set. It then dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
 
 When a reaction is stopped, it becomes inactive and removes itself from its parent's child set in order to sever this link.
 
-#### In Action 2: Marking and Sweeping
+#### Mark and Sweep
 
 When an **atom** is set, if the new value is equal to the current state, nothing happens.
 
@@ -170,6 +170,6 @@ After the sweep phase, the atom becomes **white**.
 
 #### In Transaction
 
-
+During transactions, if an **atom** is modified, it becomes **red** and its new value is stored separately from it's out-of-transaction state. The mark phase is undertaken as usual. The reaction and sweep phases are delayed until the transaction commits, when the atom's in-transaction value is propagated up to be its out-of-transaction value.
 
 ## API
