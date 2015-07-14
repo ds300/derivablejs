@@ -100,7 +100,7 @@ Broadly speaking these mean the following:
 * **Red:** This node's value is up to date, but has changed during the current mark/sweep cycle.
 * **Black:** This node's value is out of date, but doesn't necessarily need to be re-evaluated.
 
-But there are some extra subtleties so do read on.
+But there are some extra subtleties so do read on if you aren't already catatonic.
 
 #### Data At Rest
 
@@ -110,7 +110,7 @@ An **atom** encapsulates the following data:
 - Its current state.
 - A set of direct children.
 
-New atoms are **white** and have empty child sets.
+New atoms are **white**, have empty child sets, and a given state.
 
 A **derivation** encapsulates the following data:
 
@@ -120,7 +120,7 @@ A **derivation** encapsulates the following data:
 - A set of direct parents.
 - A deriving function. This calculates the derivation's current state in terms of one or more atoms or other derivations.
 
-New derivations are **green** with empty child and parent sets.
+New derivations are **green**, have empty child and parent sets, and no state.
 
 A **reaction** encapsulates the following data:
 
@@ -207,7 +207,7 @@ Returns the atom.
 Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
-Returns a [Lens](#lens) based on lensDescriptor. See [Lens Descriptors](#lens-descriptors)
+Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
 
 ---
 
@@ -228,7 +228,7 @@ Lens descriptors are objects with two methods
 
 As an example, if we wanted to make a lens which operates on the numbers after a decimal point separately from the number before it:
 
-```
+```javascript
 const num = atom(3.14159);
 
 const afterDecimalPoint = num.lens({
@@ -281,7 +281,7 @@ Returns the lens.
 Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
-Returns a new [Lens](#lens) based on lensDescriptor. See [Lens Descriptors](#lens-descriptors)
+Returns a new `Lens` based on `lensDescriptor`.
 
 
 ### Top-level functions
