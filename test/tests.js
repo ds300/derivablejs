@@ -6,22 +6,22 @@ describe("the humble atom", () => {
   const n = atom(0);
 
   it("can be dereferenced via .get to obtain its current state", () => {
-    assert.equal(n.get(), 0);
+    assert.strictEqual(n.get(), 0);
   });
 
   it("can be .set to change its current state", () => {
     n.set(1);
-    assert.equal(n.get(), 1);
+    assert.strictEqual(n.get(), 1);
   });
 
   it("can be .swap-ped a la clojure", () => {
     const double = x => x * 2;
     n.swap(double);
-    assert.equal(n.get(), 2);
+    assert.strictEqual(n.get(), 2);
     n.swap(double);
-    assert.equal(n.get(), 4);
+    assert.strictEqual(n.get(), 4);
     n.swap(double);
-    assert.equal(n.get(), 8);
+    assert.strictEqual(n.get(), 8);
   });
 });
 
@@ -34,12 +34,12 @@ describe("a derivation", () => {
 
   it("can be created via the Atom.derive(f) method", () => {
     kiloBytes = bytes.derive(orderUp);
-    assert.equal(kiloBytes.get(), 1024 * 1024)
+    assert.strictEqual(kiloBytes.get(), 1024 * 1024)
   });
 
   it("can also be created via the derive function in the ratom package", () => {
     megaBytes = derive(() => orderUp(kiloBytes.get()));
-    assert.equal(megaBytes.get(), 1024);
+    assert.strictEqual(megaBytes.get(), 1024);
   });
 
   it("can derive from more than one atom", () => {
@@ -50,17 +50,17 @@ describe("a derivation", () => {
     const size = derive(bytes, order, orderUp);
     const sizeString = derive`${size} ${orderName}`;
 
-    assert.equal(size.get(), bytes.get(), "size is in bytes when order is 0");
-    assert.equal(sizeString.get(), bytes.get() + " bytes");
+    assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
+    assert.strictEqual(sizeString.get(), bytes.get() + " bytes");
     order.set(1);
-    assert.equal(size.get(), kiloBytes.get(), "size is in kbs when order is 1");
-    assert.equal(sizeString.get(), kiloBytes.get() + " kilobytes");
+    assert.strictEqual(size.get(), kiloBytes.get(), "size is in kbs when order is 1");
+    assert.strictEqual(sizeString.get(), kiloBytes.get() + " kilobytes");
     order.set(2);
-    assert.equal(size.get(), megaBytes.get(), "size is in mbs when order is 2");
-    assert.equal(sizeString.get(), megaBytes.get() + " megabytes");
+    assert.strictEqual(size.get(), megaBytes.get(), "size is in mbs when order is 2");
+    assert.strictEqual(sizeString.get(), megaBytes.get() + " megabytes");
     order.set(3);
-    assert.equal(size.get(), 1, "size is in gbs when order is 2");
-    assert.equal(sizeString.get(), "1 gigabytes");
+    assert.strictEqual(size.get(), 1, "size is in gbs when order is 2");
+    assert.strictEqual(sizeString.get(), "1 gigabytes");
   });
 });
 
@@ -71,7 +71,7 @@ describe("a reaction", () => {
   let history = imut.List();
   let action = null;
   let reaction = counter.react(function (n) {
-    reaction && assert.equal(this, reaction, "`this` is bound to the reaction");
+    reaction && assert.strictEqual(this, reaction, "`this` is bound to the reaction");
     history = history.push(n);
     action && action();
   });
@@ -208,20 +208,20 @@ describe("boolean logic", () => {
         aORb = _.or(a, b),
         NOTa = _.not(a);
 
-    assert.equal(aANDb.get(), true, "true & true = true");
-    assert.equal(aORb.get(), true, "true | true = true");
-    assert.equal(NOTa.get(), false, "!true = false")
+    assert.strictEqual(aANDb.get(), true, "true & true = true");
+    assert.strictEqual(aORb.get(), true, "true | true = true");
+    assert.strictEqual(NOTa.get(), false, "!true = false")
 
     b.set(false);
 
-    assert.equal(aANDb.get(), false, "true & false = false");
-    assert.equal(aORb.get(), true, "true | false = true");
+    assert.strictEqual(aANDb.get(), false, "true & false = false");
+    assert.strictEqual(aORb.get(), true, "true | false = true");
 
     a.set(false);
 
-    assert.equal(aANDb.get(), false, "false & false = false");
-    assert.equal(aORb.get(), false, "false | false = false");
-    assert.equal(NOTa.get(), true, "!false = true");
+    assert.strictEqual(aANDb.get(), false, "false & false = false");
+    assert.strictEqual(aORb.get(), false, "false | false = false");
+    assert.strictEqual(NOTa.get(), true, "!false = true");
   });
 });
 
@@ -232,11 +232,11 @@ describe("control flow", () => {
 
     let message = _.if(even, "even", "odd");
 
-    assert.equal(message.get(), "even");
+    assert.strictEqual(message.get(), "even");
 
     number.set(1);
 
-    assert.equal(message.get(), "odd");
+    assert.strictEqual(message.get(), "odd");
   });
 
   it("doesn't evaluate untaken paths", () => {
@@ -281,15 +281,15 @@ describe("control flow", () => {
       "Tigran", "Hamasayan"
     );
 
-    assert.equal("Hamasayan", result.get());
+    assert.strictEqual("Hamasayan", result.get());
 
     thing.set("Banana");
 
-    assert.equal("YUMMY", result.get());
+    assert.strictEqual("YUMMY", result.get());
 
     thing.set(532);
 
-    assert.equal("FiveThreeTwo", result.get());
+    assert.strictEqual("FiveThreeTwo", result.get());
 
     thing.set("nonsense");
 
@@ -394,5 +394,31 @@ describe("lenses", () => {
     assert.equal(2, reactions);
 
     assert(imut.fromJS(["zero", "five", "two"]).equals(things.get()));
+  });
+
+  it("works on numbers too", () => {
+    const num = atom(3.14159);
+
+    const afterDecimalPoint = num.lens({
+      get (number) {
+        return parseInt(number.toString().split(".")[1]) || 0;
+      },
+      set (number, newVal) {
+        let beforeDecimalPoint = number.toString().split(".")[0];
+        return parseFloat(`${beforeDecimalPoint}.${newVal}`);
+      }
+    });
+
+    assert.strictEqual(14159, afterDecimalPoint.get());
+
+    afterDecimalPoint.set(4567);
+
+    assert.strictEqual(3.4567, num.get());
+
+    afterDecimalPoint.swap(x => x * 2);
+
+    assert.strictEqual(9134, afterDecimalPoint.get());
+
+    assert.strictEqual(3.9134, num.get());
   });
 })

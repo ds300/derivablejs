@@ -176,6 +176,7 @@ During transactions, if an **atom** is modified, it becomes **red** and its new 
 
 ## API
 ### Types
+---
 #### `Atom`
 Construct using the [`atom(initialValue)`](#atom) top level function.
 ##### Methods
@@ -188,6 +189,16 @@ Returns the atom.
 ###### `.get()`
 Returns the current state of the atom.
 
+###### `.derive(fn)`
+Returns a new derivation representing the state of this atom applied to `fn`.
+
+###### `.reaction(fn)`
+Returns a new reaction which calls `fn` with the value of this atom every time it (this atom) changes.
+
+###### `.react(fn)`
+Returns a new *running* reaction which calls `fn` with the value of this atom every time it (this atom) changes.
+Equivalent to `.reaction(fn).start().force()`
+
 ###### `.swap(fn, ...args)`
 Sets the current state of the atom to be `fn` applied to its (the atom's) current state and `args`.
 
@@ -196,7 +207,82 @@ Returns the atom.
 Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
 
 ###### `.lens(lensDescriptor)`
-Returns a [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors]()
+Returns a [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors](#Lens_Descriptors)
+
+---
+
+#### `Lens`
+Construct using the `.lens(lensDescriptor)` methods of this class and [`Atom`](#Atom).
+
+##### Lens Descriptors
+
+Lens descriptors are objects with two methods
+
+- `.get(parentState)`
+
+  Which returns the lensed view over the parent state.
+
+- `.set(parentState, value)`
+
+  Which returns the new state for the parent with value incorporated.
+
+As an example, if we wanted to make a lens which operates on the numbers after a decimal point separately from the number before it:
+
+```
+const num = atom(3.14159);
+
+const afterDecimalPoint = num.lens({
+  get (number) {
+    return parseInt(number.toString().split(".")[1]) || 0;
+  },
+  set (number, newVal) {
+    let beforeDecimalPoint = number.toString().split(".")[0];
+    return parseFloat(`${beforeDecimalPoint}.${newVal}`);
+  }
+});
+
+afterDecimalPoint.get(); // => 14159
+
+afterDecimalPoint.set(4567);
+
+num.get(); // => 3.4567
+
+afterDecimalPoint.swap(x => x * 2);
+
+num.get(); // => 3.9134
+```
+
+##### Methods
+
+###### `.set(newValue)`
+Changes the lens' state to be newValue. Updates the root atom according to the lens logic. Causes any dependent reactions to be re-run synchronously.
+
+Returns the lens.
+
+###### `.get()`
+Returns the current state of the lens.
+
+
+###### `.derive(fn)`
+Returns a new derivation representing the state of this lens applied to `fn`.
+
+###### `.reaction(fn)`
+Returns a new reaction which calls `fn` with the value of this lens every time it (this lens) changes.
+
+###### `.react(fn)`
+Returns a new *running* reaction which calls `fn` with the value of this lens every time it (this lens) changes.
+Equivalent to `.reaction(fn).start().force()`
+
+###### `.swap(fn, ...args)`
+Sets the current state of the lens to be `fn` applied to its (the lens') current state and `args`.
+
+Returns the lens.
+
+Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
+
+###### `.lens(lensDescriptor)`
+Returns a new [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors](#Lens_Descriptors)
+
 
 ### Top-level functions
 #### `atom`
