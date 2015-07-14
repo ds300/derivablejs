@@ -222,42 +222,61 @@ During transactions, if an **atom** is modified, it becomes **red** and its new 
 
 ### Types
 
+#### Derivable
+
+Non-extendable interface specifying common operations between objects considered *derivable*, i.e. Atoms, Derivations, and Lenses.
+
+##### Methods
+
+- **`.get()`**
+
+  Returns the current state of the derivable.
+
+- **`.derive(fn)`**
+
+  Returns a new derivation representing the state of this derivable applied to `fn`.
+
+- **`.reaction(fn [, lifecycle])`**
+
+  Returns a new reaction which calls `fn` with the value of this derivable every time it (this derivable) changes.
+
+  For lifecycle format see [Lifecycles](#lifecycles).
+
+- **`.react(fn [, lifecycle])`**
+
+  Returns a new *running* reaction which calls `fn` with the value of this derivable every time it (this derivable) changes.
+
+  Equivalent to `.reaction(fn [, lifecycle]).start().force()`
+
+  For lifecycle format see [Lifecycles](#lifecycles).
+
+#### Mutable
+
+Non-extendable interface specifying common operations between objects considered *mutable*, i.e. Atoms and Lenses.
+
+- **`.set(newValue)`**
+
+  Changes the mutable's state to be newValue. Causes any dependent reactions to be re-run synchronously.
+
+  Returns the mutable.
+
+- **`.swap(fn, ...args)`**
+
+  Sets the current state of the mutable to be `fn` applied to its (the mutable's) current state and `args`.
+
+  Returns the mutable.
+
+  Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
+
+- **`.lens(lensDescriptor)`**
+
+  Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
 
 #### `Atom`
 Construct using the [`atom`](#atom-1) top level function.
 ##### Methods
 
-###### `.set(newValue)`
-Changes the atom's state to be newValue. Causes any dependent reactions to be re-run synchronously.
 
-Returns the atom.
-
-###### `.get()`
-Returns the current state of the atom.
-
-###### `.derive(fn)`
-Returns a new derivation representing the state of this atom applied to `fn`.
-
-###### `.reaction(fn [, lifecycle])`
-Returns a new reaction which calls `fn` with the value of this atom every time it (this atom) changes.
-
-For lifecycle format see [Lifecycles](#lifecycles).
-
-###### `.react(fn [, lifecycle])`
-Returns a new *running* reaction which calls `fn` with the value of this atom every time it (this atom) changes.
-Equivalent to `.reaction(fn).start().force()`
-
-For lifecycle format see [Lifecycles](#lifecycles).
-
-###### `.swap(fn, ...args)`
-Sets the current state of the atom to be `fn` applied to its (the atom's) current state and `args`.
-
-Returns the atom.
-
-Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
-
-###### `.lens(lensDescriptor)`
-Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
 
 #### `Derivation`
 Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
@@ -301,16 +320,19 @@ let elem = $("<span class='error'></span>");
 ##### Methods
 
 - `Reaction::start()`
+
   Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
 
   Returns this reaction.
 
 - `Reaction::stop()`
+
   Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
 
   Returns this reaction.
 
 - `Reaction::force()`
+
   Forces the re-running of this reaction.
 
   Returns this reaction.
@@ -319,10 +341,11 @@ let elem = $("<span class='error'></span>");
 
   Returns this reaction.
 
-###### `Reaction::setReactor(fn)`
-Sets the side-effecting function associated with this reaction to be `fn`.
+- `Reaction::setReactor(fn)`
 
-Returns this reaction.
+  Sets the side-effecting function associated with this reaction to be `fn`.
+
+  Returns this reaction.
 
 
 #### `Lens`
