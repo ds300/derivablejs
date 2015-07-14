@@ -59,7 +59,7 @@ The idea for, name of, and api nomenclature used in this library were directly i
 The key advantage ratom.js has over all the above is that it uses a novel\* mark-and-sweep algorithm for change propagation which provides two significant benefits:
 
 - Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework.
-- Extreme laziness. *Upstream of active reactions, no values are computed unless absolutely necessary*. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
+- Almost total laziness\*\*. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
 
 Other advantages which may not each apply to every project mentioned above include:
 
@@ -70,6 +70,8 @@ Other advantages which may not each apply to every project mentioned above inclu
 Drawbacks? Benchmark this shit.
 
 \* Well, the fact that a GC-esque mark-and-sweep algorithm is being used to propagate change in a FRP-ish value graph is novel, I'm pretty sure. I did a lot of digging.
+
+\*\* Potentially-wasteful recomputations are a necessary side effect of fully automatic memory management. In normal usage, however, they should be extremely rare.
 
 ## Model
 
@@ -178,7 +180,7 @@ During transactions, if an **atom** is modified, it becomes **red** and its new 
 ### Types
 ---
 #### `Atom`
-Construct using the [`atom(initialValue)`](#atom) top level function.
+Construct using the [`atom`](#atom-1) top level function.
 ##### Methods
 
 ###### `.set(newValue)`
@@ -283,6 +285,18 @@ Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
 ###### `.lens(lensDescriptor)`
 Returns a new `Lens` based on `lensDescriptor`.
 
+---
+
+#### `Lens`
+Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
 
 ### Top-level functions
 #### `atom`
+
+## Hire Me
+
+If this project is useful to you, consider supporting the author by giving him a job!
+
+I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you are based in western Europe, please get in touch.
+
+A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to eat is eggs. My favourite thing to do in a hammock is think.
