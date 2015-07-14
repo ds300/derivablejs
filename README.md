@@ -53,8 +53,8 @@ transact(() => {
     - [Mark and Sweep](#mark-and-sweep)
     - [In Transaction](#in-transaction)
 - [API](#api)
-- [### Types](#-types)
   - [Types](#types)
+- [](#)
     - [`Atom`](#atom)
       - [Methods](#methods)
         - [`.set(newValue)`](#setnewvalue)
@@ -64,7 +64,7 @@ transact(() => {
         - [`.react(fn)`](#reactfn)
         - [`.swap(fn, ...args)`](#swapfn-args)
         - [`.lens(lensDescriptor)`](#lenslensdescriptor)
-- [](#)
+- [](#-1)
     - [`Lens`](#lens)
       - [Lens Descriptors](#lens-descriptors)
       - [Methods](#methods-1)
@@ -75,7 +75,7 @@ transact(() => {
         - [`.react(fn)`](#reactfn-1)
         - [`.swap(fn, ...args)`](#swapfn-args-1)
         - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
-- [](#-1)
+- [](#-2)
     - [`Derivation`](#derivation)
   - [Top-level functions](#top-level-functions)
     - [`atom`](#atom)
@@ -222,8 +222,11 @@ After the sweep phase, the atom becomes **white**.
 During transactions, if an **atom** is modified, it becomes **red** and its new value is stored separately from it's out-of-transaction state. The mark phase is undertaken as usual. The reaction and sweep phases are delayed until the transaction commits, when the atom becomes white and its in-transaction value is propagated up to be its out-of-transaction value.
 
 ## API
+
 ### Types
+
 ---
+
 #### `Atom`
 Construct using the [`atom`](#atom-1) top level function.
 ##### Methods
