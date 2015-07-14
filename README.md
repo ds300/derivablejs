@@ -160,11 +160,13 @@ Otherwise, the atom becomes **red**.
 
 The atom's children are then traversed for the mark phase. If any of them are **white** or **red**, they are set to **black** and recursively traversed. Already-**black** children are not traversed. Any **reactions** which are encountered are placed in a queue. It is not possible to encounter **green** nodes at this stage, as **green** children have no consensual parents.
 
-Once the mark phase is complete, the reaction queue is consumed, notifying the reactions that they may need to re-run themselves.
+Once the mark phase is complete, the **reaction queue** is consumed, notifying the reactions that they may need to re-run themselves.
 
-A reaction decides whether or not it needs to re-run by considering its parent's color. If the parent is **black** it is first dereferenced. Then, if the parent is **white**, it does not need to re-run. If the parent is **red** it does. It is not possible for the parent to be **green** at this stage, as **green** children have no consensual parents and atoms are never **green**.
+A **reaction** decides whether or not it needs to re-run by considering its parent's color. If the parent is **black** it is first dereferenced. Then, if the parent is **white**, it does not need to re-run. If the parent is **red** it does. It is not possible for the parent to be **green** at this stage, as **green** children have no consensual parents and atoms are never **green**.
 
-Once all reactions have had a chance to re-run, the atom's children are again traversed in the sweep phase. If any encountered nodes are **white**, its children are not traversed. If any encountered nodes are **red**, they become **white** and traversal continues with their children. If any encountered nodes are **black**, they are removed from their parents' child sets and turned **green**. It is not possible to encounter **green** nodes during the sweep phase for the same reason as during the mark phase.
+Once all reactions have had a chance to re-run, the **atom**'s children are again traversed in the sweep phase. If any encountered nodes are **red**, they become **white** and traversal continues with their children. If any encountered nodes are **black**, they are removed from their parents' child sets and turned **green**. Any **white** encountered nodes are ignored. It is not possible to encounter **green** nodes during the sweep phase for the same reason as during the mark phase.
+
+After the sweep phase, the atom becomes **white**.
 
 #### In Transaction
 
