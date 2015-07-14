@@ -87,6 +87,8 @@ The one remaining type is **Lenses** which enable [Om](https://github.com/omcljs
 
 ### Algorithms and Data Structures
 
+##### Colors
+
 All nodes in a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I think it'll catch on) have an associated color. There are 4 colors: **black**, **white**, **red**, and **green**.
 
 Broadly speaking these 4 colors mean the following:
@@ -94,9 +96,11 @@ Broadly speaking these 4 colors mean the following:
 * **Green:** This node needs evaluating.
 * **White:** This node's value is up to date.
 * **Red:** This node's value is up to date, but has changed during the current mark/sweep cycle.
-* **Black:** This node's value is out of date.
+* **Black:** This node's value is out of date, but doesn't necessarily need to be re-evaluated.
 
-But there are some extra subtleties involved in the full algorithm which is described below.
+But there are some extra subtleties so do read on.
+
+##### Structures At Rest
 
 An **atom** encapsulates the following data:
 
@@ -104,7 +108,7 @@ An **atom** encapsulates the following data:
 - Its current state.
 - A set of direct children.
 
-Atoms are always **white**, except during a mark and sweep phase when they are **red**. New atoms have empty child sets.
+New atoms are **white** and have empty child sets.
 
 A **derivation** encapsulates the following data:
 
@@ -120,20 +124,33 @@ A **reaction** encapsulates the following information:
 
 - Its color.
 - Its parent.
-- A reacting function.
+- Its activity status (active or inactive).
+- A reacting function. This is called for side-effects each time the parent's value changes.
 
-New reactions are **green** with their parent assigned.
+New reactions are **green** and inactive with their parent assigned.
 
-When a reaction is started, it places itself in its parent's child set and dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
+##### Query
 
-When a reaction is stopped, it removes itself from its parent's child set in order to sever this link.
+When an **atom** is dereferenced it simply returns its current state.
 
-New atoms are **white** with empty child sets. New derivations are **green** with empty parent sets. New reactions are **green** with a parent.
+When a **derivation** is dereferenced its color is taken into consideration:
 
-When an atom is dereferenced, it simply returns its state, regardless of color.
+- **White** or **red**: Its current state is returned.
+- **green**: The derivation's deriving function is evaluated.
 
-Derivations encapsulate an evaluation function which dereferences one or more atoms or other derivations. Whenever this function is called, these dereferences are intercepted so that the parent-child relationships can be established via population of the child sets in the dereferencees and parent set in the dereferencer (the derivation). If the value produced by this function is identical to the derivation's current state, it becomes white, otherwise its state is set to be the new value and it becomes red.
+  This is done in a context which allows dereferences of direct parents to be monitored. Parent-child relationships are then set up by insterting the derivation into the child sets of the captured parents. Likewise, the set of captured parents becomes the derivation's parent set.
 
-When a derivation is dereferenced its color is taken into consideration: when green, it calls its evaluation function and returns its state; when white or red, it returns its state,
+  If the derived value is equal to the derivation's current state, the derivation becomes **white** and it's current state is returned. Otherwise it becomes **red** while its current state becomes the newly-derived value. This value is then returned.
+
+- **black**: The child's parents are interrogated. If any of them are **red** the derivation must be re-evaluated as above. If any of the parents are **black** or **green** they are  dereferenced. If they then become **red**, the derivation must be re-evaluated as above. Otherwise all parents are **white** and therefore this derivation is set to **white** and it's current state is returned.
+
+##### In Motion
+
+When a **reaction** is started, it becomes active and places itself in its parent's child set. It then dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
+
+When a reaction is stopped, it becomes inactive and removes itself from its parent's child set in order to sever this link.
+
+
+
 
 ### API
