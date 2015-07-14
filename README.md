@@ -67,6 +67,8 @@ Other advantages which may not each apply to every project mentioned above inclu
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
 - It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), dealing gracefully with 'dead' derivation branches, etc.
 
+Drawbacks? Benchmark this shit.
+
 \* Well, the fact that a GC-esque mark-and-sweep algorithm is being used to propagate change in a FRP-ish value graph is novel, I'm pretty sure. I did a lot of digging.
 
 ## Model
@@ -170,6 +172,31 @@ After the sweep phase, the atom becomes **white**.
 
 #### In Transaction
 
-During transactions, if an **atom** is modified, it becomes **red** and its new value is stored separately from it's out-of-transaction state. The mark phase is undertaken as usual. The reaction and sweep phases are delayed until the transaction commits, when the atom's in-transaction value is propagated up to be its out-of-transaction value.
+During transactions, if an **atom** is modified, it becomes **red** and its new value is stored separately from it's out-of-transaction state. The mark phase is undertaken as usual. The reaction and sweep phases are delayed until the transaction commits, when the atom becomes white and its in-transaction value is propagated up to be its out-of-transaction value.
 
 ## API
+### Types
+#### `Atom`
+Construct using the [`atom(initialValue)`](#atom) top level function.
+##### Methods
+
+###### `.set(newValue)`
+Changes the atom's state to be newValue. Causes any dependent reactions to be re-run synchronously.
+
+Returns the atom.
+
+###### `.get()`
+Returns the current state of the atom.
+
+###### `.swap(fn, ...args)`
+Sets the current state of the atom to be `fn` applied to its (the atom's) current state and `args`.
+
+Returns the atom.
+
+Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
+
+###### `.lens(lensDescriptor)`
+Returns a [Lens](#Lens) based on lensDescriptor. See [Lens Descriptors]()
+
+### Top-level functions
+#### `atom`
