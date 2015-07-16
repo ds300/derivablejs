@@ -1,10 +1,10 @@
-# ratom.js
-Reactive values for Derived Data All The Way Down
+# Havelock
+Reactive values for Derived Data All The Way Down. Always consistent. Totally lazy. Zero leakage.
 
 ## {greeting}, {name}!
 
 ```javascript
-import {atom, derive, transact} from 'ratom'
+import {atom, derive, transact} from 'havelock'
 
 // static constants
 const greetings = {
