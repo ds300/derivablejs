@@ -273,32 +273,14 @@ Non-extendable interface specifying common operations between objects considered
   Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
 
 #### `Atom`
+*Implements [Derivable](#derivable) and [Mutable](#mutable)*
+
 Construct using the [`atom`](#atom-1) top level function.
-##### Methods
-
-
 
 #### `Derivation`
+*Implements [Derivable](#derivable)*
+
 Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
-
-##### Methods
-
-###### `.get()`
-Returns the current state of the derivation.
-
-###### `.derive(fn)`
-Returns a new derivation representing the state of this derivation applied to `fn`.
-
-###### `.reaction(fn [, lifecycle])`
-Returns a new reaction which calls `fn` with the value of this derivation every time it (this derivation) changes.
-
-For lifecycle format see [Lifecycles](#lifecycles).
-
-###### `.react(fn [, lifecycle])`
-Returns a new *running* reaction which calls `fn` with the value of this derivation every time it (this derivation) changes.
-Equivalent to `.reaction(fn).start().force()`
-
-For lifecycle format see [Lifecycles](#lifecycles).
 
 #### `Reaction`
 Construct using the `.reaction(fn [, lifecycle])` and `.react(fn [, lifecycle])` methods of the [`Atom`](#atom), [`Derivation`](#atom), and [`Lens`](#atom) classes.
@@ -319,29 +301,29 @@ let elem = $("<span class='error'></span>");
 
 ##### Methods
 
-- `Reaction::start()`
+- **`start()`**
 
   Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
 
   Returns this reaction.
 
-- `Reaction::stop()`
+- **`stop()`**
 
   Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
 
   Returns this reaction.
 
-- `Reaction::force()`
+- **`force()`**
 
   Forces the re-running of this reaction.
 
   Returns this reaction.
 
-- `Reaction::setInput(parent)`
+- **`setInput(parent)`**
 
   Returns this reaction.
 
-- `Reaction::setReactor(fn)`
+- **`setReactor(fn)`**
 
   Sets the side-effecting function associated with this reaction to be `fn`.
 
