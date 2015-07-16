@@ -1,56 +1,91 @@
-// colors for garbage collection / change detection
-const Ratom = {};
+const Havelock = {};
 
-export default Ratom;
+/********************************/
+/*** GENERAL HELPER FUNCTIONS ***/
+/********************************/
 
-const RED = Symbol("red"),
-      BLACK = Symbol("black"),
-      WHITE = Symbol("white"),
-      GREEN = Symbol("green");
 
-// helpers
 
-function eq(a, b) {
-  return a === b
-         || Object.is && Object.is(a, b)
-         || (a && a.equals && a.equals(b));
+
+
+
+/**************************/
+/*** EXECUTION CONTEXTS ***/
+/**************************/
+
+/*== Parents Capturing ==*/
+const parentsStack = [];
+
+function capturingParents(f) {
+  parentsStack.push(new ArraySet());
+  f();
+  return parentsStack.pop();
 }
 
-function extend(obj, ...others) {
-  for (let other of others) {
-    for (let prop of Object.keys(other)) {
-      obj[prop] = other[prop];
-    }
-  }
-  return obj;
+/*== Transactions ==*/
+
+/*** CORE NODE DATA STRUCTURES ***/
+
+// core types
+const ATOM = 0,
+      DERIVATION = 1,
+      LENS = 2,
+      REACTION = 3;
+
+Havelock.isAtom       = x => x._type === ATOM;
+Havelock.isDerivation = x => x._type === DERIVATION;
+Havelock.isLens       = x => x._type === LENS;
+
+// node modes
+const NEW = 0,
+      CHANGED = 1,
+      UNCHANGED = 2,
+      ORPHANED = 3,
+      INSTABLE = 4,
+      STABLE = 5,
+      FROZEN = 6,
+      ERROR = 7;
+
+const Atom = value => ({
+  _type: ATOM,
+  _uid: Symbol("my_uid"),
+  _children: new ArraySet(),
+  _mode: STABLE,
+  _state: value
+});
+
+const Derivation = fn => ({
+  _type: DERIVATION,
+  _uid: Symbol("my_uid"),
+  _children: new ArraySet(),
+  _mode: NEW,
+  _state: Symbol("null"),
+  _deriver: fn
+});
+
+const Lens = fn => ({
+  _type: LENS,
+  _uid: Symbol("my_uid"),
+  _children: new ArraySet(),
+  _mode: NEW,
+  _state: Symbol("null"),
+  _deriver: fn
+});
+
+function assignPrototype(object, proto) {
+  object.prototype = proto;
+  return object;
 }
 
-function symbolValues (obj) {
-  return Object.getOwnPropertySymbols(obj).map(s => obj[s]);
-}
 
-/*
-
-GC/change algorithm
-
-Root nodes start white, all derived nodes start green.
-When a root node is altered, it is turned red. Then the tree is traversed, with
-all nodes being marked black, and all leaf reactions placed in the reaction queue.
-The reactions are executed. When a leaf derived value is dereferenced, if it is green it is evaluated, marked white, and its state returned, otherwise we
-checks whether it is white (unchanged) or red (changed), and, if it is either simply returns its current state.
-Otherwise, it iterates over it's parent nodes, skipping those that are white and calling .get on those that are black.
-If any parent node is red or becomes red after having .get called, we immediately stop iterating over the parents and re-evaluate ourself.
-if it is changed, it marks itself as red, otherwise it marks itself as white.
-If not red parents are encountered, we set ourself to white and return our current state.
-
-*/
 
 
 class DerivableValue {
   constructor () {
     this._uid = Symbol("my uid");
-    this._children = {};
+    this._children = new ArraySet();
     this._validator = null;
+    this._mode = NEW;
   }
 
   withValidator (f) {
@@ -71,51 +106,12 @@ class DerivableValue {
     }
   }
 
-  _addChild (child) {
-    this._children[child._uid] = child;
-  }
-
-  _removeChild (child) {
-    delete this._children[child._uid];
-  }
-
-  _getChildren () {
-    return symbolValues(this._children);
-  }
-
-  _markChildren (reactionQueue) {
-    this._getChildren().forEach(child => child._mark(reactionQueue));
-  }
-
-  _mark (reactionQueue) {
-    // stop marking if we were already here
-    if (this._color !== BLACK) {
-      this._color = BLACK;
-      this._markChildren(reactionQueue);
-    }
-  }
-
-  _sweep () {
-    if (this._color !== WHITE) {
-      this._color = WHITE;
-      this._getChildren().forEach(child => {
-        if (child._color === BLACK) {
-          // white parents disowning black children? What have I done!
-          child._getParents().forEach(p => p._removeChild(child));
-          child._color = GREEN;
-        } else {
-          child._sweep();
-        }
-      });
-    }
-  }
-
   /**
    * Creates a derived value whose state will always be f applied to this
    * value
    */
   derive (f) {
-    return derive(this, f);
+    return Havelock.derive(this, f);
   }
 
   reaction (f) {
@@ -134,133 +130,53 @@ class DerivableValue {
 
   get () {
     if (parentsStack.length > 0) {
-      parentsStack[parentsStack.length-1][this._uid] = this;
+      parentsStack.push(parentsStack.pop().add(this));
     }
     return this._get(); // abstract protected method, in Java parlance
   }
 }
 
-const ROOT_CTX = {
-  childTxns: []
-};
-
-let CURRENT_TXN = ROOT_CTX;
-
-function inTxn () {
-  return CURRENT_TXN !== ROOT_CTX;
-}
-
-const RUNNING = Symbol("running"),
-      COMPLETED = Symbol("completed"),
-      ABORTED = Symbol("aborted");
-
-class Transaction {
-  constructor () {
-    this.parent = CURRENT_TXN;
-    CURRENT_TXN = this;
-    this.reactionQueue = [];
-    this.state = RUNNING;
-    this.inTxnValues = {};
-  }
-
-  assertState (state, failMsg) {
-    if (this.state !== state) {
-      throw new Error(failMsg);
+function mark(node, reactions) {
+  if (node instanceof Reaction) {
+    reactions.push(node);
+  } else if (node._mode !== INSTABLE) {
+    node._mode = INSTABLE;
+    for (let child of node._children) {
+      mark(child, reactions);
     }
-  }
-
-  commit () {
-    this.assertState(RUNNING, "Must be in running state to commit transaction");
-
-    CURRENT_TXN = this.parent;
-
-    if (inTxn()) {
-      // push in-txn vals up to current txn
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
-        atom.set(value);
-      }
-    } else {
-      // change root state and run reactions.
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
-        atom._state = value;
-      }
-
-      processReactionQueue(this.reactionQueue);
-
-      // then sweep for a clean finish
-      for (let {atom} of symbolValues(this.inTxnValues)) {
-        atom._color = WHITE;
-        atom._sweep();
-      }
-    }
-
-    this.state = COMPLETED;
-
-    delete this.reactionQueue;
-    delete this.inTxnValues;
-  }
-
-  abort () {
-    this.assertState(RUNNING, "Must be in running state to abort transaction");
-
-    CURRENT_TXN = this.parent;
-
-    if (!inTxn()) {
-      for (let {atom} of symbolValues(this.inTxnValues)) {
-        atom._color = WHITE;
-        atom._sweep();
-      }
-    }
-
-    delete this.inTxnValues;
-    delete this.reactionQueue;
-
-    this.state = ABORTED;
   }
 }
 
-class TransactionFailedException {}
-
-export function abortTransaction() {
-  throw new TransactionFailedException();
-}
-
-Ratom.abortTransaction = abortTransaction;
-
-/**
- * Runs f in a transaction. f should be synchronous
- */
-export function transact (f) {
-  let txn = new Transaction();
-  let abortion = false;
-  try {
-    f()
-  } catch (e) {
-    txn.abort();
-    abortion = true;
-    if (!(e instanceof TransactionFailedException)) {
-      throw e;
+function sweep(node) {
+  switch (node._mode) {
+  case CHANGED:
+  case UNCHANGED:
+    node._mode = STABLE;
+    for (let child of node._children) {
+      sweep(child);
     }
-  } finally {
-    !abortion && txn.commit();
+    break;
+  case INSTABLE:
+    node._mode = ORPHANED;
+    let stashedParentStates = [];
+    for (let parent of node._parents) {
+      parent._children = parent._children.remove(node);
+      stashedParentStates.push([parent, parent._state]);
+    }
+    node._parents = stashedParentStates;
+    break;
+  case STABLE:
+    break;
+  default:
+    throw new Error(`It should be impossible to sweep nodes with mode: ${node._mode}`);
   }
-};
-
-Ratom.transact = transact;
-
-let inReactCycle = false;
-
-function processReactionQueue (rq) {
-  inReactCycle = true;
-  rq.forEach(r => r._maybeReact());
-  inReactCycle = false;
 }
 
 class Atom extends DerivableValue {
-  constructor (value) {
+  constructor (value, equals) {
     super();
     this._state = value;
-    this._color = WHITE;
+    this._mode = STABLE;
   }
 
   _clone () {
@@ -273,8 +189,8 @@ class Atom extends DerivableValue {
                       + " an error. Use middleware for cascading changes.");
     }
     this._validate(value);
-    if (!eq(value, this._state)) {
-      this._color = RED;
+    if (!this._eq(value, this._state)) {
+      this._mode = CHANGED;
 
       if (inTxn()) {
         let record = CURRENT_TXN.inTxnValues[this._uid];
@@ -284,14 +200,14 @@ class Atom extends DerivableValue {
           CURRENT_TXN.inTxnValues[this._uid] = {value, atom: this};
         }
 
-        this._markChildren(CURRENT_TXN.reactionQueue);
+        mark(this, CURRENT_TXN.reactionQueue);
       } else {
         this._state = value;
 
         var reactionQueue = [];
-        this._markChildren(reactionQueue);
+        mark(this, reactionQueue);
         processReactionQueue(reactionQueue);
-        this._sweep();
+        sweep(this);
 
         this._color = WHITE;
       }
@@ -321,28 +237,28 @@ class Atom extends DerivableValue {
   }
 }
 
-var parentsStack = [];
 
-function capturingParents(child, f) {
-  var newParents = {};
-  parentsStack.push(newParents);
 
-  f();
 
-  if (newParents !== parentsStack.pop()) {
-    throw new Error("parents stack mismanagement");
-  }
+let inReactCycle = false;
 
-  return newParents;
+function processReactionQueue (rq) {
+  inReactCycle = true;
+  rq.forEach(r => r._maybeReact());
+  inReactCycle = false;
 }
 
+
+
+
 export class Derivation extends DerivableValue {
-  constructor (deriver) {
+  constructor (deriver, equals) {
     super();
     this._deriver = deriver;
     this._state = Symbol("null");
     this._color = GREEN;
-    this._parents = {};
+    this._parents = new ArraySet();
+    this._eq = equals;
   }
 
   _clone () {
@@ -357,7 +273,7 @@ export class Derivation extends DerivableValue {
     let newParents = capturingParents(this, () => {
       let newState = this._deriver();
       this._validate(newState);
-      this._color = eq(newState, this._state) ? WHITE : RED;
+      this._color = this._eq(newState, this._state) ? WHITE : RED;
       this._state = newState;
     });
 
@@ -441,11 +357,12 @@ export class Lens extends Derivation {
 // TODO: There is some code duplication between this and Derivation. Find
 // some way to share.
 export class Reaction {
-  constructor () {
+  constructor (reactor) {
     this._parent = null;
     this._enabled = true;
     this._color = GREEN;
     this._uid = Symbol("reaction_uid");
+    this.react = reactor;
   }
 
   setInput (parent) {
@@ -459,11 +376,6 @@ export class Reaction {
       this._enabled = false;
       this.onStop && this.onStop();
     }
-    return this;
-  }
-
-  setReactor (react) {
-    this.react = react;
     return this;
   }
 
