@@ -6,121 +6,70 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
- import { symbolValues } from './util'
-
-let CURRENT_TXN = null;
-
-export function inTransaction () {
-  return CURRENT_TXN !== null;
-}
-
-export function setInTransactionState (atom, value) {
-  CURRENT_TXN.inTxnValues[atom._id] = [atom, value];
-}
-
-export function getInTransactionState (atom) {
-  let inTxnValue = CURRENT_TXN[atom._id];
-  if (inTxnValue) {
-    return inTxnValue[1];
-  } else {
-    return atom.get();
-  }
-}
+import { symbolValues, extend } from './util'
 
 const RUNNING = Symbol("running"),
       COMPLETED = Symbol("completed"),
       ABORTED = Symbol("aborted");
 
-class Transaction {
+const $parent = Symbol("parent_txn");
+const $state = Symbol("txn_state");
+
+export class TransactionContext {
   constructor () {
-    this.parent = CURRENT_TXN;
-    CURRENT_TXN = this;
-    this.reactionQueue = [];
-    this.state = RUNNING;
-    this.inTxnValues = {};
+    this.currentTxn = null;
   }
-
-  assertState (state, failMsg) {
-    if (this.state !== state) {
-      throw new Error(failMsg);
+  inTransaction () {
+    return this.currentTxn != null;
+  }
+  currentTransaction () {
+    return this.currentTxn;
+  }
+  begin (txn) {
+    txn[$parent] = this.currentTxn;
+    txn[$state] = RUNNING;
+    this.currentTxn = txn;
+  }
+  _popTransaction (name, cb) {
+    let txn = this.currentTxn;
+    this.currentTxn = txn[$parent];
+    if (txn[$state] !== RUNNING) {
+      throw new Error(`Must be in state 'RUNNING' to ${name} transaction.`
+                     + ` Was in state ${txn[$state]}.`);
     }
+    cb(txn);
   }
-
   commit () {
-    this.assertState(RUNNING, "Must be in running state to commit transaction");
-
-    CURRENT_TXN = this.parent;
-
-    if (inTxn()) {
-      // push in-txn vals up to current txn
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
-        atom.set(value);
-      }
-    } else {
-      // change root state and run reactions.
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
-        atom._state = value;
-      }
-
-      processReactionQueue(this.reactionQueue);
-
-      // then sweep for a clean finish
-      for (let {atom} of symbolValues(this.inTxnValues)) {
-        atom._color = WHITE;
-        atom._sweep();
-      }
-    }
-
-    this.state = COMPLETED;
-
-    delete this.reactionQueue;
-    delete this.inTxnValues;
+    this._popTransaction("commit", txn => {
+      txn[$state] = COMPLETED;
+      txn.onCommit && txn.onCommit();
+    });
   }
-
   abort () {
-    this.assertState(RUNNING, "Must be in running state to abort transaction");
-
-    CURRENT_TXN = this.parent;
-
-    if (!inTxn()) {
-      for (let {atom} of symbolValues(this.inTxnValues)) {
-        atom._color = WHITE;
-        atom._sweep();
-      }
-    }
-
-    delete this.inTxnValues;
-    delete this.reactionQueue;
-
-    this.state = ABORTED;
+    this._popTransaction("abort", txn => {
+      txn[$state] = ABORTED;
+      txn.onAbort && txn.onAbort();
+    });
   }
 }
 
-class TransactionFailedException {}
+const TransactionAbortion = Symbol("abort that junk yo");
 
-export function abortTransaction() {
-  throw new TransactionFailedException();
+function abortTransaction() {
+  throw TransactionAbortion;
 }
-
-Ratom.abortTransaction = abortTransaction;
 
 /**
- * Runs f in a transaction. f should be synchronous
+ * Runs f in txn. f should be synchronous
  */
-export function transact (f) {
-  let txn = new Transaction();
-  let abortion = false;
+export function runTransaction (txn, f) {
   try {
-    f()
+    f(abortTransaction);
+    txn.commit();
   } catch (e) {
     txn.abort();
-    abortion = true;
-    if (!(e instanceof TransactionFailedException)) {
+    if (e !== TransactionAbortion) {
       throw e;
     }
-  } finally {
-    !abortion && txn.commit();
   }
 };
-
-Ratom.transact = transact;

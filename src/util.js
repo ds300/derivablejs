@@ -24,3 +24,8 @@ function equals (a, b) {
          || Object.is && Object.is(a, b)
          || (a && a.equals && a.equals(b));
 }
+
+function withPrototype (obj, proto) {
+  obj.prototype = proto;
+  return obj;
+}
