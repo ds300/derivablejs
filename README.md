@@ -12,7 +12,7 @@ const greetings = {
   de: "Hallo",
   es: "Hola",
   cn: "您好",
-  fr: "Bonjour"
+  fr: "Bonjour",
 };
 
 // applicaiton state
