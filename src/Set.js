@@ -44,7 +44,7 @@ class MapSet {
     }
     return this;
   }
-  [Symbol.iterator]: function* () {
+  *[Symbol.iterator] () {
     for (let k of this._map) {
       yield this._map[k];
     }
@@ -64,6 +64,7 @@ class ArraySet {
         return this;
       }
     }
+    return this;
   }
   remove (elem) {
     let idx = this._array.indexOf(elem);

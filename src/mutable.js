@@ -6,9 +6,9 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-export default function createMutablePrototype (havelock, _) {
+export function createMutablePrototype (havelock, _) {
   return {
-    swap (...args) {
+    swap (f, ...args) {
       return this.set(f.apply(null, [this.get()].concat(args)));
     },
     lens (lensDescriptor) {

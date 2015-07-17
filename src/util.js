@@ -6,7 +6,7 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-function extend(obj, ...others) {
+export function extend(obj, ...others) {
   for (let other of others) {
     for (let prop of Object.keys(other)) {
       obj[prop] = other[prop];
@@ -15,17 +15,17 @@ function extend(obj, ...others) {
   return obj;
 }
 
-function symbolValues (obj) {
+export function symbolValues (obj) {
   return Object.getOwnPropertySymbols(obj).map(s => obj[s]);
 }
 
-function equals (a, b) {
+export function equals (a, b) {
   return a === b
          || Object.is && Object.is(a, b)
          || (a && a.equals && a.equals(b));
 }
 
-function withPrototype (obj, proto) {
+export function withPrototype (obj, proto) {
   obj.prototype = proto;
   return obj;
 }

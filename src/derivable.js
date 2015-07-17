@@ -10,7 +10,6 @@ import { StandardReaction, anonymousReaction, Reaction} from './reaction'
 import { maybeCaptureParent } from './parents'
 
 export function createDerivablePrototype (havelock, { equals }) {
-  let dEquals = havelock.lift(equals);
   return {
     withValidator (f) {
       if (f == null || (typeof f === funtion)) {
@@ -60,7 +59,7 @@ export function createDerivablePrototype (havelock, { equals }) {
     },
 
     is (other) {
-      return dEquals(this, other);
+      return havelock.lift(equals)(this, other);
     },
 
     and (other) {
@@ -72,7 +71,7 @@ export function createDerivablePrototype (havelock, { equals }) {
     },
 
     then (thenClause, elseClause) {
-      return this.derive(x => havelock.unpack(x ? thenClause : elseClause);
+      return this.derive(x => havelock.unpack(x ? thenClause : elseClause));
     },
 
     not () {

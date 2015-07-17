@@ -91,6 +91,7 @@ export class Reaction {
 
 export class StandardReaction extends Reaction {
   constructor (f) {
+    super();
     this.react = f;
   }
 }

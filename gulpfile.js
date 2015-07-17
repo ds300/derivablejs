@@ -8,7 +8,7 @@ var babel = require("gulp-babel");
 var browserify = require("gulp-browserify");
 
 gulp.task("default", function () {
-  return gulp.src("ratom.js")
+  return gulp.src("src/*.js")
     .pipe(sourcemaps.init())
     .pipe(babel({blacklist: ["es6.tailCall"]}))
     .pipe(sourcemaps.write("."))
@@ -16,7 +16,7 @@ gulp.task("default", function () {
 });
 
 gulp.task("watch", function () {
-    return gulp.watch(["ratom.js", "test/*"], ["default", "test"]);
+    return gulp.watch(["src/*", "test/*"], ["default", "test"]);
 });
 
 gulp.task("test", function () {

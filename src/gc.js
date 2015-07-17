@@ -22,12 +22,12 @@ export const REACTION = Symbol("REACTION");
 
 
 export function mark(node, reactions) {
-  if (node._mode !== UNSTABLE) {
-    node._mode = UNSTABLE;
-    if (node._type === REACTION) {
-      reactions.push(node);
-    } else {
-      for (let child of node._children) {
+  if (node._type === REACTION) {
+    reactions.push(node);
+  } else {
+    for (let child of node._children) {
+      if (child._mode !== UNSTABLE) {
+        child._mode = UNSTABLE;
         mark(child, reactions);
       }
     }

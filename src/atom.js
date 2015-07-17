@@ -119,11 +119,10 @@ export function createAtomPrototype (havelock, {equals}) {
   };
 }
 
-export function makeAtom (value) {
-  return {
-    _uid: Symbol("my_uid"),
-    _children: new Set(),
-    _mode: STABLE,
-    _state: value
-  };
+export function constructAtom (atom, value) {
+  atom._uid = Symbol("my_uid");
+  atom._children = new Set();
+  atom._mode = STABLE;
+  atom._state = value;
+  return atom;
 }

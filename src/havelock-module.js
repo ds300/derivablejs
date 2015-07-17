@@ -7,7 +7,7 @@
  */
 
 import { ATOM, DERIVATION, LENS, REACTION } from './gc'
-import { createAtomPrototype, createAtom } from './atom'
+import { createAtomPrototype, constructAtom } from './atom'
 import { createDerivationPrototype, createDerivation } from './derivation'
 import { createLensPrototype, createLens } from './lens'
 import { createDerivablePrototype } from './derivable'
@@ -37,7 +37,7 @@ export default function havelock (config={}) {
   let Derivation = extend({}, Derivable,
                           createDerivationPrototype(Havelock, config));
 
-  let Lens       = extend({}, Mutable, Derivation
+  let Lens       = extend({}, Mutable, Derivation,
                           createLensPrototype(Havelock, config));
 
   Havelock.Reaction = Reaction;
@@ -45,7 +45,7 @@ export default function havelock (config={}) {
   /**
    * Constructs a new atom whose state is the given value
    */
-  Havelock.atom = val => withPrototype(createAtom(val), Atom);
+  Havelock.atom = val => constructAtom(Object.create(Atom), val);
 
   /**
    * Sets the e's state to be f applied to e's current state and args

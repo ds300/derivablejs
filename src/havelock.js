@@ -1,5 +1,7 @@
 import Havelock from './havelock-module'
 
+const havelock = Havelock();
+
 const {
   isAtom,
   isDerivation,
@@ -21,7 +23,7 @@ const {
   and,
   not,
   switchCase,
-} = Havelock();
+} = havelock;
 
 export {
   isAtom,
@@ -45,3 +47,5 @@ export {
   not,
   switchCase,
 };
+
+export default havelock;
