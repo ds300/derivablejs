@@ -85,9 +85,13 @@ transact(() => {
 ## Rationale
 
 ### Problem
-Monolithic MV[whatever] frameworks tend to encourage keeping application state in disparate little mutable chunks, tightly coupled to the [whatever] bits. Think Angular Scopes, Ember Models, Knockout View Models, etc. Such frameworks typically have no story for keeping these little mutable state chunks in sync with each other, or even with the ground-truth M which is often behind some callback-heavy API wall. This necessitates a certain degree of manual state synchronization, which is fine when your app is small and simple.
+When writing applications it is often convenient to keep our state in little mutable chunks. We rightfully try to organize these chunks such that they correspond to *distinct responsibilities*, and then we invent magic frameworkey gubbins to keep these state chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\* but many of us make the mistake of closing our eyes, crossing our fingers, and pushing forward under the happy delusion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it never really does, and we end up with tangled callback webs trying to keep the states of *interdependent* components consistent with one another.
 
-Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. Working on such a project, one might find oneself coming to the conclusion that orchestrating state consistency across dozens of mutable interdependent components in the face of asynchronous everything and the inevitable ad-hoc cross-cutting concerns which don't jibe with the rigid authoritarian architectures you once imagined to be boundlessly flexible is extremely—*painfully*—difficult. Difficult. Lemon difficult.
+Luckily this just isn't a problem if you're building a small and simple application that will stay small and simple. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
+
+Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with MVC, this iteration cost grows exponentially precisely because of the difficulty inherent in keeping state consistent with callback webs. We need an easier way. We need to make the cost of iteration graph linear or even asymptotic.
+
+\* *And I suppose that it is wonderful compared to the days when we knitted the DOM and our state together with pure jQuery. \*shudder\**
 
 ### Solution
 The solution to this problem seems to be something involving 'unidirectional data flow', as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a remarkable and compelling discourse on the particular brand of Flux-ishness Havelock aims to serve. So **go read the re-frame README**. For reals. Do it.
@@ -97,6 +101,8 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 > Keeping disparate pieces of mutable state consistent is hard. Keeping one piece of immutable state consistent is a matter of course. Let's do the latter.
 
 The goal of Havelock is to make it easy to build complex applications around global immutable state.
+
+
 
 ## Comparison with Previous Work
 
