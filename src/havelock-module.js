@@ -121,7 +121,7 @@ export default function havelock (config={}) {
   Havelock.lift = f => {
     return function () {
       let args = arguments;
-      return derive(function () {
+      return Havelock.derive(function () {
         return f.apply(this, Array.prototype.map.call(args, Havelock.unpack));
       });
     }
@@ -155,12 +155,14 @@ export default function havelock (config={}) {
   Havelock.ifThenElse = (a, b, c) => a.then(b, c);
 
   Havelock.or = (...args) => Havelock.derive(() => {
-    for (i = 0; i<args.length; i++) {
-      let x = Havelock.unpack(args[i]);
-      if (x) {
-        return x;
+    let val;
+    for (let arg of args) {
+      val = Havelock.unpack(arg);
+      if (val) {
+        break;
       }
     }
+    return val;
   });
 
   Havelock.and = (...args) => Havelock.derive(() => {
@@ -172,7 +174,7 @@ export default function havelock (config={}) {
       }
     }
     return val;
-  })
+  });
 
   Havelock.not = x => x.not();
 

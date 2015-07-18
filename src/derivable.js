@@ -11,33 +11,6 @@ import { maybeCaptureParent } from './parents'
 
 export function createDerivablePrototype (havelock, { equals }) {
   return {
-    withValidator (f) {
-      if (f == null || (typeof f === 'function')) {
-        let result = this._clone();
-        let existing = this._validator;
-        if (existing) {
-          result._validator = x => f(x) && existing(x)
-        } else {
-          result._validator = f;
-        }
-        return result;
-      } else {
-        throw new Error(".withValidator expects function or null");
-      }
-    },
-
-    validate () {
-      this._validate(this.get());
-    },
-
-    _validate (value) {
-      let validationResult = this._validator && this._validator(value);
-      if (this._validator && validationResult !== true) {
-        throw new Error(`Failed validation with value: '${value}'.`
-                        +` Validator returned '${validationResult}' `);
-      }
-    },
-
     /**
      * Creates a derived value whose state will always be f applied to this
      * value
@@ -98,6 +71,6 @@ export function createDerivablePrototype (havelock, { equals }) {
           return havelock.unpack(args[i]);
         }
       });
-    }
+    },
   };
 }

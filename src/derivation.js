@@ -20,7 +20,6 @@ export function createDerivationPrototype (havelock, { equals }) {
     _forceGet () {
       let newParents = capturingParents(() => {
         let newState = this._deriver();
-        this._validate(newState);
         this._mode = equals(newState, this._state) ? UNCHANGED : CHANGED;
         this._state = newState;
       });

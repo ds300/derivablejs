@@ -39,7 +39,6 @@ describe("the `is*` fns", () => {
 describe("the `struct` function", () => {
   it ("does nothing to a deriveable", () => {
     let a = atom(0);
-    console.log("jambouree");
     let b = _.struct(a);
 
     assert.strictEqual(b.get(), 0);
@@ -105,5 +104,31 @@ describe("the `struct` function", () => {
     };
 
     assert.deepEqual(expected2, grouped.get());
+  });
+});
+
+
+describe("boolean logic", () => {
+  it("is well understood", () => {
+    let a = atom(true),
+        b = atom(true),
+        aANDb = _.and(a, b),
+        aORb = _.or(a, b),
+        NOTa = _.not(a);
+
+    assert.strictEqual(aANDb.get(), true, "true & true = true");
+    assert.strictEqual(aORb.get(), true, "true | true = true");
+    assert.strictEqual(NOTa.get(), false, "!true = false")
+
+    b.set(false);
+
+    assert.strictEqual(aANDb.get(), false, "true & false = false");
+    assert.strictEqual(aORb.get(), true, "true | false = true");
+
+    a.set(false);
+
+    assert.strictEqual(aANDb.get(), false, "false & false = false");
+    assert.strictEqual(aORb.get(), false, "false | false = false");
+    assert.strictEqual(NOTa.get(), true, "!false = true");
   });
 });

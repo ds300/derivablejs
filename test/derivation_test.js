@@ -41,4 +41,85 @@ describe("a derivation", () => {
     assert.strictEqual(size.get(), 1, "size is in gbs when order is 2");
     assert.strictEqual(sizeString.get(), "1 gigabytes");
   });
+
+  it("implements the derivable interface", () => {
+    let name = atom("smithe");
+    let size6 = name.derive(x => x.length === 6);
+    let startsWithS = name.derive(x => x[0] === "s");
+    let endsWithE = name.derive(x => x[x.length-1] === "e");
+
+    assert.strictEqual(size6.get(), true, "has length 6");
+    assert.strictEqual(startsWithS.get(), true, "starts with s");
+    assert.strictEqual(endsWithE.get(), true, "ends wth e");
+
+    let isSmithe = name.is(atom("smithe"));
+
+    assert.strictEqual(isSmithe.get(), true, "is smithe");
+
+    let size6orE = size6.or(endsWithE);
+    let size6andE = size6.and(endsWithE);
+    let sOrE = startsWithS.or(endsWithE);
+    let sAndE = startsWithS.and(endsWithE);
+
+    assert.strictEqual(size6orE.get(), true);
+    assert.strictEqual(size6andE.get(), true);
+    assert.strictEqual(sOrE.get(), true);
+    assert.strictEqual(sAndE.get(), true);
+
+    name.set("smithy");
+
+    assert.strictEqual(size6.get(), true, "has length 6");
+    assert.strictEqual(startsWithS.get(), true, "starts with s");
+    assert.strictEqual(endsWithE.get(), false, "ends wth y");
+
+    assert.strictEqual(isSmithe.get(), false, "is not smithe");
+
+    assert.strictEqual(size6orE.get(), true);
+    assert.strictEqual(size6andE.get(), false);
+    assert.strictEqual(sOrE.get(), true);
+    assert.strictEqual(sAndE.get(), false);
+
+    assert.strictEqual(size6orE.not().get(), false);
+    assert.strictEqual(size6andE.not().get(), true);
+    assert.strictEqual(sOrE.not().get(), false);
+    assert.strictEqual(sAndE.not().get(), true);
+
+    assert.strictEqual(size6orE.not().not().get(), true);
+    assert.strictEqual(size6andE.not().not().get(), false);
+    assert.strictEqual(sOrE.not().not().get(), true);
+    assert.strictEqual(sAndE.not().not().get(), false);
+
+    it("with .then goodness", done => {
+      startsWithS.then(
+        done,
+        () => assert(false, "smithy what?")
+      ).get();
+    });
+
+    it("and the other way", done => {
+      endsWithE.then(
+        () => assert(false, "smithy doesn't end in e?!"),
+        done
+      ).get();
+    });
+
+    let firstLetter = name.derive(x => x[0]);
+
+    it("does switching too", done => {
+      firstLetter.switch(
+        "a", () => assert(false, "smithy doesn't start with a"),
+        "b", () => assert(false, "smithy doesn't start with b"),
+        "s", done
+      ).get();
+    });
+
+    it("allows a default value", done => {
+      firstLetter.switch(
+        "a", () => assert(false, "smithy doesn't start with a"),
+        "b", () => assert(false, "smithy doesn't start with b"),
+        "x", "blah",
+        done
+      ).get();
+    });
+  });
 });

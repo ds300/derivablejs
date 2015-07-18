@@ -22,7 +22,8 @@ export function symbolValues (obj) {
 export function equals (a, b) {
   return a === b
          || Object.is && Object.is(a, b)
-         || (a && a.equals && a.equals(b));
+         || (a && a.equals && a.equals(b))
+         || false;
 }
 
 export function withPrototype (obj, proto) {

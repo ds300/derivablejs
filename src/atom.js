@@ -81,6 +81,33 @@ export function createAtomPrototype (havelock, {equals}) {
       return havelock.atom(this._state);
     },
 
+    withValidator (f) {
+      if (f == null || (typeof f === 'function')) {
+        let result = this._clone();
+        let existing = this._validator;
+        if (existing) {
+          result._validator = x => f(x) && existing(x)
+        } else {
+          result._validator = f;
+        }
+        return result;
+      } else {
+        throw new Error(".withValidator expects function or null");
+      }
+    },
+
+    validate () {
+      this._validate(this.get());
+    },
+
+    _validate (value) {
+      let validationResult = this._validator && this._validator(value);
+      if (this._validator && validationResult !== true) {
+        throw new Error(`Failed validation with value: '${value}'.`
+                        +` Validator returned '${validationResult}' `);
+      }
+    },
+
     set (value) {
       if (inReactCycle) {
         throw new Error("Trying to set atom state during reaction phase. This "

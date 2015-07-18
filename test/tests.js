@@ -6,31 +6,8 @@ import assert from 'assert';
 
 
 
-//
-// describe("boolean logic", () => {
-//   it("is well understood", () => {
-//     let a = atom(true),
-//         b = atom(true),
-//         aANDb = _.and(a, b),
-//         aORb = _.or(a, b),
-//         NOTa = _.not(a);
-//
-//     assert.strictEqual(aANDb.get(), true, "true & true = true");
-//     assert.strictEqual(aORb.get(), true, "true | true = true");
-//     assert.strictEqual(NOTa.get(), false, "!true = false")
-//
-//     b.set(false);
-//
-//     assert.strictEqual(aANDb.get(), false, "true & false = false");
-//     assert.strictEqual(aORb.get(), true, "true | false = true");
-//
-//     a.set(false);
-//
-//     assert.strictEqual(aANDb.get(), false, "false & false = false");
-//     assert.strictEqual(aORb.get(), false, "false | false = false");
-//     assert.strictEqual(NOTa.get(), true, "!false = true");
-//   });
-// });
+
+
 //
 // describe("control flow", () => {
 //   it ("allows different paths to be taken depending on conditions", () => {
@@ -161,7 +138,7 @@ import assert from 'assert';
 //     assert.equal(15, c.get());
 //   });
 // });
-//
+
 //
 // describe("lenses", () => {
 //   let cursor = (lensable, ...path) => lensable.lens({
