@@ -16,7 +16,7 @@ let inReactCycle = false;
 
 function processReactionQueue (rq) {
   inReactCycle = true;
-  rq.forEach(r => r._maybeReact());
+  rq.forEach(r => r.maybeReact());
   inReactCycle = false;
 }
 
@@ -81,8 +81,6 @@ export function createAtomPrototype (havelock, {equals}) {
       return havelock.atom(this._state);
     },
 
-    _type: ATOM,
-
     set (value) {
       if (inReactCycle) {
         throw new Error("Trying to set atom state during reaction phase. This "
@@ -120,6 +118,7 @@ export function constructAtom (atom, value) {
   atom._children = new Set();
   atom._mode = STABLE;
   atom._state = value;
+  atom._type = ATOM;
   return atom;
 }
 

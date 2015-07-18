@@ -5,71 +5,7 @@ import assert from 'assert';
 
 
 
-//
-// describe("the `struct` function", () => {
-//   it("turns an array of derivables into a derivable", () => {
-//     let fib1 = atom(0),
-//         fib2 = atom(1),
-//         fib = derive(() => fib1.get() + fib2.get());
-//
-//     let grouped = _.struct([fib1, fib2, fib]);
-//     assert.deepEqual([0,1,1], grouped.get());
-//
-//     fib1.set(1);
-//     assert.deepEqual([1,1,2], grouped.get());
-//   });
-//
-//   it("turns a map of derivables into a derivable", () => {
-//     let name = atom("wilbur"),
-//         telephone = atom("0987654321");
-//
-//     let grouped = _.struct({name, telephone});
-//
-//     assert.deepEqual({name: "wilbur", telephone: "0987654321"}, grouped.get());
-//
-//     name.set("Jemimah");
-//     telephone.set("n/a");
-//
-//     assert.deepEqual({name: "Jemimah", telephone: "n/a"}, grouped.get());
-//   });
-//
-//   it("actually turns any arbitrarily nested structure of"
-//      +" maybe-derivables into a derivable", () => {
-//     let name = atom("wilbur"),
-//         telephone = atom("0987654321"),
-//         friend1Name = atom("Sylvester"),
-//         friend1Telephone = atom("blub");
-//
-//     let grouped = _.struct({
-//       name, telephone,
-//       blood_type: "AB Negative",
-//       age: 75,
-//       friends: [{name: friend1Name, telephone: friend1Telephone}, "others"]
-//     });
-//
-//     let expected1 = {
-//       name: "wilbur",
-//       telephone: "0987654321",
-//       blood_type: "AB Negative",
-//       age: 75,
-//       friends: [{name: "Sylvester", telephone: "blub"}, "others"]
-//     };
-//
-//     assert.deepEqual(expected1, grouped.get());
-//
-//     friend1Name.set("Brittany");
-//
-//     let expected2 = {
-//       name: "wilbur",
-//       telephone: "0987654321",
-//       blood_type: "AB Negative",
-//       age: 75,
-//       friends: [{name: "Brittany", telephone: "blub"}, "others"]
-//     };
-//
-//     assert.deepEqual(expected2, grouped.get());
-//   });
-// });
+
 //
 // describe("boolean logic", () => {
 //   it("is well understood", () => {

@@ -135,16 +135,18 @@ export default function havelock (config={}) {
   Havelock.get = d => d.get();
 
   function deepUnpack (thing) {
-    if (thing instanceof Array) {
+    if (Havelock.isDerivable(thing)) {
+      return thing.get();
+    } else if (thing instanceof Array) {
       return thing.map(deepUnpack);
-    } else if (thing.constructor === Object || thing.constructor === void 0) {
+    } else if (thing.constructor === Object) {
       let result = {};
       for (let prop of Object.keys(thing)) {
         result[prop] = deepUnpack(thing[prop]);
       }
       return result;
     } else {
-      return Havelock.unpack(thing);
+      return thing;
     }
   }
 

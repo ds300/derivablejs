@@ -13,6 +13,7 @@ export const UNCHANGED = 2;
 export const ORPHANED = 3;
 export const UNSTABLE = 4;
 export const STABLE = 5;
+export const DISOWNED = 6;
 
 // core types
 export const ATOM = Symbol("ATOM");
@@ -44,21 +45,22 @@ export function sweep(node) {
     node._mode = STABLE;
     break;
   case UNSTABLE:
-    node._mode = ORPHANED;
     let stashedParentStates = [];
     for (let parent of node._parents) {
       if (parent._mode === CHANGED) {
-        stashedParentStates = null;
-        break;
+        node._mode = ORPHANED;
       }
       parent._children.remove(node);
       stashedParentStates.push([parent, parent._state]);
     }
-    node._parents = stashedParentStates;
+    if (node._mode !== ORPHANED) {
+      node._mode = DISOWNED;
+      node._parents = stashedParentStates;
+    }
     break;
   case STABLE:
     break;
   default:
-    throw new Error(`It should be impossible to sweep nodes with mode: ${node._mode}`);
+    throw new Error(`It should be impossible tosweep nodes with mode: ${node._mode}`);
   }
 }

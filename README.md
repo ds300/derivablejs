@@ -94,7 +94,7 @@ Alas, many small and simple apps eventually become large and complex apps. Likew
 \* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
 
 ### Solution?
-It appears to be 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it.
+It appears to be 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
@@ -130,7 +130,7 @@ The key advantage Havelock has over all the above is that it uses a novel\* appr
 
 Other advantages which may not each apply to every project mentioned above include:
 
-- It is a standalone library (jumping on the 'unix philosophy' bandwagon), not tied to a UI framework.
+- It is a standalone library that does one thing well (jumping on the 'unix philosophy' bandwagon).
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
 - It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), dealing gracefully with 'dead' derivation branches, etc.
 

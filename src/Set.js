@@ -78,7 +78,7 @@ class ArraySet {
     return this;
   }
   [Symbol.iterator] () {
-    return this._array[Symbol.iterator]();
+    return this._array.slice(0)[Symbol.iterator]();
   }
 }
 

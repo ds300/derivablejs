@@ -22,10 +22,10 @@ describe("a derivation", () => {
   });
 
   it("can derive from more than one atom", () => {
-    const order = atom(0);
-    const orderName = order.derive(order => {
+    const order = label(atom(0), "O");
+    const orderName = label(order.derive(order => {
       return (["bytes", "kilobytes", "megabytes", "gigabytes"])[order];
-    });
+    }), "ON");
     const size = label(derive(bytes, order, orderUp), "!size!");
     const sizeString = derive`${size} ${orderName}`;
 

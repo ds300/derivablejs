@@ -1,4 +1,5 @@
-import _, {atom, derive, transact} from '../src/havelock';
+import imut from 'immutable';
+import _, {atom, derive, transact, Reaction} from '../src/havelock';
 import assert from 'assert';
 
 describe("a reaction", () => {
@@ -7,7 +8,8 @@ describe("a reaction", () => {
   let history = imut.List();
   let action = null;
   let reaction = counter.react(function (n) {
-    reaction && assert.strictEqual(this, reaction, "`this` is bound to the reaction");
+    reaction && assert.strictEqual(this, reaction,
+                                   "`this` is bound to the reaction");
     history = history.push(n);
     action && action();
   });
@@ -69,4 +71,85 @@ describe("a reaction", () => {
     // now transaction commits and 8 gets added
     checkHistory(imut.List([0, 1, 2, 3, 6, 8]), "eight");
   });
+
+  it("can be exteded via the Reaction class", () => {
+    class NTimesReaction extends Reaction {
+      constructor (n, f) {
+        super();
+        this.n = n;
+        this.f = f;
+        this.running = false;
+      }
+      reset (n) {
+        this.n = n;
+        this.start();
+      }
+      onStart() {
+        this.running = true;
+      }
+      onStop () {
+        this.running = false;
+      }
+      react (v) {
+        this.f(v)
+        this.n--;
+        if (this.n === 0) {
+          this.stop();
+        }
+      }
+    }
+
+    const thing = atom("one");
+    let things = imut.List();
+    const reaction = new NTimesReaction(5, x => things = things.push(x));
+
+    assert.strictEqual(false, reaction.running, "reaction should be stopped");
+    thing.reaction(reaction);
+    assert.strictEqual(false, reaction.running, "reaction should be stopped 2");
+    reaction.start();
+    assert.strictEqual(true, reaction.running, "reaction should be started");
+    assert(things.equals(imut.List()), "things is empty");
+
+    reaction.force();
+    assert(things.equals(imut.List(["one"])), "one");
+    thing.set("two");
+    assert(things.equals(imut.List(["one", "two"])), "two");
+    thing.set("three");
+    assert(things.equals(imut.List(["one", "two", "three"])), "three");
+    thing.set("four");
+    assert(things.equals(imut.List(["one", "two", "three", "four"])), "four");
+    thing.set("five");
+    assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
+          "five");
+    assert.strictEqual(reaction.running, false, "reaction should have stopped");
+    thing.set("six");
+    assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
+          "not six");
+
+    reaction.reset(1);
+
+    assert.strictEqual(reaction.running, true,
+                       "reaction should have restarted");
+
+    reaction.force();
+
+    assert(things.equals(imut.List(["one", "two", "three",
+                                    "four", "five", "six"])),
+          "yes six");
+
+    assert.strictEqual(reaction.running, false, "reaction should have stopped");
+  });
+
+  it(`can't be initialized twice`, () => {
+
+    let a = atom(0);
+    let reaction = a.reaction(n => console.log(n));
+    assert.throws(() => {
+      atom(0).react(reaction);
+    });
+    reaction = a.reaction(n => console.log(n));
+    assert.throws(() => {
+      a.react(reaction);
+    });
+  })
 });

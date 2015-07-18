@@ -5,7 +5,7 @@
  *  This source code is licensed under the BSD-style license found in the
  *  LICENSE file in the root directory of this source tree.
  */
-import { NEW, CHANGED, UNCHANGED, ORPHANED, UNSTABLE,
+import { NEW, CHANGED, UNCHANGED, ORPHANED, UNSTABLE, DISOWNED,
          STABLE, REACTION} from './gc'
 
 import { extend } from './util'
@@ -17,8 +17,8 @@ class ReactionBase {
     this._mode = STABLE;
     this._uid = Symbol("my_uid");
     this.active = false;
+    this._type = REACTION;
   }
-  _type: REACTION
 
   stop () {
    this.parent._children.remove(this);
@@ -37,6 +37,7 @@ class ReactionBase {
     if (this._mode === UNSTABLE) {
       if (this.parent._mode === UNSTABLE
           || this.parent._mode === ORPHANED
+          || this.parent._mode === DISOWNED
           || this.parent._mode === NEW) {
         this.parent._get();
       }
@@ -66,7 +67,13 @@ class ReactionBase {
 }
 
 export class Reaction {
+  constructor () {
+    this._type = REACTION;
+  }
   _createBase (parent) {
+    if (this._base) {
+      throw new Error("This reaction has already been initialized");
+    }
     this._base = new ReactionBase(parent, this);
     return this;
   }

@@ -12,7 +12,7 @@ export function createMutablePrototype (havelock, _) {
       return this.set(f.apply(null, [this.get()].concat(args)));
     },
     lens (lensDescriptor) {
-      havelock.lens(this, lensDescriptor);
+      return havelock.lens(this, lensDescriptor);
     }
   }
 };

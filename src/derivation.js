@@ -7,13 +7,12 @@
  */
 
 import Set from './set'
-import { NEW, CHANGED, UNCHANGED, ORPHANED, UNSTABLE, STABLE, DERIVATION } from './gc'
+import { NEW, CHANGED, UNCHANGED, ORPHANED, DISOWNED,
+        UNSTABLE, STABLE, DERIVATION } from './gc'
 import { capturingParents } from './parents'
 
 export function createDerivationPrototype (havelock, { equals }) {
   return {
-    _type: DERIVATION,
-
     _clone () {
       return havelock.derive(this._deriver);
     },
@@ -44,11 +43,14 @@ export function createDerivationPrototype (havelock, { equals }) {
     _get () {
       outer: switch (this._mode) {
       case NEW:
+      case ORPHANED:
         this._forceGet();
         break;
       case UNSTABLE:
         for (let parent of this._parents) {
-          if (parent._mode === UNSTABLE || parent._mode === ORPHANED) {
+          if (parent._mode === UNSTABLE
+              || parent._mode === ORPHANED
+              || parent._mode === DISOWNED) {
             parent._get();
           }
           switch (parent._mode) {
@@ -58,30 +60,25 @@ export function createDerivationPrototype (havelock, { equals }) {
             break;
           case CHANGED:
             this._forceGet();
-            break;
+            break outer;
           default:
             throw new Error(`invalid parent mode: ${parent._mode}`);
           }
         }
+        this._mode = UNCHANGED;
         break;
-      case ORPHANED:
-        if (this._parents === null) {
-          this._parents = [];
-          this._forceGet();
-        } else {
-          let parents = new Set();
-          for (let [parent, state] of this._parents) {
-            if (!equals(parent._get(), state)) {
-              this._forceGet();
-              break outer;
-            } else {
-              parents.add(parent);
-            }
+      case DISOWNED:
+        let parents = new Set();
+        for (let [parent, state] of this._parents) {
+          if (!equals(parent._get(), state)) {
+            this._forceGet();
+            break outer;
+          } else {
+            parents.add(parent);
           }
-          this._parents = parents;
-          this._mode = UNCHANGED;
         }
-
+        this._parents = parents;
+        this._mode = UNCHANGED;
         break;
       default:
         // noop
@@ -98,6 +95,7 @@ export function createDerivation(obj, deriver) {
     obj._parents = new Set();
     obj._deriver = deriver;
     obj._mode = NEW;
+    obj._type = DERIVATION;
     obj._state = Symbol("null");
     return obj;
 }

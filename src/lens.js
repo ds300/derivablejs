@@ -11,8 +11,6 @@ import { LENS, NEW } from './gc'
 
 export function createLensPrototype(havelock, _) {
   return {
-    _type: LENS,
-
     _clone () {
       return havelock.lens(this._parent, {get: this._getter, set: this._setter});
     },
@@ -28,6 +26,7 @@ export function createLens(derivation, parent, descriptor) {
   derivation._getter = descriptor.get;
   derivation._setter = descriptor.set;
   derivation._parent = parent;
+  derivation._type = LENS;
 
   return derivation;
 }
