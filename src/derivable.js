@@ -12,13 +12,22 @@ import { maybeCaptureParent } from './parents'
 export function createDerivablePrototype (havelock, { equals }) {
   return {
     withValidator (f) {
-      if (f == null || (typeof f === funtion)) {
+      if (f == null || (typeof f === 'function')) {
         let result = this._clone();
-        result._validator = f;
+        let existing = this._validator;
+        if (existing) {
+          result._validator = x => f(x) && existing(x)
+        } else {
+          result._validator = f;
+        }
         return result;
       } else {
         throw new Error(".withValidator expects function or null");
       }
+    },
+
+    validate () {
+      this._validate(this.get());
     },
 
     _validate (value) {

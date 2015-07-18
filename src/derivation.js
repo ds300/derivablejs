@@ -19,7 +19,7 @@ export function createDerivationPrototype (havelock, { equals }) {
     },
 
     _forceGet () {
-      let newParents = capturingParents(this, () => {
+      let newParents = capturingParents(() => {
         let newState = this._deriver();
         this._validate(newState);
         this._mode = equals(newState, this._state) ? UNCHANGED : CHANGED;
@@ -30,7 +30,7 @@ export function createDerivationPrototype (havelock, { equals }) {
       for (let possiblyFormerParent of this._parents) {
         if (!newParents[possiblyFormerParent._uid]) {
           // definitely former parent
-          possiblyFormerParent._removeChild(this);
+          possiblyFormerParent._children.remove(this);
         }
       }
 
@@ -65,17 +65,23 @@ export function createDerivationPrototype (havelock, { equals }) {
         }
         break;
       case ORPHANED:
-        let parents = new Set();
-        for (let [parent, state] of this._parents) {
-          if (!equals(parent._state, state)) {
-            this._forceGet();
-            break outer;
-          } else {
-            parents.add(parent);
+        if (this._parents === null) {
+          this._parents = [];
+          this._forceGet();
+        } else {
+          let parents = new Set();
+          for (let [parent, state] of this._parents) {
+            if (!equals(parent._get(), state)) {
+              this._forceGet();
+              break outer;
+            } else {
+              parents.add(parent);
+            }
           }
+          this._parents = parents;
+          this._mode = UNCHANGED;
         }
-        this._parents = parents;
-        this._mode = UNCHANGED;
+
         break;
       default:
         // noop
@@ -86,13 +92,12 @@ export function createDerivationPrototype (havelock, { equals }) {
   }
 }
 
-export function createDerivation(deriver) {
-  return {
-    _uid: Symbol("my_uid"),
-    _children: new Set(),
-    _parents: new Set(),
-    _deriver: deriver,
-    _mode: NEW,
-    _state: Symbol("null")
-  };
+export function createDerivation(obj, deriver) {
+    obj._uid = Symbol("my_uid");
+    obj._children = new Set();
+    obj._parents = new Set();
+    obj._deriver = deriver;
+    obj._mode = NEW;
+    obj._state = Symbol("null");
+    return obj;
 }

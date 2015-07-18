@@ -61,7 +61,6 @@ class AtomicTransactionState {
 
       // then sweep for a clean finish
       for (let [atom, _] of symbolValues(this.inTxnValues)) {
-        atom._mode = STABLE;
         sweep(atom)
       }
     }
@@ -70,7 +69,6 @@ class AtomicTransactionState {
   onAbort () {
     if (!TXN_CTX.inTransaction()) {
       for (let [atom, _] of symbolValues(this.inTxnValues)) {
-        atom._mode = STABLE;
         sweep(atom);
       }
     }
@@ -87,8 +85,8 @@ export function createAtomPrototype (havelock, {equals}) {
 
     set (value) {
       if (inReactCycle) {
-        throw new Error("Trying to set atom state during reaction phase. This is"
-                        + " an error. Use middleware for cascading changes.");
+        throw new Error("Trying to set atom state during reaction phase. This "
+                        + "is an error. Use middleware for cascading changes.");
       }
       this._validate(value);
       if (!equals(value, this._state)) {
@@ -103,8 +101,6 @@ export function createAtomPrototype (havelock, {equals}) {
           mark(this, reactionQueue);
           processReactionQueue(reactionQueue);
           sweep(this);
-
-          this._mode = STABLE;
         }
       }
       return value;

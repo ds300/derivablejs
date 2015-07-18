@@ -20,12 +20,15 @@ const defaultConfig = { equals };
 export default function havelock (config={}) {
   config = extend({}, defaultConfig, config);
 
-  const Havelock = {transact, Reaction};
+  const Havelock = {
+    transact,
+    Reaction,
+    isAtom:       x => x && x._type === ATOM,
+    isDerivation: x => x && (x._type === DERIVATION || x._type === LENS),
+    isLens:       x => x && x._type === LENS,
+    isReaction:   x => x && x._type === REACTION,
+  };
 
-  Havelock.isAtom       = x => x && x._type === ATOM;
-  Havelock.isDerivation = x => x && (x._type === DERIVATION || x._type === LENS);
-  Havelock.isLens       = x => x && x._type === LENS;
-  Havelock.isReaction   = x => x && x._type === REACTION;
   Havelock.isDerivable  = x => Havelock.isDerivation(x) || Havelock.isAtom(x);
 
   let Derivable  = createDerivablePrototype(Havelock, config);
@@ -53,7 +56,7 @@ export default function havelock (config={}) {
   /**
    * Creates a new derivation. Can also be used as a template string tag.
    */
-  Havelock.derive = (a, b, c, d, e) => {
+  Havelock.derive = function (a, b, c, d, e) {
     if (a instanceof Array) {
       return deriveString.apply(null, arguments);
     }
@@ -62,7 +65,7 @@ export default function havelock (config={}) {
       case 0:
         throw new Error("Wrong arity for derive. Expecting 1+ args");
       case 1:
-        return withPrototype(createDerivation(a), Derivation);
+        return createDerivation(Object.create(Derivation), a);
       case 2:
         return Havelock.derive(() => b(a.get()));
       case 3:
@@ -79,7 +82,7 @@ export default function havelock (config={}) {
   };
 
   function deriveString (parts, ...args) {
-    return derive(() => {
+    return Havelock.derive(() => {
       let s = "";
       for (let i=0; i<parts.length; i++) {
         s += parts[i];

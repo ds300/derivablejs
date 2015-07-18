@@ -5,8 +5,6 @@ import assert from 'assert';
 describe("the humble atom", () => {
   const n = atom(0);
 
-  console.log("nnn", n._children[Symbol.iterator]);
-
   it("can be dereferenced via .get to obtain its current state", () => {
     assert.strictEqual(n.get(), 0);
   });
@@ -52,5 +50,28 @@ describe("the humble atom", () => {
       assert.strictEqual(a.get(), "c");
     });
     assert.strictEqual(a.get(), "c");
+  });
+
+  it(`can include a validation function`, () => {
+    const a = atom("x").withValidator(thing => thing.length < 5);
+    assert.throws(() => {
+      a.set("abcde");
+    });
+    a.set("blah");
+    a.validate();
+    assert.strictEqual(a.get(), "blah");
+
+    const b = a.withValidator(thing => thing instanceof Array);
+    assert.throws(() => {
+      b.validate();
+    });
+    assert.throws(() => {
+      b.set("a");
+    });
+    b.set(['b', 'l', 'a', 'h']);
+    assert.throws(() => {
+      b.set([0,1,2,3,4]);
+    });
+
   });
 });

@@ -38,16 +38,20 @@ export function sweep(node) {
   switch (node._mode) {
   case CHANGED:
   case UNCHANGED:
-    node._mode = STABLE;
     for (let child of node._children) {
       sweep(child);
     }
+    node._mode = STABLE;
     break;
   case UNSTABLE:
     node._mode = ORPHANED;
     let stashedParentStates = [];
     for (let parent of node._parents) {
-      parent._children = parent._children.remove(node);
+      if (parent._mode === CHANGED) {
+        stashedParentStates = null;
+        break;
+      }
+      parent._children.remove(node);
       stashedParentStates.push([parent, parent._state]);
     }
     node._parents = stashedParentStates;
