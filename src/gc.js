@@ -27,8 +27,8 @@ export function mark(node, reactions) {
     reactions.push(node);
   } else {
     for (let child of node._children) {
-      if (child._mode !== UNSTABLE) {
-        child._mode = UNSTABLE;
+      if (child._state !== UNSTABLE) {
+        child._state = UNSTABLE;
         mark(child, reactions);
       }
     }
@@ -36,31 +36,31 @@ export function mark(node, reactions) {
 }
 
 export function sweep(node) {
-  switch (node._mode) {
+  switch (node._state) {
   case CHANGED:
   case UNCHANGED:
     for (let child of node._children) {
       sweep(child);
     }
-    node._mode = STABLE;
+    node._state = STABLE;
     break;
   case UNSTABLE:
     let stashedParentStates = [];
     for (let parent of node._parents) {
-      if (parent._mode === CHANGED) {
-        node._mode = ORPHANED;
+      if (parent._state === CHANGED) {
+        node._state = ORPHANED;
       }
       parent._children.remove(node);
-      stashedParentStates.push([parent, parent._state]);
+      stashedParentStates.push([parent, parent._value]);
     }
-    if (node._mode !== ORPHANED) {
-      node._mode = DISOWNED;
+    if (node._state !== ORPHANED) {
+      node._state = DISOWNED;
       node._parents = stashedParentStates;
     }
     break;
   case STABLE:
     break;
   default:
-    throw new Error(`It should be impossible tosweep nodes with mode: ${node._mode}`);
+    throw new Error(`It should be impossible tosweep nodes with mode: ${node._state}`);
   }
 }

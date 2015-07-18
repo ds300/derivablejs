@@ -20,8 +20,8 @@ export function createDerivationPrototype (havelock, { equals }) {
     _forceGet () {
       let newParents = capturingParents(() => {
         let newState = this._deriver();
-        this._mode = equals(newState, this._state) ? UNCHANGED : CHANGED;
-        this._state = newState;
+        this._state = equals(newState, this._value) ? UNCHANGED : CHANGED;
+        this._value = newState;
       });
 
       // organise parents
@@ -40,19 +40,19 @@ export function createDerivationPrototype (havelock, { equals }) {
     },
 
     _get () {
-      outer: switch (this._mode) {
+      outer: switch (this._state) {
       case NEW:
       case ORPHANED:
         this._forceGet();
         break;
       case UNSTABLE:
         for (let parent of this._parents) {
-          if (parent._mode === UNSTABLE
-              || parent._mode === ORPHANED
-              || parent._mode === DISOWNED) {
+          if (parent._state === UNSTABLE
+              || parent._state === ORPHANED
+              || parent._state === DISOWNED) {
             parent._get();
           }
-          switch (parent._mode) {
+          switch (parent._state) {
           case STABLE:
           case UNCHANGED:
             // noop
@@ -61,10 +61,10 @@ export function createDerivationPrototype (havelock, { equals }) {
             this._forceGet();
             break outer;
           default:
-            throw new Error(`invalid parent mode: ${parent._mode}`);
+            throw new Error(`invalid parent mode: ${parent._state}`);
           }
         }
-        this._mode = UNCHANGED;
+        this._state = UNCHANGED;
         break;
       case DISOWNED:
         let parents = new Set();
@@ -77,13 +77,13 @@ export function createDerivationPrototype (havelock, { equals }) {
           }
         }
         this._parents = parents;
-        this._mode = UNCHANGED;
+        this._state = UNCHANGED;
         break;
       default:
         // noop
       }
 
-      return this._state;
+      return this._value;
     }
   }
 }
@@ -93,8 +93,8 @@ export function createDerivation(obj, deriver) {
     obj._children = new Set();
     obj._parents = new Set();
     obj._deriver = deriver;
-    obj._mode = NEW;
+    obj._state = NEW;
     obj._type = DERIVATION;
-    obj._state = Symbol("null");
+    obj._value = Symbol("null");
     return obj;
 }

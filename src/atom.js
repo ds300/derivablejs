@@ -35,7 +35,7 @@ class AtomicTransactionState {
     if (inTxnValue) {
       return inTxnValue[1];
     } else {
-      return atom._state;
+      return atom._value;
     }
   }
 
@@ -53,7 +53,7 @@ class AtomicTransactionState {
     } else {
       // change root state and run reactions.
       for (let [atom, value] of symbolValues(this.inTxnValues)) {
-        atom._state = value;
+        atom._value = value;
         mark(atom, NOOP_ARRAY);
       }
 
@@ -78,7 +78,7 @@ class AtomicTransactionState {
 export function createAtomPrototype (havelock, {equals}) {
   return {
     _clone () {
-      return havelock.atom(this._state);
+      return havelock.atom(this._value);
     },
 
     withValidator (f) {
@@ -114,13 +114,13 @@ export function createAtomPrototype (havelock, {equals}) {
                         + "is an error. Use middleware for cascading changes.");
       }
       this._validate(value);
-      if (!equals(value, this._state)) {
-        this._mode = CHANGED;
+      if (!equals(value, this._value)) {
+        this._state = CHANGED;
 
         if (TXN_CTX.inTransaction()) {
           TXN_CTX.currentTransaction().setState(this, value);
         } else {
-          this._state = value;
+          this._value = value;
 
           let reactionQueue = [];
           mark(this, reactionQueue);
@@ -135,7 +135,7 @@ export function createAtomPrototype (havelock, {equals}) {
       if (TXN_CTX.inTransaction()) {
         return TXN_CTX.currentTransaction().getState(this);
       }
-      return this._state;
+      return this._value;
     }
   };
 }
@@ -143,8 +143,8 @@ export function createAtomPrototype (havelock, {equals}) {
 export function constructAtom (atom, value) {
   atom._uid = Symbol("my_uid");
   atom._children = new Set();
-  atom._mode = STABLE;
-  atom._state = value;
+  atom._state = STABLE;
+  atom._value = value;
   atom._type = ATOM;
   return atom;
 }

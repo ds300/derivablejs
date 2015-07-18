@@ -14,7 +14,7 @@ class ReactionBase {
   constructor (parent, control) {
     this.control = control;
     this.parent = parent;
-    this._mode = STABLE;
+    this._state = STABLE;
     this._uid = Symbol("my_uid");
     this.active = false;
     this._type = REACTION;
@@ -34,31 +34,31 @@ class ReactionBase {
   }
 
   maybeReact () {
-    if (this._mode === UNSTABLE) {
-      if (this.parent._mode === UNSTABLE
-          || this.parent._mode === ORPHANED
-          || this.parent._mode === DISOWNED
-          || this.parent._mode === NEW) {
+    if (this._state === UNSTABLE) {
+      if (this.parent._state === UNSTABLE
+          || this.parent._state === ORPHANED
+          || this.parent._state === DISOWNED
+          || this.parent._state === NEW) {
         this.parent._get();
       }
 
-      switch (this.parent._mode) {
+      switch (this.parent._state) {
       case UNCHANGED:
-        this._mode = STABLE;
+        this._state = STABLE;
         break;
       case CHANGED:
         this.force();
         break;
       // should never be STABLE, as this only gets called during react phase
       default:
-        throw new Error(`invalid mode for parent: ${this.parent._mode}`);
+        throw new Error(`invalid mode for parent: ${this.parent._state}`);
       }
     }
   }
 
   force () {
     if (this.control.react) {
-      this._mode = STABLE;
+      this._state = STABLE;
       this.control.react(this.parent._get());
     } else {
       throw new Error("No reaction function available.");

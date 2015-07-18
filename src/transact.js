@@ -13,7 +13,7 @@ const RUNNING = Symbol("running"),
       ABORTED = Symbol("aborted");
 
 const $parent = Symbol("parent_txn");
-const $state = Symbol("txn_state");
+const $state = Symbol("txn_value");
 
 export class TransactionContext {
   constructor () {
