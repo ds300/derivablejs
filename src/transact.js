@@ -25,7 +25,7 @@ export class TransactionContext {
   currentTransaction () {
     return this.currentTxn;
   }
-  begin (txn) {
+  _begin (txn) {
     txn[$parent] = this.currentTxn;
     txn[$state] = RUNNING;
     this.currentTxn = txn;
@@ -39,17 +39,30 @@ export class TransactionContext {
     }
     cb(txn);
   }
-  commit () {
+  _commit () {
     this._popTransaction("commit", txn => {
       txn[$state] = COMPLETED;
       txn.onCommit && txn.onCommit();
     });
   }
-  abort () {
+  _abort () {
     this._popTransaction("abort", txn => {
       txn[$state] = ABORTED;
       txn.onAbort && txn.onAbort();
     });
+  }
+
+  transact (txn, f) {
+    this._begin(txn);
+    try {
+      f(abortTransaction);
+      this._commit();
+    } catch (e) {
+      this._abort();
+      if (e !== TransactionAbortion) {
+        throw e;
+      }
+    }
   }
 }
 
@@ -58,18 +71,3 @@ const TransactionAbortion = Symbol("abort that junk yo");
 function abortTransaction() {
   throw TransactionAbortion;
 }
-
-/**
- * Runs f in txn. f should be synchronous
- */
-export function runTransaction (txn, f) {
-  try {
-    f(abortTransaction);
-    txn.commit();
-  } catch (e) {
-    txn.abort();
-    if (e !== TransactionAbortion) {
-      throw e;
-    }
-  }
-};

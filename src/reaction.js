@@ -43,7 +43,7 @@ class ReactionBase {
 
       switch (this.parent._mode) {
       case UNCHANGED:
-        // noop
+        this._mode = STABLE;
         break;
       case CHANGED:
         this.force();

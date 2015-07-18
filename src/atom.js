@@ -31,7 +31,7 @@ class AtomicTransactionState {
   }
 
   getState (atom) {
-    let inTxnValue = this.inTxnValues[atom._id];
+    let inTxnValue = this.inTxnValues[atom._uid];
     if (inTxnValue) {
       return inTxnValue[1];
     } else {
@@ -40,19 +40,19 @@ class AtomicTransactionState {
   }
 
   setState (atom, state) {
-    this.inTxnValues[atom._id] = [atom, state];
+    this.inTxnValues[atom._uid] = [atom, state];
     mark(atom, this.reactionQueue);
   }
 
   onCommit () {
     if (TXN_CTX.inTransaction()) {
       // push in-txn vals up to current txn
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
+      for (let [atom, value] of symbolValues(this.inTxnValues)) {
         atom.set(value);
       }
     } else {
       // change root state and run reactions.
-      for (let {atom, value} of symbolValues(this.inTxnValues)) {
+      for (let [atom, value] of symbolValues(this.inTxnValues)) {
         atom._state = value;
         mark(atom, NOOP_ARRAY);
       }
@@ -60,7 +60,7 @@ class AtomicTransactionState {
       processReactionQueue(this.reactionQueue);
 
       // then sweep for a clean finish
-      for (let {atom} of symbolValues(this.inTxnValues)) {
+      for (let [atom, _] of symbolValues(this.inTxnValues)) {
         atom._mode = STABLE;
         sweep(atom)
       }
@@ -69,7 +69,7 @@ class AtomicTransactionState {
 
   onAbort () {
     if (!TXN_CTX.inTransaction()) {
-      for (let {atom} of symbolValues(this.inTxnValues)) {
+      for (let [atom, _] of symbolValues(this.inTxnValues)) {
         atom._mode = STABLE;
         sweep(atom);
       }
@@ -125,4 +125,8 @@ export function constructAtom (atom, value) {
   atom._mode = STABLE;
   atom._state = value;
   return atom;
+}
+
+export function transact (f) {
+  TXN_CTX.transact(new AtomicTransactionState(), f);
 }

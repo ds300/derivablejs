@@ -2,30 +2,6 @@ import imut from 'immutable';
 import _, {atom, derive, transact} from '../src/havelock';
 import assert from 'assert';
 
-describe("the humble atom", () => {
-  const n = atom(0);
-
-  console.log("nnn", n._children[Symbol.iterator]);
-
-  it("can be dereferenced via .get to obtain its current state", () => {
-    assert.strictEqual(n.get(), 0);
-  });
-
-  it("can be .set to change its current state", () => {
-    n.set(1);
-    assert.strictEqual(n.get(), 1);
-  });
-
-  it("can be .swap-ped a la clojure", () => {
-    const double = x => x * 2;
-    n.swap(double);
-    assert.strictEqual(n.get(), 2);
-    _.swap(n, double);
-    assert.strictEqual(n.get(), 4);
-    n.swap(double);
-    assert.strictEqual(n.get(), 8);
-  });
-});
 
 // describe("a derivation", () => {
 //   const oneGigabyte = 1024 * 1024 * 1024;
