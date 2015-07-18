@@ -45,6 +45,8 @@ transact(() => {
 
 
 - [Rationale](#rationale)
+  - [Problem](#problem)
+  - [Solution](#solution)
 - [Comparison with Previous Work](#comparison-with-previous-work)
 - [Model](#model)
 - [Algorithms and Data Structures](#algorithms-and-data-structures)
@@ -56,8 +58,17 @@ transact(() => {
     - [In Transaction](#in-transaction)
 - [API](#api)
   - [Types](#types)
-    - [`Atom`](#atom)
+    - [Derivable](#derivable)
       - [Methods](#methods)
+    - [Mutable](#mutable)
+    - [`Atom`](#atom)
+    - [`Derivation`](#derivation)
+    - [`Reaction`](#reaction)
+      - [Lifecycles](#lifecycles)
+      - [Methods](#methods-1)
+    - [`Lens`](#lens)
+      - [Lens Descriptors](#lens-descriptors)
+      - [Methods](#methods-2)
         - [`.set(newValue)`](#setnewvalue)
         - [`.get()`](#get)
         - [`.derive(fn)`](#derivefn)
@@ -65,17 +76,6 @@ transact(() => {
         - [`.react(fn)`](#reactfn)
         - [`.swap(fn, ...args)`](#swapfn-args)
         - [`.lens(lensDescriptor)`](#lenslensdescriptor)
-    - [`Lens`](#lens)
-      - [Lens Descriptors](#lens-descriptors)
-      - [Methods](#methods-1)
-        - [`.set(newValue)`](#setnewvalue-1)
-        - [`.get()`](#get-1)
-        - [`.derive(fn)`](#derivefn-1)
-        - [`.reaction(fn)`](#reactionfn-1)
-        - [`.react(fn)`](#reactfn-1)
-        - [`.swap(fn, ...args)`](#swapfn-args-1)
-        - [`.lens(lensDescriptor)`](#lenslensdescriptor-1)
-    - [`Derivation`](#derivation)
   - [Top-level functions](#top-level-functions)
     - [`atom`](#atom)
 - [Hire Me](#hire-me)
@@ -87,26 +87,41 @@ transact(() => {
 ### Problem
 When writing applications it is often convenient to keep our state in little mutable chunks. We rightfully try to organize these chunks such that they correspond to *distinct responsibilities*, and then we invent magic frameworkey gubbins to keep these state chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\* but many of us make the mistake of closing our eyes, crossing our fingers, and pushing forward under the happy delusion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it never really does, and we end up with tangled callback webs trying to keep the states of interdependent components consistent with one another.
 
-Luckily this just isn't a problem if you're building a small and simple application that will stay small and simple. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
+Luckily this just isn't a problem if you're building a small and simple application that won't change significantly. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
 
-Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with MVC: iteration cost grows exponentially with complexity precisely because of the difficulty and fragility inherent in keeping state consistent with callback webs. We need an easier way. The cost of iteration graph should be linear or even asymptotic.
+Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with MVC: iteration cost grows exponentially with complexity precisely because of the difficulty and fragility inherent in keeping state consistent using callback webs. We need an easier way. The cost of iteration graph should be linear or even asymptotic.
 
-\* <em style="font-size: -0.2em">And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM together with our state using jQuery. \*shudder\* </em>
+\* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
 
-### Solution
-The solution to this problem seems to be something involving 'unidirectional data flow', as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a remarkable and compelling discourse on the particular brand of Flux-ishness Havelock aims to serve. So **go read the re-frame README**. For reals. Do it.
+### Solution?
+It appears to be 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
 > Keeping disparate pieces of mutable state consistent is hard. Keeping one piece of immutable state consistent is a matter of course. Let's do the latter.
 
-The goal of Havelock is to make it easy to build complex applications around global immutable state.
+Havelock's raison d'être is to make doing the latter [easy](http://www.infoq.com/presentations/Simple-Made-Easy) by providing simple, safe, and efficient means for deriving those convenient little chunks of state from a single source of truth. Then, if you are so inclined, you can go deeper by deriving a virtual DOM tree from all those disparate chunks and handing it off to [React](https://facebook.github.io/react/) or [virtual-dom](https://github.com/Matt-Esch/virtual-dom) for good times. It's just derived data all the way down. #DDATWDFTW
 
+## Model
+
+There are three base types exposed by Havelock:
+
+- **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
+- **Derivations** represent applications of pure functions to upstream values.
+- **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
+
+These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
+
+<img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
+
+It is often inappropriate for reactions to persist for the entire lifetime of your application. As such they can be manually started and stopped, and have two overridable lifecycle methods: `.onStart()` and `.onStop()` which can be used as hooks for acquiring and releasing resources associated with the reaction.
+
+The one remaining type is **Lenses** which allow derivations to act as mutable proxies for atoms. This means that consumers of derivations who may wish to perform mutations on the underlying atom can do so without knowing the atom's full structure.
 
 
 ## Comparison with Previous Work
 
-The idea for, name of, and api nomenclature used in this library were directly inspired by [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it doesn't seem to be publicly available. [Shiny](http://shiny.rstudio.com/), the R web framework, has a [very similar model](http://shiny.rstudio.com/articles/reactivity-overview.html). I'm sure there are others.
+The idea for (and api nomenclature of) this library came directly from [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it doesn't seem to be publicly available. [Shiny](http://shiny.rstudio.com/), the R web framework, has a [very similar model](http://shiny.rstudio.com/articles/reactivity-overview.html). I'm sure there are others.
 
 The key advantage Havelock has over all the above is that it uses a novel\* approach for change propagation which invloves a GC-inspired 3-phase mark-react-sweep algorithm. It provides two significant benefits:
 
@@ -121,21 +136,6 @@ Other advantages which may not each apply to every project mentioned above inclu
 
 \* As far as I am aware.
 
-## Model
-
-There are three main types exposed by Havelock:
-
-- **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
-- **Derivations** represent applications of pure functions to upstream values.
-- **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects.
-
-These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
-
-<img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
-
-It is often inappropriate for reactions to persist for the entire lifetime of your application. As such they can be manually started and stopped, and have two overridable lifecycle methods: `.onStart()` and `.onStop()` which can be used as hooks for acquiring and releasing resources associated with the reaction.
-
-The one remaining type is **Lenses** which enable [Om](https://github.com/omcljs/om)-ish [cursors](https://github.com/omcljs/om/wiki/Cursors), among other fancy transformations. Lenses are derivations with one parent: either an atom or another lens. They abstract over the `get` and `set` operations of their parent, allowing one to modify part of a root atom without explicitly knowing the particulars of it's structure (that knowledge is encoded in the lenses themselves).
 
 ## Algorithms and Data Structures
 
