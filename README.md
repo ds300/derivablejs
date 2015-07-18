@@ -91,7 +91,7 @@ Luckily this just isn't a problem if you're building a small and simple applicat
 
 Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with MVC: iteration cost grows exponentially with complexity precisely because of the difficulty and fragility inherent in keeping state consistent with callback webs. We need an easier way. The cost of iteration graph should be linear or even asymptotic.
 
-\* *And I suppose that it is wonderful compared to the days when we manually knitted the DOM together with our state using jQuery.* * \*shudder\* *
+\* <em>And I suppose that it is wonderful compared to the days when we manually knitted the DOM together with our state using jQuery. \*shudder\* </em>
 
 ### Solution
 The solution to this problem seems to be something involving 'unidirectional data flow', as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a remarkable and compelling discourse on the particular brand of Flux-ishness Havelock aims to serve. So **go read the re-frame README**. For reals. Do it.
