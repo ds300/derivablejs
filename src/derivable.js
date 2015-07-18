@@ -62,7 +62,8 @@ export function createDerivablePrototype (havelock, { equals }) {
 
     ["switch"] (...args) {
       return this.derive(x => {
-        for (let i = 0; i < args.length-2; i+=2) {
+        let i;
+        for (i = 0; i < args.length-1; i+=2) {
           if (equals(x, havelock.unpack(args[i]))) {
             return havelock.unpack(args[i+1]);
           }

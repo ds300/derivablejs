@@ -43,6 +43,7 @@ export default function havelock (config={}) {
   let Lens       = extend({}, Mutable, Derivation,
                           createLensPrototype(Havelock, config));
 
+
   /**
    * Constructs a new atom whose state is the given value
    */
@@ -98,10 +99,11 @@ export default function havelock (config={}) {
    * creates a new lens
    */
   Havelock.lens = (parent, descriptor) => {
-    let derivation = parent.derive(descriptor.get);
-    let lens = createLens(derivation, parent, descriptor);
-    lens.prototype = Lens;
-    return lens;
+    let lens = Object.create(Lens);
+    return createLens(createDerivation(lens,
+                                       () => descriptor.get(parent.get())),
+                      parent,
+                      descriptor);
   };
 
   /**

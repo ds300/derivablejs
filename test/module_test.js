@@ -132,3 +132,136 @@ describe("boolean logic", () => {
     assert.strictEqual(NOTa.get(), true, "!false = true");
   });
 });
+
+
+
+describe("control flow", () => {
+  it ("allows different paths to be taken depending on conditions", () => {
+    let number = atom(0);
+    let even = number.derive(n => n % 2 === 0);
+
+    let message = _.ifThenElse(even, "even", "odd");
+
+    assert.strictEqual(message.get(), "even");
+
+    number.set(1);
+
+    assert.strictEqual(message.get(), "odd");
+  });
+
+  it("doesn't evaluate untaken paths", () => {
+    let number = atom(0);
+    let even = number.derive(n => n % 2 === 0);
+
+    let dideven = false;
+    let didodd = false;
+
+    let chooseAPath = _.ifThenElse(even,
+      derive(() => {
+        dideven = true;
+      }),
+      derive(() => {
+        didodd = true;
+      })
+    );
+
+    chooseAPath.get();
+
+    assert(dideven && !didodd, "didnt eval odd path");
+
+    dideven = false;
+
+    assert(!dideven && !didodd, "didnt eval anything yet1");
+
+    number.set(1);
+
+    assert(!dideven && !didodd, "didnt eval anything yet2");
+
+    chooseAPath.get();
+
+    assert(!dideven && didodd, "didnt eval even path");
+  });
+
+  it("same goes for the switch statement", () => {
+    let thing = atom("Tigran");
+
+    let result = _.switchCase(thing,
+      "Banana", "YUMMY",
+      532,      "FiveThreeTwo",
+      "Tigran", "Hamasayan"
+    );
+
+    assert.strictEqual("Hamasayan", result.get());
+
+    thing.set("Banana");
+
+    assert.strictEqual("YUMMY", result.get());
+
+    thing.set(532);
+
+    assert.strictEqual("FiveThreeTwo", result.get());
+
+    thing.set("nonsense");
+
+    assert(result.get() === void 0);
+
+    let switcheroo = atom("a");
+
+    let dida = false,
+        didb = false,
+        didc = false,
+        didx = false;
+
+    let conda = atom("a"),
+        condb = atom("b"),
+        condc = atom("c");
+
+    let chooseAPath = _.switchCase(switcheroo,
+      conda, derive(() => dida = true),
+      condb, derive(() => didb = true),
+      condc, derive(() => didc = true),
+      //else
+      derive(() => didx = true)
+    );
+
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 1");
+
+    chooseAPath.get();
+    assert(dida && !didb && !didc && !didx, "did a");
+
+    dida = false;
+    switcheroo.set("b");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 2");
+
+    chooseAPath.get();
+    assert(!dida && didb && !didc && !didx, "did b");
+
+    didb = false;
+    switcheroo.set("c");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 3");
+
+    chooseAPath.get();
+    assert(!dida && !didb && didc && !didx, "did b");
+
+    didc = false;
+    switcheroo.set("blubr");
+    assert(!dida && !didb && !didc && !didx, "did nothing yet 4");
+
+    chooseAPath.get();
+    assert(!dida && !didb && !didc && didx, "did else");
+  });
+});
+
+
+describe("the lift function", () => {
+  it("lifts a function which operates on values to operate on derivables", () => {
+    let plus = (a, b) => a + b;
+    let dPlus = _.lift(plus);
+
+    let a = atom(5);
+    let b = atom(10);
+    let c = dPlus(a, b);
+
+    assert.equal(15, c.get());
+  });
+});

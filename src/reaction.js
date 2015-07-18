@@ -104,5 +104,5 @@ export class StandardReaction extends Reaction {
 }
 
 export function anonymousReaction (descriptor) {
-  return Object.create(extend({}, descriptor, Reaction.prototype));
+  return extend(new Reaction(), descriptor);
 }

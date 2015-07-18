@@ -89,37 +89,33 @@ describe("a derivation", () => {
     assert.strictEqual(sOrE.not().not().get(), true);
     assert.strictEqual(sAndE.not().not().get(), false);
 
-    it("with .then goodness", done => {
-      startsWithS.then(
-        done,
-        () => assert(false, "smithy what?")
-      ).get();
-    });
 
-    it("and the other way", done => {
-      endsWithE.then(
-        () => assert(false, "smithy doesn't end in e?!"),
-        done
-      ).get();
-    });
+    let x = startsWithS.then(
+      () => assert(true, "smithy starts with s"),
+      () => assert(false, "smithy what?")
+    ).get()();
+
+
+    endsWithE.then(
+      () => assert(false, "smithy doesn't end in e?!"),
+      () => assert(true, "smithy ends in y yo")
+    ).get()();
 
     let firstLetter = name.derive(x => x[0]);
 
-    it("does switching too", done => {
-      firstLetter.switch(
-        "a", () => assert(false, "smithy doesn't start with a"),
-        "b", () => assert(false, "smithy doesn't start with b"),
-        "s", done
-      ).get();
-    });
+    firstLetter.switch(
+      "a", () => assert(false, "smithy doesn't start with a"),
+      "b", () => assert(false, "smithy doesn't start with b"),
+      "s", () => assert(true, "smithy starts with s")
+    ).get()();
 
     it("allows a default value", done => {
       firstLetter.switch(
         "a", () => assert(false, "smithy doesn't start with a"),
         "b", () => assert(false, "smithy doesn't start with b"),
         "x", "blah",
-        done
-      ).get();
+        () => assert(true, "yay")
+      ).get()();
     });
   });
 });

@@ -151,5 +151,38 @@ describe("a reaction", () => {
     assert.throws(() => {
       a.react(reaction);
     });
-  })
+  });
+
+  it(`can bre created by anonymous classes`, () => {
+    let a = atom(5);
+    let b = null;
+    let started = false;
+    let stopped = false;
+
+    let r = a.react({
+      onStart () {
+        started = true;
+      },
+      onStop () {
+        stopped = true;
+      },
+      react (val) {
+        b = val;
+      }
+    });
+
+    assert(started, "it started");
+    assert(!stopped, "it didn't stopped yet");
+    assert.strictEqual(5, b, "b is 5");
+
+    a.set("blub");
+    assert.strictEqual("blub", b, "b is blub");
+
+    r.stop();
+
+    assert(stopped, "it stopped");
+    a.set("jesuit");
+
+    assert.strictEqual("blub", b, "b is still blub");
+  });
 });

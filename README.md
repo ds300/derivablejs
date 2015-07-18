@@ -125,7 +125,7 @@ The idea for (and api nomenclature of) this library came directly from [Reagent]
 
 The key advantage Havelock has over all the above is that it uses a novel\* approach for change propagation which invloves a GC-inspired 3-phase mark-react-sweep algorithm. It provides two significant benefits:
 
-- Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework. *Nobody else does this, AFAICT*
+- Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework. *Nobody else does this*\*
 - Total laziness. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
 
 Other advantages which may not each apply to every project mentioned above include:
