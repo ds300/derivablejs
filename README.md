@@ -98,7 +98,7 @@ Alas, many small and simple apps eventually become large and complex apps. Likew
 \* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
 
 ### Solution?
-The most promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The most promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
@@ -112,21 +112,21 @@ Havelock's raison d'être is to fill this gap—to make global immutable state e
 
 Speaking of which, Havelock exposes three main types:
 
-- **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
-- **Derivations** represent applications of pure functions to upstream values.
-- **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
+- **Atoms** are mutable references intended to hold immutable values.
+- **Derivations** represent applications of pure functions to values held in atoms.
+- **Reactions** are passive observers reacting to changes in atoms (possibly via derivations). Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
 
 These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
 
 <img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
 
-It is important to note that the edges between nodes in the graph do not represent data flow. They are not streams or channels or even representative of some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM): gestalt and always internally consistent no matter which parts of it you decide to dereference at any given time. Reactions are executed with respect to changes in this gestalt virtual reference.
+It is important to note that the edges between nodes in the graph do not represent data flow. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value is a virtual composite of the two atoms' states. The derivations are merely views into this value; they are the same information presented differently, as light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
 
 Note also that derivations are totally lazy. They literally **never** do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
 
-The other key difference to streams is that there is no need to manually deregister observers when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This allows the library to be ergonomic and practical to use on its own rather than as part of a framework.
+The other key benefit over streams is that there is no need to clean up after yourself when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This is simple to the max, and it makes the library practical to use on its own rather than as part of a framework.
 
-Which isn't to say that streams and channels are bad (callback chains tend to be, though), just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
+All this isn't to say that streams and channels are bad (callback chains tend to be, though), just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
 
 ## Comparison with Previous Work
 
@@ -149,7 +149,7 @@ Other advantages of Havelock which may not each apply to every project mentioned
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
 - It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), reaction lifecycles, etc.
 
-The one disadvantage is performance: the extra sweep phase means that the cost of propagating change is roughly twice that of most other implementations (in the worst case). Fortunately for most user-focused javascript apps this extra time is negligable. [See Benchmarks](#todo).
+The one disadvantage is performance: the extra sweep phase means that the cost of propagating change is roughly twice that of most other implementations (in the worst case). Fortunately for typical user-focused javascript apps this extra time is negligable. [See Benchmarks](#todo).
 
 
 \* 'weak' meaning it can't guarantee consistency in the face of a dynamically changing propagation graph.
