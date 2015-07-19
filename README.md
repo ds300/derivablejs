@@ -95,12 +95,12 @@ Luckily this isn't much of a problem if you're building a small and simple appli
 
 Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration.
 
-Now, I haven't done any science to back this up but I reckon that the cost of iteration grows linearly with time when one does MVC; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
+Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly with time; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
 
 \* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
 
 ### Solution?
-The most promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+A promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
