@@ -1,10 +1,16 @@
 # Havelock
-Reactive values for [Derived Data All The Way Down](#rationale). Totally lazy. Always consistent. Zero leakage.
+Reactive values for derived data all the way down
+---
+**Always Consistent** — **Zero Leakage** — **Totally Lazy** — *Si Non Confectus, Non Reficiat*
 
-## {greeting}, {name}!
+## Quick Demo App: {greeting}, {name}!
 
 ```javascript
 import {atom, derive, transact} from 'havelock'
+
+// global application state
+const countryCode = atom("en");
+const name = atom("World");
 
 // static constants
 const greetings = {
@@ -15,21 +21,19 @@ const greetings = {
   fr: "Bonjour",
 };
 
-// applicaiton state
-const countryCode = atom("en");
-const name = atom("World");
-
-// state derivation
+// derive a greeting message based on the user's name and country.
 const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive`${greeting}, ${name}!`;
+const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
 
-// side-effecting reaction
+// set up a side-effecting reaction to print the message
 message.react(msg => console.log(msg)); // $> Hello, World!
 
-// state change
+// if we change the root state derivations are automatically kept in sync and
+// reactions are automatically re-run
 countryCode.set("de"); // $> Hallo, World!
 name.set("Dieter"); // $> Hallo, Dieter!
 
+// we can avoid unwanted intermediate reactions by using transactions
 transact(() => {
   countryCode.set("fr");
   name.set("Étienne");
@@ -85,57 +89,70 @@ transact(() => {
 ## Rationale
 
 ### Problem
-When writing applications it is often convenient to keep our state in little mutable chunks. We rightfully try to organize these chunks such that they correspond to *distinct responsibilities*, and then we invent magic frameworkey gubbins to keep these state chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\* but many of us make the mistake of closing our eyes, crossing our fingers, and pushing forward under the happy delusion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it never really does, and we end up with tangled callback webs trying to keep the states of interdependent components consistent with one another.
+When writing JavaScript web applications it is often convenient to keep our state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to *distinct responsibilities*, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\* but many of us make the mistake of closing our eyes, crossing our fingers, and pushing forward under the happy delusion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs trying to keep the states of interdependent components consistent with one another and the server.
 
-Luckily this just isn't a problem if you're building a small and simple application that won't change significantly. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
+Luckily this isn't much of a problem if you're building a small and simple application that won't change significantly. A small amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
 
-Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with MVC: iteration cost grows exponentially with complexity precisely because of the difficulty and fragility inherent in keeping state consistent using callback webs. We need an easier way. The cost of iteration graph should be linear or even asymptotic.
+Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration. Speaking from personal experience with traditional MVC: iteration cost grows exponentially with complexity precisely because of the difficulty and fragility inherent in keeping state consistent using callback webs. We need an easier way. The cost of iteration curve should be asymptotic, or even *flat*.
 
 \* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
 
 ### Solution?
-It appears to be 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The most promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which is, in part, a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
 > Keeping disparate pieces of mutable state consistent is hard. Keeping one piece of immutable state consistent is a matter of course. Let's do the latter.
 
-Havelock's raison d'être is to make doing the latter [easy](http://www.infoq.com/presentations/Simple-Made-Easy) by providing simple, safe, and efficient means for deriving those convenient little chunks of state from a single source of truth. Then, if you are so inclined, you can go deeper by deriving a virtual DOM tree from all those disparate chunks and handing it off to [React](https://facebook.github.io/react/) or [virtual-dom](https://github.com/Matt-Esch/virtual-dom) for good times. It's just derived data all the way down. #DDATWDFTW
+Sounds good, right? And while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
+
+Havelock's raison d'être is to fill this gap—to make global immutable state easy. It does this by providing simple, safe, and efficient means for deriving those convenient little chunks from a single source of truth. It makes only one demand of the user: *keep derivation pure and entirely separate from reaction*. This is the first of two easiness tradeoffs made for the sake of simplicity.
 
 ## Model
 
-There are three base types exposed by Havelock:
+Speaking of which, Havelock exposes three main types:
 
 - **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
-- **Derivations** represent applications of pure functions to upstream values.
+- **Derivations** *represent* applications of pure functions to upstream values.
 - **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
 
 These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
 
 <img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
 
-It is often inappropriate for reactions to persist for the entire lifetime of your application. As such they can be manually started and stopped, and have two overridable lifecycle methods: `.onStart()` and `.onStop()` which can be used as hooks for acquiring and releasing resources associated with the reaction.
+It is important to note that the links between nodes in the graph are purely symbolic. They are not streams or channels or even representative of some kind of callback chain. The (atoms + derivations) part of the graph is like a single reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM): gestalt and always internally consistent no matter which parts of it you decide to dereference at any given time. Reactions are executed with respect to changes in this gestalt virtual reference.
 
-The one remaining type is **Lenses** which allow derivations to act as mutable proxies for atoms. This means that consumers of derivations who may wish to perform mutations on the underlying atom can do so without knowing the atom's full structure.
+Note also that derivations are totally lazy. They literally **never** do wasteful recomputation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
 
+The other key difference to streams is that there is no need to manually deregister observers when the flow structure changes. This allows the library to be ergonomic and practical to use on its own rather than as part of a framework.
+
+Which isn't to say that streams and channels are bad (callback chains tend to be, though), just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
 
 ## Comparison with Previous Work
 
-The idea for (and api nomenclature of) this library came directly from [Reagent](https://github.com/reagent-project/reagent). Reagent credits the reactive atom idea to [Reflex](https://github.com/lynaghk/reflex) which in turn cites [Knockout's Observables](http://knockoutjs.com/documentation/observables.html). Another high-quality ClojureScript solution is [javelin](https://github.com/tailrecursion/javelin). The [silk.co](http://silk.co) engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) but it doesn't seem to be publicly available. [Shiny](http://shiny.rstudio.com/), the R web framework, has a [very similar model](http://shiny.rstudio.com/articles/reactivity-overview.html). I'm sure there are others.
+The curious engineers among you will be wondering how this is all achieved. The answer is simple: mark-and-sweep. Garbage collectors have been doing it for ages. As far as I am aware, this is the only thing in Havelock that advances the state of the art.
 
-The key advantage Havelock has over all the above is that it uses a novel\* approach for change propagation which invloves a GC-inspired 3-phase mark-react-sweep algorithm. It provides two significant benefits:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager, has weak consistency guarantees*, and requires manual memory management. The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) in JavaScript, but it doesn't seem to be publicly available.
 
-- Fully automatic memory management. This makes the library ergonomic and practical to use on its own rather than as part of a framework. *Nobody else does this*\*
-- Total laziness. This allows derivation graphs to incorporate short-circuiting boolean logic. Note also that no tradeoff is made with regard to push-based flow; reactions are instantaneous and glitch-free.
+These libraries all seem to have laziness but weak consistency guarantees and require memory management either manually or by the framework:
 
-Other advantages which may not each apply to every project mentioned above include:
+- [Reagent](https://github.com/reagent-project/reagent) (ClojureScript)
+- [Reflex](https://github.com/lynaghk/reflex) (ClojureScript, deprecated)
+- [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) (use Pure Computed Observables for laziness)
+
+
+[Shiny has a very similar model](http://shiny.rstudio.com/articles/reactivity-overview.html), but with only partial laziness and framework/manual memory management (I think, my R isn't up to scratch so I didn't really grok the code. Please correct me if wrong).
+
+Other advantages of Havelock which may not each apply to every project mentioned above include:
 
 - It is a standalone library that does one thing well (jumping on the 'unix philosophy' bandwagon).
 - It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
-- It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), dealing gracefully with 'dead' derivation branches, etc.
+- It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), reaction lifecycles, etc.
 
-\* As far as I am aware.
+The one disadvantage is performance: the extra sweep phase means that the cost of propagating change is roughly twice that of most other implementations (in the worst case). Fortunately for most user-focused javascript apps this extra time is negligable. [See Benchmarks](#todo).
 
+
+\* 'weak' meaning it can't guarantee consistency in the face of a dynamically changing propagation graph.
 
 ## Algorithms and Data Structures
 
