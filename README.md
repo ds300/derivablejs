@@ -136,7 +136,7 @@ The curious among you will be wondering how this is all achieved. The answer is 
 
 [Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager, has weak consistency guarantees*, and requires manual memory management. The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) in JavaScript, but it doesn't seem to be publicly available.
 
-These libraries all seem to have laziness but weak consistency guarantees and require memory management either manually or by the framework:
+The following libraries all seem to have laziness but weak consistency guarantees and require memory management either manually or by the framework:
 
 - [Reagent](https://github.com/reagent-project/reagent) (ClojureScript)
 - [Reflex](https://github.com/lynaghk/reflex) (ClojureScript, deprecated)
