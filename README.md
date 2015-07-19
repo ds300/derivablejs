@@ -106,14 +106,14 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 
 Sounds good, right? And while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
 
-Havelock's raison d'être is to fill this gap—to make global immutable state easy. It does this by providing simple, safe, and efficient means for deriving those convenient little chunks from a single source of truth. It makes only one demand of the user: *keep derivation pure and entirely separate from reaction*. This is the first of two easiness tradeoffs made for the sake of simplicity.
+Havelock's raison d'être is to fill this gap—to make global immutable state easy. It does this by providing simple, safe, and efficient means for deriving those convenient little chunks from a single source of truth. It makes only one demand of the user for the sake of simplicity over easiness: *keep derivation pure*.
 
 ## Model
 
 Speaking of which, Havelock exposes three main types:
 
 - **Atoms** are mutable references but are intended to hold immutable, or effectively immutable, data.
-- **Derivations** *represent* applications of pure functions to upstream values.
+- **Derivations** represent applications of pure functions to upstream values.
 - **Reactions** are passive observers reacting to changes in atoms or derivations. Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
 
 These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
