@@ -122,7 +122,7 @@ These three types are connected together in DAGs with atoms at the roots. The ex
 
 <img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
 
-It is important to note that the edges between nodes in the graph do not represent data flow. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
+It is important to note that the edges between nodes in the graph do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
 
 Note also that derivations are totally lazy. They literally **never** do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
 
