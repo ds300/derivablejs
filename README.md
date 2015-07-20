@@ -258,7 +258,7 @@ root("bye");
 
 All of the above libraries are guilty of a thing which bothers me: the lexical conflation of derivation with reaction. These are two separate concerns and I see the gaining of terseness by combining them as something of a pyrrhic victory.
 
-There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) which aren't worth singling out; I'd just be repeating myself.
+There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings.
 
 ## ToDo
 
