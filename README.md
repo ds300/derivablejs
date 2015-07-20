@@ -1,8 +1,4 @@
 <h1 align="center">Havelock</h1>
-<h3 align="center">It's Derived Data all the way Down</h3>
-
----
-
 
 <p align="center">
 <strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong> 
@@ -10,6 +6,10 @@
 <p align="center">
 <em>Si Non Confectus, Non Reficiat</em>
 </p>
+
+---
+
+Havelock is a simple state management library providing reactive values for **Derived Data all the way Down**.
 
 ## Quick Demo App: {greeting}, {name}!
 
