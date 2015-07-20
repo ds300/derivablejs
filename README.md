@@ -213,8 +213,6 @@ So what's available in JS land? The silk.co engineering team [have apparently do
 More promising is [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) which seem to get the job done, but are tied to Knockout itself and also unfortunately glitchy:
 
 ```javascript
-"use strict";
-
 const root = ko.observable("hello");
 
 const fst = ko.pureComputed(() => root()[0])
@@ -224,9 +222,7 @@ const lst = ko.pureComputed(() => {
   return word[word.length-1];
 });
 
-ko.computed(function () {
-  console.log(fst(), lst());
-});
+ko.computed(() =>  console.log(fst(), lst());
 // => h o
 
 root("bye");
@@ -234,9 +230,9 @@ root("bye");
 // => b e
 ```
 
-With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience, not that much convenience is gained anyway.
+With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience, not that any real convenience is lost, you just have to remember the names of two functions rather than one.
 
-There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings.
+This is not an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. 
 
 ## What It's Not
 
@@ -245,291 +241,9 @@ Havelock makes no prescriptions about what kind of data should be held in atoms 
 Havelock also has no opinion regarding how or whether you should go about deriving virtual DOM trees from your application state. I personally have many opinions on the matter but Havelock doesn't care if you use it to do that or to set up 2-way data bindings with jQuery or whatever.
 
 
-## ToDo
+## Future Work
 
 - Investigate whether asynchronous transactions are possible, or indeed desirable.
-
-## Algorithms and Data Structures
-
-#### Colors
-
-All nodes in a DDATWDDAG (Derived Data All The Way Down Directed Acyclic Graph... I think it'll catch on) have an associated color. There are four colors: **black**, **white**, **red**, and **green**.
-
-Broadly speaking these mean the following:
-
-* **Green:** This node needs evaluating.
-* **White:** This node's value is up to date.
-* **Red:** This node's value is up to date, but has changed during the current mark/sweep cycle.
-* **Black:** This node's value is out of date, but doesn't necessarily need to be re-evaluated.
-
-But there are some extra subtleties so do read on if you aren't already catatonic.
-
-#### Data At Rest
-
-An **atom** encapsulates the following data:
-
-- Its color.
-- Its current state.
-- A set of direct children.
-
-New atoms are **white**, have empty child sets, and a given state.
-
-A **derivation** encapsulates the following data:
-
-- Its color.
-- Its current state.
-- A set of direct children.
-- A set of direct parents.
-- A deriving function. This calculates the derivation's current state in terms of one or more atoms or other derivations.
-
-New derivations are **green**, have empty child and parent sets, and no state.
-
-A **reaction** encapsulates the following data:
-
-- Its color.
-- Its parent.
-- Its activity status (active or inactive).
-- A reacting function. This is called for side-effects each time the parent's value changes.
-
-New reactions are **green** and inactive with their parent assigned.
-
-#### Query
-
-When an **atom** is dereferenced it simply returns its current state.
-
-When a **derivation** is dereferenced its color is taken into consideration:
-
-- **White** or **red**: Its current state is returned.
-- **Green**: The derivation's deriving function is evaluated.
-
-  This is done in a context which allows dereferences of direct parents to be monitored. Parent-child relationships are then set up by inserting the derivation into the child sets of the captured parents. Likewise, the set of captured parents becomes the derivation's parent set.
-
-  If the derived value is equal to the derivation's current state, the derivation becomes **white** and it's current state is returned. Otherwise it becomes **red** while its current state becomes the newly-derived value. This value is then returned.
-
-- **Black**: The child's parents are interrogated.
-
-  If any of them are **red** the derivation must be re-evaluated as above. If any of the parents are **black** or **green** they are  dereferenced. If they then become **red**, the derivation must be re-evaluated as above. Otherwise all parents are **white** and therefore this derivation is set to **white** and it's current state is returned.
-
-#### In Motion
-
-When a **reaction** is started, it becomes active and places itself in its parent's child set. It then dereferences the parent to ensure there is a bidirectional link between it (the reaction) and any upstream atoms.
-
-When a reaction is stopped, it becomes inactive and removes itself from its parent's child set in order to sever this link.
-
-#### Mark and Sweep
-
-When an **atom** is set, if the new value is equal to the current state, nothing happens.
-
-Otherwise, the atom becomes **red**.
-
-The atom's children are then traversed for the mark phase. If any of them are **white** or **red**, they are set to **black** and recursively traversed. Already-**black** children are not traversed. Any **reactions** which are encountered are placed in a queue. It is not possible to encounter **green** nodes at this stage, as **green** children have no consensual parents.
-
-Once the mark phase is complete, the **reaction queue** is consumed, notifying the reactions that they may need to re-run themselves.
-
-A **reaction** decides whether or not it needs to re-run by considering its parent's color. If the parent is **black** it is first dereferenced. Then, if the parent is **white**, it does not need to re-run. If the parent is **red** it does. It is not possible for the parent to be **green** at this stage, as **green** children have no consensual parents and atoms are never **green**.
-
-Once all reactions have had a chance to re-run, the **atom**'s children are again traversed in the sweep phase. If any encountered nodes are **red**, they become **white** and traversal continues with their children. If any encountered nodes are **black**, they are removed from their parents' child sets and turned **green**. Any **white** encountered nodes are ignored. It is not possible to encounter **green** nodes during the sweep phase for the same reason as during the mark phase.
-
-After the sweep phase, the atom becomes **white**.
-
-#### In Transaction
-
-During transactions, if an **atom** is modified, it becomes **red** and its new value is stored separately from it's out-of-transaction state. The mark phase is undertaken as usual. The reaction and sweep phases are delayed until the transaction commits, when the atom becomes white and its in-transaction value is propagated up to be its out-of-transaction value.
-
-## API
-
-### Types
-
-#### Derivable
-
-Non-extendable interface specifying common operations between objects considered *derivable*, i.e. Atoms, Derivations, and Lenses.
-
-##### Methods
-
-- **`.get()`**
-
-  Returns the current state of the derivable.
-
-- **`.derive(fn)`**
-
-  Returns a new derivation representing the state of this derivable applied to `fn`.
-
-- **`.reaction(fn [, lifecycle])`**
-
-  Returns a new reaction which calls `fn` with the value of this derivable every time it (this derivable) changes.
-
-  For lifecycle format see [Lifecycles](#lifecycles).
-
-- **`.react(fn [, lifecycle])`**
-
-  Returns a new *running* reaction which calls `fn` with the value of this derivable every time it (this derivable) changes.
-
-  Equivalent to `.reaction(fn [, lifecycle]).start().force()`
-
-  For lifecycle format see [Lifecycles](#lifecycles).
-
-#### Mutable
-
-Non-extendable interface specifying common operations between objects considered *mutable*, i.e. Atoms and Lenses.
-
-- **`.set(newValue)`**
-
-  Changes the mutable's state to be newValue. Causes any dependent reactions to be re-run synchronously.
-
-  Returns the mutable.
-
-- **`.swap(fn, ...args)`**
-
-  Sets the current state of the mutable to be `fn` applied to its (the mutable's) current state and `args`.
-
-  Returns the mutable.
-
-  Equivalent to `atom.set(fn.apply(null, [atom.get()].concat(args)))`
-
-- **`.lens(lensDescriptor)`**
-
-  Returns a [`Lens`](#lens) based on `lensDescriptor`. See [Lens Descriptors](#lens-descriptors)
-
-#### `Atom`
-*Implements [Derivable](#derivable) and [Mutable](#mutable)*
-
-Construct using the [`atom`](#atom-1) top level function.
-
-#### `Derivation`
-*Implements [Derivable](#derivable)*
-
-Construct using the `.derive(fn)` methods of this class, [`Atom`](#atom), and [`Lens`](#lens). Alternatively, use the [`derive`](#derive) top-level function.
-
-#### `Reaction`
-Construct using the `.reaction(fn [, lifecycle])` and `.react(fn [, lifecycle])` methods of the [`Atom`](#atom), [`Derivation`](#atom), and [`Lens`](#atom) classes.
-
-##### Lifecycles
-
-Reactions can be created with an optional `lifecycle` parameter. This lets the user specify start-up and tear-down behaviour by providing an object with `.onStart` and `.onStop` methods.
-
-The methods are called with `this` bound the reaction itself, but state should be stored in closures.
-
-
-```javascript
-let error = ... some derivation;
-let elem = $("<span class='error'></span>");
-
-
-```
-
-##### Methods
-
-- **`start()`**
-
-  Starts, but doesn't execute, this reaction. Calls the `.onStart()` lifecycle method.
-
-  Returns this reaction.
-
-- **`stop()`**
-
-  Stops this reaction. The reaction will no longer react to upstream changes and becomes as eligible for runtime garbage collection as any other runtime object.
-
-  Returns this reaction.
-
-- **`force()`**
-
-  Forces the re-running of this reaction.
-
-  Returns this reaction.
-
-- **`setInput(parent)`**
-
-  Returns this reaction.
-
-- **`setReactor(fn)`**
-
-  Sets the side-effecting function associated with this reaction to be `fn`.
-
-  Returns this reaction.
-
-
-#### `Lens`
-Construct using the `.lens(lensDescriptor)` methods of this class and [`Atom`](#atom).
-
-##### Lens Descriptors
-
-Lens descriptors are objects with two methods
-
-- `.get(parentState)`
-
-  Which returns the lensed view over the parent state.
-
-- `.set(parentState, value)`
-
-  Which returns the new state for the parent with value incorporated.
-
-As an example, if we wanted to make a lens which operates on the numbers after a decimal point separately from the number before it:
-
-```javascript
-const num = atom(3.14159);
-
-const afterDecimalPoint = num.lens({
-  get (number) {
-    return parseInt(number.toString().split(".")[1]) || 0;
-  },
-  set (number, newVal) {
-    let beforeDecimalPoint = number.toString().split(".")[0];
-    return parseFloat(`${beforeDecimalPoint}.${newVal}`);
-  }
-});
-
-afterDecimalPoint.get(); // => 14159
-
-afterDecimalPoint.set(4567);
-
-num.get(); // => 3.4567
-
-afterDecimalPoint.swap(x => x * 2);
-
-num.get(); // => 3.9134
-```
-
-##### Methods
-
-###### `.set(newValue)`
-Changes the lens' state to be newValue. Updates the root atom according to the lens logic. Causes any dependent reactions to be re-run synchronously.
-
-Returns the lens.
-
-###### `.get()`
-Returns the current state of the lens.
-
-
-###### `.derive(fn)`
-Returns a new derivation representing the state of this lens applied to `fn`.
-
-###### `.reaction(fn)`
-Returns a new reaction which calls `fn` with the value of this lens every time it (this lens) changes.
-
-For lifecycle format see [Lifecycles](#lifecycles).
-
-###### `.react(fn)`
-Returns a new *running* reaction which calls `fn` with the value of this lens every time it (this lens) changes.
-Equivalent to `.reaction(fn).start().force()`
-
-For lifecycle format see [Lifecycles](#lifecycles).
-
-###### `.swap(fn, ...args)`
-Sets the current state of the lens to be `fn` applied to its (the lens') current state and `args`.
-
-Returns the lens.
-
-Equivalent to `lens.set(fn.apply(null, [atom.get()].concat(args)))`
-
-###### `.lens(lensDescriptor)`
-Returns a new `Lens` based on `lensDescriptor`.
-
-
-
-
-
-### Top-level functions
-#### `atom`
 
 ## Hire Me
 
