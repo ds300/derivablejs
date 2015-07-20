@@ -232,13 +232,13 @@ root("bye");
 // => b e
 ```
 
-With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience, not that any real convenience is lost, you just have to remember the names of two functions rather than one.
+With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience.
 
 This is not an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. 
 
 ## What It's Not
 
-Havelock makes no prescriptions about what kind of data should be held in atoms or derived therefrom, except that it should all be effectively immutable. Unfortunately JavaScript doesn't provide Immutable collections so if you want to do collections, you should look at the likes of Immutable and mori. There are wrapper libraries which ensure that Havelock knows about these libraries' .equals semantics and feature cursor implementations and lots of nice examples.
+Havelock makes no prescriptions about what kind of data should be held in atoms or derived therefrom, except that it should all be effectively immutable. Unfortunately JavaScript doesn't provide Immutable collections so if you want to do collections, you should look at the likes of Immutable and mori. There are wrapper libraries which ensure that Havelock knows about these libraries' equality semantics and feature cursor implementations and lots of nice examples.
 
 Havelock also has no opinion regarding how or whether you should go about deriving virtual DOM trees from your application state. I personally have many opinions on the matter but Havelock doesn't care if you use it to do that or to set up 2-way data bindings with jQuery or whatever.
 
@@ -253,4 +253,4 @@ If this project is useful to you, consider supporting the author by giving him a
 
 I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you're based in western Europe, please get in touch.
 
-A little about me: I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I enjoy playing the drums and going for long cycles with friends. I have a really cool sister. My favourite thing to do in a hammock is close my eyes.
+A little about me: I've been on the fraying edges of academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid junk on youtube. My sister is just the coolest person and I don't get to see her often enough. I'm free from November and would love to move to Berlin or Copenhagen.
