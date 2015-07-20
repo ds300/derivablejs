@@ -1,8 +1,11 @@
 # Havelock
 Reactive values for derived data all the way down
 ---
-**Always Consistent** — **Zero Leakage** — **Totally Lazy** — *Si Non Confectus, Non Reficiat*
+<center>
+**Always Consistent** — **Zero Leakage** — **Totally Lazy**
 
+*Si Non Confectus, Non Reficiat*
+</center>
 ## Quick Demo App: {greeting}, {name}!
 
 ```javascript
