@@ -74,7 +74,7 @@ transact(() => {
 ### Problem
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\*, but many of us make the mistake of plugging our ears, closing our eyes, and spouting loud glossolalia in order to maintain the happy notion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs trying to keep interdependent state chunks consistent with one another and the server.
 
-Luckily this isn't much of a problem if you're building a small and simple application that won't change significantly. A small amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[*whatever*] frameworks can be extremely productive for doing that.
+Luckily this is almost never a problem if you're building a small and simple application that won't change much. A tiny amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[*whatever*] frameworks can be extremely productive for doing that.
 
 Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration.
 
