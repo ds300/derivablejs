@@ -50,9 +50,12 @@ transact(() => {
 
 - [Rationale](#rationale)
   - [Problem](#problem)
-  - [Solution](#solution)
-- [Comparison with Previous Work](#comparison-with-previous-work)
+  - [Solution?](#solution)
 - [Model](#model)
+  - [Key Benefits](#key-benefits)
+  - [Tradeoffs](#tradeoffs)
+  - [Comparison with Previous Work](#comparison-with-previous-work)
+- [ToDo](#todo)
 - [Algorithms and Data Structures](#algorithms-and-data-structures)
     - [Colors](#colors)
     - [Data At Rest](#data-at-rest)
@@ -126,7 +129,7 @@ These three types are connected together in DAGs with atoms at the roots. The ex
 
 It is important to note that the edges between nodes in the graph do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
 
-Note also that derivations are totally lazy. They **literally** never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
+Note also that derivations are totally lazy. They literally never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing *that* with streams.
 
 The other key benefit over streams is that there is no need to clean up after yourself when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This is simple to the max, and it makes the library practical to use on its own rather than as part of a framework.
 
@@ -166,6 +169,10 @@ The one disadvantage is performance: the extra sweep phase means that the cost o
 
 
 \* 'weak' meaning it can't guarantee consistency in the face of a dynamically changing propagation graph.
+
+## ToDo
+
+- Investigate whether asynchronous transactions are possible, or indeed desirable.
 
 ## Algorithms and Data Structures
 
