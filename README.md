@@ -255,9 +255,16 @@ root("bye");
 // => b e
 ```
 
-All of the above libraries are guilty of a thing which bothers me: the lexical conflation of derivation with reaction. These are two separate concerns and I see the gaining of terseness by combining them as something of a pyrrhic victory.
+With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience, not that much convenience is gained anyway.
 
 There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings.
+
+## What It's Not
+
+Havelock makes no prescriptions about what kind of data should be held in atoms or derived therefrom, except that it should all be effectively immutable. Unfortunately JavaScript doesn't provide Immutable collections so if you want to do collections, you should look at the likes of Immutable and mori. There are wrapper libraries which ensure that Havelock knows about these libraries' .equals semantics and feature cursor implementations and lots of nice examples.
+
+Havelock also has no opinion regarding how or whether you should go about deriving virtual DOM trees from your application state. I personally have many opinions on the matter but Havelock doesn't care if you use it to do that or to set up 2-way data bindings with jQuery or whatever.
+
 
 ## ToDo
 
