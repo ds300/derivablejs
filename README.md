@@ -89,15 +89,15 @@ transact(() => {
 ## Rationale
 
 ### Problem
-When writing browser-based applications it is often convenient to keep our state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\* but many of us make the mistake of plugging our ears, closing our eyes, and spouting loud glossolalia in order to maintain the happy notion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs trying to keep interdependent state chunks consistent with one another and the server.
+When writing browser-based applications it is often convenient to keep our state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\*, but many of us make the mistake of plugging our ears, closing our eyes, and spouting loud glossolalia in order to maintain the happy notion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs trying to keep interdependent state chunks consistent with one another and the server.
 
 Luckily this isn't much of a problem if you're building a small and simple application that won't change significantly. A small amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[whatever] frameworks can be extremely productive for doing that.
 
 Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration.
 
-Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly with time; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
+Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
 
-\* <em>And I suppose that it <strong>is</strong> wonderful compared to the days when we manually knitted the DOM to our state using jQuery. \*shudder\* </em>
+\* <em>It certainly beats the days when jQuery was *the shit*.</em>
 
 ### Solution?
 A promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
@@ -122,17 +122,28 @@ These three types are connected together in DAGs with atoms at the roots. The ex
 
 <img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
 
-It is important to note that the edges between nodes in the graph do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
+### Key Benefits
 
-Note also that derivations are totally lazy. They literally **never** do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
+It is important to note that the edges between nodes in the graph do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
+
+Note also that derivations are totally lazy. They **literally** never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing that with streams.
 
 The other key benefit over streams is that there is no need to clean up after yourself when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This is simple to the max, and it makes the library practical to use on its own rather than as part of a framework.
 
 All this isn't to say that streams and channels are bad (callback chains tend to be, though), just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
 
-## Comparison with Previous Work
+### Tradeoffs
 
-The curious among you will be wondering how this is all achieved. The answer is simple: mark-and-sweep. Garbage collectors have been doing it for ages. As far as I am aware, this is the only thing in Havelock that advances the state of the art.
+You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
+
+1. When an atom is changed, all active dependent reactions are gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case (which also happens to be the common case, but shhh don't tell your boss).
+2. The sweep phase involves yet another probably-whole-graph traversal.
+
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. Maybe this is inconsequential trivia for most use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice.
+
+*Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
+
+### Comparison with Previous Work
 
 [Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager, has weak consistency guarantees*, and requires manual memory management. The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) in JavaScript, but it doesn't seem to be publicly available.
 
