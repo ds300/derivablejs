@@ -28,8 +28,7 @@ const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
 // set up a side-effecting reaction to print the message
 message.react(msg => console.log(msg)); // $> Hello, World!
 
-// if we change the root state derivations are automatically kept in sync and
-// reactions are automatically re-run
+// reactions are automatically re-run when their inputs change
 countryCode.set("de"); // $> Hallo, World!
 name.set("Dieter"); // $> Hallo, Dieter!
 
