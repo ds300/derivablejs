@@ -55,35 +55,6 @@ transact(() => {
   - [Tradeoffs](#tradeoffs)
   - [Comparison with Previous Work](#comparison-with-previous-work)
 - [ToDo](#todo)
-- [Algorithms and Data Structures](#algorithms-and-data-structures)
-    - [Colors](#colors)
-    - [Data At Rest](#data-at-rest)
-    - [Query](#query)
-    - [In Motion](#in-motion)
-    - [Mark and Sweep](#mark-and-sweep)
-    - [In Transaction](#in-transaction)
-- [API](#api)
-  - [Types](#types)
-    - [Derivable](#derivable)
-      - [Methods](#methods)
-    - [Mutable](#mutable)
-    - [`Atom`](#atom)
-    - [`Derivation`](#derivation)
-    - [`Reaction`](#reaction)
-      - [Lifecycles](#lifecycles)
-      - [Methods](#methods-1)
-    - [`Lens`](#lens)
-      - [Lens Descriptors](#lens-descriptors)
-      - [Methods](#methods-2)
-        - [`.set(newValue)`](#setnewvalue)
-        - [`.get()`](#get)
-        - [`.derive(fn)`](#derivefn)
-        - [`.reaction(fn)`](#reactionfn)
-        - [`.react(fn)`](#reactfn)
-        - [`.swap(fn, ...args)`](#swapfn-args)
-        - [`.lens(lensDescriptor)`](#lenslensdescriptor)
-  - [Top-level functions](#top-level-functions)
-    - [`atom`](#atom)
 - [Hire Me](#hire-me)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -99,7 +70,7 @@ Alas, many small and simple apps eventually become large and complex apps. Likew
 
 Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
 
-\* <em>It certainly beats the days when jQuery was *the shit*.</em>
+\* <em>It certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.</em>
 
 ### Solution?
 A promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
