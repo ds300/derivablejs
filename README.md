@@ -154,7 +154,7 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies in the first place, please let me know and I'll edit or annotate where appropriate.*
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the derivation graph structure, which limits derivation graphs to internally-static structures which must be composed lexically. A simple, if utterly contrived, example of why this is a downside:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
 
 ```clojure
 (ns test-javelin
@@ -202,7 +202,7 @@ It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `at
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'.
 
-`reaction`s are also lazy, which is good! But not quite totally lazy. Example:
+Reagent's `reaction`s are also lazy, which is good! But not quite totally lazy. Example:
 
 ```clojure
 (ns test-ratom-again
@@ -228,7 +228,7 @@ At no point did `root` contain a word which starts with 'b' and ends with 'o', a
 
 `root` didn't change, but `fst` got computed twice. That's because of the way references are cleaned up when you call `dispose!`. Havelock suffers no such problems.
 
-Alas the one major problem with both of these libraries is that they require ClojureScript. I love love love ClojureScript but I'm not one of these extremely lucky people who get to use it at their job, so I wanted a pure JS solution. I imagine many others feel the same.
+The one major issue with both of these libraries is that they require ClojureScript. I love love love ClojureScript but I'm not one of these extremely lucky people who get to use it at their job, so I wanted a pure JS solution.
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
