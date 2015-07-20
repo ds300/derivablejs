@@ -121,7 +121,7 @@ All this isn't to say that streams and channels are bad (callback chains tend to
 
 You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
 
-- When an atom is changed, all active dependent reactions are gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
+- When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 - The sweep phase involves yet another probably-whole-graph traversal.
 
 So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice.
