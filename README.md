@@ -9,7 +9,7 @@
 
 ---
 
-Havelock is a simple state management library for JavaScript. It provides reactive values for [**Derived Data all the way Down**](#rationale).
+Havelock is a truly simple state management library for JavaScript. It provides reactive values for [**Derived Data all the way Down**](#rationale).
 
 ## Quick Demo App: {greeting}, {name}!
 
