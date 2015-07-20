@@ -152,9 +152,9 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 ### Comparison with Previous Work
 
-*NOTE: The following things are true at the time of writing. If they become untrue at some point please let me know and I'll make a note here.*
+*DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies in the first place, please let me know and I'll edit or annotate where appropriate.*
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the derivation graph structure, which limits derivation graphs to static structures which must be composed lexically. A simple example of why this is a downside:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the derivation graph structure, which limits derivation graphs to internally-static structures which must be composed lexically. A simple, if utterly contrived, example of why this is a downside:
 
 ```clojure
 (ns test-javelin
@@ -167,12 +167,14 @@ So really each time an atom is changed, its entire derivation graph is likely to
                     (if condition
                       "the condition is true"
                       value)))
+; => the condition is true
 
-; => the condition is true
 (swap! value inc)
 ; => the condition is true
+
 (swap! value inc)
 ; => the condition is true
+
 ; => ...etc
 ```
 
@@ -191,17 +193,14 @@ It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `at
 
 (def lst (reaction (last @root)))
 
-(defn print-fst-lst []
-  (.log js/console @fst @lst))
-
-(run! (print-fst-lst))
+(run! (.log js/console @fst @lst))
 ; => h o
 (reset! root "bye")
 ; => b o
 ; => b e
 ```
 
-At no point was `root` a word which starts with 'b' and ends with 'o', and yet that was the impression given to the `print-fst-lst` function for a moment there. In FRP-speak this is called a 'glitch'.
+At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'.
 
 `reaction`s are also lazy, which is good! But not quite totally lazy. Example:
 
@@ -231,10 +230,9 @@ At no point was `root` a word which starts with 'b' and ends with 'o', and yet t
 
 Alas the one major problem with both of these libraries is that they require ClojureScript. I love love love ClojureScript but I'm not one of these extremely lucky people who get to use it at their job, so I wanted a pure JS solution. I imagine many others feel the same.
 
-So what's available in JS land?
+So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
-- The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it doesn't seem to be publicly available.
-- [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) seem to get the job done, but are tied to Knockout itself and also unfortunately glitchy:
+More promising is [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) which seem to get the job done, but are tied to Knockout itself and also unfortunately glitchy:
 
 ```javascript
 "use strict";
@@ -258,11 +256,9 @@ root("bye");
 // => b e
 ```
 
-The API style bothers me too, i.e. making observables closures with overloaded arity for getting and setting state. It might save a few keystrokes, but it certainly doesn't improve grokkability.
+All of the above libraries are guilty of a thing which bothers me: the lexical conflation of derivation with reaction. These are two separate concerns and I see the gaining of terseness by combining them as something of a pyrrhic victory.
 
-All of the above libraries are guilty of another style thing which rubs me the wrong way: the lexical conflation of derivation with reaction. These are two separate concerns and whatever morsel of terseness is won by combining them is of dubious merit to my mind. I'd rather be able to easily distinguish, in my code, which constructs are effectful and which aren't.
-
-And but so there were [many](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [similar](https://github.com/arch-js/arch) [libraries](https://github.com/polymer/observe-js). None were what I wanted.
+And but so there were [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) which aren't worth singling out; I'd just be repeating myself.
 
 ## ToDo
 
