@@ -34,18 +34,20 @@ const greeting = countryCode.derive(cc => greetings[cc]);
 const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
 
 // set up a side-effecting reaction to print the message
-message.react(msg => console.log(msg)); // $> Hello, World!
+message.react(msg => console.log(msg));
+// $> Hello, World!
 
 // reactions are automatically re-run when their inputs change
-countryCode.set("de"); // $> Hallo, World!
-name.set("Dieter"); // $> Hallo, Dieter!
+countryCode.set("de");
+// $> Hallo, World!
+name.set("Dieter");
+// $> Hallo, Dieter!
 
 // we can avoid unwanted intermediate reactions by using transactions
 transact(() => {
   countryCode.set("fr");
   name.set("Étienne");
 });
-
 // $> Bonjour, Étienne!
 ```
 
