@@ -1,11 +1,14 @@
-# Havelock
-Reactive values for derived data all the way down
+# Havelock: Reactive Values
+It's Derived Data all the way Down
 ---
-<center>
-**Always Consistent** — **Zero Leakage** — **Totally Lazy**
 
-*Si Non Confectus, Non Reficiat*
-</center>
+<p align="center">
+<strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong> 
+</p>
+<p align="center">
+<em>Si Non Confectus, Non Reficiat</em>
+</p>
+
 ## Quick Demo App: {greeting}, {name}!
 
 ```javascript
