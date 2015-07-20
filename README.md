@@ -1,6 +1,8 @@
-# Havelock: Reactive Values
-It's Derived Data all the way Down
+<h1 align="center">Havelock</h1>
+<h3 align="center">It's Derived Data all the way Down</h3>
+
 ---
+
 
 <p align="center">
 <strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong> 
