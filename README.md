@@ -125,6 +125,8 @@ These three types are connected together in DAGs with atoms at the roots. The ex
 
 <img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
 
+The DAG structure is automatically inferred by executing derivation functions in a special context which allows Havelock to capture dereferences of immediate parents.
+
 ### Key Benefits
 
 It is important to note that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to dereference at any given time.
@@ -139,36 +141,128 @@ All this isn't to say that streams and channels are bad (callback chains tend to
 
 You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
 
-1. When an atom is changed, all active dependent reactions are gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case (which also happens to be the common case, but shhh don't tell your boss).
-2. The sweep phase involves yet another probably-whole-graph traversal.
+- When an atom is changed, all active dependent reactions are gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
+- The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. Maybe this is inconsequential trivia for most use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
+\* Just to be clear: this traversal is orthogonal to the actual execution of derivation functions.
+
 ### Comparison with Previous Work
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager, has weak consistency guarantees*, and requires manual memory management. The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript) in JavaScript, but it doesn't seem to be publicly available.
+*NOTE: The following things are true at the time of writing. If they become untrue at some point please let me know and I'll make a note here.*
 
-The following libraries all seem to have laziness but weak consistency guarantees and require memory management either manually or by the framework:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the derivation graph structure, which limits derivation graphs to static structures which must be composed lexically. A simple example of why this is a downside:
 
-- [Reagent](https://github.com/reagent-project/reagent) (ClojureScript)
-- [Reflex](https://github.com/lynaghk/reflex) (ClojureScript, deprecated)
-- [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) (use Pure Computed Observables for laziness)
+```clojure
+(ns test-javelin
+  (:require-macros [tailrecursion.javelin :refer [defc= defc]]))
 
+(defc value 1)
+(defc condition true)
 
-[Shiny has a very similar model](http://shiny.rstudio.com/articles/reactivity-overview.html), but with only partial laziness and framework/manual memory management (I think, my R isn't up to scratch so I didn't really grok the code. Please correct me if wrong).
+(defc= result (.log js/console
+                    (if condition
+                      "the condition is true"
+                      value)))
 
-Other advantages of Havelock which may not each apply to every project mentioned above include:
+; => the condition is true
+(swap! value inc)
+; => the condition is true
+(swap! value inc)
+; => the condition is true
+; => ...etc
+```
 
-- It is a standalone library that does one thing well (jumping on the 'unix philosophy' bandwagon).
-- It encourages a cleaner separation of concerns. e.g. decoupling pure derivation from side-effecting change listeners.
-- It has good taste, e.g. prohibiting cyclical updates (state changes causing state changes), reaction lifecycles, etc.
+The `value` cell is, lexically speaking, used by the `result` computed cell. It is never actually dereferenced, but you can't figure that out with macrology. So `result` is recomputed whenever `value` changes, even though it doesn't need to be. This sort of thing can't happen with Havelock.
 
-The one disadvantage is performance: the extra sweep phase means that the cost of propagating change is roughly twice that of most other implementations (in the worst case). Fortunately for typical user-focused javascript apps this extra time is negligable. [See Benchmarks](#todo).
+It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack either because it also uses dereference-capturing to infer graph structure. Unfortunately, it gives no consistency guarantees. To illustrate:
 
+```clojure
+(ns test-ratom
+  (:require-macros [reagent.ratom :refer [reaction run!]])
+  (:require [reagent.ratom :refer [atom]]))
 
-\* 'weak' meaning it can't guarantee consistency in the face of a dynamically changing propagation graph.
+(def root (atom "hello"))
+
+(def fst (reaction (first @root)))
+
+(def lst (reaction (last @root)))
+
+(defn print-fst-lst []
+  (.log js/console @fst @lst))
+
+(run! (print-fst-lst))
+; => h o
+(reset! root "bye")
+; => b o
+; => b e
+```
+
+At no point was `root` a word which starts with 'b' and ends with 'o', and yet that was the impression given to the `print-fst-lst` function for a moment there. In FRP-speak this is called a 'glitch'.
+
+`reaction`s are also lazy, which is good! But not quite totally lazy. Example:
+
+```clojure
+(ns test-ratom-again
+  (:require-macros [reagent.ratom :refer [reaction run!]])
+  (:require [reagent.ratom :refer [atom dispose!]]))
+
+(defn log [x]
+  (.log js/console "LOG:" x)
+  x)
+
+(def root (atom "hello"))
+
+(def fst (reaction (log (first @root))))
+
+(def rxn (run! @fst))
+; => LOG: h
+
+(dispose! rxn)
+
+(def rxn2 (run! @fst))
+; => LOG: h
+```
+
+`root` didn't change, but `fst` got computed twice. That's because of the way references are cleaned up when you call `dispose!`. Havelock suffers no such problems.
+
+Alas the one major problem with both of these libraries is that they require ClojureScript. I love love love ClojureScript but I'm not one of these extremely lucky people who get to use it at their job, so I wanted a pure JS solution. I imagine many others feel the same.
+
+So what's available in JS land?
+
+- The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it doesn't seem to be publicly available.
+- [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) seem to get the job done, but are tied to Knockout itself and also unfortunately glitchy:
+
+```javascript
+"use strict";
+
+const root = ko.observable("hello");
+
+const fst = ko.pureComputed(() => root()[0])
+
+const lst = ko.pureComputed(() => {
+  let word = root();
+  return word[word.length-1];
+});
+
+ko.computed(function () {
+  console.log(fst(), lst());
+});
+// => h o
+
+root("bye");
+// => b o
+// => b e
+```
+
+The API style bothers me too, i.e. making observables closures with overloaded arity for getting and setting state. It might save a few keystrokes, but it certainly doesn't improve grokkability.
+
+All of the above libraries are guilty of another style thing which rubs me the wrong way: the lexical conflation of derivation with reaction. These are two separate concerns and whatever morsel of terseness is won by combining them is of dubious merit to my mind. I'd rather be able to easily distinguish, in my code, which constructs are effectful and which aren't.
+
+And but so there were [many](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [similar](https://github.com/arch-js/arch) [libraries](https://github.com/polymer/observe-js). None were what I wanted.
 
 ## ToDo
 
