@@ -1,7 +1,7 @@
 <h1 align="center">Havelock</h1>
 
 <p align="center">
-<strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong> 
+<strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong>
 </p>
 <p align="center">
 <em>Si Non Confectus, Non Reficiat</em>
@@ -175,6 +175,7 @@ It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `at
 
 (run! (.log js/console @fst @lst))
 ; => h o
+
 (reset! root "bye")
 ; => b o
 ; => b e
@@ -182,10 +183,10 @@ It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `at
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'.
 
-Reagent's `reaction`s are also lazy, which is good! But not quite totally lazy. Example:
+Reagent's `reaction`s are also lazy, but only in the context of being `run!`, i.e, of actively reacting to changes. Example:
 
 ```clojure
-(ns test-ratom-again
+(ns test
   (:require-macros [reagent.ratom :refer [reaction run!]])
   (:require [reagent.ratom :refer [atom dispose!]]))
 
@@ -197,18 +198,18 @@ Reagent's `reaction`s are also lazy, which is good! But not quite totally lazy. 
 
 (def fst (reaction (log (first @root))))
 
-(def rxn (run! @fst))
+@fst
 ; => LOG: h
-
-(dispose! rxn)
-
-(def rxn2 (run! @fst))
+@fst
 ; => LOG: h
+@fst
+; => LOG: h
+; ... etc
 ```
 
-`root` didn't change, but `fst` got computed twice. That's because of the way references are cleaned up when you call `dispose!`. Havelock suffers no such problems.
+`root` didn't change, but `fst` got recomputed every time it was dereferenced. In Reagent's model, this is necessary in order to avoid the need for manual memory management. Havelock's derivations are lazy all the time, regardless of context.
 
-The one major issue with both of these libraries is that they require ClojureScript. I love love love ClojureScript but I'm not one of these extremely lucky people who get to use it at their job, so I wanted a pure JS solution.
+The one major issue with both of these libraries is that they require ClojureScript. I *totally adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job.
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
@@ -232,9 +233,9 @@ root("bye");
 // => b e
 ```
 
-With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. Havelock very purposefully avoids this for the sake of simplicity and clarity over convenience.
+With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These are two very different concerns with different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
 
-This is not an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. 
+This has not been an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. There are also many libraries on other platforms. The closest thing I managed to find to Havelock was [Shiny's Reactivity model](http://shiny.rstudio.com/articles/reactivity-overview.html).
 
 ## What It's Not
 
@@ -246,11 +247,10 @@ Havelock also has no opinion regarding how or whether you should go about derivi
 ## Future Work
 
 - Investigate whether asynchronous transactions are possible, or indeed desirable.
+- I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides. I think I figured out a way to do it which involves something like Reagent's method of garbage collection + parent state caching, but I'm not optimistic that there would be enough of a performance gain to try it out before 1.0.0.
 
 ## Hire Me
 
 If this project is useful to you, consider supporting the author by giving him a new job!
 
-I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. If that sounds like something you can offer and you're based in western Europe, please get in touch.
-
-A little about me: I've been on the fraying edges of academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and language design. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid junk on youtube. My sister is just the coolest person and I don't get to see her often enough. I'm free from November and would love to move to Berlin or Copenhagen.
+A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about tracing JIT compilers. I like to read books which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
