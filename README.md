@@ -17,6 +17,7 @@ Havelock is a truly simple state management library for JavaScript. It provides 
 
 
 - [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
+- [Usage](#usage)
 - [Rationale](#rationale)
   - [Problem](#problem)
   - [Solution?](#solution)
@@ -24,7 +25,6 @@ Havelock is a truly simple state management library for JavaScript. It provides 
   - [Key Benefits](#key-benefits)
   - [Tradeoffs](#tradeoffs)
   - [Comparison with Previous Work](#comparison-with-previous-work)
-- [What It's Not](#what-its-not)
 - [Future Work](#future-work)
 - [Hire Me](#hire-me)
 
@@ -73,16 +73,16 @@ transact(() => {
 
 ## Usage
 
-### Wrappers
-Havelock expects you to use immutable, or effectively immutable data. As such, there are a couple of tiny wrapper libraries for [Immutable](#) and [Mori](#) which make dealing with collections much more fun. I personally prefer Mori because its function-based api happens to be more terse than Immutable's method-based api when used with Havelock.
+##### Batteries Not Included
+Havelock expects you to use immutable, or effectively immutable data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go.
 
-### npm
+##### npm
 Available as `havelock`.
 
-### Browser
+##### Browser
 Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
 
-### API
+##### API & Examples
 [See Here](#todo)
 
 ## Rationale
@@ -252,13 +252,6 @@ root("bye");
 With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These are two very different concerns with different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
 
 This has not been an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. There are also many libraries on other platforms. The closest thing I managed to find to Havelock was [Shiny's Reactivity model](http://shiny.rstudio.com/articles/reactivity-overview.html).
-
-## What It's Not
-
-Havelock makes no prescriptions about what kind of data should be held in atoms or derived therefrom, except that it should all be effectively immutable. Unfortunately JavaScript doesn't provide Immutable collections so if you want to do collections, you should look at the likes of Immutable and mori. There are wrapper libraries which ensure that Havelock knows about these libraries' equality semantics and feature cursor implementations and lots of nice examples.
-
-Havelock also has no opinion regarding how or whether you should go about deriving virtual DOM trees from your application state. I personally have many opinions on the matter but Havelock doesn't care if you use it to do that or to set up 2-way data bindings with jQuery or whatever.
-
 
 ## Future Work
 
