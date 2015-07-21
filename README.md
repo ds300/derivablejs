@@ -31,7 +31,7 @@ const greetings = {
 
 // derive a greeting message based on the user's name and country.
 const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
+const message = derive(() => `${greeting.get()}, ${name.get()}!`);
 
 // set up a side-effecting reaction to print the message
 message.react(msg => console.log(msg));
@@ -40,8 +40,8 @@ message.react(msg => console.log(msg));
 // reactions are automatically re-run when their inputs change
 countryCode.set("de");
 // $> Hallo, World!
-name.set("Dieter");
-// $> Hallo, Dieter!
+name.set("Dagmar");
+// $> Hallo, Dagmar!
 
 // we can avoid unwanted intermediate reactions by using transactions
 transact(() => {
