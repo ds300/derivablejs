@@ -11,7 +11,27 @@
 
 Havelock is a truly simple state management library for JavaScript. It provides reactive values for [**Derived Data all the way Down**](#rationale).
 
-## Quick Demo App: {greeting}, {name}!
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
+- [Rationale](#rationale)
+  - [Problem](#problem)
+  - [Solution?](#solution)
+- [Model](#model)
+  - [Key Benefits](#key-benefits)
+  - [Tradeoffs](#tradeoffs)
+  - [Comparison with Previous Work](#comparison-with-previous-work)
+- [What It's Not](#what-its-not)
+- [Future Work](#future-work)
+- [Hire Me](#hire-me)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+## Quick Demo: {greeting}, {name}!
 
 ```javascript
 import {atom, derive, transact} from 'havelock'
@@ -51,23 +71,19 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
-## Contents
+## Usage
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+### Wrappers
+Havelock expects you to use immutable, or effectively immutable data. As such, there are a couple of tiny wrapper libraries for [Immutable](#) and [Mori](#) which make dealing with collections much more fun. I personally prefer Mori because its function-based api happens to be more terse than Immutable's method-based api when used with Havelock.
 
+### npm
+Available as `havelock`.
 
-- [Rationale](#rationale)
-  - [Problem](#problem)
-  - [Solution?](#solution)
-- [Model](#model)
-  - [Key Benefits](#key-benefits)
-  - [Tradeoffs](#tradeoffs)
-  - [Comparison with Previous Work](#comparison-with-previous-work)
-- [ToDo](#todo)
-- [Hire Me](#hire-me)
+### Browser
+Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+### API
+[See Here](#todo)
 
 ## Rationale
 
