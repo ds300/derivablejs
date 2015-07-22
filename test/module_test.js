@@ -264,4 +264,22 @@ describe("the lift function", () => {
 
     assert.equal(15, c.get());
   });
+
+  it("can be used in ordinary FP stuff", () => {
+    const cells = [0,1,2].map(atom);
+
+    const add = _.lift((a, b) => a + b);
+
+    const sum = cells.reduce(add);
+
+    let expected = 3;
+    let equalsExpected = false;
+    sum.react(x => equalsExpected = x === expected);
+    assert(equalsExpected);
+
+    expected = 4;
+    equalsExpected = false;
+    cells[0].swap(x => x+1);
+    assert(equalsExpected);
+  })
 });

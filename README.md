@@ -1,4 +1,5 @@
 <h1 align="center">Havelock</h1>
+<h3 align="center">Holistic State Management</h3>
 
 <p align="center">
 <strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong>
@@ -11,10 +12,8 @@
 
 Havelock is a truly simple state management library for JavaScript. It provides reactive values for [**Derived Data all the way Down**](#rationale).
 
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
 - [Usage](#usage)
@@ -51,7 +50,7 @@ const greetings = {
 
 // derive a greeting message based on the user's name and country.
 const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive(() => `${greeting.get()}, ${name.get()}!`);
+const message = derive`${greeting}, ${name}!`; // tagged template string magic!
 
 // set up a side-effecting reaction to print the message
 message.react(msg => console.log(msg));
@@ -71,19 +70,6 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
-## Usage
-
-##### Batteries Not Included
-Havelock expects you to use immutable, or effectively immutable data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go.
-
-##### npm
-Available as `havelock`.
-
-##### Browser
-Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
-
-##### API & Examples
-[See Here](#todo)
 
 ## Rationale
 
@@ -140,7 +126,7 @@ You may be wondering how these benefits are achieved. The answer is simple: mark
 - When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 - The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most UI-ish use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice. I've got a [fairly promising idea](#future-work) regarding how to fix this after v1.0.0 drops.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
@@ -148,35 +134,89 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 ### Comparison with Previous Work
 
-*DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies in the first place, please let me know and I'll edit or annotate where appropriate.*
+*DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies at conception, please let me know and I'll edit or annotate where appropriate.*
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock but is eager and requires manual memory management. It also uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
 
 ```clojure
-(ns test-javelin
-  (:require-macros [tailrecursion.javelin :refer [defc= defc]]))
+(ns test
+  (:require-macros [tailrecursion.javelin :refer [cell=]])
+  (:require [tailrecursion.javelin :refer [cell]]))
 
-(defc value 1)
-(defc condition true)
+(def cells (mapv cell (range 3)))
 
-(defc= result (.log js/console
-                    (if condition
-                      "the condition is true"
-                      value)))
-; => the condition is true
+(def sum (cell= (reduce + cells)))
 
-(swap! value inc)
-; => the condition is true
+(.log js/console @sum)
 
-(swap! value inc)
-; => the condition is true
+; => [object Object][object Object][object Object]
 
-; => ...etc
+; it tried to add the cells together, not their values
+
+; let's manually deref the cells so it can get at their values
+(def sum2 (cell= (reduce + (map deref cells))))
+
+(.log js/console @sum2)
+; => 3
+; correct!
+
+(swap! (cells 0) inc)
+
+(.log js/console @sum2)
+; => 3
+; incorrect! Look:
+
+(.log js/console (reduce + (map deref cells)))
+; => 4
 ```
 
-The `value` cell is, lexically speaking, used by the `result` computed cell. It is never actually dereferenced, but you can't figure that out with macrology. So `result` is recomputed whenever `value` changes, even though it doesn't need to be. This sort of thing can't happen with Havelock.
+So the `cell=` macro is unable to figure out that our `cells` vector contains cells which should be hooked up to the propagation graph. Havelock imposes no such constraints:
 
-It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack either because it also uses dereference-capturing to infer graph structure. Unfortunately, it gives no consistency guarantees. To illustrate:
+```javascript
+import {atom, derive, get} from 'havelock'
+
+const cells = [0,1,2].map(atom);
+
+const add = (a, b) => a + b;
+
+const sum = derive(() => cells.map(get).reduce(add));
+
+sum.react(x => console.log(x));
+// => 3
+
+cells[0].swap(x => x+1);
+// => 4
+```
+
+Sure it's a tad more verbose, but *this is JS*; I'm not a miracle worker.
+
+[Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack can handle runtime graph composition too (like Havelock, it uses dereference-capturing to infer edges). Reagent also does automatic memory management! Unfortunately, it can only do laziness for 'active' derivation branches.
+
+```clojure
+(ns test-ratom
+  (:require-macros [reagent.ratom :refer [reaction run!]])
+  (:require [reagent.ratom :refer [atom]]))
+
+(def root (atom "hello"))
+
+(def fst (reaction (.log js/console "LOG:" (first @root))))
+
+@fst
+; => LOG: h
+@fst
+; => LOG: h
+; ... etc. No laziness because graph is disconnected.
+
+; run!-ing connects the graph
+(run! @fst)
+; => LOG: h
+
+; ... and laziness kicks in
+@fst
+@fst
+```
+
+Reagent also fails to provide consistency guarantees. To illustrate:
 
 ```clojure
 (ns test-ratom
@@ -198,32 +238,6 @@ It can't happen with [Reagent](https://github.com/reagent-project/reagent)'s `at
 ```
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'.
-
-Reagent's `reaction`s are also lazy, but only in the context of being `run!`, i.e, of actively reacting to changes. Example:
-
-```clojure
-(ns test
-  (:require-macros [reagent.ratom :refer [reaction run!]])
-  (:require [reagent.ratom :refer [atom dispose!]]))
-
-(defn log [x]
-  (.log js/console "LOG:" x)
-  x)
-
-(def root (atom "hello"))
-
-(def fst (reaction (log (first @root))))
-
-@fst
-; => LOG: h
-@fst
-; => LOG: h
-@fst
-; => LOG: h
-; ... etc
-```
-
-`root` didn't change, but `fst` got recomputed every time it was dereferenced. In Reagent's model, this is necessary in order to avoid the need for manual memory management. Havelock's derivations are lazy all the time, regardless of context.
 
 The one major issue with both of these libraries is that they require ClojureScript. I *totally adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job.
 
@@ -253,13 +267,37 @@ With the partial exception of Knockout, all of the above libraries are also guil
 
 This has not been an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. There are also many libraries on other platforms. The closest thing I managed to find to Havelock was [Shiny's Reactivity model](http://shiny.rstudio.com/articles/reactivity-overview.html).
 
+## Usage
+
+##### Batteries Not Included
+Havelock expects you to use immutable, or effectively immutable data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
+
+##### Equality Woes
+JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
+
+If the data you're threading through Havelock needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
+
+##### npm
+Available as `havelock`.
+
+##### Browser
+Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
+
+##### API & Examples
+[See Here](#todo)
+
+## 1.0.0 Roadmap
+
+Aside from fixing bugs, the only thing I want to do before 1.0.0 is gather feedback/suggestions to help clean up/flesh out the core API. I hope to do this quickly, within a few weeks of 0.1.0 being released. The codebase and API are both small so chances are good.
+
 ## Future Work
 
-- Investigate whether asynchronous transactions are possible, or indeed desirable.
-- I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides. I think I figured out a way to do it which involves something like Reagent's method of garbage collection + parent state caching, but I'm not optimistic that there would be enough of a performance gain to try it out before 1.0.0.
+1. Dynamic graph optimization. (e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes).
+2. Investigate whether asynchronous transactions are possible, or indeed desirable.
+3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Hire Me
 
 If this project is useful to you, consider supporting the author by giving him a new job!
 
-A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about tracing JIT compilers. I like to read books which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
+A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read books which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
