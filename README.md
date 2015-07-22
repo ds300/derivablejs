@@ -14,8 +14,8 @@ Havelock is a truly simple state management library for JavaScript. It provides 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
-- [Usage](#usage)
 - [Rationale](#rationale)
   - [Problem](#problem)
   - [Solution?](#solution)
@@ -23,7 +23,10 @@ Havelock is a truly simple state management library for JavaScript. It provides 
   - [Key Benefits](#key-benefits)
   - [Tradeoffs](#tradeoffs)
   - [Comparison with Previous Work](#comparison-with-previous-work)
+- [Usage](#usage)
+- [1.0.0 Roadmap](#100-roadmap)
 - [Future Work](#future-work)
+- [Contributing](#contributing)
 - [Hire Me](#hire-me)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
