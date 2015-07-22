@@ -80,9 +80,9 @@ When writing client-side JavaScript it is often convenient to keep our applicati
 
 Luckily this is almost never a problem if you're building a small and simple application that won't change much. A tiny amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[*whatever*] frameworks can be extremely productive for doing that.
 
-Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration.
+Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration, i.e. the cost of modifying existing functionality and adding new functionality.
 
-Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the complexity and fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
+Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
 
 \* <em>It certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.</em>
 
@@ -119,7 +119,7 @@ Note also that derivations are totally lazy. They literally never do wasteful co
 
 The other key benefit over streams is that there is no need to clean up after yourself when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This is simple to the max, and it makes the library practical to use on its own rather than as part of a framework.
 
-All this isn't to say that streams and channels are bad (callback chains tend to be, though), just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
+All this isn't to say that streams and channels are bad, just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
 
 ### Tradeoffs
 
@@ -128,7 +128,7 @@ You may be wondering how these benefits are achieved. The answer is simple: mark
 - When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 - The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most UI-ish use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice. I've got a [fairly promising idea](#future-work) regarding how to fix this after v1.0.0 drops.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most UI-ish use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice. Although I've got a [fairly promising idea](#future-work) regarding how to fix this after v1.0.0 drops.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
