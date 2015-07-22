@@ -12,7 +12,7 @@ import { createDerivationPrototype, createDerivation } from './derivation'
 import { createLensPrototype, createLens } from './lens'
 import { createDerivablePrototype } from './derivable'
 import { createMutablePrototype } from './mutable'
-import { equals, extend, withPrototype } from './util'
+import { equals, extend } from './util'
 import { Reaction } from './reaction'
 
 const defaultConfig = { equals };

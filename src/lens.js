@@ -6,8 +6,7 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-import Set from './set'
-import { LENS, NEW } from './gc'
+import { LENS } from './gc'
 
 export function createLensPrototype(havelock, _) {
   return {

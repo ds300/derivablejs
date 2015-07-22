@@ -5,7 +5,7 @@
  *  This source code is licensed under the BSD-style license found in the
  *  LICENSE file in the root directory of this source tree.
  */
- 
+
 import { NEW, CHANGED, UNCHANGED, ORPHANED, UNSTABLE, DISOWNED,
          STABLE, REACTION} from './gc'
 
@@ -36,10 +36,10 @@ class ReactionBase {
 
   maybeReact () {
     if (this._state === UNSTABLE) {
-      if (this.parent._state === UNSTABLE
-          || this.parent._state === ORPHANED
-          || this.parent._state === DISOWNED
-          || this.parent._state === NEW) {
+      if (this.parent._state === UNSTABLE ||
+          this.parent._state === ORPHANED ||
+          this.parent._state === DISOWNED ||
+          this.parent._state === NEW) {
         this.parent._get();
       }
 

@@ -29,7 +29,7 @@ module.exports = function(grunt) {
         undef: true,
         unused: 'vars',
       },
-      all: ['src/**/*.js']
+      all: ['src/**/*.js', '!src/havelock.js']
     },
     clean: {
       build: ['dist/*']
@@ -84,6 +84,8 @@ module.exports = function(grunt) {
         var bundled = bundle.toUmd({
           banner: copyright,
           sourceMap: true,
+          sourceMapFile: 'havelock.js',
+          strict: true,
           name: 'Havelock'
         });
 
@@ -95,8 +97,14 @@ module.exports = function(grunt) {
           inputSourceMap: bundled.map,
         });
 
+        delete transformed.map.sourcesContent;
+        transformed.map.sources = transformed.map.sources.map(function (s) {
+          var idx = s.lastIndexOf("/src/");
+          return s.substring(idx + 1);
+        });
+
         fs.writeFileSync(file.dest + '.js', transformed.code);
-        fs.writeFileSync(file.dest + '.js.map', transformed.map);
+        fs.writeFileSync(file.dest + '.js.map', JSON.stringify(transformed.map, null, '\t'));
 
         var minifyResult = uglify.minify(transformed.code, {
           fromString: true,
@@ -210,5 +218,5 @@ module.exports = function(grunt) {
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
   grunt.registerTask('build', 'Build distributed javascript', ['clean', 'bundle', 'copy']);
   grunt.registerTask('test', 'Test built javascript', ['jest']);
-  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'stats', 'test']);
+  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'stats' /*, 'test' */]);
 }

@@ -6,7 +6,7 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-import { TransactionContext, runTransaction } from './transact'
+import { TransactionContext } from './transact'
 import { symbolValues } from './util'
 import { ATOM, CHANGED, STABLE, mark, sweep } from './gc'
 import Set from './set'
@@ -60,15 +60,15 @@ class AtomicTransactionState {
       processReactionQueue(this.reactionQueue);
 
       // then sweep for a clean finish
-      for (let [atom, _] of symbolValues(this.inTxnValues)) {
-        sweep(atom)
+      for (let [atom,] of symbolValues(this.inTxnValues)) {
+        sweep(atom);
       }
     }
   }
 
   onAbort () {
     if (!TXN_CTX.inTransaction()) {
-      for (let [atom, _] of symbolValues(this.inTxnValues)) {
+      for (let [atom,] of symbolValues(this.inTxnValues)) {
         sweep(atom);
       }
     }
@@ -82,7 +82,9 @@ export function createAtomPrototype (havelock, {equals}) {
     },
 
     withValidator (f) {
-      if (f == null || (typeof f === 'function')) {
+      if (f === null) {
+        return this._clone();
+      } if (typeof f === 'function') {
         let result = this._clone();
         let existing = this._validator;
         if (existing) {
@@ -103,15 +105,15 @@ export function createAtomPrototype (havelock, {equals}) {
     _validate (value) {
       let validationResult = this._validator && this._validator(value);
       if (this._validator && validationResult !== true) {
-        throw new Error(`Failed validation with value: '${value}'.`
-                        +` Validator returned '${validationResult}' `);
+        throw new Error(`Failed validation with value: '${value}'.` +
+                        ` Validator returned '${validationResult}' `);
       }
     },
 
     set (value) {
       if (inReactCycle) {
-        throw new Error("Trying to set atom state during reaction phase. This "
-                        + "is an error. Use middleware for cascading changes.");
+        throw new Error("Trying to set atom state during reaction phase. This" +
+                        " is an error. Use middleware for cascading changes.");
       }
       this._validate(value);
       if (!equals(value, this._value)) {

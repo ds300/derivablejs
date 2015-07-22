@@ -6,8 +6,6 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-import { symbolValues, extend } from './util'
-
 const RUNNING = Symbol("running"),
       COMPLETED = Symbol("completed"),
       ABORTED = Symbol("aborted");
@@ -15,12 +13,18 @@ const RUNNING = Symbol("running"),
 const $parent = Symbol("parent_txn");
 const $state = Symbol("txn_value");
 
+const TransactionAbortion = Symbol("abort that junk yo");
+
+function abortTransaction() {
+  throw TransactionAbortion;
+}
+
 export class TransactionContext {
   constructor () {
     this.currentTxn = null;
   }
   inTransaction () {
-    return this.currentTxn != null;
+    return this.currentTxn !== null;
   }
   currentTransaction () {
     return this.currentTxn;
@@ -34,8 +38,8 @@ export class TransactionContext {
     let txn = this.currentTxn;
     this.currentTxn = txn[$parent];
     if (txn[$state] !== RUNNING) {
-      throw new Error(`Must be in state 'RUNNING' to ${name} transaction.`
-                     + ` Was in state ${txn[$state]}.`);
+      throw new Error(`Must be in state 'RUNNING' to ${name} transaction.` +
+                      ` Was in state ${txn[$state]}.`);
     }
     cb(txn);
   }
@@ -64,10 +68,4 @@ export class TransactionContext {
       }
     }
   }
-}
-
-const TransactionAbortion = Symbol("abort that junk yo");
-
-function abortTransaction() {
-  throw TransactionAbortion;
 }

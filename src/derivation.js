@@ -47,9 +47,9 @@ export function createDerivationPrototype (havelock, { equals }) {
         break;
       case UNSTABLE:
         for (let parent of this._parents) {
-          if (parent._state === UNSTABLE
-              || parent._state === ORPHANED
-              || parent._state === DISOWNED) {
+          if (parent._state === UNSTABLE ||
+              parent._state === ORPHANED ||
+              parent._state === DISOWNED) {
             parent._get();
           }
           switch (parent._state) {

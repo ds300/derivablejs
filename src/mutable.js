@@ -15,4 +15,4 @@ export function createMutablePrototype (havelock, _) {
       return havelock.lens(this, lensDescriptor);
     }
   }
-};
+}

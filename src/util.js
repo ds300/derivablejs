@@ -103,13 +103,8 @@ export function equals (a, b, stackA, stackB) {
   }
   if (!(a && b)) return false;
 
-  return (typeof a.equals === 'function' && a.equals(b))
-         || (typeof b.equals === 'function' && b.equals(a))
-         || _equals(a, b, stackA, stackB)
-         || false;
-}
-
-export function withPrototype (obj, proto) {
-  obj.prototype = proto;
-  return obj;
+  return (typeof a.equals === 'function' && a.equals(b)) ||
+         (typeof b.equals === 'function' && b.equals(a)) ||
+         _equals(a, b, stackA, stackB) ||
+         false;
 }

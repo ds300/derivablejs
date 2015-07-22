@@ -12,7 +12,11 @@ const havelock = Havelock();
 
 export function withEquality (equals) {
   return Havelock({equals});
-};
+}
+
+const r = havelock.Reaction;
+
+export { r as Reaction };
 
 const {
   isAtom,
@@ -20,7 +24,6 @@ const {
   isLens,
   isReaction,
   isDerivable,
-  Reaction,
   transact,
   atom,
   swap,
@@ -35,7 +38,7 @@ const {
   or,
   and,
   not,
-  switchCase,
+  switchCase
 } = havelock;
 
 export {
@@ -44,7 +47,6 @@ export {
   isLens,
   isReaction,
   isDerivable,
-  Reaction,
   transact,
   atom,
   swap,
@@ -59,7 +61,7 @@ export {
   or,
   and,
   not,
-  switchCase,
+  switchCase
 };
 
 export default havelock;
