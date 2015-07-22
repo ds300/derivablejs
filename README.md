@@ -1,6 +1,5 @@
 <h1 align="center">Havelock</h1>
 <h3 align="center">Holistic State Management</h3>
-
 <p align="center">
 <strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong>
 </p>
