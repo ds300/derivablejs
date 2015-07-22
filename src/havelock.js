@@ -2,6 +2,10 @@ import Havelock from './havelock-module'
 
 const havelock = Havelock();
 
+export function withEquality (equals) {
+  return Havelock({equals});
+};
+
 const {
   isAtom,
   isDerivation,

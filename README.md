@@ -268,13 +268,8 @@ This has not been an exhaustive comparison. There are [some](https://www.meteor.
 
 ## Usage
 
-##### Batteries Not Included
-Havelock expects you to use immutable, or effectively immutable data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
-
-##### Equality Woes
-JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
-
-If the data you're threading through Havelock needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
+##### API & Examples
+[See Here](#todo)
 
 ##### npm
 Available as `havelock`.
@@ -282,12 +277,27 @@ Available as `havelock`.
 ##### Browser
 Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
 
-##### API & Examples
-[See Here](#todo)
+##### Batteries Not Included
+Havelock expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
+
+##### Equality Woes
+JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
+
+If the data you're threading through Havelock needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
+
+If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. Mori), then you'll need to re-initialize Havelock with a custom equality function.
+
+```javascript
+import { withEquality } from 'havelock'
+
+const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
+```
 
 ## 1.0.0 Roadmap
 
-Aside from fixing bugs, the only thing I want to do before 1.0.0 is gather feedback/suggestions to help clean up/flesh out the core API. I hope to do this quickly, within a few weeks of 0.1.0 being released. The codebase and API are both small so chances are good.
+Havelock's API will be unstable until version 1.0.0 is released. This will happen on or before September 1st 2015, whereafter the project will use [Semantic Versioning](http://semver.org/).
+
+The purpose for this delay is to gather [suggestions and feedback](#contributing) from the community to help shape the core API.
 
 ## Future Work
 
@@ -295,8 +305,12 @@ Aside from fixing bugs, the only thing I want to do before 1.0.0 is gather feedb
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
+## Contributing
+
+I heartily welcome feature requests, bug reports, and general suggestions/criticism. I also welcome bugfixes via pull request.
+
 ## Hire Me
 
 If this project is useful to you, consider supporting the author by giving him a new job!
 
-A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read books which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
+A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
