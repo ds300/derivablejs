@@ -44,14 +44,6 @@ module.exports = function(grunt) {
         }]
       }
     },
-    copy: {
-      build: {
-        files: [{
-          src: 'type-definitions/havelock.d.ts',
-          dest: 'dist/havelock.d.ts'
-        }]
-      }
-    },
     jest: {
       options: {
         testPathPattern: /.*/
@@ -138,7 +130,15 @@ module.exports = function(grunt) {
   var exec = require('child_process').exec;
 
   grunt.registerTask('make-docs', function () {
-    execp("boot cljs", "./docgen").then(function () {
+    var root = null;
+    if (fs.existsSync("./docgen/target/docgen.js")) {
+      console.log("docgen exists, skipping boot");
+      root = {then: function (cb) { return cb(); }};
+    } else {
+      console.log("docgen doesn't exist, compiling it...");
+      root = execp("boot cljs", "./docgen");
+    }
+    root.then(function () {
       return execp("node docgen.js ../../type-definitions/havelock.d.ts.edn ../../dist/havelock.d.ts", "./docgen/target");
     }).then(function () {
       console.log("all done");
@@ -232,7 +232,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('docs', 'build documentation', ['clean', 'make-docs'])
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
-  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'bundle', 'copy']);
+  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'bundle']);
   grunt.registerTask('test', 'Test built javascript', ['jest']);
-  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'stats' /*, 'test' */]);
+  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats' /*, 'test' */]);
 }
