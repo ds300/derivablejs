@@ -304,9 +304,9 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
-1. Dynamic graph optimization. (e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes).
+1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
-3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
+3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Contributing
 

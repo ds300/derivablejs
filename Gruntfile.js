@@ -1,3 +1,5 @@
+require('babel/register');
+
 /**
  *
  *   grunt lint      Lint all source javascript
@@ -32,7 +34,7 @@ module.exports = function(grunt) {
       all: ['src/**/*.js', '!src/havelock.js']
     },
     clean: {
-      build: ['dist/*']
+      build: ['dist/*', 'docs']
     },
     bundle: {
       build: {
@@ -132,6 +134,23 @@ module.exports = function(grunt) {
     });
   });
 
+  grunt.registerTask('make-docs', function () {
+    var gen = require('./resources/docgen');
+    gen.delint('./type-definitions/havelock.d.ts');
+    // var input = 'type-definitions/havelock.ts';
+    // var output = 'docs/';
+    //
+    // var typedoc = require('typedoc');
+    //
+    // var app = new typedoc.Application();
+    //
+    // var blah = app.convert([input]);
+    //
+    // console.log("blah", blah);
+    //
+    // app.generateDocs(["./"], output);
+  });
+
 
   var Promise = require("bluebird");
   var exec = require('child_process').exec;
@@ -215,6 +234,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jest');
   grunt.loadNpmTasks('grunt-release');
 
+  grunt.registerTask('docs', 'build documentation', ['clean', 'make-docs'])
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
   grunt.registerTask('build', 'Build distributed javascript', ['clean', 'bundle', 'copy']);
   grunt.registerTask('test', 'Test built javascript', ['jest']);

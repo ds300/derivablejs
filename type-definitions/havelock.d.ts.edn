@@ -1,0 +1,48 @@
+(:module havelock
+  "Havelock is an insanely cool thing yo"
+
+  (:interface (Derivable T)
+    "A thing that is derivable"
+    ((derive E) [f (=> [value T] E)] (Derivable E)
+      "Creates a new derivation based on the application of f to the
+       current value of this derivable")
+
+    (reaction [r (Reaction T)] (Reaction T)
+      "Creates a link between the given reaction and this derivable.")
+
+    (reaction [f (=> [value T] void)] (Reaction T)
+      "Creates a new reaction based on f being applied to this derivable.")
+
+    (react [r (Reaction T)] (Reaction T)
+      "Creates a link between the given reaction and this derivable. Starts
+       and forces the reaction before returning it.")
+
+    (react [f (=> [value T] void)] (Reaction T)
+      "Creates a new reaction based on f being applied to this derivable.
+      Starts and forces the reaction before returning it.")
+
+    (get [] T
+      "Returns the current value of this derivable")
+
+    (is [other any] (Derivable boolean)
+      "Returns a derivable which represents the equality of the values held in
+      this and other.
+
+      e.g.
+      ```clojure
+      let a = atom(`a`);
+          b = atom(`b`);
+
+      let same = a.is(b);
+
+      same.get();
+      // => false
+
+      b.set(`a`);
+
+      same.get();
+      // => true
+      ```
+      ")
+
+    ))
