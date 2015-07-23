@@ -120,7 +120,7 @@
              (mapv parse-property (:property things [])))))
 
 
-(defn -main [in-file]
-  (println (to-typescript (parse-module (read-string (.toString (.readFileSync fs in-file)))))))
+(defn -main [in-file out-file]
+  (.writeFileSync fs out-file (to-typescript (parse-module (read-string (.toString (.readFileSync fs in-file)))))))
 
 (set! *main-cli-fn* -main)

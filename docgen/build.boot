@@ -7,4 +7,4 @@
 
 (require '[adzerk.boot-cljs :refer [cljs]])
 
-(task-options! cljs {:target :nodejs :main "docgen.core" :output-to "docgen.js" :output-dir "../"})
+(task-options! cljs {:target :nodejs :main "docgen.core" :output-to "docgen.js"})

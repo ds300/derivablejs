@@ -134,35 +134,31 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.registerTask('make-docs', function () {
-    var gen = require('./resources/docgen');
-    gen.delint('./type-definitions/havelock.d.ts');
-    // var input = 'type-definitions/havelock.ts';
-    // var output = 'docs/';
-    //
-    // var typedoc = require('typedoc');
-    //
-    // var app = new typedoc.Application();
-    //
-    // var blah = app.convert([input]);
-    //
-    // console.log("blah", blah);
-    //
-    // app.generateDocs(["./"], output);
-  });
-
-
   var Promise = require("bluebird");
   var exec = require('child_process').exec;
 
-  function execp(cmd) {
+  grunt.registerTask('make-docs', function () {
+    execp("boot cljs", "./docgen").then(function () {
+      return execp("node docgen.js ../../type-definitions/havelock.d.ts.edn ../../dist/havelock.d.ts", "./docgen/target");
+    }).then(function () {
+      console.log("all done");
+    }).then(this.async()).error(function (error) {
+      setTimeout(function () {
+        throw error;
+      }, 0);
+    });
+  });
+
+
+
+  function execp(cmd, cwd) {
     var resolve, reject;
     var promise = new Promise(function(_resolve, _reject) {
       resolve = _resolve;
       reject = _reject;
     });
     try {
-      exec(cmd, function (error, out) {
+      exec(cmd, {cwd: cwd || "./"}, function (error, out) {
         if (error) {
           reject(error);
         } else {
