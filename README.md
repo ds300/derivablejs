@@ -75,19 +75,24 @@ transact(() => {
 
 ## Rationale
 
-### Problem
-When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful\*, but many of us make the mistake of plugging our ears, closing our eyes, and spouting loud glossolalia in order to maintain the happy notion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs trying to keep interdependent state chunks consistent with one another and the server.
+When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This all seems wonderful, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
+
+And yet many of us plug our ears, close our eyes, and spout loud glossolalia in order to maintain the happy notion that the word 'distinct' in *distinct responsibilities* will graciously extend itself to cover the meaning of the word 'independent'. Spoiler: it won't, and we end up with tangled callback webs thick with imperative code trying to keep interdependent state chunks consistent with one another and the server.
 
 Luckily this is almost never a problem if you're building a small and simple application that won't change much. A tiny amount of callback webbing is fine to deal with. Lots of people make such apps for a living, and modern MV[*whatever*] frameworks can be extremely productive for doing that.
 
 Alas, many small and simple apps eventually become large and complex apps. Likewise, large and complex apps invariably become larger and more complex. As size and complexity grow, so too does the cost of iteration, i.e. the cost of modifying existing functionality and adding new functionality.
 
-Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the fragility inherent in manually keeping state consistent using callback webs. We need a simpler way. The cost of iteration curve should be asymptotic or *flat*, even if it starts a little higher.
+Now, I haven't done any science to back this up but I reckon that with MVC the cost of iteration grows linearly over time; and that it does so precisely because of the fragility inherent in manually keeping whole-program state consistent. It is definitely the dominant source of bugs in large systems I've worked on.
 
-\* <em>It certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.</em>
+So maybe I just suck at manual state management in large sophistocated systems with shared mutable state? Yeah I'll admit to that. But even if you don't suck at that kind of thing, wouldn't it be nice to not have to worry about it ever? It would probably free up a buttload of space in that immense brain you've got.
 
-### Solution?
-A promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+Yes? Great! Well a promising solution appears to be something like 'unidirectional data flow' as popularized by Facebook's [Flux](https://facebook.github.io/flux/) architecture. There's a great video on the Flux landing page that explains the whole deal, but you can get at the gist of it quickly: You never change your state directly, but tell someone else, the Dispatcher, to do it and then you get notified when your state has changed. This might sound like pointless indirection but it gives two important benefits:
+
+* You no longer need to worry about who needs to know when your state changes. The other guy can do that.
+* You no longer need to worry about knowing about other guys' state changes that might affect your state.
+
+But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
