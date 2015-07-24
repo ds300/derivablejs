@@ -35,7 +35,7 @@
   Object
   (toString [{:keys [name type]}]
     (str (if (= (first name) "&")
-           (str "..." (.slice name 0))
+           (str "..." (.slice name 1))
            name)
          ": " (->typescript type))))
 

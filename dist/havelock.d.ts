@@ -28,14 +28,14 @@ declare module havelock {
 
     not(): Derivable<boolean>;
 
-    switch(...&args: any[]): Derivable<any>;
+    switch(...args: any[]): Derivable<any>;
   }
 
   export interface Mutable<T> {
 
     set<E>(value: E): Mutable<E>;
 
-    swap<E>(f: (value: T, ...&args: any[]) => E, ...&args: any[]): Mutable<E>;
+    swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Mutable<E>;
 
     lens<E>(descriptor: LensDescriptor<T, E>): Lens<E>;
   }

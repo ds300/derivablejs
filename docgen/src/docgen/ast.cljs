@@ -4,37 +4,29 @@
 ; *** Data type definitions ***
 ; *****************************
 
-(defrecord ParametereizedType
-  "e.g. Blah<K, V>"
-  [base-type params])
+(defrecord ParametereizedType [base-type params])
+; e.g. Blah<K, V>
 
-(defrecord ArrayType
-  "e.g. String[]"
-  [base-type])
+(defrecord ArrayType [base-type])
+; e.g. String[]
 
-(defrecord FunctionType
-  "e.g. (param1: SomeType, param2: Blah<K, V>, ...more: String[]) => Blah<X,Y>"
-  [params return-type])
+(defrecord FunctionType [params return-type])
+; e.g. (param1: SomeType, param2: Blah<K, V>, ...more: String[]) => Blah<X,Y>
 
-(defrecord Parameter
-  "e.g. param1: SomeType"
-  [name type])
+(defrecord Parameter [name type])
+; e.g. param1: SomeType
 
-(defrecord Function
-  "e.g. myFunc<TypeArg>(...params: any[]): ReturnType;"
-  [name doc type-args params return-type])
+(defrecord Function [name doc type-args params return-type])
+; e.g. myFunc<TypeArg>(...params: any[]): ReturnType;
 
-(defrecord Property
-  "e.g. myProperty: int;"
-  [name doc type])
+(defrecord Property [name doc type])
+; e.g. myProperty: int;
 
-(defrecord Module
-  "e.g. declare module mymodule { stuff }"
-  [name doc members])
+(defrecord Module [name doc members])
+; e.g. declare module mymodule { stuff }
 
-(defrecord Interface
-  "e.g. export interface MyInterface { stuff }"
-  [name type-args doc extends members])
+(defrecord Interface [name type-args doc extends members])
+; e.g. export interface MyInterface { stuff }
 
 ; *********************
 ; *** Parsing logic ***
