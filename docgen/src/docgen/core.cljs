@@ -2,6 +2,7 @@
   (:require [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
             [docgen.ast :as ast]
+            [docgen.names :refer [get-namespace resolve]]
             [docgen.typescript :refer [->typescript]]))
 
 (enable-console-print!)
@@ -21,13 +22,16 @@
  * Please change that file and re-run `grunt docs` to modify this file.
  */
 "
-  (->typescript module)))
+  (->typescript module)
+  "\n"))
 
 (defn -main [in-file out-file]
   (let [module (->> in-file
                  slurp
                  read-string
-                 ast/parse-module)]
+                 ast/parse-module)
+        namespace (get-namespace module)]
+    (pprint (resolve namespace ["havelock" "Reaction"] "Atom"))
     (spit out-file (make-d-ts in-file module))))
 
 (set! *main-cli-fn* -main)
