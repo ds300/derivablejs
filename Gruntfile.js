@@ -130,16 +130,20 @@ module.exports = function(grunt) {
   var exec = require('child_process').exec;
 
   grunt.registerTask('make-docs', function () {
-    var root = null;
-    if (fs.existsSync("./docgen/target/docgen.js")) {
+    var script = "docgen/target/docgen.js";
+    var api = "havelock.api.edn";
+    var tsOut = "dist/havelock.d.ts";
+
+    var rootQ = null;
+    if (fs.existsSync(script)) {
       console.log("docgen exists, skipping boot");
-      root = {then: function (cb) { return cb(); }};
+      rootQ = {then: function (cb) { return cb(); }};
     } else {
       console.log("docgen doesn't exist, compiling it...");
-      root = execp("boot cljs", "./docgen");
+      rootQ = execp("boot cljs", "./docgen");
     }
-    root.then(function () {
-      return execp("node docgen.js ../../type-definitions/havelock.d.ts.edn ../../dist/havelock.d.ts", "./docgen/target");
+    rootQ.then(function () {
+      return execp(["node", script, api, tsOut].join(" "));
     }).then(function () {
       console.log("all done");
     }).then(this.async()).error(function (error) {

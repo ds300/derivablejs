@@ -1,5 +1,7 @@
 (:module havelock
-  "Havelock is an insanely cool thing yo"
+  "Havelock is an holistic state management library. This is its API documentation.
+
+  "
 
   (:interface (Derivable T)
     "A thing that is derivable"
@@ -45,4 +47,50 @@
       ```
       ")
 
-    ))
+    (and [other any] (Derivable any)
+      "")
+
+    (or [other any] (Derivable any)
+      "")
+
+    (then [thenD any, elseD any] (Derivable any)
+      "")
+
+    (not [] (Derivable boolean)
+      "")
+
+    (switch [&args [any]] (Derivable any)
+      ""))
+
+  (:interface (Mutable T)
+    "Mutable interface yo"
+    ((set E) [value E] (Mutable E)
+      "")
+    ((swap E) [f (=> [value T &args [any]] E), &args [any]] (Mutable E)
+      "")
+    ((lens E) [descriptor (LensDescriptor T E)] (Lens E)
+      ""))
+
+  (:interface (LensDescriptor ParentType ChildType)
+    "Lens Descriptors are some whack jazz"
+    (get [source ParentType] ChildType
+      "")
+    (set [source ParentType, value ChildType] ParentType
+      ""))
+
+  (:interface (Atom T)
+    "blub"
+    (:extends (Derivable T) (Mutable T)))
+
+  (:interface (Lens T)
+    "blub"
+    (:extends (Derivable T) (Mutable T)))
+
+  (:interface (Reaction T)
+    "blub"
+    (start [] (Reaction T)
+      "")
+    (stop [] (Reaction T)
+      "")
+    (force [] (Reaction T)
+      "")))
