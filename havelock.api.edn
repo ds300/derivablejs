@@ -1,13 +1,12 @@
 (:module havelock
   "Havelock is an holistic state management library. This is its API documentation.
-
   "
 
   (:interface (Derivable T)
     "A thing that is derivable"
     ((derive E) [f (=> [value T] E)] (Derivable E)
       "Creates a new derivation based on the application of f to the
-       current value of this derivable")
+      current value of this derivable")
 
     (reaction [r (Reaction T)] (Reaction T)
       "Creates a link between the given reaction and this derivable.")
@@ -17,7 +16,7 @@
 
     (react [r (Reaction T)] (Reaction T)
       "Creates a link between the given reaction and this derivable. Starts
-       and forces the reaction before returning it.")
+      and forces the reaction before returning it.")
 
     (react [f (=> [value T] void)] (Reaction T)
       "Creates a new reaction based on f being applied to this derivable.
@@ -79,10 +78,6 @@
       ""))
 
   (:interface (Atom T)
-    "blub"
-    (:extends (Derivable T) (Mutable T)))
-
-  (:interface (Lens T)
     "blub"
     (:extends (Derivable T) (Mutable T)))
 

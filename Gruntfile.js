@@ -133,6 +133,11 @@ module.exports = function(grunt) {
     var script = "docgen/target/docgen.js";
     var api = "havelock.api.edn";
     var tsOut = "dist/havelock.d.ts";
+    var htmlOut = "docs/index.html";
+
+    if (!fs.existsSync("docs")) {
+      fs.mkdirSync("docs");
+    }
 
     var rootQ = null;
     if (fs.existsSync(script)) {
@@ -143,7 +148,7 @@ module.exports = function(grunt) {
       rootQ = execp("boot cljs", "./docgen");
     }
     rootQ.then(function () {
-      return execp(["node", script, api, tsOut].join(" "));
+      return execp(["node", script, api, tsOut, htmlOut].join(" "));
     }).then(function () {
       console.log("all done");
     }).then(this.async()).error(function (error) {

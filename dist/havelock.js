@@ -1,10 +1,3 @@
-/**
- *  Copyright (c) 2015, David Sheldrick.
- *  All rights reserved.
- *
- *  This source code is licensed under the BSD-style license found in the
- *  LICENSE file in the root directory of this source tree.
- */
 'use strict';
 
 var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
@@ -15,7 +8,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -34,10 +27,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var DISOWNED = 6;
 
   // core types
-  var ATOM = Symbol('ATOM');
-  var DERIVATION = Symbol('DERIVATION');
-  var LENS = Symbol('LENS');
-  var REACTION = Symbol('REACTION');
+  var ATOM = Symbol("ATOM");
+  var DERIVATION = Symbol("DERIVATION");
+  var LENS = Symbol("LENS");
+  var REACTION = Symbol("REACTION");
 
   function mark(node, reactions) {
     if (node._type === REACTION) {
@@ -147,14 +140,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
   }
 
-  var RUNNING = Symbol('running'),
-      COMPLETED = Symbol('completed'),
-      ABORTED = Symbol('aborted');
+  var RUNNING = Symbol("running"),
+      COMPLETED = Symbol("completed"),
+      ABORTED = Symbol("aborted");
 
-  var $parent = Symbol('parent_txn');
-  var $state = Symbol('txn_value');
+  var $parent = Symbol("parent_txn");
+  var $state = Symbol("txn_value");
 
-  var TransactionAbortion = Symbol('abort that junk yo');
+  var TransactionAbortion = Symbol("abort that junk yo");
 
   function abortTransaction() {
     throw TransactionAbortion;
@@ -197,7 +190,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_commit',
       value: function _commit() {
-        this._popTransaction('commit', function (txn) {
+        this._popTransaction("commit", function (txn) {
           txn[$state] = COMPLETED;
           txn.onCommit && txn.onCommit();
         });
@@ -205,7 +198,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_abort',
       value: function _abort() {
-        this._popTransaction('abort', function (txn) {
+        this._popTransaction("abort", function (txn) {
           txn[$state] = ABORTED;
           txn.onAbort && txn.onAbort();
         });
@@ -607,7 +600,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'onCommit',
       value: function onCommit() {
         if (TXN_CTX.inTransaction()) {
-          // push in-txn vals up to current txn
           var _iteratorNormalCompletion8 = true;
           var _didIteratorError8 = false;
           var _iteratorError8 = undefined;
@@ -636,7 +628,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
         } else {
-          // change root state and run reactions.
           var _iteratorNormalCompletion9 = true;
           var _didIteratorError9 = false;
           var _iteratorError9 = undefined;
@@ -765,7 +756,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
           if (typeof _ret === 'object') return _ret.v;
         } else {
-          throw new Error('.withValidator expects function or null');
+          throw new Error(".withValidator expects function or null");
         }
       },
 
@@ -782,7 +773,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       set: function set(value) {
         if (src_atom__inReactCycle) {
-          throw new Error('Trying to set atom state during reaction phase. This' + ' is an error. Use middleware for cascading changes.');
+          throw new Error("Trying to set atom state during reaction phase. This" + " is an error. Use middleware for cascading changes.");
         }
         this._validate(value);
         if (!equals(value, this._value)) {
@@ -812,7 +803,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function constructAtom(atom, value) {
-    atom._uid = Symbol('my_uid');
+    atom._uid = Symbol("my_uid");
     atom._children = new set__Set();
     atom._state = STABLE;
     atom._value = value;
@@ -1007,13 +998,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function createDerivation(obj, deriver) {
-    obj._uid = Symbol('my_uid');
+    obj._uid = Symbol("my_uid");
     obj._children = new set__Set();
     obj._parents = new set__Set();
     obj._deriver = deriver;
     obj._state = NEW;
     obj._type = DERIVATION;
-    obj._value = Symbol('null');
+    obj._value = Symbol("null");
     return obj;
   }
 
@@ -1046,7 +1037,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.control = control;
       this.parent = parent;
       this._state = STABLE;
-      this._uid = Symbol('my_uid');
+      this._uid = Symbol("my_uid");
       this.active = false;
       this._type = REACTION;
     }
@@ -1094,7 +1085,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this._state = STABLE;
           this.control.react(this.parent._get());
         } else {
-          throw new Error('No reaction function available.');
+          throw new Error("No reaction function available.");
         }
       }
     }]);
@@ -1113,7 +1104,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: '_createBase',
       value: function _createBase(parent) {
         if (this._base) {
-          throw new Error('This reaction has already been initialized');
+          throw new Error("This reaction has already been initialized");
         }
         this._base = new ReactionBase(parent, this);
         return this;
@@ -1141,23 +1132,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function isRunning() {
         return this._base.active;
       }
+
       // lifecycle methods go here
       // onStart, onStop
-
     }]);
 
     return Reaction;
   })();
 
   var StandardReaction = (function (_Reaction) {
+    _inherits(StandardReaction, _Reaction);
+
     function StandardReaction(f) {
       _classCallCheck(this, StandardReaction);
 
       _get2(Object.getPrototypeOf(StandardReaction.prototype), 'constructor', this).call(this);
       this.react = f;
     }
-
-    _inherits(StandardReaction, _Reaction);
 
     return StandardReaction;
   })(Reaction);
@@ -1186,7 +1177,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         } else if (f && f.react) {
           return anonymousReaction(f)._createBase(this);
         } else {
-          throw new Error('Unrecognized type for reaction ' + f);
+          throw new Error("Unrecognized type for reaction " + f);
         }
       },
 
@@ -1227,7 +1218,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         });
       }
 
-    }, 'switch', function _switch() {
+    }, "switch", function _switch() {
       for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         args[_key2] = arguments[_key2];
       }
@@ -1264,7 +1255,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var defaultConfig = { equals: equals };
 
   function havelock_module__havelock() {
-    var config = arguments[0] === undefined ? {} : arguments[0];
+    var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     config = extend({}, defaultConfig, config);
 
@@ -1322,7 +1313,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var n = arguments.length;
       switch (n) {
         case 0:
-          throw new Error('Wrong arity for derive. Expecting 1+ args');
+          throw new Error("Wrong arity for derive. Expecting 1+ args");
         case 1:
           return createDerivation(Object.create(Derivation), a);
         case 2:
@@ -1358,7 +1349,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       return Havelock.derive(function () {
-        var s = '';
+        var s = "";
         for (var i = 0; i < parts.length; i++) {
           s += parts[i];
           if (i < args.length) {
@@ -1611,3 +1602,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   exports['default'] = src_havelock;
 });
 //# sourceMappingURL=./havelock.js.map
+/**
+ *  Copyright (c) 2015, David Sheldrick.
+ *  All rights reserved.
+ *
+ *  This source code is licensed under the BSD-style license found in the
+ *  LICENSE file in the root directory of this source tree.
+ */
+// push in-txn vals up to current txn
+
+// change root state and run reactions.

@@ -49,8 +49,6 @@ declare module havelock {
 
   export interface Atom<T> extends Derivable<T>, Mutable<T> {}
 
-  export interface Lens<T> extends Derivable<T>, Mutable<T> {}
-
   export interface Reaction<T> {
 
     start(): Reaction<T>;

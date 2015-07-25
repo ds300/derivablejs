@@ -2,7 +2,7 @@
   (:require [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
             [docgen.ast :as ast]
-            [docgen.names :refer [get-namespace resolve]]
+            [docgen.docs :refer [generate-module-docs]]
             [docgen.typescript :refer [->typescript]]))
 
 (enable-console-print!)
@@ -25,13 +25,14 @@
   (->typescript module)
   "\n"))
 
-(defn -main [in-file out-file]
+
+
+(defn -main [in-file out-ts-file out-html-file]
   (let [module (->> in-file
                  slurp
                  read-string
-                 ast/parse-module)
-        namespace (get-namespace module)]
-    (pprint (resolve namespace ["havelock" "Reaction"] "Atom"))
-    (spit out-file (make-d-ts in-file module))))
+                 ast/parse-module)]
+    (spit out-html-file (generate-module-docs module))
+    (spit out-ts-file (make-d-ts in-file module))))
 
 (set! *main-cli-fn* -main)

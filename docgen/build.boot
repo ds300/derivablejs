@@ -3,7 +3,8 @@
 (set-env! :dependencies '[[adzerk/boot-cljs "0.0-3308-0" :scope "test"]
                           [org.clojure/clojure "1.7.0" :scope "test"]
                           [org.clojure/clojurescript "0.0-3308"]
-                          [reagent "0.5.0"]])
+                          [markdown-clj "0.9.67"]
+                          ])
 
 (require '[adzerk.boot-cljs :refer [cljs]])
 

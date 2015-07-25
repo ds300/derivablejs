@@ -16,7 +16,7 @@
   ([coll depth]
     (reduce str (map #(->typescript % depth) coll))))
 
-(extend-type ast/ParametereizedType
+(extend-type ast/ParameterizedType
   Object
   (toString [{:keys [base-type params]}]
     (str base-type "<" (all->ts (interpose ", " params)) ">")))

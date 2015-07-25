@@ -4,7 +4,7 @@
 ; *** Data type definitions ***
 ; *****************************
 
-(defrecord ParametereizedType [base-type params])
+(defrecord ParameterizedType [base-type params])
 ; e.g. Blah<K, V>
 
 (defrecord ArrayType [base-type])
@@ -49,7 +49,7 @@
     (list? type)   (let [[hd & tl] type]
                      (if (= hd '=>)
                        (parse-function-type tl)
-                       (ParametereizedType. hd (mapv parse-type tl))))))
+                       (ParameterizedType. hd (mapv parse-type tl))))))
 
 (defn parse-name [nm]
   (if (list? nm)

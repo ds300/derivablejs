@@ -1,65 +1,52 @@
 (ns docgen.names
   (:require [docgen.ast :as ast]))
 
-(defrecord Named [element namespace uid])
+(defrecord Named [element namespace path])
 
-(def uid (atom 0))
-
-(defn make-named [element namespace]
-  (Named. element namespace (swap! uid inc)))
+(defn make-named [element namespace path]
+  (Named. element namespace path))
 
 (defrecord Namespace [])
 
 (defprotocol IsNamed
-  (declare-name [this namespace]))
+  (declare-name [this namespace path]))
 
 (extend-type js/Object
   IsNamed
-  (declare-name [_ namespace]
+  (declare-name [_ namespace path]
     namespace))
 
 (extend-type ast/Property
   IsNamed
-  (declare-name [this namespace]
-    (assoc namespace (:name this) (make-named this nil))))
-
-(extend-type Symbol
-  IsNamed
-  (declare-name [this namespace]
-    (assoc namespace (str this) (make-named this nil))))
+  (declare-name [{:keys [name] :as this} namespace path]
+    (assoc namespace (:name this) (make-named this nil (conj path name)))))
 
 (extend-type ast/Function
   IsNamed
-  (declare-name [{:keys [name type-args] :as this} namespace]
-    (assoc namespace
-           name
-           (make-named this
-                   (reduce #(declare-name %2 %1)
-                           (Namespace.)
-                           type-args)))))
+  (declare-name [{:keys [name type-args] :as this} namespace path]
+    (assoc namespace name (make-named this nil (conj path name)))))
+
+(defn -declare-name [{:keys [name members] :as this} namespace path]
+  (assoc namespace
+         name
+         (make-named this
+                     (reduce #(declare-name %2 %1 (conj path name))
+                             (Namespace.)
+                             members)
+                     (conj path name))))
 
 (extend-type ast/Interface
   IsNamed
-  (declare-name [{:keys [name type-args members] :as this} namespace]
-    (assoc namespace
-           name
-           (make-named this
-                   (reduce #(declare-name %2 %1)
-                           (Namespace.)
-                           (concat type-args members))))))
+  (declare-name [this ns path]
+    (-declare-name this ns path)))
 
 (extend-type ast/Module
   IsNamed
-  (declare-name [{:keys [name members] :as this} namespace]
-    (assoc namespace
-           name
-           (make-named this
-                   (reduce #(declare-name %2 %1)
-                           (Namespace.)
-                           members)))))
+  (declare-name [this ns path]
+    (-declare-name this ns path)))
 
-(defn get-namespace [module]
-  (declare-name module (Namespace.)))
+(defn make-namespace [module]
+  (declare-name module (Namespace.) []))
 
 (defn resolve [namespace [nm & more] name]
   (or (and nm
