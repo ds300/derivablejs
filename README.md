@@ -77,17 +77,13 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
 
-And yet but still one thing remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to end up doing most of it manually. This seems to be the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
+And yet but still one thing remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This seems to be the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
 
-Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without having to worry about introducing exotic, hard-to-reproduce, and even-harder-to-dignose bugs as a bizarre artifact of how you were manually propagating state between a group of interdependent components?
+Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic, hard-to-reproduce, and even-harder-to-dignose bugs as a bizarre artifact of how you (or your feckless predecessor, if the boss is asking) were manually propagating state between a group of interdependent components?
 
-Wonder no more! Havelock is available *today*. For the low low price of *nothing*. Just a few keystrokes and you too will never again have to worry about how to keep your state fresh and clean.
+Wonder no more! Havelock is available *today*. For the low low price of *nothing*. Just a few keystrokes and your state will be fresh and clean forever and ever. Amen.
 
-## Origin Story
-
-Not really an origin, but the popularity of this kind of thing has been exploding as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a great video on the Flux landing page that explains the whole deal with that, but actually there's a better explaination of what Havelock is all about...
-
-The most direct source of inspiration for this library is [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The popularity of this kind of thing has been exploding as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's video on the Flux landing page that explains the whole deal with that, but actually the most direct source of inspiration for this library is [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
