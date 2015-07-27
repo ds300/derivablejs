@@ -184,7 +184,6 @@
                [:script {:src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"}]
                [:script (html/raw "hljs.initHighlightingOnLoad();")]
                [:script {:src "js/sticky.js"}]
-               [:script {:src "js/toc.js"}]
                (stylesheet "http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700")
                (stylesheet "http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic")
                (stylesheet "http://fonts.googleapis.com/css?family=Questrial")
