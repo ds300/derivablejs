@@ -86,3 +86,7 @@
 (extend-type cljs.core/EmptyList
   IRender
   (render [x] (render-seq x)))
+
+(extend-type nil
+  IRender
+  (render [_] ""))

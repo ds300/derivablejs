@@ -23,16 +23,27 @@
 
 (extend-type ast/Function
   IsNamed
-  (declare-name [{:keys [name type-args] :as this} namespace path]
-    (assoc namespace name (make-named this nil (conj path name)))))
+  (declare-name [{:keys [name signatures] :as this} namespace path]
+    (assoc namespace
+           name
+           (make-named this
+                       (reduce #(declare-name %2 %1 (conj path name))
+                                (Namespace.)
+                                (mapcat :type-args signatures))
+                       (conj path name)))))
 
-(defn -declare-name [{:keys [name members] :as this} namespace path]
+(extend-type cljs.core/Symbol
+  IsNamed
+  (declare-name [this namespace path]
+    (assoc namespace (str this) :type-arg)))
+
+(defn -declare-name [{:keys [name members type-args] :as this} namespace path]
   (assoc namespace
          name
          (make-named this
                      (reduce #(declare-name %2 %1 (conj path name))
                              (Namespace.)
-                             members)
+                             (concat members type-args))
                      (conj path name))))
 
 (extend-type ast/Interface

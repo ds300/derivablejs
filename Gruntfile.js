@@ -34,7 +34,7 @@ module.exports = function(grunt) {
       all: ['src/**/*.js', '!src/havelock.js']
     },
     clean: {
-      build: ['dist/*', 'docs']
+      build: ['dist/*', 'docs/index.html']
     },
     bundle: {
       build: {

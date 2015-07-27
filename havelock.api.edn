@@ -30,8 +30,8 @@
       this and other.
 
       e.g.
-      ```clojure
-      let a = atom(`a`);
+      ```javascript
+      let a = atom(`a`),
           b = atom(`b`);
 
       let same = a.is(b);
@@ -62,7 +62,7 @@
       ""))
 
   (:interface (Mutable T)
-    "Mutable interface yo"
+    "Mutable interface yo see {{Derivable}}"
     ((set E) [value E] (Mutable E)
       "")
     ((swap E) [f (=> [value T &args [any]] E), &args [any]] (Mutable E)

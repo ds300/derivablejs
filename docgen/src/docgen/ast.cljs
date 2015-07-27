@@ -16,7 +16,9 @@
 (defrecord Parameter [name type])
 ; e.g. param1: SomeType
 
-(defrecord Function [name doc type-args params return-type])
+(defrecord FunctionSignature [doc type-args params return-type])
+
+(defrecord Function [name signatures])
 ; e.g. myFunc<TypeArg>(...params: any[]): ReturnType;
 
 (defrecord Property [name doc type])
@@ -64,10 +66,10 @@
 (defn parse-function [[name params return-type & [doc]]]
   (let [[name type-args] (parse-name name)]
     (Function. name
-               doc
-               type-args
-               (parse-params params)
-               (parse-type return-type))))
+               [ (FunctionSignature. doc
+                                     type-args
+                                     (parse-params params)
+                                     (parse-type return-type)) ])))
 
 (defn parse-property [[name type & [doc]]]
   (Property. (str name) doc (parse-type type)))
@@ -81,6 +83,17 @@
 (defn member-includer [decl-parser]
   (fn [acc decl]
     (update-in acc [:members] conj (decl-parser decl))))
+
+(defn include-function [acc decl]
+  (let [func (parse-function decl)
+        name (:name func)
+        [i existing] (first (keep-indexed (fn [i member]
+                                              (when (= name (:name member))
+                                                [i member]))
+                                          (:members acc)))]
+    (if existing
+      (update-in acc [:members i :signatures] into (:signatures func))
+      (update-in acc [:members] conj func))))
 
 (defn include-doc [{doc :doc :as acc} more-doc]
   (assoc acc :doc (if (not-empty doc)
@@ -113,5 +126,5 @@
                  :doc       include-doc
                  :interface (member-includer parse-interface)
                  :module    (member-includer parse-module)
-                 :function  (member-includer parse-function)
+                 :function  include-function
                  :property  (member-includer parse-property) })

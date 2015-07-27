@@ -42,18 +42,22 @@
 (defn space [n]
   (reduce str (take (* n 2) (repeat " "))))
 
-(extend-type ast/Function
+(extend-type ast/FunctionSignature
   Object
-  (toString [{:keys [name type-args params return-type]}]
-    (str name
-         (if (seq type-args)
-           (str "<" (all->ts (interpose ", " type-args)) ">")
+  (toString [{:keys [type-args params return-type]}]
+    (str (if (seq type-args)
+           (str "<" (all->ts (interpose "," type-args)) ">")
            "")
-         "(" (all->ts (interpose ", " params)) "): " (->typescript return-type) ";"))
+         "(" (all->ts (interpose ", " params)) "): "
+         (->typescript return-type) ";")))
 
+(extend-type ast/Function
   TypeScripty
-  (->typescript [this depth]
-    (str (space depth) this)))
+  (->typescript [{:keys [name signatures]} depth]
+    (reduce str
+           (interpose "\n"
+                      (map #(str (space depth) name %)
+                           signatures)))))
 
 (extend-type ast/Property
   Object

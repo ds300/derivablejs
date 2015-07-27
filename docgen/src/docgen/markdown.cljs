@@ -23,7 +23,7 @@
       text
       (replace text
                #"\{\{\w+\}\}"
-               #(let [name (subs % 1 (dec (count %)))
+               #(let [name (subs % 2 (- (count %) 2))
                       [link className] (resolver name)]
                   (if link
                     (str "<a class=\"" className "\" href=\"" link "\">"name"</a>"))))
