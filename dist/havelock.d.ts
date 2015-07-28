@@ -29,13 +29,13 @@ declare module havelock {
     switch(...args: any[]): Derivable<any>;
   }
 
-  export interface Mutable<T> {
+  export interface Atom<T> extends Derivable<T> {
 
-    set<E>(value: E): Mutable<E>;
+    set<E>(value: E): Atom<E>;
 
-    swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Mutable<E>;
+    swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
 
-    lens<E>(descriptor: LensDescriptor<T, E>): Lens<E>;
+    lens<E>(descriptor: LensDescriptor<T, E>): Atom<E>;
   }
 
   export interface LensDescriptor<ParentType, ChildType> {
@@ -44,8 +44,6 @@ declare module havelock {
 
     set(source: ParentType, value: ChildType): ParentType;
   }
-
-  export interface Atom<T> extends Derivable<T>, Mutable<T> {}
 
   export interface Reaction<T> {
 

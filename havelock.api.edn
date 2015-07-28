@@ -220,25 +220,108 @@
       // => `other`
       ```"))
 
-  (:interface (Mutable T)
-    "Mutable interface yo see {{Derivable}}"
-    ((set E) [value E] (Mutable E)
-      "")
-    ((swap E) [f (=> [value T &args [any]] E), &args [any]] (Mutable E)
-      "")
-    ((lens E) [descriptor (LensDescriptor T E)] (Lens E)
-      ""))
+  (:interface (Atom T)
+    "Represents a mutable reference. "
+    (:extends (Derivable T))
+    ((set E) [value E] (Atom E)
+      "Sets the value of this atom to be `value`, returns this atom")
+    ((swap E) [f (=> [value T &args [any]] E), &args [any]] (Atom E)
+      "Sets the value of this atom to be the value returned when `f` is applied
+      to the current value of this and `args`.
+
+      Equivalent to:
+
+      ```javascript
+      this.set(f.apply(null, [this.get()].concat(args)));
+      ```")
+    ((lens E) [descriptor (LensDescriptor T E)] (Atom E)
+      "Returns a new Atom connected to this one via the logic specified in
+      `descriptor`. See {{LensDescriptor}}."))
 
   (:interface (LensDescriptor ParentType ChildType)
-    "Lens Descriptors are some whack jazz"
-    (get [source ParentType] ChildType
-      "")
-    (set [source ParentType, value ChildType] ParentType
-      ""))
+    "A lens is a kind of cross between an atom and a derivation.
+    It acts as a mutable proxy for some base atom, which lets consumers modify
+    the base atom without knowing precisely how. This knowledge is encoded in a
+    `LensDescriptor` as {{get}} and {{set}} functions.
 
-  (:interface (Atom T)
-    "blub"
-    (:extends (Derivable T) (Mutable T)))
+    For example, you could (but probably shouldn't) store your entire
+    application state as a json string, e.g.
+
+    ```javascript
+    const jsonState = atom(JSON.stringify({
+      username: `Tigran`,
+      sessionID: `x3rfs`
+    }));
+    ```
+
+    and then use you could use a generic lens to access and mutate properties
+    within that string:
+
+    ```javascript
+    function jsonLens (prop) {
+      return {
+        get (json) {
+          return JSON.parse(json)[prop];
+        },
+        set (json, value) {
+          let state = JSON.parse(json);
+          state[prop] = value;
+          return JSON.stringify(state);
+        }
+      }
+    }
+
+    const username = jsonState.lens(jsonLens(`username`));
+
+    username.get();
+    // => `Tigran`
+
+    username.set(`Franny`);
+
+    username.get();
+    // => `Franny`
+
+    jsonState.get();
+    // => `{\"username\": \"Franny\", \"sessionID\": \"x3rfs\"}`
+    ```
+
+    If someone has the `username` atom, they can be completely oblivious to the
+    fact that it is an abstraction over a json string, treating it like a normal
+    atom. This is the power of lenses!
+
+    But lenses also *compose*!
+
+    For example, if we were passing `username` to someone who can only read
+    backwards, we could do something like:
+
+    ```javascript
+    function stringReverse (s) {
+      let result = ``;
+      for (let c of s) {
+        result = c + result;
+      }
+      return result;
+    }
+    const reverseLens = {
+      get: s => stringReverse(s),
+      set: (_, s) => stringReverse(s)
+    };
+
+    const emanresu = username.lens(reverseLens);
+
+    emanresu.get();
+    // => `ynnarF`
+
+    emanresu.set(`drahciR`);
+
+    jsonState.get();
+    // => `{\"username\": \"Richard\", \"sessionID\": \"x3rfs\"}`
+    ```
+    "
+    (get [source ParentType] ChildType
+      "Returns the lensed value extracted from `source`.")
+    (set [source ParentType, value ChildType] ParentType
+      "Returns the transformed version of `source` which includes `value`."))
 
   (:interface (Reaction T)
     "blub"

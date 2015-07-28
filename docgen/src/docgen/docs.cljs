@@ -23,7 +23,7 @@
       [(make-href (:path elem)) "code"])))
 
 (defn compile-md [doc path]
-  (html/raw (md/compile-doc doc (count path) (make-link-resolver path))))
+  (html/raw (md/compile-doc doc (dec (count path)) (make-link-resolver path))))
 
 (defprotocol IDoc
   (gen [this path]))
@@ -75,7 +75,7 @@
     [:div.module
       (anchor path name)
       [:h2.code "module " [:.name name]]
-      (docs doc path)
+      (docs doc (conj path name))
       (gen-members members path name)])
 
   IToc
@@ -94,7 +94,7 @@
           (gen-type-args type-args (conj path name))]]
       (when (seq extends)
         [:h4.code [:.punct "extends "] (interpose [:.punct ", "] (map #(gen % (conj path name)) extends))])
-      (docs doc path)
+      (docs doc (conj path name))
       (gen-members members path name)])
 
   IToc
@@ -123,7 +123,7 @@
                [:.params (gen-params params (conj path name))]
                [:.punct " => "]
                (gen return-type (conj path name))]
-             (docs doc path)])]))
+             (docs doc (conj path name))])]))
 
   IToc
   (toc [{:keys [name]} path]
@@ -139,7 +139,7 @@
                   [:.params (gen-params params (conj path name))]
                   [:.punct " => "]
                   (gen return-type (conj path name))]
-        (docs doc path)]))
+        (docs doc (conj path name))]))
 
   IToc
   (toc [{:keys [name]} path]
@@ -152,7 +152,7 @@
       [:h4.code [:.name name]
                 [:.punct ": "]
                 (gen type path)]
-      (docs doc path)])
+      (docs doc (conj path name))])
 
   IToc
   (toc [{:keys [name]} path]
