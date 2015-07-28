@@ -9,7 +9,7 @@
 
 ---
 
-Havelock is a truly simple state management library for JavaScript. It provides reactive values for [**Derived Data all the way Down**](#rationale).
+Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by taking control of your interconnections. It is [**Derived Data all the way Down**](#rationale).
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -77,11 +77,11 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
 
-And yet but still one thing remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This seems to be the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
+And yet but still one thing remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This is arguably the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
 
-Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic, hard-to-reproduce, and even-harder-to-dignose bugs as a bizarre artifact of how you (or your feckless predecessor, if the boss is asking) were manually propagating state between a group of interdependent components?
+Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic, hard-to-reproduce, and even-harder-to-dignose bugs as a bizarre artifact of how state changes were being propagated between a group of interdependent components?
 
-Wonder no more! Havelock is available *today*. For the low low price of *nothing*. Just a few keystrokes and your state will be fresh and clean forever and ever. Amen.
+Wonder no more! Havelock is available *today*! For the low low price of *nothing*! It takes the responsibility to propagate state change away from your stateful things. All they have to worry about now is *reacting* to changes and *causing* changes. You would not believe how much simpler it makes your code.
 
 The popularity of this kind of thing has been exploding as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's video on the Flux landing page that explains the whole deal with that, but actually the most direct source of inspiration for this library is [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
@@ -134,7 +134,7 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies at conception, please let me know and I'll edit or annotate where appropriate.*
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also exclusively uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
 
 ```clojure
 (ns test
@@ -200,14 +200,14 @@ Sure it's a tad more verbose, but *this is JS*; I'm not a miracle worker.
 (def fst (reaction (.log js/console "LOG:" (first @root))))
 
 @fst
-; => LOG: h
+; $> LOG: h
 @fst
-; => LOG: h
+; $> LOG: h
 ; ... etc. No laziness because graph is disconnected.
 
 ; run!-ing connects the graph
 (run! @fst)
-; => LOG: h
+; $> LOG: h
 
 ; ... and laziness kicks in
 @fst
@@ -235,9 +235,9 @@ Reagent also fails to provide consistency guarantees. To illustrate:
 ; => b e
 ```
 
-At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'.
+At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'. Havelock is glitch-free.
 
-The one major issue with both of these libraries is that they require ClojureScript. I *totally adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job.
+The one major issue with both of these libraries is that they require ClojureScript. I *adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job. Maybe you're in a similar boat.
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
@@ -261,7 +261,7 @@ root("bye");
 // => b e
 ```
 
-With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These are two very different concerns with different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
+With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These two concerns have different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
 
 This has not been an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. There are also many libraries on other platforms. The closest thing I managed to find to Havelock was [Shiny's Reactivity model](http://shiny.rstudio.com/articles/reactivity-overview.html).
 
@@ -300,16 +300,16 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
-1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So if you want to get ahead of the curve!
+1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Contributing
 
-I heartily welcome feature requests, bug reports, and general suggestions/criticism. I also welcome bugfixes via pull request.
+I heartily welcome feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
 
 ## Hire Me
 
 If this project is useful to you, consider supporting the author by giving him a new job!
 
-A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about the human condition. I can juggle 7 balls. I play instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would love to move to Berlin or Copenhagen, but would consider remote work or moving anywhere in Western Europe for the right job.
+A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure (<3) and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would be willing to move anywhere in Western Europe for the right job.
