@@ -51,13 +51,21 @@
          "(" (all->ts (interpose ", " params)) "): "
          (->typescript return-type) ";")))
 
+(defn fn-or-method->ts [name signatures depth]
+  (reduce str
+          (interpose "\n"
+                     (map #(str (space depth) name %)
+                          signatures))))
+
 (extend-type ast/Function
   TypeScripty
   (->typescript [{:keys [name signatures]} depth]
-    (reduce str
-           (interpose "\n"
-                      (map #(str (space depth) name %)
-                           signatures)))))
+    (fn-or-method->ts name signatures depth)))
+
+(extend-type ast/Method
+  TypeScripty
+  (->typescript [{:keys [name signatures]} depth]
+    (fn-or-method->ts name signatures depth)))
 
 (extend-type ast/Property
   Object

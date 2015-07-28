@@ -5,31 +5,87 @@
   (:interface (Derivable T)
     "A thing that is derivable"
     ((derive E) [f (=> [value T] E)] (Derivable E)
-      "Creates a new derivation based on the application of f to the
-      current value of this derivable")
+      "Creates a new derivation based on the application of `f` to the
+      current value of this derivable. e.g.
+
+      ```javascript
+      const x = atom(4);
+      const timesTwo = (n) => n * 2;
+      const xTimesTwo = x.derive(timesTwo);
+
+      xTimesTwo.get();
+      // => 8
+      ```")
 
     (reaction [r (Reaction T)] (Reaction T)
-      "Creates a link between the given reaction and this derivable.")
+      "Creates a link between `r` and this derivable. `r` should be a 'fresh'
+      reaction. i.e. it should not have been linked to any other derivable
+      in the past. For examples see {{Reaction}}")
 
     (reaction [f (=> [value T] void)] (Reaction T)
-      "Creates a new reaction based on f being applied to this derivable.")
+      "Creates a new reaction based on `f` being applied to this derivable. e.g.
+
+      ```javascript
+      const x = atom(4);
+      const r = x.reaction(x => console.log(`x is`, x));
+
+      x.set(8);
+
+      // .reaction creats the reaction, but doesn't start it, so nothing gets
+      // printed yet
+
+      r.start();
+
+      // now that the reaction has started it will respond to changes in x
+
+      x.set(16);
+      // $> x is 16
+
+      x.set(32);
+      // $> x is 32
+      ```")
 
     (react [r (Reaction T)] (Reaction T)
       "Creates a link between the given reaction and this derivable. Starts
-      and forces the reaction before returning it.")
+      and forces the reaction before returning it. i.e.
+
+      ```javascript
+      derivable.react(r);
+      ```
+
+      is equivalent to
+
+      ```javascript
+      derivable.reaction(r).start().force();
+      ```")
 
     (react [f (=> [value T] void)] (Reaction T)
-      "Creates a new reaction based on f being applied to this derivable.
-      Starts and forces the reaction before returning it.")
+      "Creates a new reaction based on `f` being applied to this derivable.
+      Starts and forces the reaction before returning it. i.e.
+
+      ```javascript
+      derivable.react(f);
+      ```
+
+      is equivalent to
+
+      ```javascript
+      derivable.reaction(f).start().force();
+      ```")
 
     (get [] T
-      "Returns the current value of this derivable")
+      "Returns the current value of this derivable.
+
+      ```javascript
+      const x = atom(`a string`);
+      x.get();
+      // => 'a string'
+      ```")
 
     (is [other any] (Derivable boolean)
       "Returns a derivable which represents the equality of the values held in
-      this and other.
+      this and `other`.
 
-      e.g.
       ```javascript
       let a = atom(`a`),
           b = atom(`b`);
@@ -47,19 +103,122 @@
       ")
 
     (and [other any] (Derivable any)
-      "")
+      "Returns a derivable which represents the boolean AND composition of the
+      values held in this and `other`.
+
+      ```javascript
+      const condition = atom(`truthy value`);
+
+      const result = condition.and(`yes truthy`);
+
+      result.get();
+      // => `yes truthy`
+
+      condition.set(false);
+
+      result.get();
+      // => false
+      ```
+
+      `other` can be a derivable.
+
+      ```javascript
+      const result2 = result.and(condition.derive(s => s.split(` `)[0]));
+
+      result2.get();
+      // => false
+
+      condition.set(`some string`);
+
+      result2.get();
+      // => `some`
+      ```
+
+      Due to havelock's laziness, we can be sure that the derivation of
+      `condition` (the string splitting bit) will only ever be evaluated
+      when `condition` contains a truthy value.")
 
     (or [other any] (Derivable any)
-      "")
+      "Returns a derivable which represents the boolean OR composition of the
+      values held in this and `other`.
+
+      ```javascript
+      const first = atom(`truthy value`);
+      const second = atom(false);
+
+      first.or(second).get();
+      // => `truthy value`
+
+      second.or(first).get();
+      // => `truthy value`
+
+      first.set(false);
+
+      second.or(first).get();
+      // => false
+
+      first.set(`first`);
+      second.set(`second`);
+
+      first.or(second).get();
+      // => `first`
+
+      second.or(first).get();
+      // => `second`
+      ```")
 
     (then [thenD any, elseD any] (Derivable any)
-      "")
+      "Returns a derivable which represents the value of `thenD` if this is
+      truthy, or `elseD` otherwise.
+
+      Equivalent to:
+
+      ```javascript
+      this.and(thenD).or(elseD);
+      ```")
 
     (not [] (Derivable boolean)
-      "")
+      "Returns a derivable which represents the boolean complement of the
+      truthiness of the the value represented by this.
+
+      Equivalent to:
+
+      ```javascript
+      this.derive(x => !x);
+      ```")
 
     (switch [&args [any]] (Derivable any)
-      ""))
+      "Args is a flat list of (comparatee, value) pairs. If the value
+      represented by this derivable is equal to a comparatee (which can be derivable or not),
+      a derivable representing the comparatee's corresponding value is returned. If none match,
+      the value represented is `undefined` unless a trailing value is supplied.
+
+      ```javascript
+      const x = atom(3);
+
+      const y = x.switch(
+        1, `one`,
+        2, `two`,
+        3, `three`
+      );
+
+      y.get();
+      // => `three`
+
+      x.set(4);
+
+      y.get();
+      // => undefined
+
+      const z = x.switch(
+        5, `five`,
+        6, `six`,
+        `other`
+      );
+
+      z.get();
+      // => `other`
+      ```"))
 
   (:interface (Mutable T)
     "Mutable interface yo see {{Derivable}}"

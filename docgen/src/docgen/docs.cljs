@@ -85,29 +85,57 @@
 
 (extend-type ast/Interface
   IDoc
-  (gen [{:keys [name type-args doc members]} path]
+  (gen [{:keys [name type-args doc members extends]} path]
     [:div.interface
       (anchor path name)
       [:h3.code "interface "
         [:.name
           name
           (gen-type-args type-args (conj path name))]]
+      (when (seq extends)
+        [:h4.code [:.punct "extends "] (interpose [:.punct ", "] (map #(gen % (conj path name)) extends))])
       (docs doc path)
       (gen-members members path name)])
 
   IToc
   (toc [{:keys [name members]} path]
-    [:li (link (make-href (conj path name)) (str name))
+    [:li.interface (link (make-href (conj path name)) (str name))
       (when (seq members)
         [:ul (map #(toc % (conj path name)) members)])]))
 
 (extend-type ast/Function
   IDoc
   (gen [{:keys [name signatures]} path]
+    (let [do-individual-type-args (not (or (= 1 (count signatures))
+                                           (apply = (map :type-args signatures))))]
+       [:div.function
+         (anchor path name)
+         [:h3.code
+           "function "
+           [:.name name (when-not do-individual-type-args
+                          (gen-type-args (:type-args (first signatures)) (conj path name)))]]
+
+         (for [{:keys [type-args params return-type doc]} signatures]
+           [:div.function-signature
+             [:h4.code
+               (when do-individual-type-args
+                 [:.name (gen-type-args type-args (conj path name))])
+               [:.params (gen-params params (conj path name))]
+               [:.punct " => "]
+               (gen return-type (conj path name))]
+             (docs doc path)])]))
+
+  IToc
+  (toc [{:keys [name]} path]
+    [:li.function (link (make-href (conj path name)) (str name))]))
+
+(extend-type ast/Method
+  IDoc
+  (gen [{:keys [name signatures]} path]
     (for [{:keys [type-args params return-type doc]} signatures]
-      [:div.function
+      [:div.method
         (anchor path name)
-        [:h4.code [:.name name (gen-type-args type-args (conj path name))]
+        [:h4.code [:.name "." name (gen-type-args type-args (conj path name))]
                   [:.params (gen-params params (conj path name))]
                   [:.punct " => "]
                   (gen return-type (conj path name))]
@@ -115,7 +143,7 @@
 
   IToc
   (toc [{:keys [name]} path]
-    [:li (link (make-href (conj path name)) (str name))]))
+    [:li.method (link (make-href (conj path name)) (str "." name))]))
 
 (extend-type ast/Property
   IDoc
@@ -128,7 +156,7 @@
 
   IToc
   (toc [{:keys [name]} path]
-    [:li (link (make-href (conj path name)) (str name))]))
+    [:li.property (link (make-href (conj path name)) (str name))]))
 
 (extend-type ast/Parameter
   IDoc
@@ -198,7 +226,6 @@
                                (icon :github)]]]
 
             [:div#toc
-              [:h2 "Contents"]
               (toc module [])]
 
             [:div.page (gen module [])]

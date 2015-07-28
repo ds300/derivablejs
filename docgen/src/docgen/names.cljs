@@ -21,16 +21,24 @@
   (declare-name [{:keys [name] :as this} namespace path]
     (assoc namespace (:name this) (make-named this nil (conj path name)))))
 
+(defn declare-fn-or-method [{:keys [name signatures] :as this} namespace path]
+  (assoc namespace
+         name
+         (make-named this
+                     (reduce #(declare-name %2 %1 (conj path name))
+                              (Namespace.)
+                              (mapcat :type-args signatures))
+                     (conj path name))))
+
 (extend-type ast/Function
   IsNamed
-  (declare-name [{:keys [name signatures] :as this} namespace path]
-    (assoc namespace
-           name
-           (make-named this
-                       (reduce #(declare-name %2 %1 (conj path name))
-                                (Namespace.)
-                                (mapcat :type-args signatures))
-                       (conj path name)))))
+  (declare-name [this namespace path]
+    (declare-fn-or-method this namespace path)))
+
+(extend-type ast/Method
+  IsNamed
+  (declare-name [this namespace path]
+    (declare-fn-or-method this namespace path)))
 
 (extend-type cljs.core/Symbol
   IsNamed

@@ -19,6 +19,7 @@
 (defrecord FunctionSignature [doc type-args params return-type])
 
 (defrecord Function [name signatures])
+(defrecord Method [name signatures])
 ; e.g. myFunc<TypeArg>(...params: any[]): ReturnType;
 
 (defrecord Property [name doc type])
@@ -63,13 +64,13 @@
     (cons (Parameter. (name nm) (parse-type type))
           (parse-params more))))
 
-(defn parse-function [[name params return-type & [doc]]]
+(defn parse-function-or-method [constructor [name params return-type & [doc]]]
   (let [[name type-args] (parse-name name)]
-    (Function. name
-               [ (FunctionSignature. doc
-                                     type-args
-                                     (parse-params params)
-                                     (parse-type return-type)) ])))
+    (constructor. name
+                  [ (FunctionSignature. doc
+                                        type-args
+                                        (parse-params params)
+                                        (parse-type return-type)) ])))
 
 (defn parse-property [[name type & [doc]]]
   (Property. (str name) doc (parse-type type)))
@@ -84,8 +85,8 @@
   (fn [acc decl]
     (update-in acc [:members] conj (decl-parser decl))))
 
-(defn include-function [acc decl]
-  (let [func (parse-function decl)
+(defn include-function-or-method [constructor acc decl]
+  (let [func (parse-function-or-method constructor decl)
         name (:name func)
         [i existing] (first (keep-indexed (fn [i member]
                                               (when (= name (:name member))
@@ -107,24 +108,31 @@
     (vector? args) :function
     :else          :property))
 
-(declare includers)
 
-(defn include-member [thing member]
+
+(defn include-member [includers thing member]
   (let [include (includers (decl-type member))]
     (include thing member)))
+
+(declare interface-includers)
+(declare module-includers)
 
 (defn parse-interface [[_ name & members]]
   (let [[name type-args] (parse-name name)
         interface (Interface. name type-args "" [] [])]
-    (reduce include-member interface members)))
+    (reduce (partial include-member interface-includers) interface members)))
 
 (defn parse-module [[_ name & members]]
   (let [module (Module. (str name) "" [])]
-    (reduce include-member module members)))
+    (reduce (partial include-member module-includers) module members)))
 
-(def includers { :extends   include-extends
-                 :doc       include-doc
-                 :interface (member-includer parse-interface)
-                 :module    (member-includer parse-module)
-                 :function  include-function
-                 :property  (member-includer parse-property) })
+(def module-includers { :extends   include-extends
+                        :doc       include-doc
+                        :interface (member-includer parse-interface)
+                        :module    (member-includer parse-module)
+                        :function  (partial include-function-or-method Function)
+                        :property  (member-includer parse-property) })
+
+(def interface-includers (assoc module-includers
+                                :function
+                                (partial include-function-or-method Method)))
