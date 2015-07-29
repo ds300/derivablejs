@@ -77,19 +77,11 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
 
-<<<<<<< HEAD
 And yet but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This is arguably the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
 
 Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic time-sucking bugs as a bizarre artifact of how state changes were being mis-propagated between a group of interdependent components?
 
 Wonder no more: Havelock is available *today*! For the low low price of *nothing*! With just one 'weird' trick, your stateful things can be entirely free of the responsibility to propagate change! You won't believe how simple your code will be!
-=======
-And yet but still one thing remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This is arguably the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
-
-Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic, hard-to-reproduce, and even-harder-to-dignose bugs as a bizarre artifact of how state changes were being propagated between a group of interdependent components?
-
-Wonder no more! Havelock is available *today*! For the low low price of *nothing*! It takes the responsibility to propagate state change away from your stateful things. All they have to worry about now is *reacting* to changes and *causing* changes. You would not believe how much simpler it makes your code.
->>>>>>> 98345b422058afe16a6f9a1515ed2990e1081ff4
 
 Hyperbole aside, the popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a video on the Flux landing page that explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
