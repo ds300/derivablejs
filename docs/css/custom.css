@@ -201,8 +201,8 @@ div.note {
 
 div.see-also {
   border-left: 4px solid #3FB8AF;
-  padding-left: 0.3em;
   background-color: #f0f0f0;
+  border-radius: 3px;
 }
 
 div.see-also > p {
@@ -215,4 +215,5 @@ div.see-also > p > .label {
   letter-spacing: 0.2em;
   font-size: 9pt;
   color: #555;
+  padding: 0 0.4em;
 }

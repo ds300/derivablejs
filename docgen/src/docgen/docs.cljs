@@ -87,6 +87,12 @@
           [:li.subheading subheading]
           (map #(toc % path) group))))))
 
+(defn doc-grouped [members path name]
+  (let [groups (group-by type members)]
+    (for [[type _] type-subheadings]
+      (when-let [group (groups type)]
+        (gen-members group path name)))))
+
 (extend-type ast/Module
   IDoc
   (gen [{:keys [name docs members]} path]
@@ -94,7 +100,7 @@
       (anchor path name)
       [:h2.code "module " [:.name name]]
       (gen-docs docs (conj path name))
-      (gen-members members path name)])
+      (doc-grouped members path name)])
 
   IToc
   (toc [{:keys [members name]} path]
