@@ -7,7 +7,7 @@
 
 (defn trim-leading [lead s]
   (let [idx (.indexOf s lead)]
-    (if (>= idx 0)
+    (if (= idx 0)
       (.slice s (.-length lead))
       s)))
 

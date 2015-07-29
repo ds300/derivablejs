@@ -323,13 +323,35 @@
     (set [source ParentType, value ChildType] ParentType
       "Returns the transformed version of `source` which includes `value`."))
 
-  (:interface (Reaction T)
-    "blub"
+  (:class (Reaction T)
+    "A Reaction is a stateful object which can be attached to a particular
+    derivable. Changes in this derivable will cause a Reaction to be executed."
+    (:constructor [])
     (start [] (Reaction T)
-      "")
+      "Starts this reaction. After this is called, any changes in the derivable
+      to which the reaction is attached will cause the reaction's .{{react}}
+      method to be called.
+
+      Calls the {{onStart}} method if defined.")
     (stop [] (Reaction T)
-      "")
+      "Stops this reaction. Changes in the attached derivable will no longer
+      cause reaction.
+
+      Calls the {{onStop}} method if defined.")
     (force [] (Reaction T)
-      ""))
+      "Forces reaction.")
+    (react [value T] void
+      "*Abstract. Required.*
+
+      This method is responsible for carrying out reactive side-effects based
+      on `value`.")
+    (onStart [] void
+      (:note "*Abstract*")
+      "Called when the reaction is started. Use for acquiring resources.")
+    (onStop [] void
+      (:note "*Abstract*")
+      "Called when the reaction is stopped. Use for releasing resources."
+      (:see-also stop start other))
+    )
 
   )

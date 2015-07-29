@@ -33,6 +33,7 @@
                  read-string
                  ast/parse-module)]
     (spit out-html-file (generate-module-docs module))
-    (spit out-ts-file (make-d-ts in-file module))))
+    (spit out-ts-file (make-d-ts in-file module))
+    ))
 
 (set! *main-cli-fn* -main)

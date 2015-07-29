@@ -40,6 +40,13 @@
   (declare-name [this namespace path]
     (declare-fn-or-method this namespace path)))
 
+(extend-type ast/Constructor
+  IsNamed
+  (declare-name [this namespace path]
+    (assoc namespace
+           "constructor"
+           (make-named this nil (conj path "constructor")))))
+
 (extend-type cljs.core/Symbol
   IsNamed
   (declare-name [this namespace path]
@@ -55,6 +62,11 @@
                      (conj path name))))
 
 (extend-type ast/Interface
+  IsNamed
+  (declare-name [this ns path]
+    (-declare-name this ns path)))
+
+(extend-type ast/Class
   IsNamed
   (declare-name [this ns path]
     (-declare-name this ns path)))

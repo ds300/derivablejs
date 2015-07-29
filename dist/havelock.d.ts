@@ -45,12 +45,20 @@ declare module havelock {
     set(source: ParentType, value: ChildType): ParentType;
   }
 
-  export interface Reaction<T> {
+  export class Reaction<T> {
+
+    constructor ();
 
     start(): Reaction<T>;
 
     stop(): Reaction<T>;
 
     force(): Reaction<T>;
+
+    react(value: T): void;
+
+    onStart(): void;
+
+    onStop(): void;
   }
 }

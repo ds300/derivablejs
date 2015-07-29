@@ -1,4 +1,5 @@
 (ns docgen.html
+  "NIH gone wild. Hiccup reimplmented for some reason."
   (:require [goog.string :as gstring]))
 
 (defn space [n]

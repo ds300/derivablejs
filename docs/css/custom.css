@@ -47,13 +47,18 @@ pre, code, .code {
   font-family: 'Source Code Pro', monospace;
 }
 
-p code {
+code {
   border-radius: 3px;
   background-color: #f0f0f0;
   padding: 0.1em 0.3em;
   display: inline-block;
   font-size: 11pt;
   color: #980052;
+}
+
+pre code {
+  color: black;
+  display: block;
 }
 
 pre {
@@ -185,4 +190,29 @@ div.interface, div.function {
     margin: 0.5em 0em;
     padding: 0.5em 0em;
   }
+}
+
+div.note {
+  background-color: #CDF2D6;
+  padding: 0.2em 0.4em;
+  float: right;
+  border-radius: 3px;
+}
+
+div.see-also {
+  border-left: 4px solid #3FB8AF;
+  padding-left: 0.3em;
+  background-color: #f0f0f0;
+}
+
+div.see-also > p {
+  padding: 0.5em;
+}
+
+div.see-also > p > .label {
+  text-transform: uppercase;
+  font-family: "Questrial", sans-serif;
+  letter-spacing: 0.2em;
+  font-size: 9pt;
+  color: #555;
 }

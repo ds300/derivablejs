@@ -1,4 +1,5 @@
-(ns docgen.ast)
+(ns docgen.ast
+  (:require [docgen.markdown :refer [trim-indent space]]))
 
 ; *****************************
 ; *** Data type definitions ***
@@ -16,31 +17,106 @@
 (defrecord Parameter [name type])
 ; e.g. param1: SomeType
 
-(defrecord FunctionSignature [doc type-args params return-type])
+(defrecord FunctionSignature [type-args params return-type])
 
 (defrecord Function [name signatures])
 (defrecord Method [name signatures])
+(defrecord Constructor [params])
+
 ; e.g. myFunc<TypeArg>(...params: any[]): ReturnType;
 
-(defrecord Property [name doc type])
+(defrecord Property [name type])
 ; e.g. myProperty: int;
 
-(defrecord Module [name doc members])
+(defrecord Module [name members])
 ; e.g. declare module mymodule { stuff }
 
-(defrecord Interface [name type-args doc extends members])
+(defrecord Interface [name type-args extends members])
 ; e.g. export interface MyInterface { stuff }
+
+(defrecord Class [name type-args extends members])
+; e.g. export class MyClass { stuff }
+
+(defrecord Doc [modifier value])
+; modifier being e.g. :note or :see-also
+
+(defn add-doc [thing doc]
+  (update-in thing [:docs] (fnil conj []) doc))
 
 ; *********************
 ; *** Parsing logic ***
 ; *********************
 
+; first, to make parsing much simpler, we transform the input, replacing known
+; shorthand with full longhand.
+
+; so, e.g.
+
+;  (:module blah
+;    (my-func [] void)
+;    (:interface (Junk A B)
+;      (do-junk [a A] B
+;        "blah"
+;        (:see-also my-func))))
+
+; becomes
+
+; (:module blah
+;   (:function my-func [] void)
+;   (:interface (Junk A B)
+;     (:function do-junk [a A] B
+;       (:doc :markdown "blah")
+;       (:doc :see-also [my-func]))))
+
+(defn transform-strings
+  "trims indentation from strings, assuming two spaces per level"
+  [depth form]
+  (if (string? form)
+    (trim-indent form (dec depth))
+    (if (list? form)
+      (map (partial transform-strings (inc depth))
+           form)
+      form)))
+
+(defn transform-functions+properties
+  "replaces shorthand function definitions with longhand"
+  [[nm args & more :as form]]
+  (cond
+    (symbol? nm)
+      (if (vector? args)
+        (cons :function form)
+        (cons :property form))
+    (seq? nm)
+      (cons :function form)
+    (#{:interface :module :class} nm)
+      (concat [nm args]
+              (map transform-functions+properties more))
+    :else form))
+
+(defn transform-docs
+  "replaces shorthand doc stuff with longhand.
+
+  e.g. \"blah\" -> (:doc :markdown \"blah\")
+       (:see-also Thing1 Thing2) -> (:doc :see-also [Thing1 Thing2])
+       (:node \"md\") -> (:doc :note \"md\")"
+  [form]
+  (cond
+    (string? form) (list :doc :markdown form)
+    (seq? form)    (let [type (first form)]
+                     (case type
+                       :see-also (list :doc :see-also (vec (rest form)))
+                       :note     (list :doc :note (second form))
+                       (doall (map transform-docs form))))
+    :else          form))
+
+(def transform (comp transform-docs
+                     transform-functions+properties
+                     (partial transform-strings 0)))
+
+; now we declare parsing logic for the leaves. i.e. names, types, params
+
 (declare parse-params)
 (declare parse-type)
-(declare parse-function-type)
-(declare parse-function)
-(declare parse-interface)
-(declare parse-module)
 
 (defn parse-function-type [[params return-type]]
   (FunctionType. (parse-params params) (parse-type return-type)))
@@ -49,13 +125,13 @@
   (cond
     (symbol? type) type
     (vector? type) (ArrayType. (parse-type (type 0)))
-    (list? type)   (let [[hd & tl] type]
+    (seq? type)    (let [[hd & tl] type]
                      (if (= hd '=>)
                        (parse-function-type tl)
                        (ParameterizedType. hd (mapv parse-type tl))))))
 
 (defn parse-name [nm]
-  (if (list? nm)
+  (if (seq? nm)
     [(str (first nm)) (mapv parse-type (rest nm))]
     [(str nm) []]))
 
@@ -64,75 +140,63 @@
     (cons (Parameter. (name nm) (parse-type type))
           (parse-params more))))
 
-(defn parse-function-or-method [constructor [name params return-type & [doc]]]
+; now we simply create a multimethod reducer dispatching on the keyword at the
+; start of declarations
+
+(defmulti include (fn [_ [key & __]] key))
+
+(defmethod include :doc [acc [_ modifier value]]
+  (update-in acc [:docs] (fnil conj []) (Doc. modifier value)))
+
+(defn add-member [acc member things]
+  (update-in acc [:members] (fnil conj []) (reduce include member things)))
+
+(defmethod include :module [acc [_ name & things]]
+  (add-member acc (Module. (str name) []) things))
+
+(defmethod include :interface [acc [_ name & things]]
   (let [[name type-args] (parse-name name)]
-    (constructor. name
-                  [ (FunctionSignature. doc
-                                        type-args
-                                        (parse-params params)
-                                        (parse-type return-type)) ])))
+    (add-member acc (Interface. name type-args [] []) things)))
 
-(defn parse-property [[name type & [doc]]]
-  (Property. (str name) doc (parse-type type)))
+(defmethod include :class [acc [_ name & things]]
+  (let [[name type-args] (parse-name name)]
+    (add-member acc (Class. name type-args [] []) things)))
 
-(defn parse-extends [[_ & types]]
-  (mapv parse-type types))
+(defmethod include :extends [acc [_ & interfaces]]
+  (update-in acc [:extends] (fnil into []) (map parse-type interfaces)))
 
-(defn include-extends [interface decl]
-  (update-in interface [:extends] into (parse-extends decl)))
+(defmethod include :constructor [acc [_ params & things]]
+  (add-member acc (Constructor. (mapv parse-type params)) things))
 
-(defn member-includer [decl-parser]
-  (fn [acc decl]
-    (update-in acc [:members] conj (decl-parser decl))))
+(def function-constructors { Module #(Function. %1 %2)
+                             Interface #(Method. %1 %2)
+                             Class #(Method. %1 %2) })
 
-(defn include-function-or-method [constructor acc decl]
-  (let [func (parse-function-or-method constructor decl)
-        name (:name func)
-        [i existing] (first (keep-indexed (fn [i member]
-                                              (when (= name (:name member))
-                                                [i member]))
-                                          (:members acc)))]
-    (if existing
-      (update-in acc [:members i :signatures] into (:signatures func))
-      (update-in acc [:members] conj func))))
-
-(defn include-doc [{doc :doc :as acc} more-doc]
-  (assoc acc :doc (if (not-empty doc)
-                    (str doc "\n\n" more-doc)
-                    more-doc)))
-
-(defn decl-type [[k args & more :as decl]]
-  (cond
-    (string? decl) :doc
-    (keyword? k)   k
-    (vector? args) :function
-    :else          :property))
-
-
-
-(defn include-member [includers thing member]
-  (let [include (includers (decl-type member))]
-    (include thing member)))
-
-(declare interface-includers)
-(declare module-includers)
-
-(defn parse-interface [[_ name & members]]
+(defmethod include :function [acc [_ name params return-type & things]]
   (let [[name type-args] (parse-name name)
-        interface (Interface. name type-args "" [] [])]
-    (reduce (partial include-member interface-includers) interface members)))
+        signature (reduce include
+                          (FunctionSignature. type-args
+                                              (parse-params params)
+                                              (parse-type return-type))
+                          things)
+        ; might already be a function with this name, so update that maybe
+        existing-idx (first (keep-indexed (fn [i member]
+                                            (when (= name (:name member))
+                                              i))
+                                          (:members acc)))]
+    (if existing-idx
+      (update-in acc [:members existing-idx :signatures] conj signature)
+      (update-in acc
+                 [:members]
+                 conj
+                 ((function-constructors (type acc)) name [signature])))))
 
-(defn parse-module [[_ name & members]]
-  (let [module (Module. (str name) "" [])]
-    (reduce (partial include-member module-includers) module members)))
+(defmethod include :property [acc [_ name type & things]]
+  (add-member acc (Property. name (parse-type type)) things))
 
-(def module-includers { :extends   include-extends
-                        :doc       include-doc
-                        :interface (member-includer parse-interface)
-                        :module    (member-includer parse-module)
-                        :function  (partial include-function-or-method Function)
-                        :property  (member-includer parse-property) })
-
-(def interface-includers (assoc module-includers
-                                :function
-                                (partial include-function-or-method Method)))
+(defn parse-module [stuff]
+  (->> stuff
+    transform
+    (include {})
+    :members
+    first))

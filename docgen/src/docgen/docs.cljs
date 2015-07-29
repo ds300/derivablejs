@@ -35,9 +35,26 @@
   (let [id (join "-" (conj path name))]
     [:a {:id id}]))
 
-(defn docs [doc path]
-  (when (not-empty doc)
-     [:div.docs (compile-md doc path)]))
+(defmulti render-doc :modifier)
+
+(extend-type ast/Doc
+  IDoc
+  (gen [this path]
+    (render-doc this path)))
+
+(defmethod render-doc :markdown [{s :value} path]
+  (when (not-empty s)
+    [:div.docs (compile-md s path)]))
+
+(defmethod render-doc :see-also [{things :value} path]
+  [:div.see-also [:p [:.label "See also: "] (interpose ", " (map #(do [:.code (gen % path)]) things))]])
+
+(defmethod render-doc :note [{s :value} path]
+  (when (not-empty s)
+    [:div.note (compile-md s path)]))
+
+(defn gen-docs [docs path]
+  (map #(gen % path) docs))
 
 (defn gen-members [members path name]
   (let [path (conj path name)]
@@ -57,9 +74,10 @@
     [:.punct ")"]])
 
 (def type-subheadings [ [ast/Module     "Modules"   ]
-                        [ast/Interface  "Interfaces"]
                         [ast/Function   "Functions" ]
-                        [ast/Property "Properties"] ])
+                        [ast/Class      "Classes"   ]
+                        [ast/Interface  "Interfaces"]
+                        [ast/Property   "Properties"] ])
 
 (defn toc-grouped [members path]
   (let [groups (group-by type members)]
@@ -71,11 +89,11 @@
 
 (extend-type ast/Module
   IDoc
-  (gen [{:keys [name doc members]} path]
+  (gen [{:keys [name docs members]} path]
     [:div.module
       (anchor path name)
       [:h2.code "module " [:.name name]]
-      (docs doc (conj path name))
+      (gen-docs docs (conj path name))
       (gen-members members path name)])
 
   IToc
@@ -85,7 +103,7 @@
 
 (extend-type ast/Interface
   IDoc
-  (gen [{:keys [name type-args doc members extends]} path]
+  (gen [{:keys [name type-args docs members extends]} path]
     [:div.interface
       (anchor path name)
       [:h3.code "interface "
@@ -94,7 +112,27 @@
           (gen-type-args type-args (conj path name))]]
       (when (seq extends)
         [:h4.code [:.punct "extends "] (interpose [:.punct ", "] (map #(gen % (conj path name)) extends))])
-      (docs doc (conj path name))
+      (gen-docs docs (conj path name))
+      (gen-members members path name)])
+
+  IToc
+  (toc [{:keys [name members]} path]
+    [:li.interface (link (make-href (conj path name)) (str name))
+      (when (seq members)
+        [:ul (map #(toc % (conj path name)) members)])]))
+
+(extend-type ast/Class
+  IDoc
+  (gen [{:keys [name type-args docs members extends]} path]
+    [:div.class
+      (anchor path name)
+      [:h3.code "class "
+        [:.name
+          name
+          (gen-type-args type-args (conj path name))]]
+      (when (seq extends)
+        [:h4.code [:.punct "extends "] (interpose [:.punct ", "] (map #(gen % (conj path name)) extends))])
+      (gen-docs docs (conj path name))
       (gen-members members path name)])
 
   IToc
@@ -105,7 +143,7 @@
 
 (extend-type ast/Function
   IDoc
-  (gen [{:keys [name signatures]} path]
+  (gen [{:keys [name signatures docs]} path]
     (let [do-individual-type-args (not (or (= 1 (count signatures))
                                            (apply = (map :type-args signatures))))]
        [:div.function
@@ -114,8 +152,8 @@
            "function "
            [:.name name (when-not do-individual-type-args
                           (gen-type-args (:type-args (first signatures)) (conj path name)))]]
-
-         (for [{:keys [type-args params return-type doc]} signatures]
+         (gen-docs docs (conj path name))
+         (for [{:keys [type-args params return-type docs]} signatures]
            [:div.function-signature
              [:h4.code
                (when do-individual-type-args
@@ -123,7 +161,7 @@
                [:.params (gen-params params (conj path name))]
                [:.punct " => "]
                (gen return-type (conj path name))]
-             (docs doc (conj path name))])]))
+             (gen-docs docs (conj path name))])]))
 
   IToc
   (toc [{:keys [name]} path]
@@ -132,27 +170,40 @@
 (extend-type ast/Method
   IDoc
   (gen [{:keys [name signatures]} path]
-    (for [{:keys [type-args params return-type doc]} signatures]
+    (for [{:keys [type-args params return-type docs]} signatures]
       [:div.method
         (anchor path name)
         [:h4.code [:.name "." name (gen-type-args type-args (conj path name))]
                   [:.params (gen-params params (conj path name))]
                   [:.punct " => "]
                   (gen return-type (conj path name))]
-        (docs doc (conj path name))]))
+        (gen-docs docs (conj path name))]))
 
   IToc
   (toc [{:keys [name]} path]
     [:li.method (link (make-href (conj path name)) (str "." name))]))
 
+(extend-type ast/Constructor
+  IDoc
+  (gen [{:keys [params docs]} path]
+    [:div.method
+      (anchor path "constructor")
+      [:h4.code [:.name "constructor"]
+                [:.params (gen-params params (conj path "constructor"))]]
+      (gen-docs docs (conj path "constructor"))])
+
+  IToc
+  (toc [_ path]
+    [:li.method (link (make-href (conj path "constructor")) "constructor")]))
+
 (extend-type ast/Property
   IDoc
-  (gen [{:keys [name doc type]} path]
+  (gen [{:keys [name docs type]} path]
     [:div.property
       [:h4.code [:.name name]
                 [:.punct ": "]
                 (gen type path)]
-      (docs doc (conj path name))])
+      (gen-docs docs (conj path name))])
 
   IToc
   (toc [{:keys [name]} path]
