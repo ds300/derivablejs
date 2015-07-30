@@ -18,9 +18,13 @@
   (str "#" (join "-" path)))
 
 (defn make-link-resolver [path]
-  (fn [name]
-    (when-let [elem (resolve *namespace* path name)]
-      [(make-href (:path elem)) "code"])))
+  (fn [nm]
+    (html/render
+      (if-let [elem (resolve *namespace* path nm)]
+        (if (keyword? elem)
+          [:span {:class (str "code " (name elem))} nm]
+          [:a.code {:href (make-href (:path elem))} nm])
+        nm))))
 
 (defn compile-md [doc path]
   (html/raw (md/compile-doc doc (dec (count path)) (make-link-resolver path))))
@@ -230,7 +234,7 @@
   (gen [this path]
     [:.type
       (if-let [elem (resolve *namespace* path (str this))]
-        (if (= elem :type-arg)
+        (if (= elem :type-args)
           [:.type-args (str this)]
           [:a {:href (make-href (:path elem))} (str this)])
         [:.builtin-type (str this)])]))
@@ -274,6 +278,7 @@
                (stylesheet "http://fonts.googleapis.com/css?family=Questrial")
                (stylesheet "css/font-awesome.min.css")
                (stylesheet "css/normalize.css")
+               (stylesheet "css/github.css")
                (stylesheet "css/custom.css")]
         [:body
           [:div.container

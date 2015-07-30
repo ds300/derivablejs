@@ -35,10 +35,10 @@ declare module havelock {
 
     swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
 
-    lens<E>(descriptor: LensDescriptor<T, E>): Atom<E>;
+    lens<E>(lens: Lens<T, E>): Atom<E>;
   }
 
-  export interface LensDescriptor<ParentType, ChildType> {
+  export interface Lens<ParentType, ChildType> {
 
     get(source: ParentType): ChildType;
 
@@ -61,4 +61,18 @@ declare module havelock {
 
     onStop(): void;
   }
+
+  atom<T>(value: T): Atom<T>;
+
+  derive<T>(f: () => T): Derivable<T>;
+
+  isAtom(obj: any): boolean;
+
+  isDerivable(obj: any): boolean;
+
+  isDerivation(obj: any): boolean;
+
+  isLensed(obj: any): boolean;
+
+  isReaction(obj: any): boolean;
 }

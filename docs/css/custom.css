@@ -48,17 +48,22 @@ pre, code, .code {
 }
 
 code {
-  border-radius: 3px;
-  background-color: #f0f0f0;
+  background-color: #f8f8f8;
   padding: 0.1em 0.3em;
   display: inline-block;
   font-size: 11pt;
-  color: #980052;
+  color: #BD0000;
+  border-right: 2px solid #EFEFEF;
+  border-bottom: 2px solid #EFEFEF;
+  border-radius: 5px;
 }
 
 pre code {
   color: black;
   display: block;
+  border: 0;
+  border-left: 2px solid #EFEFEF;
+  border-top: 2px solid #EFEFEF;
 }
 
 pre {
@@ -91,13 +96,11 @@ strong {
   float: right;
 }
 
-div.interface > div.method, div.interface > div.property, div.function > div.function-signature {
-  border-left: 5px solid #f0f0f0;
-  padding-left: 10px;
-}
-
-.interface > .method:hover, .interface > .property:hover {
-  border-left: 5px solid #f0f0f0;
+div.interface > div.method,
+div.interface > div.property,
+div.function > div.function-signature,
+div.class > div.method {
+  border-left: 2px dotted #ddd;
   padding-left: 10px;
 }
 
@@ -118,6 +121,7 @@ div.method > h4 {
 }
 
 .type-args {
+  font-weight: 700;
   color: #008972;
 }
 
@@ -130,7 +134,8 @@ div.method .name {
   color: #0A6592;
 }
 
-.param .name {
+.param .name, .param-name {
+  font-weight: 700;
   color: #0A6592;
 }
 
@@ -193,15 +198,21 @@ div.interface, div.function {
 }
 
 div.note {
-  background-color: #CDF2D6;
-  padding: 0.2em 0.4em;
+  background-color: #D0F1EF;
   float: right;
   border-radius: 3px;
+  margin-left: 0.5em;
+  margin-top: 0.5em;
+  padding: 0.2em 0.4em;
+}
+div.note > p {
+  margin: 0;
 }
 
 div.see-also {
+  font-size: 10pt;
   border-left: 4px solid #3FB8AF;
-  background-color: #f0f0f0;
+  background-color: #f8f8f8;
   border-radius: 3px;
 }
 

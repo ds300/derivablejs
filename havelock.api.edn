@@ -31,12 +31,13 @@
 
       x.set(8);
 
-      // .reaction creats the reaction, but doesn't start it, so nothing gets
-      // printed yet
+      // .reaction creats the reaction, but doesn't start it,
+      // so nothing gets printed yet
 
       r.start();
 
-      // now that the reaction has started it will respond to changes in x
+      // now that the reaction has started it will respond
+      // to changes in x
 
       x.set(16);
       // $> x is 16
@@ -234,15 +235,15 @@
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
       ```")
-    ((lens E) [descriptor (LensDescriptor T E)] (Atom E)
-      "Returns a new Atom connected to this one via the logic specified in
-      `descriptor`. See {{LensDescriptor}}."))
+    ((lens E) [lens (Lens T E)] (Atom E)
+      "Returns a new Atom connected to this one via the logic encapsulated by
+      the `lens` parameter. See {{Lens}}."))
 
-  (:interface (LensDescriptor ParentType ChildType)
+  (:interface (Lens ParentType ChildType)
     "A lens is a kind of cross between an atom and a derivation.
     It acts as a mutable proxy for some base atom, which lets consumers modify
     the base atom without knowing precisely how. This knowledge is encoded in a
-    `LensDescriptor` as {{get}} and {{set}} functions.
+    `Lens` as {{get}} and {{set}} functions.
 
     For example, you could (but probably shouldn't) store your entire
     application state as a json string, e.g.
@@ -278,11 +279,11 @@
 
     username.set(`Franny`);
 
-    username.get();
-    // => `Franny`
-
     jsonState.get();
     // => `{\"username\": \"Franny\", \"sessionID\": \"x3rfs\"}`
+
+    username.get();
+    // => `Franny`
     ```
 
     If someone has the `username` atom, they can be completely oblivious to the
@@ -317,6 +318,9 @@
     jsonState.get();
     // => `{\"username\": \"Richard\", \"sessionID\": \"x3rfs\"}`
     ```
+
+    Now the poor soul who can only read backwards doesn't ever have to think
+    about reversing strings ever again.
     "
     (get [source ParentType] ChildType
       "Returns the lensed value extracted from `source`.")
@@ -354,4 +358,48 @@
       (:see-also stop start other))
     )
 
+  ((atom T) [value T] (Atom T)
+    "Returns a new {{Atom}} containing {{value}}: {{T}}.
+
+    ```javascript
+    const myAtom = atom(`a string`);
+
+    myAtom.get();
+    // => `a string`
+    ```")
+
+  ((derive T) [f (=> [] T)] (Derivable T)
+    "Returns a new derivable encapsulating the result returned by `f` which
+    should be pure aside from dereferencing one or more {{Derivable}}s.
+
+    ```javascript
+    const x = atom(1),
+          y = atom(2);
+
+    const z = derive(() => x.get() + y.get());
+
+    z.get();
+    // => 3
+
+    x.set(2);
+    z.get();
+    // => 4
+
+    ```")
+
+  (isAtom [obj any] boolean
+    "Returns true iff `obj` is an {{Atom}}.")
+
+  (isDerivable [obj any] boolean
+    "Returns true iff `obj` is a {{Derivable}}.")
+
+  (isDerivation [obj any] boolean
+    "Returns true iff `obj` is a derivation,
+    i.e. a derivable which is not an atom.")
+
+  (isLensed [obj any] boolean
+    "Returns true iff `obj` is a {{Lens}}ed atom.")
+
+  (isReaction [obj any] boolean
+    "Returns true iff `obj` is a {{Reaction}}.")
   )

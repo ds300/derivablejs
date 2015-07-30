@@ -23,13 +23,10 @@
       text
       (replace text
                #"\{\{\w+\}\}"
-               #(let [name (subs % 2 (- (count %) 2))
-                      [link className] (resolver name)]
-                  (if link
-                    (str "<a class=\"" className "\" href=\"" link "\">"name"</a>"))))
-                    text)
+               #(let [name (subs % 2 (- (count %) 2))]
+                  (resolver name))))
     state ])
 
 (defn compile-doc [doc depth resolver]
-  (md->html (trim-indent doc depth) :custom-transformers
+  (md->html (str "\n\n" doc "\n\n") :custom-transformers
                                     [(partial code-link-transformer resolver)]))
