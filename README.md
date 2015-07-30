@@ -150,7 +150,7 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 (.log js/console @sum)
 
-; => [object Object][object Object][object Object]
+; $> [object Object][object Object][object Object]
 
 ; it tried to add the cells together, not their values
 
@@ -158,17 +158,17 @@ So really each time an atom is changed, its entire derivation graph is likely to
 (def sum2 (cell= (reduce + (map deref cells))))
 
 (.log js/console @sum2)
-; => 3
+; $> 3
 ; correct!
 
 (swap! (cells 0) inc)
 
 (.log js/console @sum2)
-; => 3
+; $> 3
 ; incorrect! Look:
 
 (.log js/console (reduce + (map deref cells)))
-; => 4
+; $> 4
 ```
 
 So the `cell=` macro is unable to figure out that our `cells` vector contains cells which should be hooked up to the propagation graph. Havelock imposes no such constraints:
@@ -183,10 +183,10 @@ const add = (a, b) => a + b;
 const sum = derive(() => cells.map(get).reduce(add));
 
 sum.react(x => console.log(x));
-// => 3
+// $> 3
 
 cells[0].swap(x => x+1);
-// => 4
+// $> 4
 ```
 
 Sure it's a tad more verbose, but *this is JS*; I'm not a miracle worker.
@@ -231,11 +231,11 @@ Reagent also fails to provide consistency guarantees. To illustrate:
 (def lst (reaction (last @root)))
 
 (run! (.log js/console @fst @lst))
-; => h o
+; $> h o
 
 (reset! root "bye")
-; => b o
-; => b e
+; $> b o
+; $> b e
 ```
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'. Havelock is glitch-free.
@@ -257,11 +257,11 @@ const lst = ko.pureComputed(() => {
 });
 
 ko.computed(() =>  console.log(fst(), lst());
-// => h o
+// $> h o
 
 root("bye");
-// => b o
-// => b e
+// $> b o
+// $> b e
 ```
 
 With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These two concerns have different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
