@@ -104,11 +104,11 @@ div.class > div.method {
   padding-left: 10px;
 }
 
-.module h2, .interface h3, .function h3 {
+.module h2, .interface h3, .function h3, .class h3 {
   font-weight: 400;
   color: #555;
 }
-.module h2 .name, .interface h3 .name, .function h3 .name {
+.module h2 .name, .interface h3 .name, .function h3 .name, .class h3 .name {
   font-weight: 700;
   color: black;
 }
@@ -139,10 +139,9 @@ div.method .name {
   color: #0A6592;
 }
 
-div.interface, div.function {
+div.interface, div.function, div.class {
   border-top: 2px solid #e9e9e9;
-  margin: 2em 0em;
-  padding: 2em 0em;
+  margin: 3.2em 0em;
 }
 
 #toc ul {
