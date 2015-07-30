@@ -17,17 +17,22 @@ Havelock is a truly simple state management library for JavaScript. It believes 
 
 - [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
 - [Rationale](#rationale)
-  - [Problem](#problem)
-  - [Solution?](#solution)
 - [Model](#model)
   - [Key Benefits](#key-benefits)
   - [Tradeoffs](#tradeoffs)
   - [Comparison with Previous Work](#comparison-with-previous-work)
 - [Usage](#usage)
+      - [API & Examples](#api-&-examples)
+      - [npm](#npm)
+      - [Browser](#browser)
+      - [Batteries Not Included](#batteries-not-included)
+      - [Equality Woes](#equality-woes)
 - [1.0.0 Roadmap](#100-roadmap)
 - [Future Work](#future-work)
 - [Contributing](#contributing)
+- [Thanks](#thanks)
 - [Hire Me](#hire-me)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -81,9 +86,9 @@ And but still one question remains particularly irksome: how do we keep those ch
 
 Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth?
 
-Wonder no more: Havelock is available *today*! For the low low price of *nothing*! With just one 'weird' trick, your stateful components can be entirely free of the responsibility to propagate change! You won't believe how simple your code will be!
+Wonder no more! The core concept is very simple: your stateful components never change their state directly. Instead they delegate to some centralized third party who is then responsible for applying the change and propagating it. Then your components just need to subscribe to this third party, or some subsidiary thereof, in order to be notified of pertinent changes. This detangles the callback web and you end up with a lovely simple [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph).
 
-Hyperbole aside, the popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a video on the Flux landing page that explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page that explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
@@ -91,7 +96,7 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 
 This sounded like a very good idea to me. But while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
 
-Havelock's raison d'être is to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple, safe, and efficient means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
+Havelock's raison d'être is to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
 
 ## Model
 
@@ -109,7 +114,7 @@ The DAG structure is automatically inferred by executing derivation functions in
 
 ### Key Benefits
 
-It is important to note that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which parts of it you decide to inspect at any given time.
+It is important to note that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which individual parts of it you decide to inspect at any given time.
 
 Note also that derivations are totally lazy. They literally never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing *that* with streams.
 
@@ -121,14 +126,12 @@ All this isn't to say that streams and channels are bad, just different. Events 
 
 You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
 
-- When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
-- The sweep phase involves yet another probably-whole-graph traversal.
+* When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
+* The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times\*. I would argue that this is negligible for most UI-ish use cases, but if you're doing something *seriously heavy* then perhaps Havelock isn't the best choice. Although I've got a [fairly promising idea](#future-work) regarding how to fix this after v1.0.0 drops.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps Havelock isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) regarding how to reduce the traversal overhead after v1.0.0 drops.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
-
-\* Just to be clear: this traversal is orthogonal to the actual execution of derivation functions.
 
 ### Comparison with Previous Work
 
@@ -246,7 +249,7 @@ More promising is [Knockout's Observables](http://knockoutjs.com/documentation/o
 ```javascript
 const root = ko.observable("hello");
 
-const fst = ko.pureComputed(() => root()[0])
+const fst = ko.pureComputed(() => root()[0]);
 
 const lst = ko.pureComputed(() => {
   let word = root();
@@ -274,7 +277,7 @@ This has not been an exhaustive comparison. There are [some](https://www.meteor.
 Available as `havelock`.
 
 ##### Browser
-Either with browserify or, if need be, import `dist/havelock.min.js` directly. `window.Havelock` is where it's at.
+Either with browserify or, if need be, import `dist/havelock.min.js` directly (find it at `window.Havelock`).
 
 ##### Batteries Not Included
 Havelock expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
@@ -313,9 +316,9 @@ I heartily welcome feature requests, bug reports, and general suggestions/critic
 Special thanks to:
 
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
-- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and write everything.
+- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin, current mentors/employers for keeping me around despite my doing stuff like this.
-- Rich Hickey for words of wisdom regarding how to go about doing software.
+- Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
 
 ## Hire Me
 
@@ -327,8 +330,18 @@ I want to work with and learn from awesome software engineers while tackling dee
 
 I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure (<3) and Java, plus a whole bunch of full-stack web development.
 
-That was fun but now I want to become a professional and deeply competent engineer. This seems very hard to do alone in an academic setting.
+That was fun but now I intend to become a professional and competent engineer, which seems like a very hard thing to accomplish alone in an academic setting.
 
-I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us).
+I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I think South-East Asian cuisine is where it's at, cuisine-wise. But most of the others are pretty great too.
 
 I'm free from November and might be willing to do remote work or move anywhere in Western Europe for the right job.
+
+## License
+
+```
+Copyright (c) 2015, David Sheldrick. <djsheldrick@gmail.com>
+All rights reserved.
+
+This source code is licensed under the BSD-style license found in the
+LICENSE file in the root directory of this source tree
+```
