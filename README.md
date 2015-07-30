@@ -77,11 +77,11 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
 
-And yet but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Modern MV[*whatever*] frameworks don't seem to have a compelling solution for that and we tend to do most of it manually. This is arguably the dominant source of frustration when adding new features or modifying existing features, especially as projects grow larger and more complex.
+And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially as applications grow ever larger. It becomes increasingly difficult to modify or add new features to your system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated.
 
-Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth if you could add new features to your system without introducing exotic time-sucking bugs as a bizarre artifact of how state changes were being mis-propagated between a group of interdependent components?
+Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth?
 
-Wonder no more: Havelock is available *today*! For the low low price of *nothing*! With just one 'weird' trick, your stateful things can be entirely free of the responsibility to propagate change! You won't believe how simple your code will be!
+Wonder no more: Havelock is available *today*! For the low low price of *nothing*! With just one 'weird' trick, your stateful components can be entirely free of the responsibility to propagate change! You won't believe how simple your code will be!
 
 Hyperbole aside, the popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a video on the Flux landing page that explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
@@ -308,8 +308,27 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 I heartily welcome feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
 
+## Thanks
+
+Special thanks to:
+
+- Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
+- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and write everything.
+- David Weir and Jeremy Reffin, current mentors/employers for keeping me around despite my doing stuff like this.
+- Rich Hickey for words of wisdom regarding how to go about doing software.
+
 ## Hire Me
 
 If this project is useful to you, consider supporting the author by giving him a new job!
 
-A little about me: I want to work with and learn from awesome software engineers while tackling deeply interesting engineering problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again. I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure (<3) and Java, plus a whole bunch of full-stack web development. I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I'm free from November and would be willing to move anywhere in Western Europe for the right job.
+A little about me:
+
+I want to work with and learn from awesome software engineers while tackling deeply interesting problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again.
+
+I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure (<3) and Java, plus a whole bunch of full-stack web development.
+
+That was fun but now I want to become a professional and deeply competent engineer. This seems very hard to do alone in an academic setting.
+
+I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us).
+
+I'm free from November and might be willing to do remote work or move anywhere in Western Europe for the right job.

@@ -22,7 +22,7 @@
   [ (if (:code state)
       text
       (replace text
-               #"\{\{\w+\}\}"
+               #"\{\{[^\{\}]+\}\}"
                #(let [name (subs % 2 (- (count %) 2))]
                   (resolver name))))
     state ])

@@ -240,7 +240,7 @@
       the `lens` parameter. See {{Lens}}."))
 
   (:interface (Lens ParentType ChildType)
-    "A lens is a kind of cross between an atom and a derivation.
+    "The value returned from {{Atom::lens}} is a *lensed* atom. A lens is a kind of cross between an atom and a derivation.
     It acts as a mutable proxy for some base atom, which lets consumers modify
     the base atom without knowing precisely how. This knowledge is encoded in a
     `Lens` as {{get}} and {{set}} functions.

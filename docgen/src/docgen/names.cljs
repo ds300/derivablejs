@@ -16,15 +16,23 @@
   (declare-name [_ namespace path]
     namespace))
 
+(defn leaf-name [elem name namespace path]
+  (assoc namespace (str name) (make-named elem nil (conj path (str name)))))
+
 (extend-type ast/Property
   IsNamed
   (declare-name [{:keys [name] :as this} namespace path]
-    (assoc namespace (:name this) (make-named this nil (conj path name)))))
+    (leaf-name this name namespace path)))
 
 (extend-type ast/Parameter
   IsNamed
-  (declare-name [{:keys [name]} namespace path]
-    (assoc namespace (str name) :param-name)))
+  (declare-name [{:keys [name] :as this} namespace path]
+    (leaf-name this name namespace path)))
+
+(extend-type cljs.core/Symbol
+  IsNamed
+  (declare-name [this namespace path]
+    (leaf-name this (name this) namespace path)))
 
 (defn declare-fn-or-method [{:keys [name signatures] :as this} namespace path]
   (assoc namespace
@@ -53,10 +61,7 @@
            "constructor"
            (make-named this nil (conj path "constructor")))))
 
-(extend-type cljs.core/Symbol
-  IsNamed
-  (declare-name [this namespace path]
-    (assoc namespace (str this) :type-args)))
+
 
 (defn -declare-name [{:keys [name members type-args] :as this} namespace path]
   (assoc namespace

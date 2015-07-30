@@ -3,31 +3,10 @@
             [docgen.html :as html]
             [docgen.ast :as ast]
             [cljs.pprint :refer [pprint]]
-            [clojure.string :refer [join]]
+            [clojure.string :as str :refer [join]]
             [docgen.markdown :as md]))
 
 (def ^:dynamic *namespace* nil)
-
-(defn icon [nm]
-  [:i {:class (str "fa fa-" (name nm))}])
-
-(defn link [href & stuff]
-  (into [:a {:href href}] stuff))
-
-(defn make-href [path]
-  (str "#" (join "-" path)))
-
-(defn make-link-resolver [path]
-  (fn [nm]
-    (html/render
-      (if-let [elem (resolve *namespace* path nm)]
-        (if (keyword? elem)
-          [:span {:class (str "code " (name elem))} nm]
-          [:a.code {:href (make-href (:path elem))} nm])
-        nm))))
-
-(defn compile-md [doc path]
-  (html/raw (md/compile-doc doc (dec (count path)) (make-link-resolver path))))
 
 (defprotocol IDoc
   (gen [this path]))
@@ -35,9 +14,41 @@
 (defprotocol IToc
   (toc [this path]))
 
+(defprotocol ILink
+  (link [this path]))
+
+(defn icon [nm]
+  [:i {:class (str "fa fa-" (name nm))}])
+
+(defn path-href
+  ([path]
+    (str "#" (join "-" path)))
+  ([path name] (path-href (conj (vec path) name))))
+
+(defn do-resolve [namespace path [name & others]]
+  (if-let [named (resolve namespace path name)]
+    (cons named
+          (when (seq others)
+            (do-resolve (:namespace named) (:path named) others)))
+    (throw (js/Error. (str "Can't resolve name: " name)))))
+
+(defn render-code-link [path name]
+  (html/render
+    [:.code-link
+      (interpose [:.punct "::"]
+        (for [{:keys [element path]} (do-resolve *namespace*
+                                                 path
+                                                 (str/split name "::"))]
+          (link element path)))]))
+
+(defn compile-md [doc path]
+  (html/raw (md/compile-doc doc
+                            (dec (count path))
+                            (partial render-code-link path))))
+
 (defn anchor [path name]
   (let [id (join "-" (conj path name))]
-    [:a {:id id}]))
+    [:a.anchor {:id id :href (str "#" id)} (icon :anchor)]))
 
 (defmulti render-doc :modifier)
 
@@ -126,10 +137,14 @@
       (gen-members members path name)])
 
   IToc
-  (toc [{:keys [name members]} path]
-    [:li.interface (link (make-href (conj path name)) (str name))
+  (toc [{:keys [name members] :as this} path]
+    [:li.interface (link this path)
       (when (seq members)
-        [:ul (map #(toc % (conj path name)) members)])]))
+        [:ul (map #(toc % (conj path name)) members)])])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.interface {:href (path-href path name)} name]))
 
 (extend-type ast/Class
   IDoc
@@ -146,10 +161,14 @@
       (gen-members members path name)])
 
   IToc
-  (toc [{:keys [name members]} path]
-    [:li.interface (link (make-href (conj path name)) (str name))
+  (toc [{:keys [name members] :as this} path]
+    [:li.interface (link this path)
       (when (seq members)
-        [:ul (map #(toc % (conj path name)) members)])]))
+        [:ul (map #(toc % (conj path name)) members)])])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.class {:href (path-href path name)} name]))
 
 (extend-type ast/Function
   IDoc
@@ -174,8 +193,12 @@
              (gen-docs docs (conj path name))])]))
 
   IToc
-  (toc [{:keys [name]} path]
-    [:li.function (link (make-href (conj path name)) (str name))]))
+  (toc [this path]
+    [:li.function (link this path)])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.function {:href (path-href path name)} name]))
 
 (extend-type ast/Method
   IDoc
@@ -190,8 +213,12 @@
         (gen-docs docs (conj path name))]))
 
   IToc
-  (toc [{:keys [name]} path]
-    [:li.method (link (make-href (conj path name)) (str "." name))]))
+  (toc [this path]
+    [:li.method (link this path)])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.method {:href (path-href path name)} name]))
 
 (extend-type ast/Constructor
   IDoc
@@ -204,7 +231,11 @@
 
   IToc
   (toc [_ path]
-    [:li.method (link (make-href (conj path "constructor")) "constructor")]))
+    [:li.method (link _ path)])
+
+  ILink
+  (link [_ path]
+    [:a.method {:href (path-href path "constructor")} "constructor"]))
 
 (extend-type ast/Property
   IDoc
@@ -216,8 +247,12 @@
       (gen-docs docs (conj path name))])
 
   IToc
-  (toc [{:keys [name]} path]
-    [:li.property (link (make-href (conj path name)) (str name))]))
+  (toc [this path]
+    [:li.property (link this path)])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.property {:href (path-href path name)} name]))
 
 (extend-type ast/Parameter
   IDoc
@@ -227,17 +262,22 @@
                 (str "..." (.slice name 1))
                 name)]
       [:.punct ": "]
-      (gen type path)]))
+      (gen type path)])
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.param {:href (path-href path name)} name]))
 
 (extend-type cljs.core/Symbol
   IDoc
   (gen [this path]
-    [:.type
-      (if-let [elem (resolve *namespace* path (str this))]
-        (if (= elem :type-args)
-          [:.type-args (str this)]
-          [:a {:href (make-href (:path elem))} (str this)])
-        [:.builtin-type (str this)])]))
+    (if-let [{:keys [element path]} (resolve *namespace* path (str this))]
+        (link element path)
+        [:.builtin-type (str this)]))
+
+  ILink
+  (link [this path]
+    [:.type-args (name this)]))
 
 (extend-type ast/ParameterizedType
   IDoc

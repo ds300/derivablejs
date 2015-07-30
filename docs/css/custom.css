@@ -30,6 +30,17 @@
   left: auto;
 }
 
+a.anchor {
+  float: right;
+  display: block;
+  padding: 0.5em;
+  color: #EEE;
+  outline: none;
+}
+
+a.anchor:hover {
+  color: #AAA;
+}
 @media (max-width: 42em) {
   .page {
     position: static;
