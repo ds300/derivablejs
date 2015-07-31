@@ -387,6 +387,10 @@
 
     ```")
 
+  ((derive A B) [d (Derivable A), f (=> [a A] B)] (Derivable B)
+    "Returns a new derivable encapsulating the resulf of applying {{f}} to the
+    the value encapsulated by {{d}}")
+
   (isAtom [obj any] boolean
     "Returns true iff `obj` is an {{Atom}}.")
 

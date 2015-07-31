@@ -119,7 +119,7 @@
   (gen [{:keys [name docs members]} path]
     [:div.module
       (anchor path name)
-      [:h2.code "module " [:.name name]]
+      [:h2.code [:.punct "module "] [:.module name]]
       (gen-docs docs (conj path name))
       (doc-grouped members path name)])
 
@@ -133,8 +133,9 @@
   (gen [{:keys [name type-args docs members extends]} path]
     [:div.interface
       (anchor path name)
-      [:h3.code "interface "
-        [:.name
+      [:h3.code
+        [:.punct "interface "]
+        [:.interface
           name
           (gen-type-args type-args (conj path name))]]
       (when (seq extends)
@@ -157,8 +158,9 @@
   (gen [{:keys [name type-args docs members extends]} path]
     [:div.class
       (anchor path name)
-      [:h3.code "class "
-        [:.name
+      [:h3.code
+        [:.punct "class "]
+        [:.class
           name
           (gen-type-args type-args (conj path name))]]
       (when (seq extends)
@@ -184,15 +186,15 @@
        [:div.function
          (anchor path name)
          [:h3.code
-           "function "
-           [:.name name (when-not do-individual-type-args
+           [:.punct "function "]
+           [:.function name (when-not do-individual-type-args
                           (gen-type-args (:type-args (first signatures)) (conj path name)))]]
          (gen-docs docs (conj path name))
          (for [{:keys [type-args params return-type docs]} signatures]
            [:div.function-signature
              [:h4.code
                (when do-individual-type-args
-                 [:.name (gen-type-args type-args (conj path name))])
+                 (gen-type-args type-args (conj path name)))
                [:.params (gen-params params (conj path name))]
                [:.punct " => "]
                (gen return-type (conj path name))]
@@ -212,7 +214,7 @@
     (for [{:keys [type-args params return-type docs]} signatures]
       [:div.method
         (anchor path name)
-        [:h4.code [:.name "." name (gen-type-args type-args (conj path name))]
+        [:h4.code [:.method "." name (gen-type-args type-args (conj path name))]
                   [:.params (gen-params params (conj path name))]
                   [:.punct " => "]
                   (gen return-type (conj path name))]
@@ -231,7 +233,7 @@
   (gen [{:keys [params docs]} path]
     [:div.method
       (anchor path "constructor")
-      [:h4.code [:.name "constructor"]
+      [:h4.code [:.method "constructor"]
                 [:.params (gen-params params (conj path "constructor"))]]
       (gen-docs docs (conj path "constructor"))])
 
@@ -247,7 +249,7 @@
   IDoc
   (gen [{:keys [name docs type]} path]
     [:div.property
-      [:h4.code [:.name name]
+      [:h4.code [:.property name]
                 [:.punct ": "]
                 (gen type path)]
       (gen-docs docs (conj path name))])
@@ -264,7 +266,7 @@
   IDoc
   (gen [{:keys [name type]} path]
     [:.param
-      [:.name (if (zero? (.indexOf name "&"))
+      [:.param (if (zero? (.indexOf name "&"))
                 (str "..." (.slice name 1))
                 name)]
       [:.punct ": "]
@@ -272,7 +274,7 @@
 
   ILink
   (link [{:keys [name]} path]
-    [:a.param {:href (path-href path name)} name]))
+    [:.param name]))
 
 (extend-type cljs.core/Symbol
   IDoc
@@ -283,7 +285,7 @@
 
   ILink
   (link [this path]
-    [:.type-args (name this)]))
+    [:.type-arg (name this)]))
 
 (extend-type ast/ParameterizedType
   IDoc
@@ -328,6 +330,9 @@
                (stylesheet "css/custom.css")]
         [:body
           [:div.container
+            [:div#toc
+              (toc module [])
+              ]
             [:div#head
               [:h1#title
                 [:a.github {:href "https://github.com/ds300/havelock"
@@ -335,9 +340,7 @@
                     (icon :github)]
                 "Havelock API"]
                          ]
-            [:div#toc
-              (toc module [])
-              ]
+
 
             [:div#gradient-bit]
             [:div#page (gen module [])]

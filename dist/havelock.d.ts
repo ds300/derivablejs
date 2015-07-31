@@ -65,6 +65,7 @@ declare module havelock {
   atom<T>(value: T): Atom<T>;
 
   derive<T>(f: () => T): Derivable<T>;
+  derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
 
   isAtom(obj: any): boolean;
 

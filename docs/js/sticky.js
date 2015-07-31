@@ -10,8 +10,8 @@
   function Sticky(head, title, toc, page, gradientBit) {
     var inFixedMode = false;
     page.style.top = maxHeadHeight + "px";
-    toc.style.top = maxHeadHeight + "px";
-    gradientBit.style.top = maxHeadHeight + "px";
+    toc.style.paddingTop = maxHeadHeight + "px";
+    gradientBit.style.marginTop = maxHeadHeight + "px";
     gradientBit.style.opacity = "0";
 
     function check () {
@@ -23,18 +23,14 @@
           head.style.height = minHeadHeight + "px";
           head.style.padding = minHeadPadding + "px 0px";
           title.style.fontSize = (minHeadHeight - (minHeadPadding * 2)) * 0.7;
-          toc.className = "fixed";
-          toc.style.top = minHeadHeight + "px";
-          gradientBit.className = "fixed";
-          gradientBit.style.top = minHeadHeight + "px";
+          toc.style.paddingTop = minHeadHeight + "px";
+          gradientBit.style.marginTop = minHeadHeight + "px";
           inFixedMode = true;
         }
       } else {
+        toc.style.paddingTop = headHeight + "px";
+        gradientBit.style.marginTop = headHeight + "px";
         if (inFixedMode) {
-          toc.className = "";
-          toc.style.top = maxHeadHeight + "px";
-          gradientBit.className = "";
-          gradientBit.style.top = maxHeadHeight + "px";
           inFixedMode = false;
         }
 

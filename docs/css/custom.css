@@ -18,10 +18,9 @@
 }
 
 #toc {
-  position: absolute;
-  top: 4em;
-  padding-top: 0.5em;
-  left: 0em;
+  position: fixed;
+  top: 0em;
+  left: auto;
   width: 12em;
   max-width: 12em;
   max-height: 100vh;
@@ -29,16 +28,13 @@
   box-sizing: border-box;
 }
 
-#toc.fixed {
-  position: fixed;
-  left: auto;
-}
 
 #head {
   position: fixed;
   top: 0px;
   left: auto;
   box-sizing: border-box;
+  background-color: white;
 }
 
 #title {
@@ -46,8 +42,9 @@
 }
 
 #gradient-bit {
-  position: absolute;
-  left: 0;
+  position: fixed;
+  top: 0;
+  left: auto;
   height: 8px;
   width: 12em;
   background: rgba(0,0,0,0.25);
@@ -58,11 +55,6 @@
   background: -ms-linear-gradient(top, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
   background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff', GradientType=0 );
-}
-
-#gradient-bit.fixed {
-  position: fixed;
-  left: auto;
 }
 
 @media (max-width: 42em) {
@@ -128,18 +120,31 @@ pre code {
   border-top: 2px solid #EFEFEF;
 }
 
+@media (max-width: 38em) {
+  body, h4, code, pre {
+    font-size: 10pt;
+  }
+  h3 {
+    font-size: 11pt;
+  }
+  h2 {
+    font-size: 13pt;
+  }
+}
 
 /********************************/
 /*** Syntax Highlighing Stuff ***/
 /********************************/
 
-span.param, a.param,
+span.param, a.param {
+  color: #72920B;
+}
 span.method, a.method {
   color: #0A6592;
 }
 
 span.function, a.function {
-  color: #0A6592;
+  color: #0A86C5;
 }
 
 span.class, a.class,
@@ -156,9 +161,22 @@ span.builtin-type, a.builtin-type {
   color: #555;
 }
 
+h2 .punct, h3 .punct, h4 .punct,
+h2 .builtin-type, h3 .builtin-type, h4 .builtin-type {
+  font-weight: 400;
+}
 
+/********************************/
+/*** Minor structural Styling ***/
+/********************************/
 
-
+div.interface > div.method,
+div.interface > div.property,
+div.function > div.function-signature,
+div.class > div.method {
+  border-left: 2px dotted #ddd;
+  padding-left: 10px;
+}
 
 a.anchor {
   float: right;
@@ -172,23 +190,6 @@ a.anchor:hover {
   color: #AAA;
 }
 
-div.interface > div.method,
-div.interface > div.property,
-div.function > div.function-signature,
-div.class > div.method {
-  border-left: 2px dotted #ddd;
-  padding-left: 10px;
-}
-
-.module h2, .interface h3, .function h3, .class h3 {
-  font-weight: 400;
-  color: #555;
-}
-.module h2 .name, .interface h3 .name, .function h3 .name, .class h3 .name {
-  font-weight: 700;
-  color: black;
-}
-
 div.method > h4 {
   padding: 0.3em 0em;
   border-bottom: 2px dotted #ddd;
@@ -196,29 +197,21 @@ div.method > h4 {
   margin-bottom: 0.2em;
 }
 
-.type-args {
-  font-weight: 700;
-  color: #008972;
-}
-
-.punct, .builtin-type {
-  color: #555;
-  font-weight: 400;
-}
-
-div.method .name {
-  color: #0A6592;
-}
-
-.param .name, .param-name {
-  font-weight: 700;
-  color: #0A6592;
-}
-
 div.interface, div.function, div.class {
   border-top: 2px solid #e9e9e9;
   margin: 3.2em 0em;
 }
+
+@media (max-width: 38em) {
+  div.interface, div.function {
+    margin: 0.5em 0em;
+    padding: 0.5em 0em;
+  }
+}
+
+/******************/
+/*** TOC Styles ***/
+/******************/
 
 #toc ul {
   list-style-type: none;
@@ -243,34 +236,29 @@ div.interface, div.function, div.class {
   font-size: 9pt;
   color: #555;
   padding: 0.1em 0;
-  margin-bottom: 0.5em;
+  margin: 0.5em 0;
   border-bottom: 1px solid #e0e0e0;
 }
 
-#toc li.interface > a, #toc li.function > a, #toc li.property > a {
+#toc li.interface > a, #toc li.property > a {
   font-weight: 700;
+}
+
+#toc li.function > a {
+  color: #0A86C5;
 }
 
 #toc li.method > a {
   color: #0A6592;
 }
 
-@media (max-width: 38em) {
-  body, h4, code, pre {
-    font-size: 10pt;
-  }
-  h3 {
-    font-size: 11pt;
-  }
-  h2 {
-    font-size: 13pt;
-  }
-
-  div.interface, div.function {
-    margin: 0.5em 0em;
-    padding: 0.5em 0em;
-  }
+.github {
+  padding: 0em 0.2em;
 }
+
+/**************************/
+/*** Documentation Bits ***/
+/**************************/
 
 div.note {
   background-color: #D0F1EF;
@@ -302,8 +290,4 @@ div.see-also > p > .label {
   font-size: 9pt;
   color: #555;
   padding: 0 0.4em;
-}
-
-.github {
-  padding: 0em 0.2em;
 }
