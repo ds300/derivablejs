@@ -126,7 +126,11 @@
   IToc
   (toc [{:keys [members name]} path]
     (let [things (group-by type members)]
-      [:ul (toc-grouped members (conj path name))])))
+      [:ul (toc-grouped members (conj path name))]))
+
+  ILink
+  (link [{:keys [name]} path]
+    [:a.interface {:href (path-href path name)} name]))
 
 (extend-type ast/Interface
   IDoc
@@ -262,19 +266,22 @@
   (link [{:keys [name]} path]
     [:a.property {:href (path-href path name)} name]))
 
+(defn replace-splat [name]
+  (if (zero? (.indexOf name "&"))
+    (str "…" (.slice name 1))
+    name))
+
 (extend-type ast/Parameter
   IDoc
   (gen [{:keys [name type]} path]
     [:.param
-      [:.param (if (zero? (.indexOf name "&"))
-                (str "..." (.slice name 1))
-                name)]
+      [:.param (replace-splat (str name))]
       [:.punct ": "]
       (gen type path)])
 
   ILink
   (link [{:keys [name]} path]
-    [:.param name]))
+    [:.param (replace-splat name)]))
 
 (extend-type cljs.core/Symbol
   IDoc
@@ -310,12 +317,12 @@
            :type "text/css"
            :href href        }])
 
-
 (defn generate-module-docs [module]
   (binding [*namespace* (make-namespace module)]
     (html/render
       [:html
         [:head [:title "Havelock API Documentation"]
+               [:meta {:charset "utf-8"}]
                [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
                (stylesheet "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css")
                [:script {:src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"}]
@@ -330,13 +337,15 @@
                (stylesheet "css/custom.css")]
         [:body
           [:div.container
-            [:div#toc
-              (toc module [])
+            [:div#toc-flex
+              [:div#spacer]
+              [:div#toc (toc module [])]
+
               ]
             [:div#head
               [:h1#title
                 [:a.github {:href "https://github.com/ds300/havelock"
-                            :title "I am in the Githubs"}
+                            :title "See me in the Githubs"}
                     (icon :github)]
                 "Havelock API"]
                          ]

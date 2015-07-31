@@ -5,7 +5,7 @@
   (:interface (Derivable T)
     "A thing that is derivable"
     ((derive E) [f (=> [value T] E)] (Derivable E)
-      "Creates a new derivation based on the application of `f` to the
+      "Creates a new derivation based on the application of {{f}} to the
       current value of this derivable. e.g.
 
       ```javascript
@@ -15,15 +15,16 @@
 
       xTimesTwo.get();
       // => 8
-      ```")
+      ```"
+    (:see-also havelock::derive))
 
     (reaction [r (Reaction T)] (Reaction T)
-      "Creates a link between `r` and this derivable. `r` should be a 'fresh'
+      "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
       reaction. i.e. it should not have been linked to any other derivable
       in the past. For examples see {{Reaction}}")
 
     (reaction [f (=> [value T] void)] (Reaction T)
-      "Creates a new reaction based on `f` being applied to this derivable. e.g.
+      "Creates a new {{Reaction}} based on {{f}} being applied to this derivable. e.g.
 
       ```javascript
       const x = atom(4);
@@ -47,7 +48,7 @@
       ```")
 
     (react [r (Reaction T)] (Reaction T)
-      "Creates a link between the given reaction and this derivable. Starts
+      "Creates a link between {{r}} and this derivable. Starts
       and forces the reaction before returning it. i.e.
 
       ```javascript
@@ -61,7 +62,7 @@
       ```")
 
     (react [f (=> [value T] void)] (Reaction T)
-      "Creates a new reaction based on `f` being applied to this derivable.
+      "Creates a new {{Reaction}} based on {{f}} being applied to this derivable.
       Starts and forces the reaction before returning it. i.e.
 
       ```javascript
@@ -85,7 +86,7 @@
 
     (is [other any] (Derivable boolean)
       "Returns a derivable which represents the equality of the values held in
-      this and `other`.
+      this and {{other}}.
 
       ```javascript
       let a = atom(`a`),
@@ -105,7 +106,7 @@
 
     (and [other any] (Derivable any)
       "Returns a derivable which represents the boolean AND composition of the
-      values held in this and `other`.
+      values held in this and {{other}}.
 
       ```javascript
       const condition = atom(`truthy value`);
@@ -141,7 +142,7 @@
 
     (or [other any] (Derivable any)
       "Returns a derivable which represents the boolean OR composition of the
-      values held in this and `other`.
+      values held in this and {{other}}.
 
       ```javascript
       const first = atom(`truthy value`);
@@ -169,8 +170,8 @@
       ```")
 
     (then [thenD any, elseD any] (Derivable any)
-      "Returns a derivable which represents the value of `thenD` if this is
-      truthy, or `elseD` otherwise.
+      "Returns a derivable which represents the value of {{thenD}} if this is
+      truthy, or {{elseD}} otherwise.
 
       Equivalent to:
 
@@ -189,7 +190,7 @@
       ```")
 
     (switch [&args [any]] (Derivable any)
-      "Args is a flat list of (comparatee, value) pairs. If the value
+      "{{&args}} is a flat list of (comparatee, value) pairs. If the value
       represented by this derivable is equal to a comparatee (which can be derivable or not),
       a derivable representing the comparatee's corresponding value is returned. If none match,
       the value represented is `undefined` unless a trailing value is supplied.
@@ -222,28 +223,33 @@
       ```"))
 
   (:interface (Atom T)
-    "Represents a mutable reference. "
+    "Represents a mutable reference. Should hold immutable, or effectively
+    immutable data."
     (:extends (Derivable T))
     ((set E) [value E] (Atom E)
-      "Sets the value of this atom to be `value`, returns this atom")
+      "Sets the value of this atom to be {{value}}, returns this atom")
     ((swap E) [f (=> [value T &args [any]] E), &args [any]] (Atom E)
-      "Sets the value of this atom to be the value returned when `f` is applied
-      to the current value of this and `args`.
+      "Sets the value of this atom to be the value returned when {{f}} is applied
+      to the current value of this and {{&args}}. Returns this.
 
       Equivalent to:
 
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
-      ```")
+      ```"
+      (:see-also havelock::swap))
     ((lens E) [lens (Lens T E)] (Atom E)
-      "Returns a new Atom connected to this one via the logic encapsulated by
-      the `lens` parameter. See {{Lens}}."))
+      "Returns a new atom connected to this one via the logic encapsulated by
+      {{lens}}."
+
+      (:see-also Lens)))
 
   (:interface (Lens ParentType ChildType)
-    "The value returned from {{Atom::lens}} is a *lensed* atom. A lens is a kind of cross between an atom and a derivation.
+    "The value returned from {{Atom::lens}} is a *lensed* atom. This is a kind
+    of cross between an atom and a derivation.
     It acts as a mutable proxy for some base atom, which lets consumers modify
     the base atom without knowing precisely how. This knowledge is encoded in a
-    `Lens` as {{get}} and {{set}} functions.
+    lens as {{get}} and {{set}} functions.
 
     For example, you could (but probably shouldn't) store your entire
     application state as a json string, e.g.
@@ -255,7 +261,7 @@
     }));
     ```
 
-    and then use you could use a generic lens to access and mutate properties
+    and then use you could create a generic json lens to access and mutate properties
     within that string:
 
     ```javascript
@@ -292,8 +298,8 @@
 
     But lenses also *compose*!
 
-    For example, if we were passing `username` to someone who can only read
-    backwards, we could do something like:
+    For example, if wanted to pass `username` to someone who can only read
+    backwards, we could do the following:
 
     ```javascript
     function stringReverse (s) {
@@ -323,9 +329,13 @@
     about reversing strings ever again.
     "
     (get [source ParentType] ChildType
-      "Returns the lensed value extracted from `source`.")
+      "Returns the lensed value extracted from {{source}}.
+
+      Called with `this` set to `null`.")
     (set [source ParentType, value ChildType] ParentType
-      "Returns the transformed version of `source` which includes `value`."))
+      "Returns the transformed version of {{source}} which includes {{value}}.
+
+      Called with `this` set to `null`."))
 
   (:class (Reaction T)
     "A Reaction is a stateful object which can be attached to a particular
@@ -345,10 +355,9 @@
     (force [] (Reaction T)
       "Forces reaction.")
     (react [value T] void
-      "*Abstract. Required.*
-
-      This method is responsible for carrying out reactive side-effects based
-      on `value`.")
+      (:note "*Abstract<br/>Required*")
+      "This method is responsible for carrying out reactive side-effects based
+      on {{value}}.")
     (onStart [] void
       (:note "*Abstract*")
       "Called when the reaction is started. Use for acquiring resources.")
@@ -359,7 +368,7 @@
     )
 
   ((atom T) [value T] (Atom T)
-    "Returns a new {{Atom}} containing {{value}}: {{T}}.
+    "Returns a new {{Atom}} containing {{value}}.
 
     ```javascript
     const myAtom = atom(`a string`);
@@ -367,6 +376,12 @@
     myAtom.get();
     // => `a string`
     ```")
+
+  ((swap A B) [atom (Atom A) f (=> [a A &args [any]] B) &args [any]] B
+    "Changes the contents of {{atom}} to be the result of {{f}} applied to
+    {{atom}}'s current value and {{&args}}. Returns the new value."
+
+    (:see-also Atom::swap))
 
   ((derive T) [f (=> [] T)] (Derivable T)
     "Returns a new derivable encapsulating the result returned by `f` which
@@ -389,16 +404,240 @@
 
   ((derive A B) [d (Derivable A), f (=> [a A] B)] (Derivable B)
     "Returns a new derivable encapsulating the resulf of applying {{f}} to the
-    the value encapsulated by {{d}}")
+    the value encapsulated by {{d}}.
+
+    ```javascript
+    const x = atom(5);
+
+    const y = derive(x, x => x * 2);
+
+    y.get();
+    // => 10
+    ```
+
+    Equivalent to:
+
+    ```javascript
+    d.derive(f);
+    ```")
+
+  ((derive A B C) [d1 (Derivable A), d2 (Derivable B), f (=> [a A b B] C)] (Derivable C)
+    "Returns a new derivable encapsulating the resulf of applying {{f}} to the
+    the values encapsulated by {{d1}} and {{d2}}.
+
+    ```javascript
+    const x = atom(5),
+          y = atom(10);
+
+    const z = derive(x, y, (x, y) => x * y);
+
+    y.get();
+    // => 50
+    ```
+    ")
+
+  ((derive A B C D) [d1 (Derivable A), d2 (Derivable B), d3 (Derivable C), f (=> [a A b B c C] D)] (Derivable D)
+    "As above but for 3-arity derivation functions.")
+
+  ((derive A B C D E) [d1 (Derivable A), d2 (Derivable B), d3 (Derivable C), d4 (Derivable D), f (=> [a A b B c C d D] E)] (Derivable E)
+    "As above but for 4-arity derivation functions.")
+
+  (derive [&ds [(Derivable any)] f (=> [&args [any]] any)] (Derivable any)
+    "As above for any arity.")
+
+  (transact [f (=> [] void)] void
+    "Executes {{f}} in the context of a transaction.
+
+    In a transactional context, changes to atoms do not have side effects. All
+    changes made during the transaction are propagated for side effects when the
+    transaction commits.
+
+    ```javascript
+    const firstName = `Joe`,
+          lastName = `Schmoe`;
+
+    derive`My name is ${firstName} ${lastName}`.react(
+      x => console.log(x);
+    );
+    // $> My name is Joe Schmoe
+    ```
+
+    All good, but now we want to change the name to Tigran Hamasayan.
+
+    ```javascript
+    firstName.set(`Tigran`);
+    // $> My name is Tigran Schmoe
+    ```
+
+    Doh! Tigran Schmoe isn't a person! We certainly don't want reactions to think
+    he is, that could be totally confusing for someone.
+
+    {{transact}} to the rescue! Let's abort the previous mission and try changing
+    the name to William Blake without ever having a William Schmoe.
+
+    ```javascript
+    transact(() => {
+      firstName.set(`William`);
+      lastName.set(`Blake`);
+    });
+    // $> My name is William Blake
+    ```
+
+    Success!
+    ")
+
+  (unpack [obj any] any
+    "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
+
+  (struct [obj any] (Derivable any)
+    "Given some potentially nested JavaScript collection containing one or more derivable things,
+    returns a new derivable representing the input collection with unpacked
+    values. e.g.
+
+    ```javascript
+    const a = atom(`Andrew`),
+          b = atom(`Bernice`),
+          c = atom(`Charlie`);
+
+    const together = struct({a: a, bandc: [b, c]});
+
+    together.react(names => {
+      console.log(`A stands for ${names.a}`);
+      console.log(`B stands for ${names.bandc[0]}`);
+      console.log(`C stands for ${names.bandc[1]}`);
+    });
+    // $> A stands for Andrew
+    // $> B stands for Bernice
+    // $> C stands for Charlie
+
+    c.set(`Chris`);
+    // $> A stands for Andrew
+    // $> B stands for Bernice
+    // $> C stands for Chris
+    ```")
+
+  (ifThenElse [condition (Derivable any) thenD any elseD any] (Derivable any)
+    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
+    value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is
+    falsey.
+
+    ```javascript
+    const condition = atom(true);
+
+    const thenD = atom(`then`);
+    const elseD = `else`;
+
+    const result = ifThenElse(condition, thenD, elseD);
+
+    result.get();
+    // => `then`
+
+    condition.set(false);
+
+    result.get();
+    // => `else`
+    ```"
+
+    (:see-also unpack Derivable::then))
+
+  (or [&conditions [any]] (Derivable any)
+    "Returns a derivable which encapsulates the first value in {{&conditions}}
+    which is truthy when passed through {{unpack}};
+
+    ```javascript
+    or(false, false, null, undefined, 0, ``, `yes`).get();
+    // => `yes`
+
+    or(atom(false),
+       atom(null),
+       atom(undefined),
+       atom(0),
+       atom(``),
+       atom(`yes`)).get();
+    // => `yes`
+    ```"
+    (:see-also Derivable::or))
+
+  (and [&conditions [any]] (Derivable any)
+    "Returns a derivable which represents the last value in {{&conditions}} iff
+    all values are truthy when passed through {{unpack}}. Otherwise it represents
+    whichever first value was falsey.
+
+    ```javascript
+    and(1, true, `yes`, `lastvalue`).get();
+    // => `lastValue`
+
+    and(1, true, 0, `lastvalue`).get();
+    // => 0
+    ```"
+    (:see-also Derivable::and))
+
+  (not [d (Derivable any)] (Derivable boolean)
+    "Returns a derivable which represents the boolean complement of the
+    truthiness of the value encapsulated by {{d}}.
+
+    A functional interface to the {{Derivable::not}} method.")
+
+  (switchCase [d (Derivable any) &args [any]] (Derivable any)
+    "Functional interface to the {{Derivable::switch}} method.
+
+    ```javascript
+    switchCase(d, ...args);
+    ```
+
+    is equivalent to
+
+    ```javascript
+    d.switch(...args);
+    ```")
+
+  ((get T) [d (Derivable T)] T
+    "Functional interface to the {{Derivable::get}} method.
+
+    ```javascript
+    get(d);
+    ```
+
+    is equivalent to
+
+    ```javascript
+    d.get();
+    ```")
+
+  ((set A B) [a (Atom A) v B] (Atom B)
+    "Functional interface to the {{Atom::set}} method.
+
+    ```javascript
+    set(a, v);
+    ```
+
+    is equivalent to
+
+    ```javascript
+    a.set(v);
+    ```")
+
+  ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
+    "A functional interface to the {{Atom::lens}} method.
+
+    ```javascript
+    lens(a, l);
+    ```
+
+    is equivalent to
+
+    ```javascript
+    a.lens(l);
+    ```")
 
   (isAtom [obj any] boolean
-    "Returns true iff `obj` is an {{Atom}}.")
+    "Returns true iff {{obj}} is an {{Atom}}.")
 
   (isDerivable [obj any] boolean
-    "Returns true iff `obj` is a {{Derivable}}.")
+    "Returns true iff {{obj}} is a {{Derivable}}.")
 
   (isDerivation [obj any] boolean
-    "Returns true iff `obj` is a derivation,
+    "Returns true iff {{obj}} is a derivation,
     i.e. a derivable which is not an atom.")
 
   (isLensed [obj any] boolean

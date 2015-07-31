@@ -64,8 +64,36 @@ declare module havelock {
 
   atom<T>(value: T): Atom<T>;
 
+  swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
+
   derive<T>(f: () => T): Derivable<T>;
   derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
+  derive<A, B, C>(d1: Derivable<A>, d2: Derivable<B>, f: (a: A, b: B) => C): Derivable<C>;
+  derive<A, B, C, D>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, f: (a: A, b: B, c: C) => D): Derivable<D>;
+  derive<A, B, C, D, E>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, d4: Derivable<D>, f: (a: A, b: B, c: C, d: D) => E): Derivable<E>;
+  derive(...ds: Derivable<any>[], f: (...args: any[]) => any): Derivable<any>;
+
+  transact(f: () => void): void;
+
+  unpack(obj: any): any;
+
+  struct(obj: any): Derivable<any>;
+
+  ifThenElse(condition: Derivable<any>, thenD: any, elseD: any): Derivable<any>;
+
+  or(...conditions: any[]): Derivable<any>;
+
+  and(...conditions: any[]): Derivable<any>;
+
+  not(d: Derivable<any>): Derivable<boolean>;
+
+  switchCase(d: Derivable<any>, ...args: any[]): Derivable<any>;
+
+  get<T>(d: Derivable<T>): T;
+
+  set<A, B>(a: Atom<A>, v: B): Atom<B>;
+
+  lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
 
   isAtom(obj: any): boolean;
 

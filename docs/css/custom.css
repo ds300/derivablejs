@@ -17,16 +17,28 @@
   padding: 0.3em;
 }
 
-#toc {
+#toc-flex {
   position: fixed;
   top: 0em;
   left: auto;
   width: 12em;
   max-width: 12em;
-  max-height: 100vh;
-  overflow: scroll;
+  height: 100vh;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
+
+#spacer {
+  flex: 0 0 auto;
+  width: 12em;
+  height: 12px;
+}
+#toc {
+  flex: 1 1 auto;
+  overflow: scroll;
+}
+
 
 
 #head {
@@ -61,12 +73,11 @@
   #page {
     position: static;
   }
-  #toc, #toc.fixed {
-    position: static;
-    max-width: 100%;
+  #toc {
+    display: none;
   }
   #head {
-    padding: 0 0.5em;
+    display: none;
   }
 }
 

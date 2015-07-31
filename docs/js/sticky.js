@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var maxHeadHeight = 150;
+  var maxHeadHeight = 200;
   var minHeadHeight = 40;
   var maxHeadPadding = 40;
   var minHeadPadding = 5;
@@ -10,7 +10,7 @@
   function Sticky(head, title, toc, page, gradientBit) {
     var inFixedMode = false;
     page.style.top = maxHeadHeight + "px";
-    toc.style.paddingTop = maxHeadHeight + "px";
+    spacer.style.height = maxHeadHeight + "px";
     gradientBit.style.marginTop = maxHeadHeight + "px";
     gradientBit.style.opacity = "0";
 
@@ -23,12 +23,12 @@
           head.style.height = minHeadHeight + "px";
           head.style.padding = minHeadPadding + "px 0px";
           title.style.fontSize = (minHeadHeight - (minHeadPadding * 2)) * 0.7;
-          toc.style.paddingTop = minHeadHeight + "px";
+          spacer.style.height = minHeadHeight + "px";
           gradientBit.style.marginTop = minHeadHeight + "px";
           inFixedMode = true;
         }
       } else {
-        toc.style.paddingTop = headHeight + "px";
+        spacer.style.height = headHeight + "px";
         gradientBit.style.marginTop = headHeight + "px";
         if (inFixedMode) {
           inFixedMode = false;
@@ -51,6 +51,6 @@
 
   window.addEventListener("load", function () {
     var $ = function (id) { return document.getElementById(id); };
-    Sticky($("head"), $("title"), $("toc"), $("page"), $("gradient-bit"));
+    Sticky($("head"), $("title"), $("toc"), $("page"), $("gradient-bit"), $("spacer"));
   });
 })();
