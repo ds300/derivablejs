@@ -315,7 +315,7 @@ I heartily welcome feature requests, bug reports, and general suggestions/critic
 
 Special thanks to:
 
-- Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
+- Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin, current mentors/employers for keeping me around despite my doing stuff like this.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.

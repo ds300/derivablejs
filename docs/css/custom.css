@@ -1,10 +1,14 @@
+/*******************/
+/*** Page Layout ***/
+/*******************/
+
 .container {
   margin: 0 auto;
   max-width: 52em;
   position: relative;
 }
 
-.page {
+#page {
   position: absolute;
   top: 4em;
   left: 12em;
@@ -26,67 +30,43 @@
 
 #toc.fixed {
   position: fixed;
-  top: 0em;
   left: auto;
 }
 
-a.anchor {
-  float: right;
-  display: block;
-  padding: 0.5em;
-  color: #EEE;
-  outline: none;
+#head {
+  position: fixed;
+  top: 0px;
+  left: auto;
+  box-sizing: border-box;
 }
 
-a.anchor:hover {
-  color: #AAA;
+#title {
+  margin: 0;
 }
+
 @media (max-width: 42em) {
-  .page {
+  #page {
     position: static;
   }
   #toc, #toc.fixed {
     position: static;
     max-width: 100%;
   }
-  .header {
+  #head {
     padding: 0 0.5em;
   }
 }
 
-pre, code, .code {
-  font-family: 'Source Code Pro', monospace;
-}
-
-code {
-  background-color: #f8f8f8;
-  padding: 0.1em 0.3em;
-  display: inline-block;
-  font-size: 11pt;
-  color: #BD0000;
-  border-right: 2px solid #EFEFEF;
-  border-bottom: 2px solid #EFEFEF;
-  border-radius: 5px;
-}
-
-pre code {
-  color: black;
-  display: block;
-  border: 0;
-  border-left: 2px solid #EFEFEF;
-  border-top: 2px solid #EFEFEF;
-}
-
-pre {
-  font-size: 11pt;
-}
+/*******************/
+/*** Base Styles ***/
+/*******************/
 
 body {
   font-family: 'Lora', Georgia, serif;
 }
 
 a {
-  color: #DB133B;
+  color: #FE4365;
   text-decoration: none;
   font-weight: 700;
 }
@@ -99,12 +79,79 @@ strong {
   font-weight: 700;
 }
 
-.title, .github {
-  display: inline-block;
-}
-
 .pull-right {
   float: right;
+}
+
+code, .code {
+  font-family: 'Source Code Pro', monospace;
+}
+
+code {
+  background-color: #f3f3f3;
+  padding: 0.1em 0.3em;
+  display: inline-block;
+  font-size: 11pt;
+  color: black;
+  border-right: 2px solid #EAEAEA;
+  border-bottom: 2px solid #EAEAEA;
+  border-radius: 5px;
+}
+
+pre code {
+  color: black;
+  display: block;
+  border: 0;
+  background-color: #f8f8f8;
+  border-left: 2px solid #EFEFEF;
+  border-top: 2px solid #EFEFEF;
+}
+
+
+/********************************/
+/*** Syntax Highlighing Stuff ***/
+/********************************/
+
+span.param, a.param,
+span.method, a.method {
+  color: #0A6592;
+}
+
+span.function, a.function {
+  color: #0A6592;
+}
+
+span.class, a.class,
+span.interface, a.interface {
+  color: #BD0E04;
+}
+
+span.type-arg, a.type-arg {
+  color: #008972;
+}
+
+span.punct, a.punct,
+span.builtin-type, a.builtin-type {
+  color: #555;
+}
+
+
+.github {
+  padding: 0em 0.2em;
+}
+
+
+
+a.anchor {
+  float: right;
+  display: block;
+  padding: 0.5em;
+  color: #EEE;
+  outline: none;
+}
+
+a.anchor:hover {
+  color: #AAA;
 }
 
 div.interface > div.method,

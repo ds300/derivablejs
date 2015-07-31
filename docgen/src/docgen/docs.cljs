@@ -32,14 +32,16 @@
             (do-resolve (:namespace named) (:path named) others)))
     (throw (js/Error. (str "Can't resolve name: " name)))))
 
+(defn code-link [path name]
+  [:code
+    (interpose [:.punct "::"]
+      (for [{:keys [element path]} (do-resolve *namespace*
+                                               path
+                                               (str/split name "::"))]
+        (link element (pop path))))])
+
 (defn render-code-link [path name]
-  (html/render
-    [:.code-link
-      (interpose [:.punct "::"]
-        (for [{:keys [element path]} (do-resolve *namespace*
-                                                 path
-                                                 (str/split name "::"))]
-          (link element path)))]))
+  (html/render (code-link path name)))
 
 (defn compile-md [doc path]
   (html/raw (md/compile-doc doc
@@ -62,7 +64,11 @@
     [:div.docs (compile-md s path)]))
 
 (defmethod render-doc :see-also [{things :value} path]
-  [:div.see-also [:p [:.label "See also: "] (interpose ", " (map #(do [:.code (gen % path)]) things))]])
+  [:div.see-also
+    [:p [:.label "See also: "]
+        (interpose ", "
+                   (map (comp (partial code-link path) str)
+                        things))]])
 
 (defmethod render-doc :note [{s :value} path]
   (when (not-empty s)
@@ -272,7 +278,7 @@
   IDoc
   (gen [this path]
     (if-let [{:keys [element path]} (resolve *namespace* path (str this))]
-        (link element path)
+        (link element (pop path))
         [:.builtin-type (str this)]))
 
   ILink
@@ -322,14 +328,16 @@
                (stylesheet "css/custom.css")]
         [:body
           [:div.container
-            [:div.header [:h1.title "Havelock API"]
-                         [:h1.github.pull-right
-                           [:a {:href "https://github.com/ds300/havelock"}
-                               (icon :github)]]]
-
+            [:div#head
+              [:h1#title
+                [:a.github {:href "https://github.com/ds300/havelock"
+                            :title "I am in the Githubs"}
+                    (icon :github)]
+                "Havelock API"]
+                         ]
             [:div#toc
               (toc module [])]
 
-            [:div.page (gen module [])]
+            [:div#page (gen module [])]
 
             ]]])))

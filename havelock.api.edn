@@ -355,7 +355,7 @@
     (onStop [] void
       (:note "*Abstract*")
       "Called when the reaction is stopped. Use for releasing resources."
-      (:see-also stop start other))
+      (:see-also stop start))
     )
 
   ((atom T) [value T] (Atom T)
@@ -398,7 +398,8 @@
     i.e. a derivable which is not an atom.")
 
   (isLensed [obj any] boolean
-    "Returns true iff `obj` is a {{Lens}}ed atom.")
+    "Returns true iff {{obj}} is a *lensed* atom."
+    (:see-also Lens Atom::lens))
 
   (isReaction [obj any] boolean
     "Returns true iff `obj` is a {{Reaction}}.")
