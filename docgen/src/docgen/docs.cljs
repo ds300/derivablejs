@@ -336,8 +336,10 @@
                 "Havelock API"]
                          ]
             [:div#toc
-              (toc module [])]
+              (toc module [])
+              ]
 
+            [:div#gradient-bit]
             [:div#page (gen module [])]
 
             ]]])))

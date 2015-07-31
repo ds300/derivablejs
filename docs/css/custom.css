@@ -22,6 +22,7 @@
   top: 4em;
   padding-top: 0.5em;
   left: 0em;
+  width: 12em;
   max-width: 12em;
   max-height: 100vh;
   overflow: scroll;
@@ -42,6 +43,26 @@
 
 #title {
   margin: 0;
+}
+
+#gradient-bit {
+  position: absolute;
+  left: 0;
+  height: 8px;
+  width: 12em;
+  background: rgba(0,0,0,0.25);
+  background: -moz-linear-gradient(top, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
+  background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(0,0,0,0.25)), color-stop(100%, rgba(255,255,255,0)));
+  background: -webkit-linear-gradient(top, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
+  background: -o-linear-gradient(top, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
+  background: -ms-linear-gradient(top, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff', GradientType=0 );
+}
+
+#gradient-bit.fixed {
+  position: fixed;
+  left: auto;
 }
 
 @media (max-width: 42em) {
@@ -136,9 +157,6 @@ span.builtin-type, a.builtin-type {
 }
 
 
-.github {
-  padding: 0em 0.2em;
-}
 
 
 
@@ -284,4 +302,8 @@ div.see-also > p > .label {
   font-size: 9pt;
   color: #555;
   padding: 0 0.4em;
+}
+
+.github {
+  padding: 0em 0.2em;
 }
