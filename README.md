@@ -96,7 +96,7 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 
 This sounded like a very good idea to me. But while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
 
-Havelock's raison d'être is to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
+Havelock exists to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
 
 \* <em>Count yourself lucky if that sounds as laughably anachronistic as programming on punch cards.</em>
 
@@ -242,7 +242,7 @@ Reagent also fails to provide consistency guarantees. To illustrate:
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'. Havelock is glitch-free.
 
-The one major issue with both of these libraries is that they require ClojureScript. I *adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job. Maybe you're in a similar boat.
+The one major issue with both of these libraries is that they require ClojureScript. I *adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job.
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
@@ -319,7 +319,7 @@ Special thanks to:
 
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
-- David Weir and Jeremy Reffin, ex-PhD supervisor and , for their invaluable mentorship and letting me play at academia.
+- David Weir and Jeremy Reffin for their invaluable mentorship.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
 
 ## Hire Me
