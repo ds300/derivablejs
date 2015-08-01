@@ -1108,7 +1108,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       set: function set(value) {
         this._parent.set(this._setter(this._parent._get(), value));
-        return this.get();
+        return this;
       }
     };
   }
@@ -1367,7 +1367,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             gc_sweep(this);
           }
         }
-        return value;
+        return this;
       },
 
       _get: function _get() {
@@ -1452,7 +1452,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * Sets the e's state to be f applied to e's current state and args
      */
     Havelock.swap = function (e, f, args) {
-      return e.set(f.apply(null, [e.get()].concat(args)));
+      return e.set(f.apply(null, [e.get()].concat(args))).get();
     };
 
     /**

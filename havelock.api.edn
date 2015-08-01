@@ -402,6 +402,28 @@
 
     ```")
 
+  (derive [strings [string] &things [any]] (Derivable string)
+    "Tagged template string version of derive. Returns a derivable which
+    represents {{strings}} interploated with {{&things}}, which latter may
+    contain derivables.
+
+    ```javascript
+    const myAtom = atom(`what`),
+          myConstant = 4;
+
+    const myString =
+      derive`Atom: '${myAtom}', constant: ${myConstant}.`;
+
+    myString.get();
+    // => `Atom: 'what', constant: 4.`
+
+    myAtom.set(`nothing`);
+
+    myString.get();
+    // => `Atom: 'nothing', constant: 4.`
+
+    ```")
+
   ((derive A B) [d (Derivable A), f (=> [a A] B)] (Derivable B)
     "Returns a new derivable encapsulating the resulf of applying {{f}} to the
     the value encapsulated by {{d}}.
@@ -444,6 +466,7 @@
 
   (derive [&ds [(Derivable any)] f (=> [&args [any]] any)] (Derivable any)
     "As above for any arity.")
+
 
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
@@ -628,6 +651,27 @@
 
     ```javascript
     a.lens(l);
+    ```")
+
+  (lift [f (=> [&args [any]] any)] (=> [&args [(Derivable any)]] (Derivable any))
+    "Lifts a function that works on normal values to work on derivable values.
+
+    ```javascript
+    const add = (a, b) => a + b,
+          x = atom(5),
+          y = atom(10);
+
+    const addD = lift(add);
+
+    const xplusy = addD(x, y);
+
+    xplusy.get();
+    // => 15
+
+    x.set(20);
+
+    xplusy.get();
+    // => 30
     ```")
 
   (isAtom [obj any] boolean

@@ -766,7 +766,7 @@ function createLensPrototype(havelock, _) {
 
     set (value) {
       this._parent.set(this._setter(this._parent._get(), value));
-      return this.get();
+      return this;
     }
   }
 }
@@ -913,7 +913,7 @@ function createAtomPrototype (havelock, {equals}) {
           gc_sweep(this);
         }
       }
-      return value;
+      return this;
     },
 
     _get () {
@@ -988,7 +988,8 @@ function havelock (config={}) {
   /**
    * Sets the e's state to be f applied to e's current state and args
    */
-  Havelock.swap = (e, f, args) => e.set(f.apply(null, [e.get()].concat(args)));
+  Havelock.swap = (e, f, args) => e.set(f.apply(null, [e.get()].concat(args)))
+                                   .get();
 
   /**
    * Creates a new derivation. Can also be used as a template string tag.

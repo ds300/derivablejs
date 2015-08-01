@@ -67,6 +67,7 @@ declare module havelock {
   swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
 
   derive<T>(f: () => T): Derivable<T>;
+  derive(strings: string[], ...things: any[]): Derivable<string>;
   derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
   derive<A, B, C>(d1: Derivable<A>, d2: Derivable<B>, f: (a: A, b: B) => C): Derivable<C>;
   derive<A, B, C, D>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, f: (a: A, b: B, c: C) => D): Derivable<D>;
@@ -94,6 +95,8 @@ declare module havelock {
   set<A, B>(a: Atom<A>, v: B): Atom<B>;
 
   lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
+
+  lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
 
   isAtom(obj: any): boolean;
 
