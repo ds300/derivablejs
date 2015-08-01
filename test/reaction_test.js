@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, transact, Reaction} from '../src/havelock';
+import _, {atom, derive, transact, Reaction} from '../dist/havelock';
 import assert from 'assert';
 
 describe("a reaction", () => {

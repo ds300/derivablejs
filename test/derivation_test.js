@@ -1,4 +1,4 @@
-import _, {atom, derive, transact} from '../src/havelock';
+import _, {atom, derive, transact} from '../dist/havelock';
 import assert from 'assert';
 import { label } from './util';
 

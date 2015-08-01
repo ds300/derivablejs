@@ -324,34 +324,27 @@
         [:head [:title "Havelock API Documentation"]
                [:meta {:charset "utf-8"}]
                [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
-               (stylesheet "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css")
                [:script {:src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"}]
                [:script (html/raw "hljs.initHighlightingOnLoad();")]
-               [:script {:src "js/sticky.js"}]
+               [:script {:src "dist/havelock.js"}]
+               [:script {:src "resources/js/sticky.js"}]
                (stylesheet "http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700")
                (stylesheet "http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic")
                (stylesheet "http://fonts.googleapis.com/css?family=Questrial")
-               (stylesheet "css/font-awesome.min.css")
-               (stylesheet "css/normalize.css")
-               (stylesheet "css/github.css")
-               (stylesheet "css/custom.css")]
+               (stylesheet "resources/css/font-awesome.min.css")
+               (stylesheet "resources/css/normalize.css")
+               (stylesheet "resources/css/github.css")
+               (stylesheet "resources/css/custom.css")]
         [:body
           [:div.container
             [:div#toc-flex
               [:div#spacer]
-              [:div#toc (toc module [])]
-
-              ]
+              [:div#toc (toc module [])]]
             [:div#head
               [:h1#title
                 [:a.github {:href "https://github.com/ds300/havelock"
                             :title "See me in the Githubs"}
                     (icon :github)]
-                "Havelock API"]
-                         ]
-
-
+                "Havelock API"]]
             [:div#gradient-bit]
-            [:div#page (gen module [])]
-
-            ]]])))
+            [:div#page (gen module [])]]]])))

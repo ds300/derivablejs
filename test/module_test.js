@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, transact} from '../src/havelock';
+import _, {atom, derive, transact} from '../dist/havelock';
 import assert from 'assert';
 
 describe("the `is*` fns", () => {
@@ -11,7 +11,7 @@ describe("the `is*` fns", () => {
 
     assert(_.isAtom(a), "a is an atom");
     assert(!_.isAtom(d), "d is not an atom");
-    assert(!_.isAtom(l), "l is not an atom");
+    assert(_.isAtom(l), "l is an atom");
     assert(!_.isAtom(r), "r is not an atom");
 
     assert(!_.isDerivation(a), "a is not a derivation");
@@ -19,10 +19,10 @@ describe("the `is*` fns", () => {
     assert(_.isDerivation(l), "l is a derivation");
     assert(!_.isDerivation(r), "r is not a derivation");
 
-    assert(!_.isLens(a), "a is not a lens");
-    assert(_.isLens(l), "l is a lens");
-    assert(!_.isLens(d), "d is not a lens");
-    assert(!_.isLens(r), "r is not a lens");
+    assert(!_.isLensed(a), "a is not a lens");
+    assert(_.isLensed(l), "l is a lens");
+    assert(!_.isLensed(d), "d is not a lens");
+    assert(!_.isLensed(r), "r is not a lens");
 
     assert(!_.isReaction(a), "a is a reaction");
     assert(!_.isReaction(d), "d is a reaction");

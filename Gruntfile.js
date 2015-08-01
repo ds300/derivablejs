@@ -31,99 +31,59 @@ module.exports = function(grunt) {
         undef: true,
         unused: 'vars',
       },
-      all: ['src/**/*.js', '!src/havelock.js']
+      all: ['src/havelock.js']
     },
     clean: {
-      build: ['dist/*', 'docs/index.html']
+      build: ['dist/*']
     },
-    bundle: {
-      build: {
-        files: [{
-          src: 'src/havelock.js',
-          dest: 'dist/havelock'
-        }]
-      }
-    },
-    jest: {
-      options: {
-        testPathPattern: /.*/
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec'
+        },
+        src: ['test/**/*.js']
       }
     }
   });
 
 
   var fs = require('fs');
-  var esperanto = require('esperanto');
-  var copyright = fs.readFileSync('resources/COPYRIGHT')
-  var stripCopyright = function (code) {
-    var idx = code.indexOf(copyright);
-    if (idx > -1) {
-      code = code.substring(idx + copyright.length);
-    }
-    return code;
-  };
+  var babel = require('babel');
   var uglify = require('uglify-js');
 
-  grunt.registerMultiTask('bundle', function () {
-    var done = this.async();
+  grunt.registerTask('compile', function () {
+    var src = 'src/havelock.js';
+    var dest = 'dist/havelock';
+    var code = fs.readFileSync('src/havelock.js');
 
-    this.files.map(function (file) {
-      esperanto.bundle({
-        entry: file.src[0],
-        transform: function(source) {
-          return stripCopyright(source);
-        }
-      }).then(function (bundle) {
-
-        var bundled = bundle.toUmd({
-          banner: copyright,
-          sourceMap: true,
-          sourceMapFile: 'havelock.js',
-          strict: true,
-          name: 'Havelock'
-        });
-
-        var babel = require('babel');
-
-        var transformed = babel.transform(bundled.code, {
-          blacklist: ["es6.tailCall"],
-          sourceMaps: true,
-          inputSourceMap: bundled.map,
-        });
-
-        delete transformed.map.sourcesContent;
-        transformed.map.sources = transformed.map.sources.map(function (s) {
-          var idx = s.lastIndexOf("/src/");
-          return s.substring(idx + 1);
-        });
-
-        fs.writeFileSync(file.dest + '.js', transformed.code);
-        fs.writeFileSync(file.dest + '.js.map', JSON.stringify(transformed.map, null, '\t'));
-
-        var minifyResult = uglify.minify(transformed.code, {
-          fromString: true,
-          mangle: {
-            toplevel: true
-          },
-          compress: {
-            comparisons: true,
-            pure_getters: true,
-            unsafe: true
-          },
-          output: {
-            max_line_len: 2048,
-          },
-          reserved: ['module', 'define', 'Havelock']
-        });
-
-        var minified = minifyResult.code;
-
-        fs.writeFileSync(file.dest + '.min.js', copyright + minified);
-      }).then(function(){ done(); }, function(error) {
-        grunt.log.error(error.stack);
-        done(false);
-      });
+    var transformed = babel.transform(code, {
+      blacklist: ["es6.tailCall", 'strict'],
+      sourceMaps: true,
+      modules: "ignore",
     });
+
+    fs.writeFileSync(dest + '.js', transformed.code);
+    fs.writeFileSync(dest + '.js.map', JSON.stringify(transformed.map, null, '\t'));
+
+    var minifyResult = uglify.minify(transformed.code, {
+      fromString: true,
+      mangle: {
+        toplevel: true
+      },
+      compress: {
+        comparisons: true,
+        pure_getters: true,
+        unsafe: true
+      },
+      output: {
+        max_line_len: 2048,
+      },
+      reserved: ['module', 'define', 'Havelock']
+    });
+
+    var minified = minifyResult.code;
+    var copyright = fs.readFileSync('resources/COPYRIGHT');
+    fs.writeFileSync(dest + '.min.js', copyright + minified);
   });
 
   var Promise = require("bluebird");
@@ -133,7 +93,7 @@ module.exports = function(grunt) {
     var script = "docgen/target/docgen.js";
     var api = "havelock.api.edn";
     var tsOut = "dist/havelock.d.ts";
-    var htmlOut = "docs/index.html";
+    var htmlOut = "index.html";
 
     if (!fs.existsSync("docs")) {
       fs.mkdirSync("docs");
@@ -236,12 +196,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-jest');
+  grunt.loadNpmTasks('grunt-mocha-test')
   grunt.loadNpmTasks('grunt-release');
 
   grunt.registerTask('docs', 'build documentation', ['clean', 'make-docs'])
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
-  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'bundle']);
-  grunt.registerTask('test', 'Test built javascript', ['jest']);
-  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats' /*, 'test' */]);
+  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'compile']);
+  grunt.registerTask('test', 'Test built javascript', ['mochaTest']);
+  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats', 'test']);
 }

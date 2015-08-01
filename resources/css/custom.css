@@ -69,7 +69,7 @@
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#ffffff', GradientType=0 );
 }
 
-@media (max-width: 42em) {
+@media (max-width: 40em) {
   #page {
     position: static;
   }
@@ -92,7 +92,6 @@ body {
 a {
   color: #FE4365;
   text-decoration: none;
-  font-weight: 700;
 }
 
 a:hover {
@@ -131,7 +130,22 @@ pre code {
   border-top: 2px solid #EFEFEF;
 }
 
-@media (max-width: 38em) {
+h2, h3, h4, h5, h6 {
+  font-weight: 400;
+}
+
+
+body, h4, code, pre {
+  font-size: 11pt;
+}
+h3 {
+  font-size: 12pt;
+}
+h2 {
+  font-size: 14pt;
+}
+
+@media (max-width: 40em) {
   body, h4, code, pre {
     font-size: 10pt;
   }
@@ -169,7 +183,7 @@ span.type-arg, a.type-arg {
 
 span.punct, a.punct,
 span.builtin-type, a.builtin-type {
-  color: #555;
+  color: #888;
 }
 
 h2 .punct, h3 .punct, h4 .punct,
@@ -201,7 +215,7 @@ a.anchor:hover {
   color: #AAA;
 }
 
-div.method > h4 {
+div.method > h4, div.function-signature > h4 {
   padding: 0.3em 0em;
   border-bottom: 2px dotted #ddd;
   padding-bottom: 0.6em;
@@ -213,7 +227,7 @@ div.interface, div.function, div.class {
   margin: 3.2em 0em;
 }
 
-@media (max-width: 38em) {
+@media (max-width: 40em) {
   div.interface, div.function {
     margin: 0.5em 0em;
     padding: 0.5em 0em;
@@ -232,14 +246,9 @@ div.interface, div.function, div.class {
   font-size: 10pt;
 }
 #toc li > a {
-  color: black;
-  font-weight: 400;
   font-family: 'Source Code Pro', monospace;
 }
-#toc li.active > a {
-  color: #DB133B;
-  font-weight: 700;
-}
+
 #toc li.subheading {
   text-transform: uppercase;
   font-family: "Questrial", sans-serif;
@@ -249,10 +258,6 @@ div.interface, div.function, div.class {
   padding: 0.1em 0;
   margin: 0.5em 0;
   border-bottom: 1px solid #e0e0e0;
-}
-
-#toc li.interface > a, #toc li.property > a {
-  font-weight: 700;
 }
 
 #toc li.function > a {

@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, transact} from '../src/havelock';
+import _, {atom, derive, transact} from '../dist/havelock';
 import assert from 'assert';
 
 describe("the humble atom", () => {
