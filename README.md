@@ -80,15 +80,15 @@ transact(() => {
 
 ## Rationale
 
-When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully try to organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep the chunks in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats the days when we all did manual data binding with pure jQuery and `id` attributes. *Remember that?* Dark times indeed.
+When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep them in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats having [God objects](https://en.wikipedia.org/wiki/God_object) manually bound to the DOM with pure jQuery and `id` attributes\*.
 
-And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially as applications grow ever larger. It becomes increasingly difficult to modify or add new features to your system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated.
+And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be particularly hard to reproduce and, therefore, diagnose and fix.
 
-Wouldn't it be nice if you never had to worry about that kind of junk again? How much do you think it would be worth?
+Wouldn't it be nice if you never had to worry about that kind of tedious mess again? How much do you think it would be worth?
 
-Wonder no more! The core concept is very simple: your stateful components never change their state directly. Instead they delegate to some centralized third party who is then responsible for applying the change and propagating it. Then your components just need to subscribe to this third party, or some subsidiary thereof, in order to be notified of pertinent changes. This detangles the callback web and you end up with a lovely simple [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph).
+Wonder no more! The core concept is very simple: your stateful components never change their state directly. Instead they delegate to some centralized third party who becomes responsible for applying the change and propagating it. Then your components just need to subscribe to this third party, or some subsidiary thereof, in order to be notified of pertinent changes. This detangles the callback web and you end up with a lovely simple callback tree.
 
-The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page that explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page which explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
@@ -97,6 +97,8 @@ But because you're a busy person and I'm into the whole brevity thing, here's th
 This sounded like a very good idea to me. But while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
 
 Havelock's raison d'être is to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
+
+\* <em>Count yourself lucky if that sounds as distant and laughably inferior as programming on punch cards.</em>
 
 ## Model
 
@@ -129,7 +131,7 @@ You may be wondering how these benefits are achieved. The answer is simple: mark
 * When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 * The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps Havelock isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) regarding how to reduce the traversal overhead after v1.0.0 drops.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps Havelock isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) for how to reduce the traversal overhead after v1.0.0 drops.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
@@ -137,7 +139,7 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies at conception, please let me know and I'll edit or annotate where appropriate.*
 
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also exclusively uses funky macro juju to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
+[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also exclusively uses macrology to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
 
 ```clojure
 (ns test
@@ -191,7 +193,7 @@ cells[0].swap(x => x+1);
 
 Sure it's a tad more verbose, but *this is JS*; I'm not a miracle worker.
 
-[Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack can handle runtime graph composition too (like Havelock, it uses dereference-capturing to infer edges). Reagent also does automatic memory management! Unfortunately, it can only do laziness for 'active' derivation branches.
+[Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack can handle runtime graph composition too (like Havelock, it uses dereference-capturing to infer edges). Reagent also does automatic memory management! Unfortunately, it doesn't do transactions and can only do laziness for 'active' derivation branches.
 
 ```clojure
 (ns test-ratom
@@ -244,7 +246,7 @@ The one major issue with both of these libraries is that they require ClojureScr
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
-More promising is [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) which seem to get the job done, but are tied to Knockout itself and also unfortunately glitchy:
+More promising is [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) which seem to get the job done, but are tied to Knockout itself. They also have no facility for transactions and are glitchy:
 
 ```javascript
 const root = ko.observable("hello");
@@ -303,7 +305,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
-1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So do that if you want to get ahead of the curve!
+1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
@@ -317,8 +319,9 @@ Special thanks to:
 
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
-- David Weir and Jeremy Reffin, current mentors/employers for keeping me around despite my doing stuff like this.
+- David Weir and Jeremy Reffin, ex-PhD supervisor and , for their invaluable mentorship and letting me play at academia.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
+- Evan Czaplicki, another tireless progenitor of enthusiasm for these concepts who also gives [really good talk](https://www.youtube.com/watch?v=Agu6jipKfYw).
 
 ## Hire Me
 
@@ -334,7 +337,7 @@ That was fun but now I intend to become a professional and competent engineer, w
 
 I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I think South-East Asian cuisine is where it's at, cuisine-wise. But most of the others are pretty great too.
 
-I'm free from November and might be willing to do remote work or move anywhere in Western Europe for the right job.
+I'm free from November and might be willing to do remote work or move anywhere in Western Europe for the right job. Email me.
 
 ## License
 
