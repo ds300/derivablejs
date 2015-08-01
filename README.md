@@ -82,13 +82,13 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep them in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats having [God objects](https://en.wikipedia.org/wiki/God_object) manually bound to the DOM with pure jQuery and `id` attributes\*.
 
-And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be particularly hard to reproduce and, therefore, diagnose and fix.
+And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be particularly hard to reproduce and, therefore, to diagnose and fix.
 
 Wouldn't it be nice if you never had to worry about that kind of tedious mess again? How much do you think it would be worth?
 
 Wonder no more! The core concept is very simple: your stateful components never change their state directly. Instead they delegate to some centralized third party who becomes responsible for applying the change and propagating it. Then your components just need to subscribe to this third party, or some subsidiary thereof, in order to be notified of pertinent changes. This detangles the callback web and you end up with a lovely simple callback tree.
 
-The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page which explains the whole deal with that, but the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page which explains the whole deal with that. Evan Czaplicki, the creator of [Elm](https://github.com/evancz/elm-architecture-tutorial#the-elm-architecture), is another tireless progenitor of enthusiasm for these concepts who also gives [really good talk](https://www.youtube.com/watch?v=Agu6jipKfYw). But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
 
 But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
 
@@ -98,7 +98,7 @@ This sounded like a very good idea to me. But while the latter is conceptually v
 
 Havelock's raison d'être is to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
 
-\* <em>Count yourself lucky if that sounds as distant and laughably inferior as programming on punch cards.</em>
+\* <em>Count yourself lucky if that sounds as laughably anachronistic as programming on punch cards.</em>
 
 ## Model
 
@@ -321,7 +321,6 @@ Special thanks to:
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin, ex-PhD supervisor and , for their invaluable mentorship and letting me play at academia.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
-- Evan Czaplicki, another tireless progenitor of enthusiasm for these concepts who also gives [really good talk](https://www.youtube.com/watch?v=Agu6jipKfYw).
 
 ## Hire Me
 
