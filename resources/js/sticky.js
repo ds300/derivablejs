@@ -8,44 +8,32 @@
 
   // assumes offset parent is at top for the sake of simplicity
   function Sticky(head, title, toc, page, gradientBit) {
-    var inFixedMode = false;
-    page.style.top = maxHeadHeight + "px";
-    spacer.style.height = maxHeadHeight + "px";
-    gradientBit.style.marginTop = maxHeadHeight + "px";
-    gradientBit.style.opacity = "0";
+    page.style.paddingTop = maxHeadHeight;
+    var pageScroll = Havelock.atom(window.scrollY);
+    var tocScroll = Havelock.atom(toc.scrollTop);
 
-    function check () {
-      var scroll = window.scrollY;
-      var headHeight = Math.max(minHeadHeight, maxHeadHeight - scroll);
+    window.addEventListener('scroll', function () { pageScroll.set(window.scrollY); });
+    toc.addEventListener('scroll', function () { tocScroll.set(this.scrollTop); });
 
-      if (headHeight === minHeadHeight) {
-        if (!inFixedMode) {
-          head.style.height = minHeadHeight + "px";
-          head.style.padding = minHeadPadding + "px 0px";
-          title.style.fontSize = (minHeadHeight - (minHeadPadding * 2)) * 0.7;
-          spacer.style.height = minHeadHeight + "px";
-          gradientBit.style.marginTop = minHeadHeight + "px";
-          inFixedMode = true;
-        }
-      } else {
-        spacer.style.height = headHeight + "px";
-        gradientBit.style.marginTop = headHeight + "px";
-        if (inFixedMode) {
-          inFixedMode = false;
-        }
+    var headHeight = pageScroll.derive(function (scroll) {
+      return Math.max(maxHeadHeight - scroll, minHeadHeight);
+    });
 
-        head.style.height = headHeight + "px";
-        var padding = minHeadPadding + ((maxHeadPadding - minHeadPadding) * ((headHeight - minHeadHeight) / (maxHeadHeight - minHeadHeight)));
-        head.style.padding = padding + "px 0px";
-        title.style.fontSize = (headHeight - (padding * 2)) * 0.7;
-      }
-    }
-    check();
-    window.addEventListener("scroll", check);
-    toc.addEventListener("scroll", function () {
-      // 10px grace
-      var opacity = Math.min(Math.max(this.scrollTop / 10, 0), 1);
-      gradientBit.style.opacity = "" + opacity;
+    headHeight.react(function (headHeight) {
+      spacer.style.height = headHeight + "px";
+      gradientBit.style.marginTop = headHeight + "px";
+      head.style.height = headHeight + "px";
+      var padding = minHeadPadding + ((maxHeadPadding - minHeadPadding) * ((headHeight - minHeadHeight) / (maxHeadHeight - minHeadHeight)));
+      head.style.padding = padding + "px 0px";
+      title.style.fontSize = (headHeight - (padding * 2)) * 0.7;
+    });
+
+    var gradientOpacity = tocScroll.derive(function (scroll) {
+      return Math.min(scroll / 20, 1);
+    });
+
+    gradientOpacity.react(function (opacity) {
+      gradientBit.style.opacity = opacity;
     });
   }
 
