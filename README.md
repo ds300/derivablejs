@@ -9,7 +9,7 @@
 
 ---
 
-Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by taking control of your interconnections. It is [**Derived Data all the way Down**](#rationale).
+Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by taking control of your interconnections.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -242,7 +242,7 @@ Reagent also fails to provide consistency guarantees. To illustrate:
 
 At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'. Havelock is glitch-free.
 
-The one major issue with both of these libraries is that they require ClojureScript. I *adore* ClojureScript but I'm not one of these extremely lucky people who get to use it at their job.
+The one major issue with both of these libraries is that they require ClojureScript. Don't get me wrong, I *adore* ClojureScript. But I'm not one of these extremely lucky people who get to use it at their job.
 
 So what's available in JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
 
