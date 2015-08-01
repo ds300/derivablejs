@@ -347,4 +347,5 @@
                     (icon :github)]
                 "Havelock API"]]
             [:div#gradient-bit]
-            [:div#page (gen module [])]]]])))
+            [:div#page (gen module [])
+             [:p.footer [:em "This documentation was generated from the file "] [:code "havelock.api.edn"] "."]]]]])))

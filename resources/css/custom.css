@@ -307,3 +307,8 @@ div.see-also > p > .label {
   color: #555;
   padding: 0 0.4em;
 }
+
+p.footer {
+  color: #555;
+  padding: 3em 0em;
+}
