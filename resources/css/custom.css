@@ -201,6 +201,7 @@ div.function > div.function-signature,
 div.class > div.method {
   border-left: 2px dotted #ddd;
   padding-left: 10px;
+  margin-bottom: 4em;
 }
 
 a.anchor {
