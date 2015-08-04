@@ -686,6 +686,7 @@ function createDerivationPrototype (havelock, { equals }) {
         let parents = new Set();
         for (let [parent, state] of this._parents) {
           if (!equals(parent._get(), state)) {
+            this._parents = new Set();
             this._forceGet();
             break outer;
           } else {

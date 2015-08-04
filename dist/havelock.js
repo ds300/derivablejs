@@ -1012,6 +1012,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var state = _step11$value[1];
 
                 if (!equals(_parent3._get(), state)) {
+                  this._parents = new Set();
                   this._forceGet();
                   break outer;
                 } else {
