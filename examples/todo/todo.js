@@ -133,7 +133,6 @@ function renderTodo({id, description, complete, editing}, idx) {
 // list itself as derivable
 const todosRender = derive(() => {
   const allDone = allComplete.get();
-  console.log("rendering with checked: ", allDone);
   return (
     <section className="main" style={hideWhen(numTodos.get() === 0)}>
       <input className="toggle-all"
@@ -180,13 +179,12 @@ const pageRender = derive(() => {
         <input className="new-todo"
                placeholder="What needs to be done?"
                value={newTodoName.get()}
-               onChange={e => {
-                 console.log("setting: " + e.target.value)
-                 newTodoName.set(e.target.value)
-               } }
+               onChange={e => newTodoName.set(e.target.value) }
                onKeyPress={onEnter(() => {
-                 todos.swap(newTodo, newTodoName.get());
-                 newTodoName.set("");
+                 transact(() => {
+                   todos.swap(newTodo, newTodoName.get());
+                   newTodoName.set("");
+                 });
                })}
                autofocus />
       </header>
