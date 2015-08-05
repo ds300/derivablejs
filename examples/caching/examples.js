@@ -25,3 +25,5 @@ var cachedDoubled = map(function (x) { console.log(x); return x * 2; }, numbers)
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([1, 10, 3]));
 console.log("cd:", cachedDoubled.get());
+numbers.set(immutable_1.List([1, 2, 3, 4]));
+console.log("cd:", cachedDoubled.get());

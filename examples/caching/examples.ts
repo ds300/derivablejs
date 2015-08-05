@@ -26,12 +26,15 @@ function map<I,O>(f: (x:I) => O, xs: Derivable<List<I>>): Derivable<List<O>> {
   return dxsO.derive(dxs => dxs.map(_.get).toList());
 }
 
-
 const cachedDoubled: Derivable<List<number>>
   = map(x => {console.log(x); return x*2;}, numbers);
 
 console.log("cd:", cachedDoubled.get());
 
 numbers.set(List([1, 10, 3]));
+
+console.log("cd:", cachedDoubled.get());
+
+numbers.set(List([1, 2, 3, 4]));
 
 console.log("cd:", cachedDoubled.get());

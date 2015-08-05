@@ -39,7 +39,7 @@ function explode<T>(xs: Derivable<List<T>>): Derivable<List<Derivable<T>>> {
 
 *Please don't freak out about the nested derivableness. It's fine. Honest.*
 
-So for every index in `derivableListT`, we create a new derivable which simply looks up that index. Now we can partially solve the mapping problem:
+So for every index in `xs`, we create a new derivable which simply looks up that index. Now we can partially solve the mapping problem:
 
 ```typescript
 function map<I,O>(f: (x:I) => O, xs: Derivable<List<I>>): Derivable<List<O>> {
@@ -47,7 +47,7 @@ function map<I,O>(f: (x:I) => O, xs: Derivable<List<I>>): Derivable<List<O>> {
   let dxsI: Derivable<List<Derivable<I>>> = explode(xs);
   // now map f over the derivables
   let dxsO: Derivable<List<Derivable<O>>> = dxsI.derive(dxs => {
-    return dxs.map((dx: Derivable<I>) => dx.derive(f)).toList();
+    return dxs.map(dx => dx.derive(f)).toList();
   });
   // so at this point the Derivable<O>s only get recalculated when the
   // Derivable<I>s change. And, if you'll remember, the Derivable<I>s
@@ -75,6 +75,15 @@ console.log("cd:", cachedDoubled.get());
 // $> cd: List [ 2, 20, 6 ]
 ```
 
+The reason this is only a partial solution is that if `xs` changes in length, all the derivations get regenerated which means all the values get recomputed.
 
+```typescript
+numbers.set(List([1, 2, 3, 4]));
 
-But it should be immediately obvious that if `derivableListT` changes, each derivation gets
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> 3
+// $> 4
+// $> cd: List [ 2, 4, 6, 8 ]
+```
