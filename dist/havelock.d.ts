@@ -2,7 +2,7 @@
  * This TypeScript file was generated from havelock.api.edn.
  * Please change that file and re-run `grunt docs` to modify this file.
  */
-declare module havelock {
+declare module 'havelock' {
 
   export interface Derivable<T> {
 
@@ -62,49 +62,49 @@ declare module havelock {
     onStop(): void;
   }
 
-  atom<T>(value: T): Atom<T>;
+  function atom<T>(value: T): Atom<T>;
 
-  swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
+  function swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
 
-  derive<T>(f: () => T): Derivable<T>;
-  derive(strings: string[], ...things: any[]): Derivable<string>;
-  derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
-  derive<A, B, C>(d1: Derivable<A>, d2: Derivable<B>, f: (a: A, b: B) => C): Derivable<C>;
-  derive<A, B, C, D>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, f: (a: A, b: B, c: C) => D): Derivable<D>;
-  derive<A, B, C, D, E>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, d4: Derivable<D>, f: (a: A, b: B, c: C, d: D) => E): Derivable<E>;
-  derive(...ds: Derivable<any>[], f: (...args: any[]) => any): Derivable<any>;
+  function derive<T>(f: () => T): Derivable<T>;
+  function derive(strings: string[], ...things: any[]): Derivable<string>;
+  function derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
+  function derive<A, B, C>(d1: Derivable<A>, d2: Derivable<B>, f: (a: A, b: B) => C): Derivable<C>;
+  function derive<A, B, C, D>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, f: (a: A, b: B, c: C) => D): Derivable<D>;
+  function derive<A, B, C, D, E>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, d4: Derivable<D>, f: (a: A, b: B, c: C, d: D) => E): Derivable<E>;
+  function derive(...args: any[]): Derivable<any>;
 
-  transact(f: () => void): void;
+  function transact(f: () => void): void;
 
-  unpack(obj: any): any;
+  function unpack(obj: any): any;
 
-  struct(obj: any): Derivable<any>;
+  function struct(obj: any): Derivable<any>;
 
-  ifThenElse(condition: Derivable<any>, thenD: any, elseD: any): Derivable<any>;
+  function ifThenElse(condition: Derivable<any>, thenD: any, elseD: any): Derivable<any>;
 
-  or(...conditions: any[]): Derivable<any>;
+  function or(...conditions: any[]): Derivable<any>;
 
-  and(...conditions: any[]): Derivable<any>;
+  function and(...conditions: any[]): Derivable<any>;
 
-  not(d: Derivable<any>): Derivable<boolean>;
+  function not(d: Derivable<any>): Derivable<boolean>;
 
-  switchCase(d: Derivable<any>, ...args: any[]): Derivable<any>;
+  function switchCase(d: Derivable<any>, ...args: any[]): Derivable<any>;
 
-  get<T>(d: Derivable<T>): T;
+  function get<T>(d: Derivable<T>): T;
 
-  set<A, B>(a: Atom<A>, v: B): Atom<B>;
+  function set<A, B>(a: Atom<A>, v: B): Atom<B>;
 
-  lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
+  function lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
 
-  lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
+  function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
 
-  isAtom(obj: any): boolean;
+  function isAtom(obj: any): boolean;
 
-  isDerivable(obj: any): boolean;
+  function isDerivable(obj: any): boolean;
 
-  isDerivation(obj: any): boolean;
+  function isDerivation(obj: any): boolean;
 
-  isLensed(obj: any): boolean;
+  function isLensed(obj: any): boolean;
 
-  isReaction(obj: any): boolean;
+  function isReaction(obj: any): boolean;
 }

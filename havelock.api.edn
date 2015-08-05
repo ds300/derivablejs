@@ -464,8 +464,8 @@
   ((derive A B C D E) [d1 (Derivable A), d2 (Derivable B), d3 (Derivable C), d4 (Derivable D), f (=> [a A b B c C d D] E)] (Derivable E)
     "As above but for 4-arity derivation functions.")
 
-  (derive [&ds [(Derivable any)] f (=> [&args [any]] any)] (Derivable any)
-    "As above for any arity.")
+  (derive [&args [any]] (Derivable any)
+    "As above for any arity. The last arg should be a function of the preceeding args.")
 
 
   (transact [f (=> [] void)] void

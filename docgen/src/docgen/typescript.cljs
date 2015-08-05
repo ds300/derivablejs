@@ -58,21 +58,21 @@
          (render-params params) ": "
          (->typescript return-type) ";")))
 
-(defn fn-or-method->ts [name signatures depth]
+(defn fn-or-method->ts [name prefix signatures depth]
   (reduce str
           (interpose "\n"
-                     (map #(str (space depth) name %)
+                     (map #(str (space depth) prefix name %)
                           signatures))))
 
 (extend-type ast/Function
   TypeScripty
   (->typescript [{:keys [name signatures]} depth]
-    (fn-or-method->ts name signatures depth)))
+    (fn-or-method->ts name "function " signatures depth)))
 
 (extend-type ast/Method
   TypeScripty
   (->typescript [{:keys [name signatures]} depth]
-    (fn-or-method->ts name signatures depth)))
+    (fn-or-method->ts name "" signatures depth)))
 
 (extend-type ast/Constructor
   TypeScripty
@@ -101,7 +101,7 @@
   TypeScripty
   (->typescript [{:keys [name members]} depth]
     (str (space depth)
-         "declare module " name " " (render-members members depth))))
+         "declare module '" name "' " (render-members members depth))))
 
 (defn render-class-or-interface
   [type {:keys [name type-args members extends]} depth]
