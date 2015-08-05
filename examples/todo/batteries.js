@@ -68,3 +68,29 @@ export function innerMap(derivableListDerivableT, fn) {
 export function dmap(fn, derivableListT) {
   return innerMap(explode(derivableListT), fn).derive(xs => xs.map(get).toList());
 }
+
+
+function historical (data) {
+  let a = atom(imut.Map().set("history", data).set("idx", 0));
+
+  let dataAtom = a.cursor({
+    get (a) {
+      return a.get("history").get(a.get("idx"));
+    },
+    set (a, data) {
+      return a.update("history", h => h.push(data)).update("idx", i => i+1);
+    }
+  });
+
+  let idxAtom = a.cursor({
+    get (a) {
+      return a.get("idx");
+    },
+    set (a, i) {
+      let n = a.get("history").size;
+      return a.set("idx", Math.min(Math.max(i, 0), n-1));
+    }
+  });
+
+  return [dataAtom, idxAtom]
+}

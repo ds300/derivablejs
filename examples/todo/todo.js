@@ -4,11 +4,11 @@ import React from 'react'
 
 /*** Global App State ***/
 const nextId = atom(0);
-const todos = atom(fromJS(JSON.parse(localStorage['todos'] || "[]").map(todo => {
-  todo.id = nextId.get().toString();
-  nextId.swap(x => x + 1);
-  return todo;
-})));
+function getNextId () {
+  return _.swap(nextId, x => x+1);
+}
+
+const todos = atom(fromJS([]));
 const hash = atom(window.location.hash);
 const newTodoName = atom("");
 
@@ -16,10 +16,16 @@ window.addEventListener('hashchange', () => {
   hash.set(window.location.hash);
 });
 
+{
+  let existingTodos;
+  if ((existingTodos = localStorage['todos'])) {
+    todos.set(fromJS(JSON.parse(existingTodos)).map(x => x.set('id', getNextId())));
+  }
+}
+
 todos.react(todos => {
   localStorage['todos'] = JSON.stringify(todos.toJS());
 });
-
 
 /*** Business Logic ***/
 function newTodo (todos, description) {
