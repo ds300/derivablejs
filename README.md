@@ -9,7 +9,7 @@
 
 ---
 
-Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by assuming control of your interconnections.
+Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by being the fabric through which your interconnections are woven.
 
 It is fresh as a daisy right now so do give it a try, but perhaps wait a month or two before using it in production.
 
@@ -112,7 +112,7 @@ Speaking of which, Havelock exposes three main types:
 
 These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
 
-<img src="https://raw.github.com/ds300/Havelock/master/img/example.svg" align="center" width="89%"/>
+<img src="https://ds300.github.com/havelock/img/example.svg" align="center" width="89%"/>
 
 The DAG structure is automatically inferred by executing derivation functions in a special context which allows Havelock to capture dereferences of immediate parents.
 
