@@ -1,6 +1,6 @@
 {
   "name": "havelock",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Holistic state management with reactive values",
   "author": "David Sheldrick",
   "main": "dist/havelock.js",
