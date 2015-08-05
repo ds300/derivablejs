@@ -8,7 +8,7 @@
 
 import {atom, Atom, Derivable} from 'havelock';
 import * as _ from 'havelock';
-import {List} from 'immutable';
+import {List, Map} from 'immutable';
 import * as $ from 'immutable';
 
 /***
@@ -57,7 +57,8 @@ So for every index in `xs`, we create a new derivable which simply looks up that
 
 ***/
 
-function map<I,O>(f: (x:I) => O, xs: Derivable<List<I>>): Derivable<List<O>> {
+let map: <I,O>(f: (x:I) => O, xs: Derivable<List<I>>) => Derivable<List<O>>
+= <I,O>(f: (x:I) => O, xs: Derivable<List<I>>) => {
   // first get the list of derivables
   let dxsI: Derivable<List<Derivable<I>>> = explode(xs);
   // now map f over the derivables
@@ -74,7 +75,7 @@ function map<I,O>(f: (x:I) => O, xs: Derivable<List<I>>): Derivable<List<O>> {
   // changes. This is as good as it gets with immutable collections.
 }
 
-const cachedDoubled: Derivable<List<number>>
+let cachedDoubled: Derivable<List<number>>
   = map(x => {console.log(x); return x*2;}, numbers);
 
 console.log("cd:", cachedDoubled.get());
@@ -110,7 +111,7 @@ console.log("cd:", cachedDoubled.get());
 /***
 
 So how to avoid this? Caching! If `explode` caches the `Derivable<T>`s, it can use
-them again when the size of xs changes.
+them again when the size of xs changes. Here's basic caching in action:
 
 ***/
 
@@ -132,3 +133,182 @@ explode = <T>(xs: Derivable<List<T>>): Derivable<List<Derivable<T>>> => {
     return cache;
   });
 }
+
+numbers.set(List([1,2,3]));
+
+// re-bind cachedDoubled so it uses the new `explode`
+cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> 3
+// $> cd: List [ 2, 4, 6 ]
+
+numbers.set(List([1,2,3,4]));
+
+console.log("cd:", cachedDoubled.get());
+// 1
+// 2
+// 3
+// 4
+// cd: List [ 2, 4, 6, 8 ]
+
+/***
+
+Wait, that's not right. We don't want the 1, 2, and 3 to be logged again.
+
+Alas, the `map` function rebuilds it's `Derivable<List<Derivable<O>>>` each time its `Derivable<List<Derivable<I>>>` changes. To fix this, `f` needs to be propagated into `explode`.
+
+***/
+
+let mapsplode: <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => Derivable<List<Derivable<O>>>
+= <I, O>(f, xs) => {
+  const size = xs.derive(xs => xs.size);
+
+  let cache: List<Derivable<O>> = List<Derivable<O>>();
+
+  return size.derive(size => {
+    if (size > cache.size) {
+      // xs got bigger, add more items to the cache
+      cache = cache.concat($.Range(cache.size, size).map(i => {
+        return xs.derive(xs => xs.get(i)).derive(f);
+      })).toList();
+    } else {
+      // xs is either the same size or smaller, so truncate
+      cache = cache.setSize(size);
+    }
+    return cache;
+  });
+}
+
+map = <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => {
+  // just unpack mapsplode output
+  return mapsplode(f, xs).derive(dxs => dxs.map(_.get).toList());
+};
+
+numbers.set(List([1,2,3]));
+
+// re-bind cachedDoubled so it uses the new `map`
+cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> 3
+// $> cd: List [ 2, 4, 6 ]
+
+numbers.set(List([1,2,3,4]));
+
+console.log("cd:", cachedDoubled.get());
+// 4
+// cd: List [ 2, 4, 6, 8 ]
+
+/***
+
+Progress!
+
+Unfortunately, we're not quite there yet. Look what happens if you add a number at the beginning rather than at the end:
+
+***/
+
+numbers.set(List([0,1,2,3,4]));
+
+console.log("cd:", cachedDoubled.get());
+// $> 0
+// $> 1
+// $> 2
+// $> 3
+// $> 4
+// $> cd: List [ 0, 2, 4, 6, 8 ]
+
+/***
+
+This is because the derivations created in `mapsplode` are merely indexing into `xs`. We need some way to associate them with particular values in the list. We could do that if we have some model of what makes the values in the list unique. So in addition to the derivations we could cache a map from those unique ids to their indices in `xs`. Then the derivations would first look up their index in the map before using it to look up their value in `xs`. Here's how that looks:
+
+***/
+
+
+let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>) => Derivable<List<Derivable<O>>>
+= <I, O, U>(uf, f, xs) => {
+  let cache: Map<U, Derivable<O>> = Map<U, Derivable<O>>();
+
+  const ids: Derivable<List<U>> = xs.derive(xs => xs.map(uf).toList());
+  const id2idx: Derivable<Map<U, number>> = ids.derive(ids => {
+    let map = Map<U, number>().asMutable();
+    ids.forEach((id, idx) => {
+      map.set(id, idx);
+    });
+    return map.asMutable();
+  });
+
+  return ids.derive(ids => {
+    let newCache = Map<U, Derivable<O>>().asMutable();
+    let result = [];
+
+    ids.forEach(id => {
+      if (newCache.has(id)) {
+        throw new Error(`duplicate id ${id}`);
+      }
+      let derivation: Derivable<O> = cache.get(id);
+      if (derivation == null) {
+        derivation = xs.derive(xs => xs.get(id2idx.get().get(id))).derive(f);
+      }
+      newCache.set(id, derivation);
+      result.push(derivation);
+    });
+
+    cache = newCache.asImmutable();
+    return List(result);
+  });
+}
+
+/***
+
+So, to recap, `uf` is our uniqueness function which returns ids for the items in `xs`. We then map those ids to their corresponding indices, and then build a derivation cache based on those ids, which derivations look up their index in `id2idx` which they then use to lookup their value in `xs`. *Phew*. Well done if you're still reading this!
+
+And because we are using immutable data, it is totally possible to just use the identiy function as `uf` most of the time.
+
+***/
+
+mapsplode = <I, O>(f, xs) => mapsplodeU(x => x, f, xs);
+
+/***
+
+Let's see if that clears things up for us.
+
+***/
+
+numbers.set(List([1,2,3]));
+
+// re-bind cachedDoubled so it uses the new `mapsplode`
+cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> 3
+// $> cd: List [ 2, 4, 6 ]
+
+numbers.set(List([0,1,2,3]));
+console.log("cd:", cachedDoubled.get());
+// $> 0
+// $> cd: List [ 0, 2, 4, 6 ]
+
+/***
+
+That's the ticket.
+
+***/
+
+numbers.set(List([3,2,1,0]));
+console.log("cd:", cachedDoubled.get());
+// $> cd: List [ 6, 4, 2, 0 ]
+
+/***
+
+Aww yiss.
+
+So that's *almost* the whole story. The one last wrinkle is the whole duplicate ID thing. Because we're using Immutable data, duplicates are fine as long as the uniqueness function is correct.
+
+***/
