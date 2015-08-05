@@ -1,4 +1,5 @@
 import imut from 'immutable'
+import { atom } from 'havelock'
 
 function clamp (a, b, c) {
   return Math.min(Math.max(a, b), c);
@@ -7,11 +8,11 @@ function clamp (a, b, c) {
 export function historical (data) {
   // root atom contains list of previous states and index of current state in
   // that list
-  let a = atom(imut.Map().set("history", data).set("idx", 0));
+  let a = atom(imut.Map().set("history", imut.List([data])).set("idx", 0));
 
   // create a cursor into the history list based on the index to represent
   // the current state.
-  let dataAtom = a.cursor({
+  let dataAtom = a.lens({
     get (a) {
       return a.get("history").get(a.get("idx"));
     },
@@ -26,7 +27,7 @@ export function historical (data) {
   });
 
   // let the user do back/forward by directly modifying the idx
-  let idxAtom = a.cursor({
+  let idxAtom = a.lens({
     get (a) {
       return a.get("idx");
     },
@@ -39,7 +40,7 @@ export function historical (data) {
 
   // finally, expose the history itself. but only the history, not the
   // current state
-  let historyAtom = a.cursor({
+  let historyAtom = a.lens({
     get (a) {
       let h = a.get("history");
       return h.setSize(h.size - 1);
@@ -48,7 +49,7 @@ export function historical (data) {
       let h = a.get("history");
       let idx = a.get("idx");
       if (!newHistory) {
-        h = imut.List(h.last());
+        h = imut.List([h.last()]);
         idx = 0;
       } else {
         h = newHistory.push(h.last());
