@@ -24,7 +24,8 @@ It is fresh as a daisy right now so do give it a try, but perhaps wait a month o
   - [Tradeoffs](#tradeoffs)
   - [Comparison with Previous Work](#comparison-with-previous-work)
 - [Usage](#usage)
-      - [API & Examples](#api-&-examples)
+      - [API](#api)
+      - [Examples (wip)](#examples-wip)
       - [npm](#npm)
       - [Browser](#browser)
       - [Batteries Not Included](#batteries-not-included)
@@ -277,8 +278,10 @@ This has not been an exhaustive comparison. There are [some](https://www.meteor.
 ##### API
 [See Here](https://ds300.github.com/havelock)
 
-##### Examples
+##### Examples (wip)
 [See Here](https://github.com/ds300/havelock/tree/master/examples/)
+
+- [TodoMVC w/React](https://ds300.github.com/havelock/examples/todo)
 
 ##### npm
 Available as `havelock`.
