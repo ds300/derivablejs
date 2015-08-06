@@ -110,8 +110,7 @@ numbers.set(immutable_1.List([0, 1, 2, 3]));
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([3, 2, 1, 0]));
 console.log("cd:", cachedDoubled.get());
-mapsplodeU = function (uf, f, xs) {
-    var cache = immutable_1.Map();
+function deriveIDStuff(uf, xs) {
     var ids = xs.derive(function (xs) { return xs.map(uf).toList(); });
     var id2idx = ids.derive(function (ids) {
         var map = immutable_1.Map().asMutable();
@@ -120,6 +119,11 @@ mapsplodeU = function (uf, f, xs) {
         });
         return map.asImmutable();
     });
+    return { ids: ids, id2idx: id2idx };
+}
+mapsplodeU = function (uf, f, xs) {
+    var cache = immutable_1.Map();
+    var _a = deriveIDStuff(uf, xs), ids = _a.ids, id2idx = _a.id2idx;
     return ids.derive(function (ids) {
         var newCache = immutable_1.Map().asMutable();
         var result = [];
@@ -153,3 +157,26 @@ numbers.set(immutable_1.List([1, 2, 3]));
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
 console.log("cd:", cachedDoubled.get());
+var resplodeU = function (uf, r, xs) {
+    var cache = immutable_1.Map();
+    var _a = deriveIDStuff(uf, xs), ids = _a.ids, id2idx = _a.id2idx;
+    ids.react(function (ids) {
+        var newCache = immutable_1.Map().asMutable();
+        ids.forEach(function (id) {
+            if (newCache.has(id)) {
+                throw new Error("duplicate id '" + id + "'");
+            }
+            var reaction = cache.get(id);
+            if (reaction == null) {
+                reaction = xs.derive(function (xs) { return xs.get(id2idx.get().get(id)); }).react(r);
+            }
+            else {
+                cache = cache.remove(id);
+            }
+            newCache.set(id, reaction);
+        });
+        cache.valueSeq().forEach(function (r) { return r.stop(); });
+        cache = newCache.asImmutable();
+    });
+    return null;
+};

@@ -22,13 +22,13 @@ function literateTypescript(ts) {
 module.exports = function (grunt) {
   grunt.initConfig({
     watch: {
-      files: ['examples.ts'],
+      files: ['caching.ts'],
       tasks: ['build'],
     },
   });
   grunt.registerTask('build', function () {
     var fs = require('fs');
-    var ts = fs.readFileSync('examples.ts').toString();
+    var ts = fs.readFileSync('caching.ts').toString();
     fs.writeFileSync('README.md', literateTypescript(ts));
   });
   grunt.loadNpmTasks('grunt-contrib-watch');
