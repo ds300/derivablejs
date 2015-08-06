@@ -82,7 +82,7 @@ var mapsplodeU = function (uf, f, xs) {
         ids.forEach(function (id, idx) {
             map.set(id, idx);
         });
-        return map.asMutable();
+        return map.asImmutable();
     });
     return ids.derive(function (ids) {
         var newCache = immutable_1.Map().asMutable();
@@ -118,7 +118,7 @@ mapsplodeU = function (uf, f, xs) {
         ids.forEach(function (id, idx) {
             map.set(id, idx);
         });
-        return map.asMutable();
+        return map.asImmutable();
     });
     return ids.derive(function (ids) {
         var newCache = immutable_1.Map().asMutable();

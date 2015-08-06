@@ -236,7 +236,7 @@ let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>)
     ids.forEach((id, idx) => {
       map.set(id, idx);
     });
-    return map.asMutable();
+    return map.asImmutable();
   });
 
   return ids.derive(ids => {
@@ -325,7 +325,7 @@ mapsplodeU = <I, O, U>(uf, f, xs) => {
     ids.forEach((id, idx) => {
       map.set(id, idx);
     });
-    return map.asMutable();
+    return map.asImmutable();
   });
 
   return ids.derive(ids => {
