@@ -1,10 +1,5 @@
 /// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
-/***
-
-# Caching Derivations
-
-***/
 var havelock_1 = require('havelock');
 var _ = require('havelock');
 var immutable_1 = require('immutable');
@@ -24,9 +19,10 @@ var map = function (f, xs) {
     var dxsO = dxsI.derive(function (dxs) {
         return dxs.map(function (dx) { return dx.derive(f); }).toList();
     });
-    return dxsO.derive(function (dxs) { return dxs.map(_.get).toList(); });
+    return dxsO.derive(function (dxs) { return dxs.map(_.unpack).toList(); });
 };
-var cachedDoubled = map(function (x) { console.log(x); return x * 2; }, numbers);
+var logAndDouble = function (x) { console.log(x); return x * 2; };
+var cachedDoubled = map(logAndDouble, numbers);
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([1, 10, 3]));
 console.log("cd:", cachedDoubled.get());
@@ -49,7 +45,7 @@ explode = function (xs) {
     });
 };
 numbers.set(immutable_1.List([1, 2, 3]));
-cachedDoubled = map(function (x) { console.log(x); return x * 2; }, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([1, 2, 3, 4]));
 console.log("cd:", cachedDoubled.get());
@@ -69,10 +65,10 @@ var mapsplode = function (f, xs) {
     });
 };
 map = function (f, xs) {
-    return mapsplode(f, xs).derive(function (dxs) { return dxs.map(_.get).toList(); });
+    return mapsplode(f, xs).derive(function (dxs) { return dxs.map(_.unpack).toList(); });
 };
 numbers.set(immutable_1.List([1, 2, 3]));
-cachedDoubled = map(function (x) { console.log(x); return x * 2; }, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([1, 2, 3, 4]));
 console.log("cd:", cachedDoubled.get());
@@ -108,9 +104,52 @@ var mapsplodeU = function (uf, f, xs) {
 };
 mapsplode = function (f, xs) { return mapsplodeU(function (x) { return x; }, f, xs); };
 numbers.set(immutable_1.List([1, 2, 3]));
-cachedDoubled = map(function (x) { console.log(x); return x * 2; }, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([0, 1, 2, 3]));
 console.log("cd:", cachedDoubled.get());
 numbers.set(immutable_1.List([3, 2, 1, 0]));
+console.log("cd:", cachedDoubled.get());
+mapsplodeU = function (uf, f, xs) {
+    var cache = immutable_1.Map();
+    var ids = xs.derive(function (xs) { return xs.map(uf).toList(); });
+    var id2idx = ids.derive(function (ids) {
+        var map = immutable_1.Map().asMutable();
+        ids.forEach(function (id, idx) {
+            map.set(id, idx);
+        });
+        return map.asMutable();
+    });
+    return ids.derive(function (ids) {
+        var newCache = immutable_1.Map().asMutable();
+        var result = [];
+        ids.forEach(function (id) {
+            var derivation = newCache.get(id);
+            if (derivation == null) {
+                derivation = cache.get(id);
+                if (derivation == null) {
+                    derivation = xs.derive(function (xs) { return xs.get(id2idx.get().get(id)); }).derive(f);
+                }
+                newCache.set(id, derivation);
+            }
+            result.push(derivation);
+        });
+        cache = newCache.asImmutable();
+        return immutable_1.List(result);
+    });
+};
+numbers.set(immutable_1.List([1, 2, 3]));
+cachedDoubled = map(logAndDouble, numbers);
+console.log("cd:", cachedDoubled.get());
+numbers.set(immutable_1.List([1, 2, 2]));
+console.log("cd:", cachedDoubled.get());
+numbers.set(immutable_1.List([2, 2, 2, 2, 2, 2, 2]));
+console.log("cd:", cachedDoubled.get());
+cachedDoubled = mapsplodeU(function (x) { return x % 2; }, logAndDouble, numbers)
+    .derive(function (dxs) { return dxs.map(_.unpack).toList(); });
+numbers.set(immutable_1.List([1, 2]));
+console.log("cd:", cachedDoubled.get());
+numbers.set(immutable_1.List([1, 2, 3]));
+console.log("cd:", cachedDoubled.get());
+numbers.set(immutable_1.List([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
 console.log("cd:", cachedDoubled.get());

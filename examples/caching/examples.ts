@@ -1,24 +1,20 @@
 /// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
+
 /***
 
 # Caching Derivations
 
-***/
-
-import {atom, Atom, Derivable} from 'havelock';
-import * as _ from 'havelock';
-import {List, Map} from 'immutable';
-import * as $ from 'immutable';
-
-/***
-
-#### Probelm
+#### Probelms
 
 You've got a derivable list of values, and you want to map some function over
 them to create a new derivable list of values. Here's the obvious way to do it:
 
 ***/
+import {atom, Atom, Derivable} from 'havelock';
+import * as _ from 'havelock';
+import {List, Map} from 'immutable';
+import * as $ from 'immutable';
 
 const numbers: Atom<List<number>> = atom(List([1,2,3]));
 const doubled: Derivable<List<number>> = numbers.derive(xs => {
@@ -33,9 +29,9 @@ Another related problem situation is if you have a list whose contents might cha
 
 Let's call the first problem 'the mapping problem' and the second 'the reacting problem' for brevity's sake.
 
-#### Solution
+#### Solving the Mapping Problem
 
-The solution starts out by taking the derivable list of values and converting it into a derivable list of derivable values. i.e. `derivable<list<T>> -> derivable<list<derivable<T>>>`.
+The solution starts out by taking the derivable list of values and converting it into a derivable list of derivable values.
 
 That might look like this (forgive the weird declaration, we'll need to rebind it later):
 
@@ -51,7 +47,7 @@ let explode: <T>(xs: Derivable<List<T>>) => Derivable<List<Derivable<T>>>
 
 /***
 
-*Please don't freak out about the nested derivableness. It's fine. Honest.*
+*Also, please don't freak out about the nested derivableness. It's fine. Honest.*
 
 So for every index in `xs`, we create a new derivable which simply looks up that index. Now we can partially solve the mapping problem
 
@@ -70,13 +66,14 @@ let map: <I,O>(f: (x:I) => O, xs: Derivable<List<I>>) => Derivable<List<O>>
   // get recalculated whenever xs changes, but they might not have changed.
 
   // and finally unpack
-  return dxsO.derive(dxs => dxs.map(_.get).toList());
+  return dxsO.derive(dxs => dxs.map(_.unpack).toList());
   // so the result List<O> gets rebuilt whenever any one of the Derivable<O>s
   // changes. This is as good as it gets with immutable collections.
 }
 
-let cachedDoubled: Derivable<List<number>>
-  = map(x => {console.log(x); return x*2;}, numbers);
+const logAndDouble = x => {console.log(x); return x*2;};
+
+let cachedDoubled: Derivable<List<number>> = map(logAndDouble, numbers);
 
 console.log("cd:", cachedDoubled.get());
 // $> 1
@@ -137,7 +134,7 @@ explode = <T>(xs: Derivable<List<T>>): Derivable<List<Derivable<T>>> => {
 numbers.set(List([1,2,3]));
 
 // re-bind cachedDoubled so it uses the new `explode`
-cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 
 console.log("cd:", cachedDoubled.get());
 // $> 1
@@ -184,13 +181,13 @@ let mapsplode: <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => Derivable<List<D
 
 map = <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => {
   // just unpack mapsplode output
-  return mapsplode(f, xs).derive(dxs => dxs.map(_.get).toList());
+  return mapsplode(f, xs).derive(dxs => dxs.map(_.unpack).toList());
 };
 
 numbers.set(List([1,2,3]));
 
 // re-bind cachedDoubled so it uses the new `map`
-cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 
 console.log("cd:", cachedDoubled.get());
 // $> 1
@@ -261,7 +258,7 @@ let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>)
     cache = newCache.asImmutable();
     return List(result);
   });
-}
+};
 
 /***
 
@@ -282,7 +279,7 @@ Let's see if that clears things up for us.
 numbers.set(List([1,2,3]));
 
 // re-bind cachedDoubled so it uses the new `mapsplode`
-cachedDoubled = map(x => {console.log(x); return x*2;}, numbers);
+cachedDoubled = map(logAndDouble, numbers);
 
 console.log("cd:", cachedDoubled.get());
 // $> 1
@@ -309,6 +306,101 @@ console.log("cd:", cachedDoubled.get());
 
 Aww yiss.
 
-So that's *almost* the whole story. The one last wrinkle is the whole duplicate ID thing. Because we're using Immutable data, duplicates are fine as long as the uniqueness function is correct.
+So that's *almost* the whole story. The one last wrinkle is how to deal with duplicate IDs. At the moment we just throw an error. But, because we're using immutable data, duplicates are fine as long as the uniqueness function is correct.
+
+A uniqueness function `uf` is correct if there exist no two values `a` and `b` such that `a != b && uf(a) == uf(b)`.
+
+One derivation is the same as another if they derive the same value in the same way at the same time. So, e.g, if we have a derivable list of values `D(['a', 'b', 'b'])` and we map them with an uppercasing function to get `D(['A', 'B', 'B'])`, it doesn't matter if the two `'B'` both derived from the `'b'` at index 1 or index 2 in the original list. As long as changes to the original `'b'`s are propagated correctly, it makes not one bit of difference.
+
+So lets change mapslodeU to allow duplicates:
+
+***/
+
+mapsplodeU = <I, O, U>(uf, f, xs) => {
+  let cache: Map<U, Derivable<O>> = Map<U, Derivable<O>>();
+
+  const ids: Derivable<List<U>> = xs.derive(xs => xs.map(uf).toList());
+  const id2idx: Derivable<Map<U, number>> = ids.derive(ids => {
+    let map = Map<U, number>().asMutable();
+    ids.forEach((id, idx) => {
+      map.set(id, idx);
+    });
+    return map.asMutable();
+  });
+
+  return ids.derive(ids => {
+    let newCache = Map<U, Derivable<O>>().asMutable();
+    let result = [];
+
+    ids.forEach(id => {
+      // allow duplicates
+      let derivation: Derivable<O> = newCache.get(id);
+      if (derivation == null) {
+        derivation = cache.get(id);
+        if (derivation == null) {
+          derivation = xs.derive(xs => xs.get(id2idx.get().get(id))).derive(f);
+        }
+        newCache.set(id, derivation);
+      }
+      result.push(derivation);
+    });
+
+    cache = newCache.asImmutable();
+    return List(result);
+  });
+};
+
+numbers.set(List([1,2,3]));
+
+// re-bind cachedDoubled so it uses the new `mapsplodeU`
+cachedDoubled = map(logAndDouble, numbers);
+
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> 3
+// $> cd: List [ 2, 4, 6 ]
+
+numbers.set(List([1,2,2]));
+console.log("cd:", cachedDoubled.get());
+// $> cd: List [ 2, 4, 4 ]
+
+numbers.set(List([2,2,2,2,2,2,2]));
+console.log("cd:", cachedDoubled.get());
+// $> cd: List [ 4, 4, 4, 4, 4, 4, 4 ]
+
+/***
+
+That's the mapping problem solved then. You can supply your own `uf` for efficiency
+purposes, but beware that an incorrect `uf` will cause some whack behaviour.
+
+***/
+
+cachedDoubled = mapsplodeU(x => x % 2, logAndDouble, numbers)
+                  .derive(dxs => dxs.map(_.unpack).toList());
+
+numbers.set(List([1,2]));
+console.log("cd:", cachedDoubled.get());
+// $> 1
+// $> 2
+// $> cd: List [ 2, 4 ]
+
+numbers.set(List([1,2,3]));
+console.log("cd:", cachedDoubled.get());
+// $> 3
+// $> cd: List [ 6, 4, 6 ]
+
+numbers.set(List([1,2,3,4,5,6,7,8,9,10]));
+console.log("cd:", cachedDoubled.get());
+// ...
+// $> cd: List [ 18, 20, 18, 20, 18, 20, 18, 20, 18, 20 ]
+
+/***
+
+So don't use custom uniquness functions unless you're certain they are correct!
+
+#### Solving the Reacting Problem
+
+This ins is slightly more tricky
 
 ***/
