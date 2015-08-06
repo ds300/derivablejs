@@ -553,8 +553,43 @@ function createDerivablePrototype (havelock, { equals }) {
      * Creates a derived value whose state will always be f applied to this
      * value
      */
-    derive (f) {
-      return havelock.derive(this, f);
+    derive (f, a, b, c, d) {
+      switch (arguments.length) {
+      case 0:
+        return this;
+      case 1:
+        return havelock.derivation(() => {
+          return f(this.get());
+        });
+      case 2:
+        return havelock.derivation(() => {
+          return f(this.get(), havelock.unpack(a));
+        });
+      case 3:
+        return havelock.derivation(() => {
+          return f(this.get(), havelock.unpack(a), havelock.unpack(b));
+        });
+      case 4:
+        return havelock.derivation(() => {
+          return f(this.get(),
+                   havelock.unpack(a),
+                   havelock.unpack(b),
+                   havelock.unpack(c));
+        });
+      case 5:
+        return havelock.derivation(() => {
+          return f(this.get(),
+                   havelock.unpack(a),
+                   havelock.unpack(b),
+                   havelock.unpack(c),
+                   havelock.unpack(d));
+        });
+      default:
+        const args = [this].concat(Array.prototype.slice.call(arguments, 1));
+        return havelock.derivation(() => {
+          return f.apply(null, args.map(havelock.unpack));
+        });
+      }
     },
 
     reaction (f) {
@@ -630,7 +665,7 @@ function createDerivablePrototype (havelock, { equals }) {
 function createDerivationPrototype (havelock, { equals }) {
   return {
     _clone () {
-      return havelock.derive(this._deriver);
+      return havelock.derivation(this._deriver);
     },
 
     _forceGet () {
@@ -992,36 +1027,24 @@ function havelock (config={}) {
   Havelock.swap = (e, f, args) => e.set(f.apply(null, [e.get()].concat(args)))
                                    .get();
 
+  Havelock.derivation = function (f) {
+    return createDerivation(Object.create(Derivation), f);
+  };
   /**
    * Creates a new derivation. Can also be used as a template string tag.
    */
-  Havelock.derive = function (a, b, c, d, e) {
+  Havelock.derive = function (a) {
     if (a instanceof Array) {
       return deriveString.apply(null, arguments);
-    }
-    var n = arguments.length;
-    switch (n) {
-      case 0:
-        throw new Error("Wrong arity for derive. Expecting 1+ args");
-      case 1:
-        return createDerivation(Object.create(Derivation), a);
-      case 2:
-        return Havelock.derive(() => b(a.get()));
-      case 3:
-        return Havelock.derive(() => c(a.get(), b.get()));
-      case 4:
-        return Havelock.derive(() => d(a.get(), b.get(), c.get()));
-      case 5:
-        return Havelock.derive(() => e(a.get(), b.get(), c.get(), d.get()));
-      default:
-        var args = Array.prototype.slice.call(arguments, 0, n-1);
-        var f = arguments[n-1];
-        return Havelock.derive(() => f.apply(null, args.map(a => a.get())));
+    } else if (arguments.length > 0) {
+      return Derivable.derive.apply(a, Array.prototype.slice.call(arguments, 1));
+    } else {
+      throw new Error("Wrong arity for derive. Expecting 1+ args");
     }
   };
 
   function deriveString (parts, ...args) {
-    return Havelock.derive(() => {
+    return Havelock.derivation(() => {
       let s = "";
       for (let i=0; i<parts.length; i++) {
         s += parts[i];
@@ -1061,7 +1084,7 @@ function havelock (config={}) {
   Havelock.lift = f => {
     return function () {
       let args = arguments;
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         return f.apply(this, Array.prototype.map.call(args, Havelock.unpack));
       });
     }
@@ -1090,11 +1113,11 @@ function havelock (config={}) {
     }
   }
 
-  Havelock.struct = arg => Havelock.derive(() => deepUnpack(arg));
+  Havelock.struct = arg => Havelock.derivation(() => deepUnpack(arg));
 
   Havelock.ifThenElse = (a, b, c) => a.then(b, c);
 
-  Havelock.or = (...args) => Havelock.derive(() => {
+  Havelock.or = (...args) => Havelock.derivation(() => {
     let val;
     for (let arg of args) {
       val = Havelock.unpack(arg);
@@ -1105,7 +1128,7 @@ function havelock (config={}) {
     return val;
   });
 
-  Havelock.and = (...args) => Havelock.derive(() => {
+  Havelock.and = (...args) => Havelock.derivation(() => {
     let val;
     for (let arg of args) {
       val = Havelock.unpack(arg);

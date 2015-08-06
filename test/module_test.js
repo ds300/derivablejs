@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, transact} from '../dist/havelock';
+import _, {atom, derive, derivation, transact} from '../dist/havelock';
 import assert from 'assert';
 
 describe("the `is*` fns", () => {
@@ -46,7 +46,7 @@ describe("the `struct` function", () => {
   it("turns an array of derivables into a derivable", () => {
     let fib1 = atom(0),
         fib2 = atom(1),
-        fib = derive(() => fib1.get() + fib2.get());
+        fib = derivation(() => fib1.get() + fib2.get());
 
     let grouped = _.struct([fib1, fib2, fib]);
     assert.deepEqual([0,1,1], grouped.get());
@@ -157,10 +157,10 @@ describe("control flow", () => {
     let didodd = false;
 
     let chooseAPath = _.ifThenElse(even,
-      derive(() => {
+      derivation(() => {
         dideven = true;
       }),
-      derive(() => {
+      derivation(() => {
         didodd = true;
       })
     );
@@ -217,11 +217,11 @@ describe("control flow", () => {
         condc = atom("c");
 
     let chooseAPath = _.switchCase(switcheroo,
-      conda, derive(() => dida = true),
-      condb, derive(() => didb = true),
-      condc, derive(() => didc = true),
+      conda, derivation(() => dida = true),
+      condb, derivation(() => didb = true),
+      condc, derivation(() => didc = true),
       //else
-      derive(() => didx = true)
+      derivation(() => didx = true)
     );
 
     assert(!dida && !didb && !didc && !didx, "did nothing yet 1");
@@ -281,5 +281,5 @@ describe("the lift function", () => {
     equalsExpected = false;
     cells[0].swap(x => x+1);
     assert(equalsExpected);
-  })
+  });
 });

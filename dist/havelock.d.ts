@@ -7,6 +7,9 @@ declare module 'havelock' {
   export interface Derivable<T> {
 
     derive<E>(f: (value: T) => E): Derivable<E>;
+    derive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
+    derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
+    derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
     reaction(r: Reaction<T>): Reaction<T>;
     reaction(f: (value: T) => void): Reaction<T>;
@@ -66,13 +69,13 @@ declare module 'havelock' {
 
   function swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
 
-  function derive<T>(f: () => T): Derivable<T>;
+  function derivation<T>(f: () => T): Derivable<T>;
+
+  function derive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
+  function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
+  function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
+  function derive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
   function derive(strings: string[], ...things: any[]): Derivable<string>;
-  function derive<A, B>(d: Derivable<A>, f: (a: A) => B): Derivable<B>;
-  function derive<A, B, C>(d1: Derivable<A>, d2: Derivable<B>, f: (a: A, b: B) => C): Derivable<C>;
-  function derive<A, B, C, D>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, f: (a: A, b: B, c: C) => D): Derivable<D>;
-  function derive<A, B, C, D, E>(d1: Derivable<A>, d2: Derivable<B>, d3: Derivable<C>, d4: Derivable<D>, f: (a: A, b: B, c: C, d: D) => E): Derivable<E>;
-  function derive(...args: any[]): Derivable<any>;
 
   function transact(f: () => void): void;
 

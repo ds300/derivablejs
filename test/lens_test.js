@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, transact} from '../dist/havelock';
+import _, {atom} from '../dist/havelock';
 import assert from 'assert';
 
 describe("lenses", () => {

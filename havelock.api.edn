@@ -18,6 +18,43 @@
       ```"
     (:see-also havelock::derive))
 
+    ((derive A E) [f (=> [value T a A] E) a A] (Derivable E)
+      "Creates a new derivation based on the application of {{f}} to the
+      current value of this derivable and {{a}}. e.g.
+
+      ```javascript
+      const x = atom(4);
+      const times = (a, b) => a * b;
+      const xTimesTwo = x.derive(times, 2);
+
+      xTimesTwo.get();
+      // => 8
+      ```
+      "
+    (:see-also havelock::derive))
+
+    ((derive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E)
+      "Creates a new derivation based on the application of {{f}} to the
+      current value of this derivable and the value represented by {{a}}. e.g.
+
+      ```javascript
+      const y = atom(5);
+      const xTimesY = x.derive(times, y);
+
+      xTimesY.get();
+      // => 20
+
+      y.set(10);
+      xTimesY.get();
+      // => 40
+      ```
+      "
+      (:see-also havelock::derive unpack))
+
+    ((derive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E)
+      "Any-arity version of above. Unpacks all args."
+      (:see-also havelock::derive unpack))
+
     (reaction [r (Reaction T)] (Reaction T)
       "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
       reaction. i.e. it should not have been linked to any other derivable
@@ -383,7 +420,7 @@
 
     (:see-also Atom::swap))
 
-  ((derive T) [f (=> [] T)] (Derivable T)
+  ((derivation T) [f (=> [] T)] (Derivable T)
     "Returns a new derivable encapsulating the result returned by `f` which
     should be pure aside from dereferencing one or more {{Derivable}}s.
 
@@ -401,6 +438,22 @@
     // => 4
 
     ```")
+
+  ((derive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
 
   (derive [strings [string] &things [any]] (Derivable string)
     "Tagged template string version of derive. Returns a derivable which
@@ -423,50 +476,6 @@
     // => `Atom: 'nothing', constant: 4.`
 
     ```")
-
-  ((derive A B) [d (Derivable A), f (=> [a A] B)] (Derivable B)
-    "Returns a new derivable encapsulating the resulf of applying {{f}} to the
-    the value encapsulated by {{d}}.
-
-    ```javascript
-    const x = atom(5);
-
-    const y = derive(x, x => x * 2);
-
-    y.get();
-    // => 10
-    ```
-
-    Equivalent to:
-
-    ```javascript
-    d.derive(f);
-    ```")
-
-  ((derive A B C) [d1 (Derivable A), d2 (Derivable B), f (=> [a A b B] C)] (Derivable C)
-    "Returns a new derivable encapsulating the resulf of applying {{f}} to the
-    the values encapsulated by {{d1}} and {{d2}}.
-
-    ```javascript
-    const x = atom(5),
-          y = atom(10);
-
-    const z = derive(x, y, (x, y) => x * y);
-
-    y.get();
-    // => 50
-    ```
-    ")
-
-  ((derive A B C D) [d1 (Derivable A), d2 (Derivable B), d3 (Derivable C), f (=> [a A b B c C] D)] (Derivable D)
-    "As above but for 3-arity derivation functions.")
-
-  ((derive A B C D E) [d1 (Derivable A), d2 (Derivable B), d3 (Derivable C), d4 (Derivable D), f (=> [a A b B c C d D] E)] (Derivable E)
-    "As above but for 4-arity derivation functions.")
-
-  (derive [&args [any]] (Derivable any)
-    "As above for any arity. The last arg should be a function of the preceeding args.")
-
 
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.

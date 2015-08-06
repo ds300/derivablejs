@@ -792,8 +792,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * Creates a derived value whose state will always be f applied to this
        * value
        */
-      derive: function derive(f) {
-        return havelock.derive(this, f);
+      derive: function derive(f, a, b, c, d) {
+        var _this = this;
+
+        switch (arguments.length) {
+          case 0:
+            return this;
+          case 1:
+            return havelock.derivation(function () {
+              return f(_this.get());
+            });
+          case 2:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a));
+            });
+          case 3:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b));
+            });
+          case 4:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c));
+            });
+          case 5:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c), havelock.unpack(d));
+            });
+          default:
+            var args = [this].concat(Array.prototype.slice.call(arguments, 1));
+            return havelock.derivation(function () {
+              return f.apply(null, args.map(havelock.unpack));
+            });
+        }
       },
 
       reaction: function reaction(f) {
@@ -882,16 +912,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     return {
       _clone: function _clone() {
-        return havelock.derive(this._deriver);
+        return havelock.derivation(this._deriver);
       },
 
       _forceGet: function _forceGet() {
-        var _this = this;
+        var _this2 = this;
 
         var newParents = capturingParents(function () {
-          var newState = _this._deriver();
-          _this._state = equals(newState, _this._value) ? UNCHANGED : CHANGED;
-          _this._value = newState;
+          var newState = _this2._deriver();
+          _this2._state = equals(newState, _this2._value) ? UNCHANGED : CHANGED;
+          _this2._value = newState;
         });
 
         // organise parents
@@ -1312,14 +1342,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       withValidator: function withValidator(f) {
-        var _this2 = this;
+        var _this3 = this;
 
         if (f === null) {
           return this._clone();
         }if (typeof f === 'function') {
           var _ret = (function () {
-            var result = _this2._clone();
-            var existing = _this2._validator;
+            var result = _this3._clone();
+            var existing = _this3._validator;
             if (existing) {
               result._validator = function (x) {
                 return f(x) && existing(x);
@@ -1456,43 +1486,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return e.set(f.apply(null, [e.get()].concat(args))).get();
     };
 
+    Havelock.derivation = function (f) {
+      return createDerivation(Object.create(Derivation), f);
+    };
     /**
      * Creates a new derivation. Can also be used as a template string tag.
      */
-    Havelock.derive = function (a, b, c, d, e) {
+    Havelock.derive = function (a) {
       if (a instanceof Array) {
         return deriveString.apply(null, arguments);
-      }
-      var n = arguments.length;
-      switch (n) {
-        case 0:
-          throw new Error("Wrong arity for derive. Expecting 1+ args");
-        case 1:
-          return createDerivation(Object.create(Derivation), a);
-        case 2:
-          return Havelock.derive(function () {
-            return b(a.get());
-          });
-        case 3:
-          return Havelock.derive(function () {
-            return c(a.get(), b.get());
-          });
-        case 4:
-          return Havelock.derive(function () {
-            return d(a.get(), b.get(), c.get());
-          });
-        case 5:
-          return Havelock.derive(function () {
-            return e(a.get(), b.get(), c.get(), d.get());
-          });
-        default:
-          var args = Array.prototype.slice.call(arguments, 0, n - 1);
-          var f = arguments[n - 1];
-          return Havelock.derive(function () {
-            return f.apply(null, args.map(function (a) {
-              return a.get();
-            }));
-          });
+      } else if (arguments.length > 0) {
+        return Derivable.derive.apply(a, Array.prototype.slice.call(arguments, 1));
+      } else {
+        throw new Error("Wrong arity for derive. Expecting 1+ args");
       }
     };
 
@@ -1501,7 +1507,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key4 - 1] = arguments[_key4];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var s = "";
         for (var i = 0; i < parts.length; i++) {
           s += parts[i];
@@ -1540,7 +1546,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     Havelock.lift = function (f) {
       return function () {
         var args = arguments;
-        return Havelock.derive(function () {
+        return Havelock.derivation(function () {
           return f.apply(this, Array.prototype.map.call(args, Havelock.unpack));
         });
       };
@@ -1596,7 +1602,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     Havelock.struct = function (arg) {
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         return deepUnpack(arg);
       });
     };
@@ -1610,7 +1616,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key5] = arguments[_key5];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var val = undefined;
         var _iteratorNormalCompletion17 = true;
         var _didIteratorError17 = false;
@@ -1649,7 +1655,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key6] = arguments[_key6];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var val = undefined;
         var _iteratorNormalCompletion18 = true;
         var _didIteratorError18 = false;

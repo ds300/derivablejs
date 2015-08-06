@@ -1,4 +1,4 @@
-import _, {atom, derive, transact} from '../dist/havelock';
+import _, {atom, derive, derivation, transact} from '../dist/havelock';
 import assert from 'assert';
 import { label } from './util';
 
@@ -16,8 +16,8 @@ describe("a derivation", () => {
     assert.strictEqual(kiloBytes.get(), 1024 * 1024)
   });
 
-  it("can also be created via the derive function in the ratom package", () => {
-    megaBytes = derive(() => orderUp(kiloBytes.get()));
+  it("can also be created via the derivation function in the havelock package", () => {
+    megaBytes = derivation(() => orderUp(kiloBytes.get()));
     assert.strictEqual(megaBytes.get(), 1024);
   });
 
@@ -26,7 +26,7 @@ describe("a derivation", () => {
     const orderName = label(order.derive(order => {
       return (["bytes", "kilobytes", "megabytes", "gigabytes"])[order];
     }), "ON");
-    const size = label(derive(bytes, order, orderUp), "!size!");
+    const size = label(derive(bytes, orderUp, order), "!size!");
     const sizeString = derive`${size} ${orderName}`;
 
     assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
