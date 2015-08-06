@@ -47,6 +47,11 @@
   left: auto;
   box-sizing: border-box;
   background-color: white;
+  transform-origin: 0px 0px;
+  -ms-transform-origin: 0px 0px;
+  -webkit-transform-origin: 0px 0px;
+  -o-transform-origin: 0px 0px;
+  -moz-transform-origin: 0px 0px;
 }
 
 #title {

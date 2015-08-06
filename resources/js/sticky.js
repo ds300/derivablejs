@@ -2,13 +2,17 @@
   "use strict";
 
   var maxHeadHeight = 200;
-  var minHeadHeight = 40;
+  var minHeadHeight = 50;
   var maxHeadPadding = 40;
   var minHeadPadding = 5;
 
   // assumes offset parent is at top for the sake of simplicity
   function Sticky(head, title, toc, page, gradientBit) {
     page.style.paddingTop = maxHeadHeight;
+    head.style.height = maxHeadHeight + "px";
+    var padding = minHeadPadding + ((maxHeadPadding - minHeadPadding) * ((maxHeadHeight - minHeadHeight) / (maxHeadHeight - minHeadHeight)));
+    head.style.padding = padding + "px 0px";
+    title.style.fontSize = (maxHeadHeight - (padding * 2)) * 0.7;
     var pageScroll = Havelock.atom(window.scrollY);
     var tocScroll = Havelock.atom(toc.scrollTop);
 
@@ -22,10 +26,9 @@
     headHeight.react(function (headHeight) {
       spacer.style.height = headHeight + "px";
       gradientBit.style.marginTop = headHeight + "px";
-      head.style.height = headHeight + "px";
-      var padding = minHeadPadding + ((maxHeadPadding - minHeadPadding) * ((headHeight - minHeadHeight) / (maxHeadHeight - minHeadHeight)));
-      head.style.padding = padding + "px 0px";
-      title.style.fontSize = (headHeight - (padding * 2)) * 0.7;
+
+      var scale = headHeight / maxHeadHeight;
+      head.style.transform = "scale("+scale+","+scale+")";
     });
 
     var gradientOpacity = tocScroll.derive(function (scroll) {
