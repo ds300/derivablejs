@@ -13,10 +13,11 @@ import * as _ from 'havelock';
 import {List, Map} from 'immutable';
 import * as $ from 'immutable';
 
+// helper function for mapping over immutable lists eagerly
+const mapping = (f) => xs => xs.map(f).toList()
+
 const numbers: Atom<List<number>> = atom(List([1,2,3]));
-const doubled: Derivable<List<number>> = numbers.derive(xs => {
-  return xs.map(x => x * 2).toList();
-});
+const doubled: Derivable<List<number>> = numbers.derive(mapping(x => x * 2));
 ```
 
 
@@ -53,15 +54,13 @@ let map: <I,O>(f: (x:I) => O, xs: Derivable<List<I>>) => Derivable<List<O>>
   // first get the list of derivables
   let dxsI: Derivable<List<Derivable<I>>> = explode(xs);
   // now map f over the derivables
-  let dxsO: Derivable<List<Derivable<O>>> = dxsI.derive(dxs => {
-    return dxs.map(dx => dx.derive(f)).toList();
-  });
+  let dxsO: Derivable<List<Derivable<O>>> = dxsI.derive(mapping(dx => dx.derive(f)));
   // so at this point the Derivable<O>s only get recalculated when the
   // Derivable<I>s change. And, if you'll remember, the Derivable<I>s
   // get recalculated whenever xs changes, but they might not have changed.
 
   // and finally unpack
-  return dxsO.derive(dxs => dxs.map(_.unpack).toList());
+  return dxsO.derive(mapping(_.unpack));
   // so the result List<O> gets rebuilt whenever any one of the Derivable<O>s
   // changes. This is as good as it gets with immutable collections.
 }
@@ -87,8 +86,6 @@ console.log("cd:", cachedDoubled.get());
 The reason this is only a partial solution is that if `xs` changes in length, all the derivations get regenerated which means all the values get recomputed.
 
 ```typescript
-console.log("cd:", cachedDoubled.get());
-
 numbers.set(List([1, 2, 3, 4]));
 
 console.log("cd:", cachedDoubled.get());
@@ -147,7 +144,7 @@ console.log("cd:", cachedDoubled.get());
 
 Wait, that's not right. We don't want the 1, 2, and 3 to be logged again.
 
-Alas, the `map` function rebuilds it's `Derivable<List<Derivable<O>>>` each time its `Derivable<List<Derivable<I>>>` changes. To fix this, `f` needs to be propagated into `explode`.
+Alas, the `map` function rebuilds it's `Derivable<List<Derivable<O>>>` each time its `Derivable<List<Derivable<I>>>` changes. To fix this, `f` needs to be sunk into `explode`.
 
 ```typescript
 let mapsplode: <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => Derivable<List<Derivable<O>>>
@@ -172,7 +169,7 @@ let mapsplode: <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => Derivable<List<D
 
 map = <I, O>(f: (v:I) => O, xs: Derivable<List<I>>) => {
   // just unpack mapsplode output
-  return mapsplode(f, xs).derive(dxs => dxs.map(_.unpack).toList());
+  return mapsplode(f, xs).derive(mapping(_.unpack));
 };
 
 numbers.set(List([1,2,3]));
@@ -218,7 +215,7 @@ let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>)
 = <I, O, U>(uf, f, xs) => {
   let cache: Map<U, Derivable<O>> = Map<U, Derivable<O>>();
 
-  const ids: Derivable<List<U>> = xs.derive(xs => xs.map(uf).toList());
+  const ids: Derivable<List<U>> = xs.derive(mapping(uf));
   const id2idx: Derivable<Map<U, number>> = ids.derive(ids => {
     let map = Map<U, number>().asMutable();
     ids.forEach((id, idx) => {
@@ -226,6 +223,10 @@ let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>)
     });
     return map.asImmutable();
   });
+
+  function lookup (xs: List<I>, id2idx: Map<U, number>, id: U): I {
+    return xs.get(id2idx.get(id));
+  }
 
   return ids.derive(ids => {
     let newCache = Map<U, Derivable<O>>().asMutable();
@@ -237,7 +238,7 @@ let mapsplodeU: <I, O, U>(uf: (v:I) => U, f: (v:I) => O, xs: Derivable<List<I>>)
       }
       let derivation: Derivable<O> = cache.get(id);
       if (derivation == null) {
-        derivation = xs.derive(xs => xs.get(id2idx.get().get(id))).derive(f);
+        derivation = xs.derive(lookup, id2idx, id).derive(f);
       }
       newCache.set(id, derivation);
       result.push(derivation);
@@ -307,7 +308,7 @@ interface IDStuff<U> {
 }
 
 function deriveIDStuff<T, U> (uf: (v:T) => U, xs: Derivable<List<T>>): IDStuff<U> {
-  const ids: Derivable<List<U>> = xs.derive(xs => xs.map(uf).toList());
+  const ids: Derivable<List<U>> = xs.derive(mapping(uf));
   const id2idx: Derivable<Map<U, number>> = ids.derive(ids => {
     let map = Map<U, number>().asMutable();
     ids.forEach((id, idx) => {
@@ -316,6 +317,10 @@ function deriveIDStuff<T, U> (uf: (v:T) => U, xs: Derivable<List<T>>): IDStuff<U
     return map.asImmutable();
   });
   return {ids, id2idx};
+}
+
+function lookup<T, U> (xs: List<T>, id2idx: Map<U, number>, id: U): T {
+  return xs.get(id2idx.get(id));
 }
 
 mapsplodeU = <I, O, U>(uf, f, xs) => {
@@ -333,7 +338,7 @@ mapsplodeU = <I, O, U>(uf, f, xs) => {
       if (derivation == null) {
         derivation = cache.get(id);
         if (derivation == null) {
-          derivation = xs.derive(xs => xs.get(id2idx.get().get(id))).derive(f);
+          derivation = xs.derive(lookup, id2idx, id).derive(f);
         }
         newCache.set(id, derivation);
       }
@@ -371,7 +376,7 @@ purposes, but beware that an incorrect `uf` will cause some whack behaviour.
 
 ```typescript
 cachedDoubled = mapsplodeU(x => x % 2, logAndDouble, numbers)
-                  .derive(dxs => dxs.map(_.unpack).toList());
+                 .derive(mapping(_.unpack));
 
 numbers.set(List([1,2]));
 console.log("cd:", cachedDoubled.get());
@@ -396,12 +401,13 @@ So don't use custom uniquness functions unless you're certain they are correct!
 #### Solving the Reacting Problem
 
 This one is slightly more tricky because Reactions have lifecycles, so we need to
-start them and stop them when we create and dispose of them:
+start them and stop them when we create and dispose of them. This also means we have to revert
+to disallowing duplicate IDs. At least for the time being.
 
 ```typescript
 import { Reaction } from 'havelock'
 
-let resplodeU: <T, U>(uf: (v: T) => U, r: (v: T) => void, xs: Derivable<List<T>>) => Reaction<void>
+let resplodeU: <T, U>(uf: (v: T) => U, r: (v: T) => void, xs: Derivable<List<T>>) => any
 = <T, U>(uf, r, xs) => {
 
   // just like before except cache stores reactions rather than derivations
@@ -422,7 +428,7 @@ let resplodeU: <T, U>(uf: (v: T) => U, r: (v: T) => void, xs: Derivable<List<T>>
 
       if (reaction == null) {
         // implicitly start new reactions
-        reaction = xs.derive(xs => xs.get(id2idx.get().get(id))).react(r);
+        reaction = xs.derive(lookup, id2idx, id).react(r);
       } else {
         // remove from last cache so we don't stop it later
         cache = cache.remove(id);
@@ -437,12 +443,84 @@ let resplodeU: <T, U>(uf: (v: T) => U, r: (v: T) => void, xs: Derivable<List<T>>
 
   return null;
 }
+
+const things = atom($.fromJS([{id: 0, name: "Zero"}, {id: 1, name: "One"}]));
+const id = x => x.get('id');
+const log = x => console.log(`id: ${id(x)}, name: ${x.get('name')}`);
+
+resplodeU(id, log, things);
+// $> id: 0, name: Zero
+// $> id: 1, name: One
+
+things.swap(ts => ts.setIn([0, 'name'], "Wilbur"));
+// $> id: 0, name: Wilbur
 ```
 
 
-Alright that seems fine.
+So we're successfully using the same caching strategy that helped solve the mapping problem.
+
+Note, however, that there is no way for the user to start or stop the individual
+reactions. What should `resplodeU` return to enable this? Well an object with
+.start and .stop methods which delegate to the underlying reactions would be a
+sensible place to begin. Luckily, `Reaction`s already have those methods, we just
+need to hook into their onStop and onStart lifecycle methods to propagate runningness
+to the underlying reactions.
 
 ```typescript
+resplodeU = <T, U>(uf, r, xs) => {
+  let cache: Map<U, Reaction<T>> = Map<U, Reaction<T>>();
+  const {ids, id2idx} = deriveIDStuff<T, U>(uf, xs);
+
+  const reaction = ids.reaction(ids => {
+    let newCache = Map<U, Reaction<T>>().asMutable();
+    ids.forEach(id => {
+      if (newCache.has(id)) {
+        throw new Error(`duplicate id '${id}'`);
+      }
+      let reaction: Reaction<T> = cache.get(id);
+      if (reaction == null) {
+        reaction = xs.derive(lookup, id2idx, id).react(r);
+      } else {
+        cache = cache.remove(id);
+      }
+      newCache.set(id, reaction);
+    });
+    cache.valueSeq().forEach(r => r.stop());
+    cache = newCache.asImmutable();
+  });
+
+  reaction.onStop = () => {
+    cache.valueSeq().forEach(r => r.stop());
+  };
+
+  reaction.onStart = () => {
+    // re-start reactions to still-valid ids
+    ids.get().forEach(id => {
+      let r;
+      if ((r = cache.get(id))) {
+        r.start();
+      }
+    });
+  };
+
+  return reaction;
+}
+
+// numbers.set(List([1,2,3]));
+// let reaction = resplodeU(identity, log, numbers).start().force();
+// // $> reacting: 1
+// // $> reacting: 2
+// // $> reacting: 3
+//
+// numbers.set(List([0,1,2,3,4]));
+// // $> reacting: 0
+// // $> reacting: 4
+//
+// reaction.stop();
+//
+// numbers.set(List([-1,0,1,2,3,4,5]));
+// // $> nothing happens...
+
 // class WithIndex<T> {
 //   value: T;
 //   index: number;
