@@ -1,8 +1,11 @@
 {
   "name": "havelock",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Holistic state management with reactive values",
   "author": "David Sheldrick",
+  "files": [
+    "dist"
+  ],
   "main": "dist/havelock.js",
   "typescript": {
     "definition": "dist/havelock.d.ts"

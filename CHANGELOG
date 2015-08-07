@@ -1,0 +1,12 @@
+0.2.1
+
+sorted out npm module to only include dist.
+
+0.2.0
+
+- changed behaviour of method `Derivable::derive` to work like `swap` in terms
+  of arguments. e.g. now you can do `let five = three.derive(plus, two)`;
+- changed function `derive` to match. i.e. it is now just a functional interface
+  to the method.
+- new function `derivation(f)` which does what `derive(f)` used to do.
+derive
