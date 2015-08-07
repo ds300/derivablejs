@@ -221,3 +221,10 @@ resplodeU = function (uf, r, xs) {
     };
     return reaction;
 };
+var things2 = havelock_1.atom($.fromJS([{ id: 0, name: "Zero" }, { id: 1, name: "One" }]));
+var reaction = resplodeU(id, log, things2).start().force();
+things2.swap(function (ts) { return ts.setIn([1, 'name'], "Jefferson"); });
+reaction.stop();
+things2.swap(function (ts) { return ts.setIn([0, 'name'], "Thomas"); });
+reaction.start();
+things2.swap(function (ts) { return ts.setIn([1, 'name'], "The Tank Engine"); });

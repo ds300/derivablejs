@@ -506,21 +506,36 @@ resplodeU = <T, U>(uf, r, xs) => {
   return reaction;
 }
 
-// numbers.set(List([1,2,3]));
-// let reaction = resplodeU(identity, log, numbers).start().force();
-// // $> reacting: 1
-// // $> reacting: 2
-// // $> reacting: 3
-//
-// numbers.set(List([0,1,2,3,4]));
-// // $> reacting: 0
-// // $> reacting: 4
-//
-// reaction.stop();
-//
-// numbers.set(List([-1,0,1,2,3,4,5]));
-// // $> nothing happens...
 
+// new things because otherwise we'de be getting reactions from before
+const things2 = atom($.fromJS([{id: 0, name: "Zero"}, {id: 1, name: "One"}]));
+
+let reaction = resplodeU(id, log, things2).start().force();
+// $> id: 0, name: Zero
+// $> id: 1, name: One
+
+things2.swap(ts => ts.setIn([1, 'name'], "Jefferson"));
+// $> id: 1, name: Jefferson
+
+reaction.stop();
+
+things2.swap(ts => ts.setIn([0, 'name'], "Thomas"));
+// ... nothing happens, as expected
+
+reaction.start();
+
+things2.swap(ts => ts.setIn([1, 'name'], "The Tank Engine"));
+// $> id: 1, name: The Tank Engine
+```
+
+
+Nice, but...
+
+- forcing individual reactions
+- user reaction constructor fn
+- propagating indices to reactions in case they need that, like dom nodes might
+
+```typescript
 // class WithIndex<T> {
 //   value: T;
 //   index: number;
