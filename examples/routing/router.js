@@ -2,30 +2,30 @@
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
 var havelock_1 = require('havelock');
 function makeRoot() {
-    var root = havelock_1.atom(window.location.hash);
-    window.addEventListener('hashchange', function () { return root.set(window.location.hash); });
-    return root;
+    var hash = havelock_1.atom(window.location.hash);
+    window.addEventListener('hashchange', function () { return hash.set(window.location.hash); });
+    return hash;
 }
-var root = havelock_1.atom("");
+var hash = havelock_1.atom("");
 var immutable_1 = require('immutable');
-var route = root.derive(function (root) {
+var route = hash.derive(function (hash) {
     var params = immutable_1.Map();
-    root = root.trim();
-    switch (root) {
+    hash = hash.trim();
+    switch (hash) {
         case "":
         case "#":
         case "#/":
             return { parts: immutable_1.List([]), params: params };
         default:
-            var paramsIdx = root.indexOf("?");
+            var paramsIdx = hash.indexOf("?");
             if (paramsIdx >= 0) {
-                params = parseParams(root.slice(paramsIdx + 1));
-                root = root.slice(2, paramsIdx);
+                params = parseParams(hash.slice(paramsIdx + 1));
+                hash = hash.slice(2, paramsIdx);
             }
             else {
-                root = root.slice(2);
+                hash = hash.slice(2);
             }
-            return { parts: immutable_1.List(root.split("/")), params: params };
+            return { parts: immutable_1.List(hash.split("/")), params: params };
     }
 });
 function parseParams(str) {
@@ -44,13 +44,13 @@ function parseParams(str) {
     return result;
 }
 console.log(route.get());
-root.set("#/route");
+hash.set("#/route");
 console.log(route.get());
-root.set("#/some/route");
+hash.set("#/some/route");
 console.log(route.get());
-root.set("#/some/route/with?a=param");
+hash.set("#/some/route/with?a=param");
 console.log(route.get());
-root.set("#/some/route/with?a=param&more=params&others&evenmore");
+hash.set("#/some/route/with?a=param&more=params&others&evenmore");
 console.log(route.get());
 var routeParts = route.derive(function (r) { return r.parts; });
 var chosenRoute = routeParts.derive(null);

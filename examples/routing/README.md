@@ -14,20 +14,20 @@ import { Derivable, Atom, atom } from 'havelock';
 
 // this is what we'd use in a browser
 function makeRoot(): Derivable<string> {
-  let root = atom(window.location.hash);
+  let hash = atom(window.location.hash);
 
-  window.addEventListener('hashchange', () => root.set(window.location.hash));
+  window.addEventListener('hashchange', () => hash.set(window.location.hash));
 
-  return root;
+  return hash;
 }
 
 // but this isn't running in a browser so we'll do this:
 
-const root: Atom<string> = atom("");
+const hash: Atom<string> = atom("");
 ```
 
 
-So first let's convert the root into a route.
+So first let's convert the hash into a route.
 
 I reckon a route should be a string parts list + a map of query params
 
@@ -39,24 +39,24 @@ interface Route {
   params: Map<string, string>;
 }
 
-const route: Derivable<Route> = root.derive(root => {
+const route: Derivable<Route> = hash.derive(hash => {
   let params = Map<string, string>();
-  root = root.trim();
-  switch (root) {
+  hash = hash.trim();
+  switch (hash) {
   case "":
   case "#":
   case "#/":
     return { parts: List([]), params };
   default:
-    const paramsIdx = root.indexOf("?");
+    const paramsIdx = hash.indexOf("?");
     if (paramsIdx >= 0) {
-      params = parseParams(root.slice(paramsIdx + 1));
-      root = root.slice(2, paramsIdx);
+      params = parseParams(hash.slice(paramsIdx + 1));
+      hash = hash.slice(2, paramsIdx);
     } else {
-      root = root.slice(2);
+      hash = hash.slice(2);
     }
 
-    return { parts: List(root.split("/")), params }
+    return { parts: List(hash.split("/")), params }
   }
 });
 
@@ -85,20 +85,20 @@ Ok, lets see if that all works:
 console.log(route.get());
 // $> { parts: List [], params: Map {} }
 
-root.set("#/route");
+hash.set("#/route");
 console.log(route.get());
 // $> { parts: List [ "route" ], params: Map {} }
 
-root.set("#/some/route");
+hash.set("#/some/route");
 console.log(route.get());
 // $> { parts: List [ "some", "route" ], params: Map {} }
 
-root.set("#/some/route/with?a=param");
+hash.set("#/some/route/with?a=param");
 console.log(route.get());
 // $> { parts: List [ "some", "route", "with" ],
 // $>   params: Map { "a": "param" } }
 
-root.set("#/some/route/with?a=param&more=params&others&evenmore");
+hash.set("#/some/route/with?a=param&more=params&others&evenmore");
 console.log(route.get());
 // $> { parts: List [ "some", "route", "with" ],
 // $>   params: Map { "a": "param", "more": "params", "others": "", "evenmore": "" } }
