@@ -428,7 +428,7 @@
     const x = atom(1),
           y = atom(2);
 
-    const z = derive(() => x.get() + y.get());
+    const z = derivation(() => x.get() + y.get());
 
     z.get();
     // => 3

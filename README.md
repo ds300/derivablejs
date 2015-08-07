@@ -179,13 +179,13 @@ So really each time an atom is changed, its entire derivation graph is likely to
 So the `cell=` macro is unable to figure out that our `cells` vector contains cells which should be hooked up to the propagation graph. Havelock imposes no such constraints:
 
 ```javascript
-import {atom, derive, get} from 'havelock'
+import {atom, derivation, get} from 'havelock'
 
 const cells = [0,1,2].map(atom);
 
 const add = (a, b) => a + b;
 
-const sum = derive(() => cells.map(get).reduce(add));
+const sum = derivation(() => cells.map(get).reduce(add));
 
 sum.react(x => console.log(x));
 // $> 3
@@ -313,7 +313,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
-1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `y.derive(y => ...)` or `derive(x, y, z, (x, y, z) => ...)` fashions. So do that if you want to get ahead of the curve!
+1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
