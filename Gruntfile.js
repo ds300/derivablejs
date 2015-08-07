@@ -140,6 +140,19 @@ module.exports = function(grunt) {
     return promise;
   }
 
+  grunt.registerTask('pages', function () {
+    var done = this.async();
+    execp('git checkout gh-pages').then(function () {
+      return execp('git merge master');
+    }).then(function () {
+      return execp('git push origin gh-pages');
+    }).then(function () {
+      return execp('git checkout master');
+    }).then(function () {
+      console.log("gh-pages up to date");
+    }).then(done);
+  });
+
   grunt.registerTask('stats', function () {
     Promise.all([
       execp('cat dist/havelock.js | wc -c'),
