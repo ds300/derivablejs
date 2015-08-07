@@ -3,7 +3,7 @@ import imut, {fromJS} from 'immutable'
 import React from 'react'
 
 /*** Global App State ***/
-const nextId = atom(0);
+const nextId = atom(0); // uids for the list items to make react happy
 function getNextId () {
   return _.swap(nextId, x => x+1);
 }
@@ -19,7 +19,9 @@ window.addEventListener('hashchange', () => {
 {
   let existingTodos;
   if ((existingTodos = localStorage['todos'])) {
-    todos.set(fromJS(JSON.parse(existingTodos)).map(x => x.set('id', getNextId())));
+    todos.set(fromJS(JSON.parse(existingTodos))
+                .map(x => x.set('id', getNextId()))
+                .toList());
   }
 }
 
@@ -32,11 +34,9 @@ function newTodo (todos, description) {
   if (description.trim().length === 0) {
     return todos;
   } else {
-    let id = nextId.get();
-    nextId.set(id + 1);
     return todos.push(fromJS({
       description,
-      id: id,
+      id: getNextId(),
       complete: false,
       editing: false
     }));
@@ -44,7 +44,7 @@ function newTodo (todos, description) {
 }
 
 function clearCompleted (todos) {
-  return todos.filter(t => t.complete);
+  return todos.filter(t => t.complete).toList();
 }
 
 function toggleComplete (todos, idx) {
@@ -68,7 +68,7 @@ function editTodo (todos, idx, newDescription) {
 }
 
 function markAll (todos, complete) {
-  return todos.map(t => t.set('complete', complete));
+  return todos.map(t => t.set('complete', complete)).toList();
 }
 
 
