@@ -9,48 +9,72 @@ function makeRoot() {
 var hash = havelock_1.atom("");
 var immutable_1 = require('immutable');
 var route = hash.derive(function (hash) {
-    var params = immutable_1.Map();
-    hash = hash.trim();
     switch (hash) {
         case "":
         case "#":
         case "#/":
-            return { parts: immutable_1.List([]), params: params };
+            return immutable_1.List();
         default:
-            var paramsIdx = hash.indexOf("?");
-            if (paramsIdx >= 0) {
-                params = parseParams(hash.slice(paramsIdx + 1));
-                hash = hash.slice(2, paramsIdx);
+            var queryIdx = hash.indexOf("?");
+            if (queryIdx >= 0) {
+                hash = hash.slice(2, queryIdx);
             }
             else {
                 hash = hash.slice(2);
             }
-            return { parts: immutable_1.List(hash.split("/")), params: params };
+            return immutable_1.List(hash.split("/"));
     }
 });
-function parseParams(str) {
-    var result = immutable_1.Map().asMutable();
-    var parts = str.split(/&/);
-    for (var _i = 0; _i < parts.length; _i++) {
-        var part = parts[_i];
-        var equalsIdx = part.indexOf("=");
-        if (equalsIdx >= 0) {
-            result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
+var queryParams = hash.derive(function (hash) {
+    var queryIdx = hash.indexOf("?");
+    if (queryIdx >= 0) {
+        var result = immutable_1.Map().asMutable();
+        var parts = hash.slice(queryIdx + 1).split(/&/);
+        for (var _i = 0; _i < parts.length; _i++) {
+            var part = parts[_i];
+            var equalsIdx = part.indexOf("=");
+            if (equalsIdx >= 0) {
+                result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
+            }
+            else {
+                result.set(part, true);
+            }
         }
-        else {
-            result.set(part, "");
-        }
+        return result.asImmutable();
     }
-    return result;
-}
+    else {
+        return immutable_1.Map();
+    }
+});
 console.log(route.get());
+console.log(queryParams.get());
 hash.set("#/route");
 console.log(route.get());
 hash.set("#/some/route");
 console.log(route.get());
 hash.set("#/some/route/with?a=param");
 console.log(route.get());
+console.log(queryParams.get());
 hash.set("#/some/route/with?a=param&more=params&others&evenmore");
 console.log(route.get());
-var routeParts = route.derive(function (r) { return r.parts; });
-var chosenRoute = routeParts.derive(null);
+console.log(queryParams.get());
+var havelock_2 = require('havelock');
+var join = function (x, y) { return x.join(y); };
+hash.set("#/home");
+var dispatchTable = havelock_1.atom(immutable_1.Map());
+var chosenHandler = dispatchTable.derive(function (dt) {
+    return dt.get(route.get());
+}).or((_a = ["404 route not found: /", ""], _a.raw = ["404 route not found: /", ""], havelock_2.derive(_a, route.derive(join, "/"))));
+var reaction = chosenHandler.react(function (dom) { return console.log(havelock_2.unpack(dom)); });
+dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["home"]), "Hello World!"); });
+dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["print-params"]), queryParams.derive(printParams)); });
+function printParams(params) {
+    var result = "the params are:";
+    for (var _i = 0, _a = params.entrySeq().toArray(); _i < _a.length; _i++) {
+        var _b = _a[_i], key = _b[0], val = _b[1];
+        result += "\n  " + key + ": " + val;
+    }
+    return result;
+}
+hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
+var _a;

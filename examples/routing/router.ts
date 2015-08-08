@@ -31,87 +31,90 @@ const hash: Atom<string> = atom("");
 
 /***
 
-So first let's convert the hash into a route.
+So first let's convert the hash into a route. Actually, the hash might have params
+at the end so let's convert the hash into a route and a parameter map
 
-I reckon a route should be a string parts list + a map of query params
 
 ***/
 
 import { List, Map } from 'immutable';
 
-interface Route {
-  parts: List<string>;
-  params: Map<string, string>;
-}
+type Route = List<string>;
+type Params = Map<string, string | boolean>;
 
-const route: Derivable<Route> = hash.derive(hash => {
-  let params = Map<string, string>();
-  hash = hash.trim();
+const route : Derivable<Route> = hash.derive(hash => {
   switch (hash) {
   case "":
   case "#":
   case "#/":
-    return { parts: List([]), params };
+    return List<string>();
   default:
-    const paramsIdx = hash.indexOf("?");
-    if (paramsIdx >= 0) {
-      params = parseParams(hash.slice(paramsIdx + 1));
-      hash = hash.slice(2, paramsIdx);
+    let queryIdx = hash.indexOf("?");
+    if (queryIdx >= 0) {
+      hash = hash.slice(2, queryIdx);
     } else {
+      // slice(2... to remove the '#/'
       hash = hash.slice(2);
     }
-
-    return { parts: List(hash.split("/")), params }
+    return List<string>(hash.split("/"));
   }
 });
 
-function parseParams (str: string): Map<string, string> {
-  let result = Map<string, string>().asMutable();
+const queryParams : Derivable<Params>  = hash.derive(hash => {
+  let queryIdx = hash.indexOf("?");
+  if (queryIdx >= 0) {
+    let result = Map<string, string | boolean>().asMutable();
 
-  let parts = str.split(/&/);
+    let parts = hash.slice(queryIdx + 1).split(/&/);
 
-  for (let part of parts) {
-    let equalsIdx = part.indexOf("=");
-    if (equalsIdx >= 0) {
-      result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
-    } else {
-      result.set(part, "");
+    for (let part of parts) {
+      let equalsIdx = part.indexOf("=");
+      if (equalsIdx >= 0) {
+        result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
+      } else {
+        result.set(part, true);
+      }
     }
-  }
 
-  return result;
-}
+    return result.asImmutable();
+  } else {
+    return Map<string, string | boolean>();
+  }
+});
 
 /***
 
 Ok, lets see if that all works:
 
 ***/
-
 console.log(route.get());
-// $> { parts: List [], params: Map {} }
+// $> List []
+console.log(queryParams.get());
+// $> Map {}
 
 hash.set("#/route");
 console.log(route.get());
-// $> { parts: List [ "route" ], params: Map {} }
+// $> List [ "route" ]
 
 hash.set("#/some/route");
 console.log(route.get());
-// $> { parts: List [ "some", "route" ], params: Map {} }
+// $> List [ "some", "route" ]
 
 hash.set("#/some/route/with?a=param");
 console.log(route.get());
-// $> { parts: List [ "some", "route", "with" ],
-// $>   params: Map { "a": "param" } }
+// $> List [ "some", "route", "with" ]
+console.log(queryParams.get());
+// $> Map { "a": "param" }
 
 hash.set("#/some/route/with?a=param&more=params&others&evenmore");
 console.log(route.get());
-// $> { parts: List [ "some", "route", "with" ],
-// $>   params: Map { "a": "param", "more": "params", "others": "", "evenmore": "" } }
+// $> List [ "some", "route", "with" ]
+console.log(queryParams.get());
+// $> Map { "a": "param", "more": "params", "others": true, "evenmore": true }
 
 /***
 
-Good enough for now.
+Seems good enough for now.
 
 ## Dispatching
 
@@ -119,9 +122,53 @@ So handlers, the things which render the dom for a particular route, are
 derivables rather than functions, but they need to be registered with something
 so our dispatch logic can find them.
 
+Let's keep things simple and just have a glodbal dispatch table which tries to
+match the current route against a registered route.
+
 ***/
 
-const routeParts = route.derive(r => r.parts);
-const chosenRoute = routeParts.derive(null);
+import { derive, unpack } from 'havelock'
+const join = (x, y) => x.join(y);
+hash.set("#/home");
+
+type DOM = any;
+type Handler = Derivable<DOM> | DOM;
+type DispatchTable = Map<Route, Handler>;
+
+const dispatchTable: Atom<DispatchTable> = atom(Map<Route, Handler>());
+
+
+const chosenHandler: Derivable<Handler> = dispatchTable.derive(dt => {
+  // simple lookup for now
+  return dt.get(route.get());
+}).or(derive`404 route not found: /${route.derive(join, "/")}`);
+
+
+const reaction = chosenHandler.react(dom => console.log(unpack(dom)));
+// $> 404 route not found: /home
+
+
+dispatchTable.swap(dt => dt.set(List(["home"]), "Hello World!"));
+// $> Hello World!
+
+
+dispatchTable.swap(dt => dt.set(List(["print-params"]),
+                                queryParams.derive(printParams)));
+
+function printParams(params: Params) {
+  let result = "the params are:";
+  for (let [key, val] of params.entrySeq().toArray()) {
+    result += `\n  ${key}: ${val}`;
+  }
+  return  result;
+}
+
+hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
+
+// $> the params are:
+// $>   today: thursday
+// $>   tomorrow: friday
+// $>   almost: party_time
+
 
 // (wip)
