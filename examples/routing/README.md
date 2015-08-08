@@ -322,7 +322,8 @@ about two things:
 The first one is available already. The second one can't be made available so
 easily. Maybe the `lookup` function could return it along with the matching
 handler. Or maybe the `lookup` function could be extended to accumulate the inline
-params and just return those?
+params and just return those? Whatever happens the lookup function needs to know
+about inline params, so it may as well do the extraction.
 
 ```typescript
 class InlineParam {
