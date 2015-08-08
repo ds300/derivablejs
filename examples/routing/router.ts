@@ -420,7 +420,6 @@ dispatchTree.swap(register, "resource/:id/home", params.derive(params => {
 
 hash.set("#/resource/343/home");
 // $> This is the home of the resource with id 343
-// $> Today the fruit is banana
 
 hash.set("#/resource/wub-a-lub-a-dub-dub/home?fruit=banana");
 // $> This is the home of the resource with id wub-a-lub-a-dub-dub
