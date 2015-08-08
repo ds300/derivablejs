@@ -289,12 +289,22 @@ hash.set("#/params/print?yes");
 // $> the params are:
 // $>   yes: true
 
+dispatchTree.lens(context("some"))
+            .swap(register, "deeply/nested/route", "2 deep 4 U");
+
+hash.set("#/some/deeply/nested/route");
+// $> 2 deep 4 U
+
 /***
 
-Ok, so `routes.swap(register, "some/route", handler)` is slightly more verbose
+`routes.swap(register, "some/route", handler)` is slightly more verbose
 than `routes.register("some/route", handler)`, and `routes.lens(context("ctx"))`
-is slightly more verbose than `routes.context("ctx")`, but the benefits of
-composability and extensibility are worth it IMO.
+is slightly more verbose than `routes.context("ctx")`, but that extra concision is
+trivial to achieve with wrapper objects if you are so inclined.
+
+The last thing I want to support here is inline route params, e.g. one should be
+able to specify a path like `/resource/:id/home`, for which a hash like
+`#/resource/32/home` might render the home page of the resource with id `32`.
 
 ***/
 

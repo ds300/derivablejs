@@ -149,4 +149,7 @@ dispatchTree.lens(context("params"))
 hash.set("#/params");
 hash.set("#/params/");
 hash.set("#/params/print?yes");
+dispatchTree.lens(context("some"))
+    .swap(register, "deeply/nested/route", "2 deep 4 U");
+hash.set("#/some/deeply/nested/route");
 var _a;
