@@ -69,7 +69,8 @@ var fourOhFour = (_a = ["404 route not found: /", ""], _a.raw = ["404 route not 
 var chosenHandler = dispatchTable.derive(function (dt) {
     return dt.get(route.get());
 }).or(fourOhFour);
-var reaction = chosenHandler.react(function (dom) { return console.log(havelock_2.unpack(dom)); });
+var reaction = chosenHandler.derive(havelock_2.unpack).react(function (dom) { return console.log(dom); });
+;
 dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["home"]), "Hello World!"); });
 dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["print-params"]), queryParams.derive(printParams)); });
 function printParams(params) {
@@ -81,10 +82,7 @@ function printParams(params) {
     return result;
 }
 hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
-function register(dt, path, handler) {
-    return registerRoute(dt, path2route(path), handler);
-}
-function registerRoute(dt, route, handler) {
+var registerRoute = function (dt, route, handler) {
     if (route.size === 0) {
         return dt.set("", handler);
     }
@@ -93,11 +91,15 @@ function registerRoute(dt, route, handler) {
         var child = dt.get(ctx) || immutable_1.Map();
         return dt.set(ctx, registerRoute(child, route.shift(), handler));
     }
+};
+function register(dt, path, handler) {
+    return registerRoute(dt, path2route(path), handler);
 }
 function context(ctx) {
+    var route = path2route(ctx);
     return {
         get: function (dt) {
-            var child = dt.get(ctx);
+            var child = dt.getIn(route);
             if (!child) {
                 return immutable_1.Map();
             }
@@ -109,7 +111,7 @@ function context(ctx) {
             }
         },
         set: function (parent, me) {
-            return parent.set(ctx, me);
+            return parent.setIn(route, me);
         }
     };
 }
@@ -136,7 +138,8 @@ function lookup(dt, route) {
 }
 chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
 reaction.stop();
-reaction = chosenHandler.react(function (dom) { return console.log(havelock_2.unpack(dom)); });
+reaction = chosenHandler.derive(havelock_2.unpack).react(function (dom) { return console.log(dom); });
+;
 hash.set("");
 dispatchTree.lens(context("params"))
     .swap(register, "print", queryParams.derive(printParams));
@@ -149,7 +152,82 @@ dispatchTree.lens(context("params"))
 hash.set("#/params");
 hash.set("#/params/");
 hash.set("#/params/print?yes");
-dispatchTree.lens(context("some"))
-    .swap(register, "deeply/nested/route", "2 deep 4 U");
-hash.set("#/some/deeply/nested/route");
+dispatchTree.lens(context("some/incredibly"))
+    .swap(register, "deeply/nested/route", "wow. so deep. much nest.");
+hash.set("#/some/incredibly/deeply/nested/route");
+var havelock_3 = require('havelock');
+var inlineParams;
+var params = havelock_3.derivation(function () { return queryParams.get().merge(inlineParams.get()); });
+var InlineParam = (function () {
+    function InlineParam(name) {
+        this.name = name;
+        this.kids = immutable_1.Map();
+    }
+    return InlineParam;
+})();
+registerRoute = function (dt, route, handler) {
+    if (route.size === 0) {
+        return dt.set("", handler);
+    }
+    else {
+        var ctx = route.first();
+        if (ctx.indexOf(":") === 0) {
+            if (dt.has(":")) {
+                throw new Error(("trying to overwrite inline param " + dt.get(":").name) +
+                    (" with " + ctx));
+            }
+            else {
+                var child_1 = new InlineParam(ctx.slice(1));
+                child_1.kids = registerRoute(child_1.kids, route.shift(), handler);
+                return dt.set(":", child_1);
+            }
+        }
+        var child = dt.get(ctx) || immutable_1.Map();
+        return dt.set(ctx, registerRoute(child, route.shift(), handler));
+    }
+};
+function lookupWithParams(dispatchTarget, route, params) {
+    if (route.size === 0) {
+        if (dispatchTarget instanceof immutable_1.Map) {
+            return [dispatchTarget.get(""), params];
+        }
+        else if (!(dispatchTarget instanceof InlineParam)) {
+            return [dispatchTarget, params];
+        }
+    }
+    else if (dispatchTarget instanceof InlineParam) {
+        params = params.set(dispatchTarget.name, route.first());
+        return lookupWithParams(dispatchTarget.kids, route.shift(), params);
+    }
+    else if (dispatchTarget instanceof immutable_1.Map) {
+        var child = dispatchTarget.get(route.first());
+        if (child) {
+            return lookupWithParams(child, route.shift(), params);
+        }
+        else {
+            var inlineParam = dispatchTarget.get(":");
+            if (inlineParam) {
+                return lookupWithParams(inlineParam, route, params);
+            }
+        }
+    }
+    return [null, null];
+}
+{
+    var lookupResult = dispatchTree.derive(lookupWithParams, route, immutable_1.Map());
+    chosenHandler = lookupResult.derive(function (r) { return r[0]; }).or(fourOhFour);
+    inlineParams = lookupResult.derive(function (r) { return r[1]; });
+}
+reaction.stop();
+reaction = chosenHandler.derive(havelock_2.unpack).react(function (dom) { return console.log(dom); });
+dispatchTree.swap(register, "resource/:id/home", params.derive(function (params) {
+    var _a = params.toJS(), id = _a.id, fruit = _a.fruit;
+    var result = "This is the home of the resource with id " + id;
+    if (fruit) {
+        result += "\nToday the fruit is " + fruit;
+    }
+    return result;
+}));
+hash.set("#/resource/343/home");
+hash.set("#/resource/wub-a-lub-a-dub-dub/home?fruit=banana");
 var _a;

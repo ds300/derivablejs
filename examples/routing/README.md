@@ -142,7 +142,7 @@ let chosenHandler: Derivable<Handler> = dispatchTable.derive(dt => {
 }).or(fourOhFour);
 
 
-let reaction = chosenHandler.react(dom => console.log(unpack(dom)));
+let reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
 // $> 404 route not found: /home
 
 
@@ -180,40 +180,38 @@ Nested maps and lenses to the rescue?
 ```typescript
 import { Lens } from 'havelock'
 
-type NestedHandler = Handler | Map<string, any>;
-// That `Map<string, any>` should be `DispatchTree`
-// TypeScript doesn't support recursive type aliases for some reason.
+type DispatchTree = Map<string, any>;
 
-type DispatchTree = Map<string, NestedHandler>;
+let registerRoute: (dt: DispatchTree, route: Route, handler: Handler) => DispatchTree
+= (dt, route, handler) => {
+  if (route.size === 0) {
+    return dt.set("", handler);
+  } else {
+    let ctx = route.first();
+    let child = dt.get(ctx) || Map<string, any>();
+    return dt.set(ctx, registerRoute(child, route.shift(), handler));
+  }
+}
 
 function register(dt: DispatchTree, path: string, handler: Handler): DispatchTree {
   return registerRoute(dt, path2route(path), handler);
 }
 
-function registerRoute(dt: DispatchTree, route: Route, handler: Handler): DispatchTree {
-  if (route.size === 0) {
-    return dt.set("", handler);
-  } else {
-    let ctx = route.first();
-    let child = dt.get(ctx) || Map<string, NestedHandler>();
-    return dt.set(ctx, registerRoute(child, route.shift(), handler));
-  }
-}
-
 function context(ctx: string): Lens<DispatchTree, DispatchTree> {
+  let route = path2route(ctx);
   return {
     get (dt: DispatchTree): DispatchTree {
-      let child = dt.get(ctx);
+      let child = dt.getIn(route);
       if (!child) {
-        return Map<string, NestedHandler>();
+        return Map<string, any>();
       } else if (child instanceof Map) {
         return child;
       } else {
-        return Map<string, NestedHandler>().set("", child);
+        return Map<string, any>().set("", child);
       }
     },
     set (parent: DispatchTree, me: DispatchTree) {
-      return parent.set(ctx, me);
+      return parent.setIn(route, me);
     }
   };
 }
@@ -243,7 +241,7 @@ chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
 
 // rebind reaction so it uses the latest `chosenHandler`
 reaction.stop();
-reaction = chosenHandler.react(dom => console.log(unpack(dom)));
+reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
 // $> 404 route not found: /print-params
 
 // oh right yeah...
@@ -280,11 +278,11 @@ hash.set("#/params/print?yes");
 // $> the params are:
 // $>   yes: true
 
-dispatchTree.lens(context("some"))
-            .swap(register, "deeply/nested/route", "2 deep 4 U");
+dispatchTree.lens(context("some/incredibly"))
+            .swap(register, "deeply/nested/route", "wow. so deep. much nest.");
 
-hash.set("#/some/deeply/nested/route");
-// $> 2 deep 4 U
+hash.set("#/some/incredibly/deeply/nested/route");
+// $> wow. so deep. much nest.
 ```
 
 
@@ -296,6 +294,130 @@ trivial to achieve with wrapper objects if you are so inclined.
 The last thing I want to support here is inline route params, e.g. one should be
 able to specify a path like `/resource/:id/home`, for which a hash like
 `#/resource/32/home` might render the home page of the resource with id `32`.
+
+There are a couple of issues with that:
+
+- how to get the inline params into the handlers
+- how to get the inline params in the first place
+
+The first bit is easy:
+
+```typescript
+import { derivation } from 'havelock'
+
+let inlineParams: Derivable<Params>/* = ? */;
+
+const params = derivation(() => queryParams.get().merge(inlineParams.get()));
+```
+
+
+And now the handlers just derive from `params` rather than `queryParams`.
+
+As for what `inlineParams` should derive from... Well clearly it needs to know
+about two things:
+
+- the current route
+- the route which matches the current route
+
+The first one is available already. The second one can't be made available so
+easily. Maybe the `lookup` function could return it along with the matching
+handler. Or maybe the `lookup` function could be extended to accumulate the inline
+params and just return those?
+
+```typescript
+class InlineParam {
+  name: string;
+  kids: DispatchTree;
+  constructor (name) {
+    this.name = name;
+    this.kids = <DispatchTree>Map();
+  }
+}
+
+registerRoute = (dt: DispatchTree, route: Route, handler: Handler) => {
+  if (route.size === 0) {
+    return dt.set("", handler);
+  } else {
+    let ctx = route.first();
+    if (ctx.indexOf(":") === 0) {
+      if (dt.has(":")) {
+        throw new Error(`trying to overwrite inline param ${dt.get(":").name}` +
+                         ` with ${ctx}`);
+      } else {
+        let child = new InlineParam(ctx.slice(1));
+        child.kids = registerRoute(child.kids, route.shift(), handler);
+        return dt.set(":", child);
+      }
+    }
+
+    let child = dt.get(ctx) || <DispatchTree>Map();
+
+    return dt.set(ctx, registerRoute(child, route.shift(), handler));
+  }
+}
+
+function lookupWithParams(dispatchTarget: any, route: Route, params: Params): [Handler, Params] {
+  // dispatchTarget either DispatchTree, InlineParam, or handler
+  if (route.size === 0) {
+    if (dispatchTarget instanceof Map) {
+      return [dispatchTarget.get(""), params];
+    } else if (!(dispatchTarget instanceof InlineParam)) {
+      return [dispatchTarget, params];
+    }
+  }
+
+  else if (dispatchTarget instanceof InlineParam) {
+    params = params.set(dispatchTarget.name, route.first());
+    return lookupWithParams(dispatchTarget.kids, route.shift(), params);
+  }
+
+  else if (dispatchTarget instanceof Map) {
+    let child = dispatchTarget.get(route.first());
+    if (child) {
+      return lookupWithParams(child, route.shift(), params);
+    }
+    else {
+      let inlineParam = dispatchTarget.get(":");
+      if (inlineParam) {
+        return lookupWithParams(inlineParam, route, params);
+      }
+    }
+  }
+  return [null, null]
+}
+
+{
+  let lookupResult = dispatchTree.derive(lookupWithParams, route, Map());
+  chosenHandler = lookupResult.derive(r => r[0]).or(fourOhFour);
+  inlineParams = lookupResult.derive(r => r[1]);
+}
+
+// rebind reaction so it uses the latest `chosenHandler`
+reaction.stop();
+reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));
+// $> wow. so deep. much nest.
+
+dispatchTree.swap(register, "resource/:id/home", params.derive(params => {
+  let { id, fruit } = params.toJS();
+  let result = `This is the home of the resource with id ${id}`;
+  if (fruit) {
+    result += `\nToday the fruit is ${fruit}`
+  }
+  return result;
+}));
+
+hash.set("#/resource/343/home");
+// $> This is the home of the resource with id 343
+// $> Today the fruit is banana
+
+hash.set("#/resource/wub-a-lub-a-dub-dub/home?fruit=banana");
+// $> This is the home of the resource with id wub-a-lub-a-dub-dub
+// $> Today the fruit is banana
+```
+
+
+All that's left to do is update the `context` function to know how to deal
+with inline params.
 
 ```typescript
 // (wip)
