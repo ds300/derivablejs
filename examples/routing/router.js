@@ -8,6 +8,9 @@ function makeRoot() {
 }
 var hash = havelock_1.atom("");
 var immutable_1 = require('immutable');
+function path2route(path) {
+    return immutable_1.List(path.split("/").filter(function (x) { return x !== ""; }));
+}
 var route = hash.derive(function (hash) {
     switch (hash) {
         case "":
@@ -22,7 +25,7 @@ var route = hash.derive(function (hash) {
             else {
                 hash = hash.slice(2);
             }
-            return immutable_1.List(hash.split("/"));
+            return path2route(hash);
     }
 });
 var queryParams = hash.derive(function (hash) {
@@ -62,9 +65,10 @@ var havelock_2 = require('havelock');
 var join = function (x, y) { return x.join(y); };
 hash.set("#/home");
 var dispatchTable = havelock_1.atom(immutable_1.Map());
+var fourOhFour = (_a = ["404 route not found: /", ""], _a.raw = ["404 route not found: /", ""], havelock_2.derive(_a, route.derive(join, "/")));
 var chosenHandler = dispatchTable.derive(function (dt) {
     return dt.get(route.get());
-}).or((_a = ["404 route not found: /", ""], _a.raw = ["404 route not found: /", ""], havelock_2.derive(_a, route.derive(join, "/"))));
+}).or(fourOhFour);
 var reaction = chosenHandler.react(function (dom) { return console.log(havelock_2.unpack(dom)); });
 dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["home"]), "Hello World!"); });
 dispatchTable.swap(function (dt) { return dt.set(immutable_1.List(["print-params"]), queryParams.derive(printParams)); });
@@ -77,4 +81,72 @@ function printParams(params) {
     return result;
 }
 hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
+function register(dt, path, handler) {
+    return registerRoute(dt, path2route(path), handler);
+}
+function registerRoute(dt, route, handler) {
+    if (route.size === 0) {
+        return dt.set("", handler);
+    }
+    else {
+        var ctx = route.first();
+        var child = dt.get(ctx) || immutable_1.Map();
+        return dt.set(ctx, registerRoute(child, route.shift(), handler));
+    }
+}
+function context(ctx) {
+    return {
+        get: function (dt) {
+            var child = dt.get(ctx);
+            if (!child) {
+                return immutable_1.Map();
+            }
+            else if (child instanceof immutable_1.Map) {
+                return child;
+            }
+            else {
+                return immutable_1.Map().set("", child);
+            }
+        },
+        set: function (parent, me) {
+            return parent.set(ctx, me);
+        }
+    };
+}
+var dispatchTree = havelock_1.atom(immutable_1.Map());
+dispatchTree.swap(register, "/", "Hello Again, World!");
+function lookup(dt, route) {
+    if (route.size === 0) {
+        if (dt instanceof immutable_1.Map) {
+            return dt.get("");
+        }
+        else {
+            return dt;
+        }
+    }
+    else {
+        var child = dt.get(route.first());
+        if (child) {
+            return lookup(child, route.shift());
+        }
+        else {
+            return null;
+        }
+    }
+}
+chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
+reaction.stop();
+reaction = chosenHandler.react(function (dom) { return console.log(havelock_2.unpack(dom)); });
+hash.set("");
+dispatchTree.lens(context("params"))
+    .swap(register, "print", queryParams.derive(printParams));
+hash.set("#/params/print?yes");
+dispatchTree.swap(register, "params", "you are at '/params'");
+hash.set("#/params");
+hash.set("#/params/print?yes");
+dispatchTree.lens(context("params"))
+    .swap(register, "", "you are back at '/params'");
+hash.set("#/params");
+hash.set("#/params/");
+hash.set("#/params/print?yes");
 var _a;
