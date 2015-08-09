@@ -414,7 +414,10 @@ console.log("cd:", cachedDoubled.get());
 
 So don't use custom uniquness functions unless you're certain they are correct!
 
-#### Solving the Reacting Problem
+#### Trying to Solve the Reacting Problem
+
+*note: I'm not sure there is a general solution adaptable for all situations. This
+section is unfinished but should give you a notion of the issues involved.*
 
 This one is slightly more tricky because Reactions have lifecycles, so we need to
 start them and stop them when we create and dispose of them. This also means we have to revert
@@ -547,65 +550,13 @@ things2.swap(ts => ts.setIn([1, 'name'], "The Tank Engine"));
 
 /***
 
-Nice, but...
+Further issues:
 
-- forcing individual reactions
-- user reaction constructor fn
+- Maybe it would be sensible to provide a way to .force individual reactions
+- The user should be able to provide a reaction constructor to let them do things
+  that a simple reacting function won't.
 - propagating indices to reactions in case they need that, like dom nodes might
 
 ***/
 
-// class WithIndex<T> {
-//   value: T;
-//   index: number;
-//   constructor (value, index) {
-//     this.value = value;
-//     this.index = index;
-//   }
-// }
-//
-// class Resplosion<T, U> extends Reaction<List<U>> {
-//   cache: Map<U, Reaction<T>>;
-//   xs: Derivable<List<T>>
-//   constructor (uf: (v:T) => U, f: (v:T) => Reaction<T>, xs: Derivable<List<T>>) {
-//     super();
-//     let ids: Derivable<List<U>> = xs.derive(xs => xs.map(uf).toList());
-//
-//     this.xs = xs;
-//     this.cache = Map<U, Reaction<T>>();
-//
-//     const id2idx: Derivable<Map<U, number>> = ids.derive(ids => {
-//       let map = Map<U, number>().asMutable();
-//       ids.forEach((id, idx) => {
-//         map.set(id, idx);
-//       });
-//       return map.asImmutable();
-//     });
-//   }
-//   onStop () {
-//     // stop all reactions in cache and clear
-//     this.cache.valueSeq().forEach(r => {
-//       r.stop();
-//     });
-//     this.cache = Map<U, Reaction<T>>();
-//   }
-//   react (ids: List<U>) {
-//     let newCache = Map<U, Reaction<T>>().asMutable();
-//     let result = [];
-//
-//     ids.forEach(id => {
-//       if (newCache.get(id)) {
-//         throw new Error(`duplicate id ${id}`);
-//       }
-//       let reaction: Reaction<T> = this.cache.get(id);
-//       if (reaction == null) {
-//         derivation = xs.derive(xs => xs.get(id2idx.get().get(id))).derive(f);
-//         newCache.set(id, derivation);
-//       }
-//       result.push(derivation);
-//     });
-//
-//     cache = newCache.asImmutable();
-//     return List(result);
-//   }
-// }
+// (wip)

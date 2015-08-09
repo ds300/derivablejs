@@ -279,9 +279,12 @@ This has not been an exhaustive comparison. There are [some](https://www.meteor.
 [See Here](https://ds300.github.com/havelock)
 
 ##### Examples (wip)
-[See Here](https://github.com/ds300/havelock/tree/master/examples/)
+[All Here](https://github.com/ds300/havelock/tree/master/examples/)
 
 - [TodoMVC w/React](https://ds300.github.com/havelock/examples/todo)
+- [Example of how to do Routing](https://github.com/ds300/havelock/tree/master/examples/routing)
+- [Example of how to do History](https://github.com/ds300/havelock/tree/master/examples/history)
+- [How to map over Collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching)
 
 ##### npm
 Available as `havelock`.
