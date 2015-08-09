@@ -64,18 +64,19 @@ console.log(queryParams.get());
 hash.set("#/home");
 var havelock_2 = require('havelock');
 var dispatchTree = havelock_1.atom(immutable_1.Map());
-var register = function (dt, path, handler) {
+function register(dt, path, handler) {
     return dt.setIn(path2route(path).push(""), handler);
-};
+}
 var lookup = function (dt, route) {
     return dt.getIn(route.push(""));
 };
 var fourOhFour = route.derive(function (route) {
     return "404 route not found: /" + route.join("/");
 });
-var chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
-var reaction = chosenHandler.derive(havelock_2.unpack).react(function (dom) { return console.log(dom); });
-;
+var chosenHandler = dispatchTree.derive(lookup, route)
+    .or(fourOhFour);
+var reaction = chosenHandler.derive(havelock_2.unpack)
+    .react(function (dom) { return console.log(dom); });
 dispatchTree.swap(register, '/home', "Hello World!");
 dispatchTree.swap(register, '/print-params', queryParams.derive(printParams));
 function printParams(params) {

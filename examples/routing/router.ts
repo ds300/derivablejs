@@ -135,7 +135,7 @@ We'll register them in a global nested map structure:
 
 hash.set("#/home");
 
-import { derive, unpack } from 'havelock'
+import { derive, unpack, Reaction } from 'havelock'
 
 type DOM = any;
 type Handler = Derivable<DOM> | DOM;
@@ -146,8 +146,7 @@ type DispatchTree = Map<string, Handler | any>;
 
 const dispatchTree: Atom<DispatchTree> = atom(<DispatchTree>Map());
 
-let register: (dt: DispatchTree, path: string, handler: Handler) => DispatchTree
-= (dt, path, handler) => {
+function register (dt: DispatchTree, path: string, handler: Handler): DispatchTree {
   return dt.setIn(path2route(path).push(""), handler);
 }
 
@@ -156,13 +155,15 @@ let lookup: (dt: DispatchTree, route: Route) => Handler
   return dt.getIn(route.push(""));
 }
 
-const fourOhFour = route.derive(route => {
+const fourOhFour: Handler = route.derive(route => {
   return `404 route not found: /${route.join("/")}`;
 });
 
-let chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
+let chosenHandler: Derivable<Handler> = dispatchTree.derive(lookup, route)
+                                                    .or(fourOhFour);
 
-let reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
+let reaction: Reaction<DOM> = chosenHandler.derive(unpack)
+                                           .react(dom => console.log(dom));
 // $> 404 route not found: /home
 
 
@@ -191,7 +192,7 @@ hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
 
 Yeah that's ok I reckon. The next feature I want to enable is the ability to provide
 parts of your application with contextual dispatch trees, so they don't have to know
-where they should put themselves in the global dispatch table.
+where they should put themselves in the global dispatch tree.
 
 Lenses to the rescue!
 
