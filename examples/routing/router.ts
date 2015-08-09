@@ -128,7 +128,7 @@ I'll refer to the things which render the dom for a particular route as 'handler
 In most MVC frameworks handlers are functions or templates with some associated
 data and business logic. With havelock, handlers will simply be Derivables or ordinary
 renderable values.
-In the former case it doesn't matter what they derive from or where they came
+It doesn't matter what they derive from or where they came
 from as long as they produce something renderable when dereferenced.
 
 We'll register them in a global nested map structure:
@@ -173,9 +173,9 @@ dispatchTree.swap(register, '/home', "Hello World!");
 // $> Hello World!
 
 
-dispatchTree.swap(register, '/print-params', queryParams.derive(printParams));
+dispatchTree.swap(register, '/print-params', queryParams.derive(renderParams));
 
-function printParams(params: Params) {
+function renderParams(params: Params) {
   let result = "the params are:";
   for (let [key, val] of params.entrySeq().toArray()) {
     result += `\n  ${key}: ${val}`;
@@ -216,7 +216,7 @@ function context(ctx: string): Lens<DispatchTree, DispatchTree> {
 
 const printRoutes = dispatchTree.lens(context('/print'));
 
-printRoutes.swap(register, "/params", queryParams.derive(printParams));
+printRoutes.swap(register, "/params", queryParams.derive(renderParams));
 
 hash.set("#/print/params?a=b&c");
 // $> the params are:

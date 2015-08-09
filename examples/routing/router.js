@@ -70,8 +70,8 @@ var chosenHandler = dispatchTree.derive(lookup, route)
 var reaction = chosenHandler.derive(havelock_2.unpack)
     .react(function (dom) { return console.log(dom); });
 dispatchTree.swap(register, '/home', "Hello World!");
-dispatchTree.swap(register, '/print-params', queryParams.derive(printParams));
-function printParams(params) {
+dispatchTree.swap(register, '/print-params', queryParams.derive(renderParams));
+function renderParams(params) {
     var result = "the params are:";
     for (var _i = 0, _a = params.entrySeq().toArray(); _i < _a.length; _i++) {
         var _b = _a[_i], key = _b[0], val = _b[1];
@@ -92,7 +92,7 @@ function context(ctx) {
     };
 }
 var printRoutes = dispatchTree.lens(context('/print'));
-printRoutes.swap(register, "/params", queryParams.derive(printParams));
+printRoutes.swap(register, "/params", queryParams.derive(renderParams));
 hash.set("#/print/params?a=b&c");
 printRoutes.swap(register, "/hello", queryParams.derive(function (ps) {
     return "Hello, " + ps.get('name') + "!";
