@@ -11,44 +11,36 @@ var immutable_1 = require('immutable');
 function path2route(path) {
     return immutable_1.List(path.split("/").filter(function (x) { return x !== ""; }));
 }
-var route = hash.derive(function (hash) {
-    switch (hash) {
-        case "":
-        case "#":
-        case "#/":
-            return immutable_1.List();
-        default:
-            var queryIdx = hash.indexOf("?");
-            if (queryIdx >= 0) {
-                hash = hash.slice(2, queryIdx);
-            }
-            else {
-                hash = hash.slice(2);
-            }
-            return path2route(hash);
-    }
-});
-var queryParams = hash.derive(function (hash) {
+function splitHash(hash) {
     var queryIdx = hash.indexOf("?");
-    if (queryIdx >= 0) {
-        var result = immutable_1.Map().asMutable();
-        var parts = hash.slice(queryIdx + 1).split(/&/);
-        for (var _i = 0; _i < parts.length; _i++) {
-            var part = parts[_i];
-            var equalsIdx = part.indexOf("=");
-            if (equalsIdx >= 0) {
-                result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
-            }
-            else {
-                result.set(part, true);
-            }
-        }
-        return result.asImmutable();
+    if (queryIdx < 0) {
+        return [hash.slice(1), ""];
     }
     else {
-        return null;
+        return [hash.slice(1, queryIdx), hash.slice(queryIdx + 1)];
     }
-}).or(immutable_1.Map());
+}
+function parseQueryString(query) {
+    var result = immutable_1.Map().asMutable();
+    var parts = query.split("&");
+    for (var _i = 0; _i < parts.length; _i++) {
+        var part = parts[_i];
+        var equalsIdx = part.indexOf("=");
+        if (equalsIdx >= 0) {
+            result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
+        }
+        else {
+            result.set(part, true);
+        }
+    }
+    return result.asImmutable();
+}
+function raiseTuple(tuple) {
+    return [tuple.derive(function (t) { return t[0]; }), tuple.derive(function (t) { return t[1]; })];
+}
+var _a = raiseTuple(hash.derive(splitHash)), path = _a[0], queryString = _a[1];
+var route = path.derive(path2route);
+var queryParams = queryString.derive(parseQueryString);
 console.log(route.get());
 console.log(queryParams.get());
 hash.set("#/route");
@@ -131,20 +123,10 @@ function lookupWithParams(dt, route, params) {
     return null;
 }
 lookup = function (dt, route) {
-    return lookupWithParams(dt, route.push(""), immutable_1.Map()) || [null, null];
+    return lookupWithParams(dt, route.push(""), immutable_1.Map()) || [null, immutable_1.Map()];
 };
-var inlineParams;
-{
-    var lookupResult = dispatchTree.derive(lookup, route);
-    inlineParams = lookupResult.derive(function (_a) {
-        var _ = _a[0], ps = _a[1];
-        return ps;
-    }).or(immutable_1.Map());
-    chosenHandler = lookupResult.derive(function (_a) {
-        var h = _a[0], _ = _a[1];
-        return h;
-    }).or(fourOhFour);
-}
+var _b = raiseTuple(dispatchTree.derive(lookup, route)), lookupResult = _b[0], inlineParams = _b[1];
+chosenHandler = lookupResult.or(fourOhFour);
 var merge = function (x, y) { return x.merge(y); };
 var params = queryParams.derive(merge, inlineParams);
 reaction.stop();

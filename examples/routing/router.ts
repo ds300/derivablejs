@@ -41,49 +41,51 @@ import { List, Map } from 'immutable';
 type Route = List<string>;
 type Params = Map<string, string | boolean>;
 
+
+// e.g. 'some/path' or '/some/path' or '/some/path/'
+//       becomes List ['some', 'path']
 function path2route(path: string): Route {
   return List(path.split("/").filter(x => x !== ""));
 }
 
-const route : Derivable<Route> = hash.derive(hash => {
-  switch (hash) {
-  case "":
-  case "#":
-  case "#/":
-    return List<string>();
-  default:
-    let queryIdx = hash.indexOf("?");
-    if (queryIdx >= 0) {
-      hash = hash.slice(2, queryIdx);
-    } else {
-      // slice(2... to remove the '#/'
-      hash = hash.slice(2);
-    }
-    return path2route(hash);
-  }
-});
-
-const queryParams : Derivable<Params>  = hash.derive(hash => {
+// e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
+function splitHash(hash: string): [string, string] {
   let queryIdx = hash.indexOf("?");
-  if (queryIdx >= 0) {
-    let result = <Params>Map().asMutable();
-
-    let parts = hash.slice(queryIdx + 1).split(/&/);
-
-    for (let part of parts) {
-      let equalsIdx = part.indexOf("=");
-      if (equalsIdx >= 0) {
-        result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
-      } else {
-        result.set(part, true);
-      }
-    }
-
-    return result.asImmutable();
+  if (queryIdx < 0) {
+    return [hash.slice(1), ""];
   } else {
-    return null;
+    return [hash.slice(1, queryIdx), hash.slice(queryIdx+1)];
   }
-}).or(<Params>Map());
+}
+
+// e.g. 'query=something&anotherThing'
+//       becomes Map {query: 'something', anotherThing: true}
+function parseQueryString(query: string): Params {
+  let result = <Params>Map().asMutable();
+
+  let parts = query.split("&");
+
+  for (let part of parts) {
+    let equalsIdx = part.indexOf("=");
+    if (equalsIdx >= 0) {
+      result.set(part.slice(0, equalsIdx), part.slice(equalsIdx + 1));
+    } else {
+      result.set(part, true);
+    }
+  }
+
+  return result.asImmutable();
+}
+
+function raiseTuple<a, b>(tuple: Derivable<[a, b]>): [Derivable<a>, Derivable<b>] {
+  return [tuple.derive(t => t[0]), tuple.derive(t => t[1])];
+}
+
+const [path, queryString] = raiseTuple(hash.derive(splitHash));
+
+const route = path.derive(path2route);
+
+const queryParams = queryString.derive(parseQueryString);
 
 /***
 
@@ -271,18 +273,13 @@ function lookupWithParams(dt: DispatchTree, route: Route, params: Params): [Hand
   return null;
 }
 
-lookup = (dt, route) => {
-  return lookupWithParams(dt, route.push(""), <Params>Map()) || [null, null];
+lookup = (dt, route): [Handler, Params] => {
+  return lookupWithParams(dt, route.push(""), <Params>Map()) || [null, <Params>Map()];
 };
 
+let [lookupResult, inlineParams] = raiseTuple(dispatchTree.derive(lookup, route));
 
-let inlineParams: Derivable<Params>;
-{
-  // unpack handler and params from lookup result tuple
-  let lookupResult = dispatchTree.derive(lookup, route);
-  inlineParams = lookupResult.derive(([_, ps]) => ps).or(<Params>Map());
-  chosenHandler = lookupResult.derive(([h, _]) => h).or(fourOhFour);
-}
+chosenHandler = lookupResult.or(fourOhFour);
 
 // now merge query params and inline params
 const merge = (x, y) => x.merge(y);
