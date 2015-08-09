@@ -7,7 +7,7 @@ routing system.
 
 ## Routing
 
-So everything descends from a raw hash string.
+Everything descends from a raw hash string.
 
 ```typescript
 import { Derivable, Atom, atom } from 'havelock';
@@ -27,7 +27,7 @@ const hash: Atom<string> = atom("");
 ```
 
 
-So first let's convert the hash into a route. Actually, the hash might have params
+Let's convert the hash into a route. Actually, the hash might have params
 at the end so let's convert the hash into a route and a parameter map
 
 ```typescript
@@ -61,7 +61,7 @@ const route : Derivable<Route> = hash.derive(hash => {
 const queryParams : Derivable<Params>  = hash.derive(hash => {
   let queryIdx = hash.indexOf("?");
   if (queryIdx >= 0) {
-    let result = Map<string, string | boolean>().asMutable();
+    let result = <Params>Map().asMutable();
 
     let parts = hash.slice(queryIdx + 1).split(/&/);
 
@@ -76,9 +76,9 @@ const queryParams : Derivable<Params>  = hash.derive(hash => {
 
     return result.asImmutable();
   } else {
-    return Map<string, string | boolean>();
+    return null;
   }
-});
+}).or(<Params>Map());
 ```
 
 
@@ -116,42 +116,55 @@ Seems good enough for now.
 
 ## Dispatching
 
-So handlers, the things which render the dom for a particular route, are
-derivables rather than functions, but they need to be registered with something
-so our dispatch logic can find them.
+I'll refer to the things which render the dom for a particular route as 'handlers'.
 
-Let's keep things simple and just have a glodbal dispatch table which tries to
-match the current route against a registered route.
+In most MVC frameworks handlers are functions or templates with some associated
+data and business logic. With havelock, handlers will simply be Derivables or ordinary
+renderable values.
+In the former case it doesn't matter what they derive from or where they came
+from as long as they produce something renderable when dereferenced.
+
+We'll register them in a global nested map structure:
 
 ```typescript
-import { derive, unpack } from 'havelock'
-const join = (x, y) => x.join(y);
 hash.set("#/home");
+
+import { derive, unpack } from 'havelock'
 
 type DOM = any;
 type Handler = Derivable<DOM> | DOM;
-type DispatchTable = Map<Route, Handler>;
+type DispatchTree = Map<string, Handler | any>;
+// unfortunately Typescript doesn't allow recursive type aliases, otherwise that
+// `any` at the end there would be `DispatchTree`
 
-const dispatchTable: Atom<DispatchTable> = atom(Map<Route, Handler>());
 
-const fourOhFour = derive`404 route not found: /${route.derive(join, "/")}`;
+const dispatchTree: Atom<DispatchTree> = atom(<DispatchTree>Map());
 
-let chosenHandler: Derivable<Handler> = dispatchTable.derive(dt => {
-  // simple lookup for now
-  return dt.get(route.get());
-}).or(fourOhFour);
+let register: (dt: DispatchTree, path: string, handler: Handler) => DispatchTree
+= (dt, path, handler) => {
+  return dt.setIn(path2route(path).push(""), handler);
+}
 
+let lookup: (dt: DispatchTree, route: Route) => Handler
+= (dt, route) => {
+  return dt.getIn(route.push(""));
+}
+
+const fourOhFour = route.derive(route => {
+  return `404 route not found: /${route.join("/")}`;
+});
+
+let chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
 
 let reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
 // $> 404 route not found: /home
 
 
-dispatchTable.swap(dt => dt.set(List(["home"]), "Hello World!"));
+dispatchTree.swap(register, '/home', "Hello World!");
 // $> Hello World!
 
 
-dispatchTable.swap(dt => dt.set(List(["print-params"]),
-                                queryParams.derive(printParams)));
+dispatchTree.swap(register, '/print-params', queryParams.derive(printParams));
 
 function printParams(params: Params) {
   let result = "the params are:";
@@ -162,7 +175,6 @@ function printParams(params: Params) {
 }
 
 hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
-
 // $> the params are:
 // $>   today: thursday
 // $>   tomorrow: friday
@@ -170,45 +182,20 @@ hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
 ```
 
 
-Ok this is going places. The first thing that is obviously in need of revision
-is the horribly verbose mechanism for registering routes. Ideally we'd like to
-be able to do something like `routes.register("/some/route", handler)`. A way to nest
-routes would be most useful too. That might look like `routes.context("/some").register("/route", handler)`.
+Yeah that's ok I reckon. The next feature I want to enable is the ability to provide
+parts of your application with contextual dispatch trees, so they don't have to know
+where they should put themselves in the global dispatch table.
 
-Nested maps and lenses to the rescue?
+Lenses to the rescue!
 
 ```typescript
 import { Lens } from 'havelock'
-
-type DispatchTree = Map<string, any>;
-
-let registerRoute: (dt: DispatchTree, route: Route, handler: Handler) => DispatchTree
-= (dt, route, handler) => {
-  if (route.size === 0) {
-    return dt.set("", handler);
-  } else {
-    let ctx = route.first();
-    let child = dt.get(ctx) || Map<string, any>();
-    return dt.set(ctx, registerRoute(child, route.shift(), handler));
-  }
-}
-
-function register(dt: DispatchTree, path: string, handler: Handler): DispatchTree {
-  return registerRoute(dt, path2route(path), handler);
-}
 
 function context(ctx: string): Lens<DispatchTree, DispatchTree> {
   let route = path2route(ctx);
   return {
     get (dt: DispatchTree): DispatchTree {
-      let child = dt.getIn(route);
-      if (!child) {
-        return Map<string, any>();
-      } else if (child instanceof Map) {
-        return child;
-      } else {
-        return Map<string, any>().set("", child);
-      }
+      return dt.getIn(route) || <DispatchTree>Map();
     },
     set (parent: DispatchTree, me: DispatchTree) {
       return parent.setIn(route, me);
@@ -216,187 +203,86 @@ function context(ctx: string): Lens<DispatchTree, DispatchTree> {
   };
 }
 
-const dispatchTree: Atom<DispatchTree> = atom(Map<string, any>());
+const printRoutes = dispatchTree.lens(context('/print'));
 
-dispatchTree.swap(register, "/", "Hello Again, World!");
+printRoutes.swap(register, "/params", queryParams.derive(printParams));
 
-function lookup(dt: DispatchTree, route: Route): Handler {
-  if (route.size === 0) {
-    if (dt instanceof Map) {
-      return dt.get("");
-    } else {
-      return dt;
-    }
-  } else {
-    let child = dt.get(route.first());
-    if (child) {
-      return lookup(child, route.shift());
-    } else {
-      return null;
-    }
-  }
-}
-
-chosenHandler = dispatchTree.derive(lookup, route).or(fourOhFour);
-
-// rebind reaction so it uses the latest `chosenHandler`
-reaction.stop();
-reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
-// $> 404 route not found: /print-params
-
-// oh right yeah...
-
-hash.set("")
-// $> Hello Again, World!
-
-dispatchTree.lens(context("params"))
-            .swap(register, "print", queryParams.derive(printParams));
-
-hash.set("#/params/print?yes");
+hash.set("#/print/params?a=b&c");
 // $> the params are:
-// $>   yes: true
+// $>   a: b
+// $>   c: true
 
+printRoutes.swap(register, "/hello", queryParams.derive(ps => {
+  return `Hello, ${ps.get('name')}!`;
+}));
 
-dispatchTree.swap(register, "params", "you are at '/params'");
-hash.set("#/params");
-// $> you are at '/params'
+hash.set("#/print/hello?name=Sadie");
+// $> Hello, Sadie!
 
-hash.set("#/params/print?yes");
-// $> the params are:
-// $>   yes: true
+printRoutes.swap(register, '/', "You need to pick a thing to print, dawg");
 
-dispatchTree.lens(context("params"))
-            .swap(register, "", "you are back at '/params'");
-
-hash.set("#/params");
-// $> you are back at '/params'
-
-hash.set("#/params/");
-// ... nothing happens
-
-hash.set("#/params/print?yes");
-// $> the params are:
-// $>   yes: true
-
-dispatchTree.lens(context("some/incredibly"))
-            .swap(register, "deeply/nested/route", "wow. so deep. much nest.");
-
-hash.set("#/some/incredibly/deeply/nested/route");
-// $> wow. so deep. much nest.
+hash.set("#/print");
+// $> You need to pick a thing to print, dawg
 ```
 
 
-`routes.swap(register, "some/route", handler)` is slightly more verbose
-than `routes.register("some/route", handler)`, and `routes.lens(context("ctx"))`
-is slightly more verbose than `routes.context("ctx")`, but that extra concision is
-trivial to achieve with wrapper objects if you are so inclined.
-
-The last thing I want to support here is inline route params, e.g. one should be
+Splendid. The last feature I want to support is inline path parameters, e.g. one should be
 able to specify a path like `/resource/:id/home`, for which a hash like
 `#/resource/32/home` might render the home page of the resource with id `32`.
 
-There are a couple of issues with that:
-
-- how to get the inline params into the handlers
-- how to get the inline params in the first place
-
-The first bit is easy:
+I don't think I'll need to change the register function for this, but the lookup
+function will definitely need to be expanded in order to accumulate the parameters
+and put them somewhere.
 
 ```typescript
-import { derivation } from 'havelock'
-
-let inlineParams: Derivable<Params>/* = ? */;
-
-const params = derivation(() => queryParams.get().merge(inlineParams.get()));
-```
-
-
-And now the handlers just derive from `params` rather than `queryParams`.
-
-As for what `inlineParams` should derive from... Well clearly it needs to know
-about two things:
-
-- the current route
-- the route which matches the current route
-
-The first one is available already. The second one can't be made available so
-easily. Maybe the `lookup` function could return it along with the matching
-handler. Or maybe the `lookup` function could be extended to accumulate the inline
-params and just return those? Whatever happens the lookup function needs to know
-about inline params, so it may as well do the extraction.
-
-```typescript
-class InlineParam {
-  name: string;
-  kids: DispatchTree;
-  constructor (name) {
-    this.name = name;
-    this.kids = <DispatchTree>Map();
-  }
-}
-
-registerRoute = (dt: DispatchTree, route: Route, handler: Handler) => {
+function lookupWithParams(dt: DispatchTree, route: Route, params: Params): [Handler, Params] {
   if (route.size === 0) {
-    return dt.set("", handler);
+    return [dt, params];
   } else {
-    let ctx = route.first();
-    if (ctx.indexOf(":") === 0) {
-      if (dt.has(":")) {
-        throw new Error(`trying to overwrite inline param ${dt.get(":").name}` +
-                         ` with ${ctx}`);
-      } else {
-        let child = new InlineParam(ctx.slice(1));
-        child.kids = registerRoute(child.kids, route.shift(), handler);
-        return dt.set(":", child);
-      }
-    }
-
-    let child = dt.get(ctx) || <DispatchTree>Map();
-
-    return dt.set(ctx, registerRoute(child, route.shift(), handler));
-  }
-}
-
-function lookupWithParams(dispatchTarget: any, route: Route, params: Params): [Handler, Params] {
-  // dispatchTarget either DispatchTree, InlineParam, or handler
-  if (route.size === 0) {
-    if (dispatchTarget instanceof Map) {
-      return [dispatchTarget.get(""), params];
-    } else if (!(dispatchTarget instanceof InlineParam)) {
-      return [dispatchTarget, params];
-    }
-  }
-
-  else if (dispatchTarget instanceof InlineParam) {
-    params = params.set(dispatchTarget.name, route.first());
-    return lookupWithParams(dispatchTarget.kids, route.shift(), params);
-  }
-
-  else if (dispatchTarget instanceof Map) {
-    let child = dispatchTarget.get(route.first());
+    let child = dt.get(route.first());
     if (child) {
       return lookupWithParams(child, route.shift(), params);
-    }
-    else {
-      let inlineParam = dispatchTarget.get(":");
-      if (inlineParam) {
-        return lookupWithParams(inlineParam, route, params);
+    } else {
+      // look for param routes
+      let paramKeys = dt.keySeq().filter(k => k.indexOf(':') === 0).toArray();
+
+      for (let k of paramKeys) {
+        let result = lookupWithParams(dt.get(k),
+                                      route.shift(),
+                                      params.set(k.slice(1), route.first()));
+        if (result) {
+          return result;
+        }
       }
     }
   }
-  return [null, null]
+
+  return null;
 }
 
+lookup = (dt, route) => {
+  return lookupWithParams(dt, route.push(""), <Params>Map()) || [null, null];
+};
+
+
+let inlineParams: Derivable<Params>;
 {
-  let lookupResult = dispatchTree.derive(lookupWithParams, route, Map());
-  chosenHandler = lookupResult.derive(r => r[0]).or(fourOhFour);
-  inlineParams = lookupResult.derive(r => r[1]);
+  // unpack handler and params from lookup result tuple
+  let lookupResult = dispatchTree.derive(lookup, route);
+  inlineParams = lookupResult.derive(([_, ps]) => ps).or(<Params>Map());
+  chosenHandler = lookupResult.derive(([h, _]) => h).or(fourOhFour);
 }
 
-// rebind reaction so it uses the latest `chosenHandler`
+// now merge query params and inline params
+const merge = (x, y) => x.merge(y);
+const params = queryParams.derive(merge, inlineParams);
+
+
+// re-bind reaction to use new `chosenHandler`
 reaction.stop();
-reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));
-// $> wow. so deep. much nest.
+reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
+// $> You need to pick a thing to print, dawg
+
 
 dispatchTree.swap(register, "resource/:id/home", params.derive(params => {
   let { id, fruit } = params.toJS();
@@ -413,12 +299,18 @@ hash.set("#/resource/343/home");
 hash.set("#/resource/wub-a-lub-a-dub-dub/home?fruit=banana");
 // $> This is the home of the resource with id wub-a-lub-a-dub-dub
 // $> Today the fruit is banana
+
+printRoutes.swap(register, "/:echo", params.derive(ps => {
+  return ps.get('echo');
+}));
+
+hash.set("#/print/params?buns=5");
+// $> the params are:
+// $>   buns: 5
+
+hash.set("#/print/whatevs");
+// $> whatevs
 ```
 
 
-All that's left to do is update the `context` function to know how to deal
-with inline params.
-
-```typescript
-// (wip)
-```
+I don't know about you, but that's everything I ever wanted in a router right there.

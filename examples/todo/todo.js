@@ -1,4 +1,4 @@
-import _, {atom, derive, transact} from 'havelock'
+import _, {atom, derivation, transact} from 'havelock'
 import imut, {fromJS} from 'immutable'
 import React from 'react'
 
@@ -137,7 +137,7 @@ function renderTodo({id, description, complete, editing}, idx) {
 }
 
 // list itself as derivable
-const todosRender = derive(() => {
+const todosRender = derivation(() => {
   const allDone = allComplete.get();
   return (
     <section className="main" style={hideWhen(numTodos.get() === 0)}>
@@ -154,7 +154,7 @@ const todosRender = derive(() => {
 });
 
 // footer as derivable
-const footerRender = derive(() => {
+const footerRender = derivation(() => {
   const select = name => showing.get() === name ? 'selected' : ""
   return (
     <footer className="footer">
@@ -177,7 +177,7 @@ const footerRender = derive(() => {
   )
 });
 
-const pageRender = derive(() => {
+const pageRender = derivation(() => {
   return (
     <section className="todoapp">
       <header className="header">
