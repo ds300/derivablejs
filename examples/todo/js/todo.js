@@ -124,7 +124,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 })(this, function (exports) {
   "use strict";
   /*
-
+  
        $$\   $$\ $$$$$$$$\ $$$$$$\ $$\
        $$ |  $$ |\__$$  __|\_$$  _|$$ |
        $$ |  $$ |   $$ |     $$ |  $$ |
@@ -133,7 +133,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        $$ |  $$ |   $$ |     $$ |  $$ |
        \$$$$$$  |   $$ |   $$$$$$\ $$$$$$$$\
         \______/    \__|   \______|\________|
-
+  
   */
 
   function extend(obj) {
@@ -278,7 +278,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
        $$$$$$\   $$$$$$\
       $$  __$$\ $$  __$$\
       $$ /  \__|$$ /  \__|
@@ -287,7 +287,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |  $$ |$$ |  $$\
       \$$$$$$  |\$$$$$$  |
        \______/  \______/
-
+  
   */
 
   // node modes
@@ -414,7 +414,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
        $$$$$$\  $$$$$$$$\ $$$$$$$$\
       $$  __$$\ $$  _____|\__$$  __|
       $$ /  \__|$$ |         $$ |
@@ -423,7 +423,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$\   $$ |$$ |         $$ |
       \$$$$$$  |$$$$$$$$\    $$ |
        \______/ \________|   \__|
-
+  
   */
 
   /**
@@ -431,10 +431,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    *
    * for child/parent relationships. only need to support add, remove and
    * iterate. Using identity for equality and ._id properties for map keys.
-
+  
    * use an array-based set to begin with, when it gets size > 16, switch to map.
    * switch back down at size 8
-
+  
    * 16/8 are educated guesses based on other implementations I've seen.
    * An empirical study on the best numbers to choose may be forthcoming if
    * perfomance turns out to be an issue. Or maybe something altogether different.
@@ -598,7 +598,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   })()
 
   /*
-
+  
       $$$$$$$\   $$$$$$\  $$$$$$$\  $$$$$$$$\ $$\   $$\ $$$$$$$$\  $$$$$$\
       $$  __$$\ $$  __$$\ $$  __$$\ $$  _____|$$$\  $$ |\__$$  __|$$  __$$\
       $$ |  $$ |$$ /  $$ |$$ |  $$ |$$ |      $$$$\ $$ |   $$ |   $$ /  \__|
@@ -607,7 +607,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |      $$ |  $$ |$$ |  $$ |$$ |      $$ |\$$$ |   $$ |   $$\   $$ |
       $$ |      $$ |  $$ |$$ |  $$ |$$$$$$$$\ $$ | \$$ |   $$ |   \$$$$$$  |
       \__|      \__|  \__|\__|  \__|\________|\__|  \__|   \__|    \______/
-
+  
   */
 
   /*== Parents Capturing ==*/
@@ -628,7 +628,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
   $$$$$$$$\ $$\   $$\ $$\   $$\  $$$$$$\
   \__$$  __|$$ |  $$ |$$$\  $$ |$$  __$$\
      $$ |   \$$\ $$  |$$$$\ $$ |$$ /  \__|
@@ -637,7 +637,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      $$ |   $$  /\$$\ $$ |\$$$ |$$\   $$ |
      $$ |   $$ /  $$ |$$ | \$$ |\$$$$$$  |
      \__|   \__|  \__|\__|  \__| \______/
-
+  
   */
 
   var RUNNING = Symbol("running"),
@@ -723,7 +723,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   })()
 
   /*
-
+  
       $$$$$$$\  $$$$$$$$\  $$$$$$\   $$$$$$\ $$$$$$$$\ $$\   $$\
       $$  __$$\ $$  _____|$$  __$$\ $$  __$$\\__$$  __|$$$\  $$ |
       $$ |  $$ |$$ |      $$ /  $$ |$$ /  \__|  $$ |   $$$$\ $$ |
@@ -732,7 +732,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |  $$ |$$ |      $$ |  $$ |$$ |  $$\   $$ |   $$ |\$$$ |
       $$ |  $$ |$$$$$$$$\ $$ |  $$ |\$$$$$$  |  $$ |   $$ | \$$ |
       \__|  \__|\________|\__|  \__| \______/   \__|   \__|  \__|
-
+  
   */
 
   ;
@@ -865,7 +865,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
       $$$$$$$\  $$$$$$$\  $$\    $$\  $$$$$$\  $$$$$$$\  $$\       $$$$$$$$\
       $$  __$$\ $$  __$$\ $$ |   $$ |$$  __$$\ $$  __$$\ $$ |      $$  _____|
       $$ |  $$ |$$ |  $$ |$$ |   $$ |$$ /  $$ |$$ |  $$ |$$ |      $$ |
@@ -874,7 +874,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |  $$ |$$ |  $$ |  \$$$  /  $$ |  $$ |$$ |  $$ |$$ |      $$ |
       $$$$$$$  |$$ |  $$ |   \$  /   $$ |  $$ |$$$$$$$  |$$$$$$$$\ $$$$$$$$\
       \_______/ \__|  \__|    \_/    \__|  \__|\_______/ \________|\________|
-
+  
   */
 
   function createDerivablePrototype(havelock, _ref2) {
@@ -885,8 +885,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * Creates a derived value whose state will always be f applied to this
        * value
        */
-      derive: function derive(f) {
-        return havelock.derive(this, f);
+      derive: function derive(f, a, b, c, d) {
+        var _this = this;
+
+        switch (arguments.length) {
+          case 0:
+            return this;
+          case 1:
+            return havelock.derivation(function () {
+              return f(_this.get());
+            });
+          case 2:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a));
+            });
+          case 3:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b));
+            });
+          case 4:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c));
+            });
+          case 5:
+            return havelock.derivation(function () {
+              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c), havelock.unpack(d));
+            });
+          default:
+            var args = [this].concat(Array.prototype.slice.call(arguments, 1));
+            return havelock.derivation(function () {
+              return f.apply(null, args.map(havelock.unpack));
+            });
+        }
       },
 
       reaction: function reaction(f) {
@@ -958,7 +988,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
     $$$$$$$\  $$$$$$$\  $$\    $$\ $$$$$$$$\ $$$$$$\  $$$$$$\  $$\   $$\
     $$  __$$\ $$  __$$\ $$ |   $$ |\__$$  __|\_$$  _|$$  __$$\ $$$\  $$ |
     $$ |  $$ |$$ |  $$ |$$ |   $$ |   $$ |     $$ |  $$ /  $$ |$$$$\ $$ |
@@ -967,7 +997,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     $$ |  $$ |$$ |  $$ |  \$$$  /     $$ |     $$ |  $$ |  $$ |$$ |\$$$ |
     $$$$$$$  |$$ |  $$ |   \$  /      $$ |   $$$$$$\  $$$$$$  |$$ | \$$ |
     \_______/ \__|  \__|    \_/       \__|   \______| \______/ \__|  \__|
-
+  
   */
 
   function createDerivationPrototype(havelock, _ref3) {
@@ -975,16 +1005,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     return {
       _clone: function _clone() {
-        return havelock.derive(this._deriver);
+        return havelock.derivation(this._deriver);
       },
 
       _forceGet: function _forceGet() {
-        var _this = this;
+        var _this2 = this;
 
         var newParents = capturingParents(function () {
-          var newState = _this._deriver();
-          _this._state = equals(newState, _this._value) ? UNCHANGED : CHANGED;
-          _this._value = newState;
+          var newState = _this2._deriver();
+          _this2._state = equals(newState, _this2._value) ? UNCHANGED : CHANGED;
+          _this2._value = newState;
         });
 
         // organise parents
@@ -1151,7 +1181,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
       $$\      $$\ $$\   $$\ $$$$$$$$\  $$$$$$\  $$$$$$$\  $$\       $$$$$$$$\
       $$$\    $$$ |$$ |  $$ |\__$$  __|$$  __$$\ $$  __$$\ $$ |      $$  _____|
       $$$$\  $$$$ |$$ |  $$ |   $$ |   $$ /  $$ |$$ |  $$ |$$ |      $$ |
@@ -1160,7 +1190,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |\$  /$$ |$$ |  $$ |   $$ |   $$ |  $$ |$$ |  $$ |$$ |      $$ |
       $$ | \_/ $$ |\$$$$$$  |   $$ |   $$ |  $$ |$$$$$$$  |$$$$$$$$\ $$$$$$$$\
       \__|     \__| \______/    \__|   \__|  \__|\_______/ \________|\________|
-
+  
   */
 
   function createMutablePrototype(havelock, _) {
@@ -1179,7 +1209,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
       $$\       $$$$$$$$\ $$\   $$\  $$$$$$\
       $$ |      $$  _____|$$$\  $$ |$$  __$$\
       $$ |      $$ |      $$$$\ $$ |$$ /  \__|
@@ -1188,7 +1218,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |      $$ |      $$ |\$$$ |$$\   $$ |
       $$$$$$$$\ $$$$$$$$\ $$ | \$$ |\$$$$$$  |
       \________|\________|\__|  \__| \______/
-
+  
   */
 
   function createLensPrototype(havelock, _) {
@@ -1217,7 +1247,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
      $$$$$$\ $$$$$$$$\  $$$$$$\  $$\      $$\
     $$  __$$\\__$$  __|$$  __$$\ $$$\    $$$ |
     $$ /  $$ |  $$ |   $$ /  $$ |$$$$\  $$$$ |
@@ -1226,7 +1256,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     $$ |  $$ |  $$ |   $$ |  $$ |$$ |\$  /$$ |
     $$ |  $$ |  $$ |    $$$$$$  |$$ | \_/ $$ |
     \__|  \__|  \__|    \______/ \__|     \__|
-
+  
   */
 
   var inReactCycle = false;
@@ -1405,14 +1435,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       },
 
       withValidator: function withValidator(f) {
-        var _this2 = this;
+        var _this3 = this;
 
         if (f === null) {
           return this._clone();
         }if (typeof f === 'function') {
           var _ret = (function () {
-            var result = _this2._clone();
-            var existing = _this2._validator;
+            var result = _this3._clone();
+            var existing = _this3._validator;
             if (existing) {
               result._validator = function (x) {
                 return f(x) && existing(x);
@@ -1487,7 +1517,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   /*
-
+  
       $$\      $$\  $$$$$$\  $$$$$$$\  $$\   $$\ $$\       $$$$$$$$\
       $$$\    $$$ |$$  __$$\ $$  __$$\ $$ |  $$ |$$ |      $$  _____|
       $$$$\  $$$$ |$$ /  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$ |
@@ -1496,7 +1526,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       $$ |\$  /$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$ |
       $$ | \_/ $$ | $$$$$$  |$$$$$$$  |\$$$$$$  |$$$$$$$$\ $$$$$$$$\
       \__|     \__| \______/ \_______/  \______/ \________|\________|
-
+  
   */
 
   var defaultConfig = { equals: util_equals };
@@ -1549,43 +1579,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return e.set(f.apply(null, [e.get()].concat(args))).get();
     };
 
+    Havelock.derivation = function (f) {
+      return createDerivation(Object.create(Derivation), f);
+    };
     /**
      * Creates a new derivation. Can also be used as a template string tag.
      */
-    Havelock.derive = function (a, b, c, d, e) {
+    Havelock.derive = function (a) {
       if (a instanceof Array) {
         return deriveString.apply(null, arguments);
-      }
-      var n = arguments.length;
-      switch (n) {
-        case 0:
-          throw new Error("Wrong arity for derive. Expecting 1+ args");
-        case 1:
-          return createDerivation(Object.create(Derivation), a);
-        case 2:
-          return Havelock.derive(function () {
-            return b(a.get());
-          });
-        case 3:
-          return Havelock.derive(function () {
-            return c(a.get(), b.get());
-          });
-        case 4:
-          return Havelock.derive(function () {
-            return d(a.get(), b.get(), c.get());
-          });
-        case 5:
-          return Havelock.derive(function () {
-            return e(a.get(), b.get(), c.get(), d.get());
-          });
-        default:
-          var args = Array.prototype.slice.call(arguments, 0, n - 1);
-          var f = arguments[n - 1];
-          return Havelock.derive(function () {
-            return f.apply(null, args.map(function (a) {
-              return a.get();
-            }));
-          });
+      } else if (arguments.length > 0) {
+        return Derivable.derive.apply(a, Array.prototype.slice.call(arguments, 1));
+      } else {
+        throw new Error("Wrong arity for derive. Expecting 1+ args");
       }
     };
 
@@ -1594,7 +1600,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key4 - 1] = arguments[_key4];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var s = "";
         for (var i = 0; i < parts.length; i++) {
           s += parts[i];
@@ -1633,7 +1639,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     Havelock.lift = function (f) {
       return function () {
         var args = arguments;
-        return Havelock.derive(function () {
+        return Havelock.derivation(function () {
           return f.apply(this, Array.prototype.map.call(args, Havelock.unpack));
         });
       };
@@ -1689,7 +1695,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     Havelock.struct = function (arg) {
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         return deepUnpack(arg);
       });
     };
@@ -1703,7 +1709,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key5] = arguments[_key5];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var val = undefined;
         var _iteratorNormalCompletion17 = true;
         var _didIteratorError17 = false;
@@ -1742,7 +1748,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         args[_key6] = arguments[_key6];
       }
 
-      return Havelock.derive(function () {
+      return Havelock.derivation(function () {
         var val = undefined;
         var _iteratorNormalCompletion18 = true;
         var _didIteratorError18 = false;
@@ -1801,7 +1807,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // push in-txn vals up to current txn
 
 // change root state and run reactions.
-
 },{}],3:[function(require,module,exports){
 /**
  *  Copyright (c) 2014-2015, Facebook, Inc.
@@ -26467,20 +26472,29 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var nextId = (0, _havelock.atom)(0);
-var todos = (0, _havelock.atom)((0, _immutable.fromJS)(JSON.parse(localStorage['todos'] || "[]").map(function (todo) {
-  todo.id = nextId.get().toString();
-  nextId.swap(function (x) {
+var nextId = (0, _havelock.atom)(0); // uids for the list items to make react happy
+function getNextId() {
+  return _havelock2['default'].swap(nextId, function (x) {
     return x + 1;
   });
-  return todo;
-})));
+}
+
+var todos = (0, _havelock.atom)((0, _immutable.fromJS)([]));
 var hash = (0, _havelock.atom)(window.location.hash);
 var newTodoName = (0, _havelock.atom)("");
 
 window.addEventListener('hashchange', function () {
   hash.set(window.location.hash);
 });
+
+{
+  var existingTodos = undefined;
+  if (existingTodos = localStorage['todos']) {
+    todos.set((0, _immutable.fromJS)(JSON.parse(existingTodos)).map(function (x) {
+      return x.set('id', getNextId());
+    }).toList());
+  }
+}
 
 todos.react(function (todos) {
   localStorage['todos'] = JSON.stringify(todos.toJS());
@@ -26491,11 +26505,9 @@ function newTodo(todos, description) {
   if (description.trim().length === 0) {
     return todos;
   } else {
-    var id = nextId.get();
-    nextId.set(id + 1);
     return todos.push((0, _immutable.fromJS)({
       description: description,
-      id: id,
+      id: getNextId(),
       complete: false,
       editing: false
     }));
@@ -26505,7 +26517,7 @@ function newTodo(todos, description) {
 function clearCompleted(todos) {
   return todos.filter(function (t) {
     return t.complete;
-  });
+  }).toList();
 }
 
 function toggleComplete(todos, idx) {
@@ -26533,7 +26545,7 @@ function editTodo(todos, idx, newDescription) {
 function markAll(todos, complete) {
   return todos.map(function (t) {
     return t.set('complete', complete);
-  });
+  }).toList();
 }
 
 /*** Derived Data ***/
@@ -26624,9 +26636,8 @@ function renderTodo(_ref, idx) {
 }
 
 // list itself as derivable
-var todosRender = (0, _havelock.derive)(function () {
+var todosRender = (0, _havelock.derivation)(function () {
   var allDone = allComplete.get();
-  console.log("rendering with checked: ", allDone);
   return _react2['default'].createElement(
     'section',
     { className: 'main', style: hideWhen(numTodos.get() === 0) },
@@ -26654,7 +26665,7 @@ var todosRender = (0, _havelock.derive)(function () {
 });
 
 // footer as derivable
-var footerRender = (0, _havelock.derive)(function () {
+var footerRender = (0, _havelock.derivation)(function () {
   var select = function select(name) {
     return showing.get() === name ? 'selected' : "";
   };
@@ -26714,7 +26725,7 @@ var footerRender = (0, _havelock.derive)(function () {
   );
 });
 
-var pageRender = (0, _havelock.derive)(function () {
+var pageRender = (0, _havelock.derivation)(function () {
   return _react2['default'].createElement(
     'section',
     { className: 'todoapp' },
@@ -26730,12 +26741,13 @@ var pageRender = (0, _havelock.derive)(function () {
         placeholder: 'What needs to be done?',
         value: newTodoName.get(),
         onChange: function (e) {
-          console.log("setting: " + e.target.value);
-          newTodoName.set(e.target.value);
+          return newTodoName.set(e.target.value);
         },
         onKeyPress: onEnter(function () {
-          todos.swap(newTodo, newTodoName.get());
-          newTodoName.set("");
+          (0, _havelock.transact)(function () {
+            todos.swap(newTodo, newTodoName.get());
+            newTodoName.set("");
+          });
         }),
         autofocus: true })
     ),
