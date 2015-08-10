@@ -138,6 +138,10 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
+Another major drawback is that Havelock requires one to think and design in terms of pure functions and immutable data being lazily computed, which takes a little while to get comfortable with coming from an OO background. There's no easy way around that, but of course I'd argue that the payoff is well worth any initial drop in productivity.
+
+One more drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your derivations throw errors. Fortunately, derivation graphs are just DAGs so it is often quite trivial to find such errors. Also, I think a lack of useful stack traces is endemic in JS framework land so maybe it's more of a given than a drawback?
+
 ### Comparison with Previous Work
 
 *DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies at conception, please let me know and I'll edit or annotate where appropriate.*
