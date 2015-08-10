@@ -298,8 +298,9 @@ If you want to get a really good feel for what Havelock can do, I recommend chec
 Others:
 
 - [TodoMVC w/React](https://ds300.github.com/havelock/examples/todo) ([source](https://github.com/ds300/havelock/tree/master/examples/todo))
+- [How to map over collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching/README.md) (also TypeScript)
+- [Null/Error propagation](https://github.com/ds300/havelock/tree/master/examples/maybe/README.md) (also TypeScript)
 - [Example of how to do History](https://github.com/ds300/havelock/tree/master/examples/history)
-- [How to map over collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching) (also TypeScript)
 
 ##### npm
 Available as `havelock`.
