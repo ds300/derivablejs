@@ -1,0 +1,19 @@
+{
+  "name": "maybe",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "havelock": "^0.2.1",
+    "immutable": "^3.7.4"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-watch": "^0.6.1",
+    "typescript": "^1.5.3"
+  }
+}
