@@ -74,7 +74,7 @@ const logAndDouble = x => {console.log(x); return x*2;};
 
 let cachedDoubled: Derivable<List<number>> = map(logAndDouble, numbers);
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
@@ -82,19 +82,20 @@ console.log("cd:", cachedDoubled.get());
 
 numbers.set(List([1, 10, 3]));
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 10
 // $> cd: List [ 2, 20, 6 ]
 
 /***
 
+Notice that only the number 10 was reprocessed.
 The reason this is only a partial solution is that if `xs` changes in length, all the derivations get regenerated which means all the values get recomputed.
 
 ***/
 
 numbers.set(List([1, 2, 3, 4]));
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
@@ -132,7 +133,7 @@ numbers.set(List([1,2,3]));
 // re-bind cachedDoubled so it uses the new `explode`
 cachedDoubled = map(logAndDouble, numbers);
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
@@ -140,12 +141,13 @@ console.log("cd:", cachedDoubled.get());
 
 numbers.set(List([1,2,3,4]));
 
-console.log("cd:", cachedDoubled.get());
-// 1
-// 2
-// 3
-// 4
-// cd: List [ 2, 4, 6, 8 ]
+console.log("cd:", cachedDoubled.get()); //$
+// $> 1
+// $> 2
+// $> 3
+// $> 4
+// $> cd: List [ 2, 4, 6, 8 ]
+
 
 /***
 
@@ -185,7 +187,7 @@ numbers.set(List([1,2,3]));
 // re-bind cachedDoubled so it uses the new `map`
 cachedDoubled = map(logAndDouble, numbers);
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
@@ -193,9 +195,9 @@ console.log("cd:", cachedDoubled.get());
 
 numbers.set(List([1,2,3,4]));
 
-console.log("cd:", cachedDoubled.get());
-// 4
-// cd: List [ 2, 4, 6, 8 ]
+console.log("cd:", cachedDoubled.get()); //$
+// $> 4
+// $> cd: List [ 2, 4, 6, 8 ]
 
 /***
 
@@ -207,7 +209,7 @@ Unfortunately, we're not quite there yet. Look what happens if you add a number 
 
 numbers.set(List([0,1,2,3,4]));
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 0
 // $> 1
 // $> 2
@@ -281,14 +283,14 @@ numbers.set(List([1,2,3]));
 // re-bind cachedDoubled so it uses the new `mapsplode`
 cachedDoubled = map(logAndDouble, numbers);
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
 // $> cd: List [ 2, 4, 6 ]
 
 numbers.set(List([0,1,2,3]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 0
 // $> cd: List [ 0, 2, 4, 6 ]
 
@@ -299,7 +301,7 @@ That's the ticket.
 ***/
 
 numbers.set(List([3,2,1,0]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> cd: List [ 6, 4, 2, 0 ]
 
 /***
@@ -370,18 +372,18 @@ numbers.set(List([1,2,3]));
 // re-bind cachedDoubled so it uses the new `mapsplodeU`
 cachedDoubled = map(logAndDouble, numbers);
 
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> 3
 // $> cd: List [ 2, 4, 6 ]
 
 numbers.set(List([1,2,2]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> cd: List [ 2, 4, 4 ]
 
 numbers.set(List([2,2,2,2,2,2,2]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> cd: List [ 4, 4, 4, 4, 4, 4, 4 ]
 
 /***
@@ -395,19 +397,20 @@ cachedDoubled = mapsplodeU(x => x % 2, logAndDouble, numbers)
                  .derive(mapping(_.unpack));
 
 numbers.set(List([1,2]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 1
 // $> 2
 // $> cd: List [ 2, 4 ]
 
 numbers.set(List([1,2,3]));
-console.log("cd:", cachedDoubled.get());
+console.log("cd:", cachedDoubled.get()); //$
 // $> 3
 // $> cd: List [ 6, 4, 6 ]
 
 numbers.set(List([1,2,3,4,5,6,7,8,9,10]));
-console.log("cd:", cachedDoubled.get());
-// ...
+console.log("cd:", cachedDoubled.get()); //$
+// $> 9
+// $> 10
 // $> cd: List [ 18, 20, 18, 20, 18, 20, 18, 20, 18, 20 ]
 
 /***
@@ -468,11 +471,11 @@ const things = atom($.fromJS([{id: 0, name: "Zero"}, {id: 1, name: "One"}]));
 const id = x => x.get('id');
 const log = x => console.log(`id: ${id(x)}, name: ${x.get('name')}`);
 
-resplodeU(id, log, things);
+resplodeU(id, log, things); //$
 // $> id: 0, name: Zero
 // $> id: 1, name: One
 
-things.swap(ts => ts.setIn([0, 'name'], "Wilbur"));
+things.swap(ts => ts.setIn([0, 'name'], "Wilbur")); //$
 // $> id: 0, name: Wilbur
 
 /***
@@ -531,21 +534,21 @@ resplodeU = <T, U>(uf, r, xs) => {
 // new things because otherwise we'de be getting reactions from before
 const things2 = atom($.fromJS([{id: 0, name: "Zero"}, {id: 1, name: "One"}]));
 
-let reaction = resplodeU(id, log, things2).start().force();
+let reaction = resplodeU(id, log, things2).start().force(); //$
 // $> id: 0, name: Zero
 // $> id: 1, name: One
 
-things2.swap(ts => ts.setIn([1, 'name'], "Jefferson"));
+things2.swap(ts => ts.setIn([1, 'name'], "Jefferson")); //$
 // $> id: 1, name: Jefferson
 
 reaction.stop();
 
-things2.swap(ts => ts.setIn([0, 'name'], "Thomas"));
-// ... nothing happens, as expected
+things2.swap(ts => ts.setIn([0, 'name'], "Thomas")); //$
+// ... no output
 
 reaction.start();
 
-things2.swap(ts => ts.setIn([1, 'name'], "The Tank Engine"));
+things2.swap(ts => ts.setIn([1, 'name'], "The Tank Engine")); //$
 // $> id: 1, name: The Tank Engine
 
 /***

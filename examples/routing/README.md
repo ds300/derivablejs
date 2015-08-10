@@ -86,31 +86,31 @@ const queryParams = queryString.derive(parseQueryString);
 Ok, lets see if that all works:
 
 ```typescript
-console.log(route.get());
+console.log(route.get()); 
 // $> List []
-console.log(queryParams.get());
-// $> Map {}
+console.log(queryParams.get()); 
+// $> Map { "": true }
 
 hash.set("#/route");
-console.log(route.get());
+console.log(route.get()); 
 // $> List [ "route" ]
-console.log(queryParams.get());
-// $> Map {}
+console.log(queryParams.get()); 
+// $> Map { "": true }
 
 hash.set("#/some/route");
-console.log(route.get());
+console.log(route.get()); 
 // $> List [ "some", "route" ]
 
 hash.set("#/some/route/with?a=param");
-console.log(route.get());
+console.log(route.get()); 
 // $> List [ "some", "route", "with" ]
-console.log(queryParams.get());
+console.log(queryParams.get()); 
 // $> Map { "a": "param" }
 
 hash.set("#/some/route/with?a=param&more=params&others&evenmore");
-console.log(route.get());
+console.log(route.get()); 
 // $> List [ "some", "route", "with" ]
-console.log(queryParams.get());
+console.log(queryParams.get()); 
 // $> Map { "a": "param", "more": "params", "others": true, "evenmore": true }
 ```
 
@@ -177,14 +177,14 @@ const fourOhFour: Handler = route.derive(route => {
 
 let chosenHandler: Derivable<Handler> = dispatchTree.derive(lookup, route)
                                                     .or(fourOhFour);
+const renderDom = (dom: DOM) => console.log("DOM: " + dom);
 
-let reaction: Reaction<DOM> = chosenHandler.derive(unpack)
-                                           .react(dom => console.log(dom));
-// $> 404 route not found: /home
+let reaction: Reaction<DOM> = chosenHandler.derive(unpack).react(renderDom); 
+// $> DOM: 404 route not found: /home
 
 
-dispatchTree.swap(register, '/home', "Hello World!");
-// $> Hello World!
+dispatchTree.swap(register, '/home', "Hello There World!"); 
+// $> DOM: Hello There World!
 
 
 dispatchTree.swap(register, '/print-params', queryParams.derive(renderParams));
@@ -197,8 +197,8 @@ function renderParams(params: Params) {
   return result;
 }
 
-hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time");
-// $> the params are:
+hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time"); 
+// $> DOM: the params are:
 // $>   today: thursday
 // $>   tomorrow: friday
 // $>   almost: party_time
@@ -230,8 +230,8 @@ const printRoutes = dispatchTree.lens(context('/print'));
 
 printRoutes.swap(register, "/params", queryParams.derive(renderParams));
 
-hash.set("#/print/params?a=b&c");
-// $> the params are:
+hash.set("#/print/params?a=b&c"); 
+// $> DOM: the params are:
 // $>   a: b
 // $>   c: true
 
@@ -239,13 +239,13 @@ printRoutes.swap(register, "/hello", queryParams.derive(ps => {
   return `Hello, ${ps.get('name')}!`;
 }));
 
-hash.set("#/print/hello?name=Sadie");
-// $> Hello, Sadie!
+hash.set("#/print/hello?name=Sadie"); 
+// $> DOM: Hello, Sadie!
 
-printRoutes.swap(register, '/', "You need to pick a thing to print, dawg");
+printRoutes.swap(register, '/', "pick a thing to print yo");
 
-hash.set("#/print");
-// $> You need to pick a thing to print, dawg
+hash.set("#/print"); 
+// $> DOM: pick a thing to print yo
 ```
 
 
@@ -298,8 +298,8 @@ const params = queryParams.derive(merge, inlineParams);
 
 // re-bind reaction to use new `chosenHandler`
 reaction.stop();
-reaction = chosenHandler.derive(unpack).react(dom => console.log(dom));;
-// $> You need to pick a thing to print, dawg
+reaction = chosenHandler.derive(unpack).react(renderDom);; 
+// $> DOM: pick a thing to print yo
 
 
 dispatchTree.swap(register, "resource/:id/home", params.derive(params => {
@@ -311,23 +311,23 @@ dispatchTree.swap(register, "resource/:id/home", params.derive(params => {
   return result;
 }));
 
-hash.set("#/resource/343/home");
-// $> This is the home of the resource with id 343
+hash.set("#/resource/343/home"); 
+// $> DOM: This is the home of the resource with id 343
 
-hash.set("#/resource/wub-a-lub-a-dub-dub/home?fruit=banana");
-// $> This is the home of the resource with id wub-a-lub-a-dub-dub
+hash.set("#/resource/whatever/home?fruit=banana"); 
+// $> DOM: This is the home of the resource with id whatever
 // $> Today the fruit is banana
 
 printRoutes.swap(register, "/:echo", params.derive(ps => {
   return ps.get('echo');
 }));
 
-hash.set("#/print/params?buns=5");
-// $> the params are:
+hash.set("#/print/params?buns=5"); 
+// $> DOM: the params are:
 // $>   buns: 5
 
-hash.set("#/print/whatevs");
-// $> whatevs
+hash.set("#/print/wub-a-lub-a-dub-dub"); 
+// $> DOM: wub-a-lub-a-dub-dub
 ```
 
 

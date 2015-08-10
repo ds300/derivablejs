@@ -10,8 +10,7 @@ module.exports = function (grunt) {
     },
   });
   grunt.registerTask('build', function () {
-    console.log("building");
-    console.log(lts.processFile('maybe.ts', 'maybe.js', 'README.md'));
+    lts.processFile('maybe.ts', 'maybe.js', 'README.md');
   });
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.registerTask('default', ['build', 'watch']);

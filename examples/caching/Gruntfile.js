@@ -10,7 +10,6 @@ module.exports = function (grunt) {
     },
   });
   grunt.registerTask('build', function () {
-    var fs = require('fs');
     lts.processFile('caching.ts', 'caching.js', 'README.md');
   });
   grunt.loadNpmTasks('grunt-contrib-watch');
