@@ -8,9 +8,6 @@ function makeRoot() {
 }
 var hash = havelock_1.atom("");
 var immutable_1 = require('immutable');
-function path2route(path) {
-    return immutable_1.List(path.split("/").filter(function (x) { return x !== ""; }));
-}
 function splitHash(hash) {
     var queryIdx = hash.indexOf("?");
     if (queryIdx < 0) {
@@ -19,6 +16,9 @@ function splitHash(hash) {
     else {
         return [hash.slice(1, queryIdx), hash.slice(queryIdx + 1)];
     }
+}
+function path2route(path) {
+    return immutable_1.List(path.split("/").filter(function (x) { return x !== ""; }));
 }
 function parseQueryString(query) {
     var result = immutable_1.Map().asMutable();
@@ -45,6 +45,7 @@ console.log(route.get());
 console.log(queryParams.get());
 hash.set("#/route");
 console.log(route.get());
+console.log(queryParams.get());
 hash.set("#/some/route");
 console.log(route.get());
 hash.set("#/some/route/with?a=param");

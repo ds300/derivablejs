@@ -36,13 +36,6 @@ import { List, Map } from 'immutable';
 type Route = List<string>;
 type Params = Map<string, string | boolean>;
 
-
-// e.g. 'some/path' or '/some/path' or '/some/path/'
-//       becomes List ['some', 'path']
-function path2route(path: string): Route {
-  return List(path.split("/").filter(x => x !== ""));
-}
-
 // e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
 function splitHash(hash: string): [string, string] {
   let queryIdx = hash.indexOf("?");
@@ -51,6 +44,12 @@ function splitHash(hash: string): [string, string] {
   } else {
     return [hash.slice(1, queryIdx), hash.slice(queryIdx+1)];
   }
+}
+
+// e.g. 'some/path' or '/some/path' or '/some/path/'
+//       becomes List ['some', 'path']
+function path2route(path: string): Route {
+  return List(path.split("/").filter(x => x !== ""));
 }
 
 // e.g. 'query=something&anotherThing'
@@ -95,6 +94,8 @@ console.log(queryParams.get());
 hash.set("#/route");
 console.log(route.get());
 // $> List [ "route" ]
+console.log(queryParams.get());
+// $> Map {}
 
 hash.set("#/some/route");
 console.log(route.get());
