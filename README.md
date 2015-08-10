@@ -327,7 +327,7 @@ const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 
 Havelock's API will be unstable until version 1.0.0 is released. This will happen on or before January 1st 2016, whereafter the project will use [Semantic Versioning](http://semver.org/).
 
-The purpose for this delay is to gather [suggestions and feedback](#contributing) from the community to help shape the core API, but it's a fairly simple library so hopefully these things won't take too long.
+The purpose for this delay is to gather [suggestions and feedback](#contributing) from the community to help shape the core API, but it's a fairly small library so hopefully these things won't take too long.
 
 ## Future Work
 
@@ -337,7 +337,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Contributing
 
-I heartily welcome feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
+I heartily welcome questions, feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
 
 ## Thanks
 
@@ -367,9 +367,19 @@ I'm free from November and might be willing to do remote work or move anywhere i
 ## License
 
 ```
-Copyright (c) 2015, David Sheldrick. <djsheldrick@gmail.com>
-All rights reserved.
-
-This source code is licensed under the BSD-style license found in the
-LICENSE file in the root directory of this source tree
+/**
+ * Copyright 2015 David Sheldrick <djsheldrick@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 ```
