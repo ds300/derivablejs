@@ -157,6 +157,27 @@ function lookup (dt: DispatchTree, route: Route): Handler {
   return dt.getIn(route.push(""));
 }
 
+/***
+
+So, e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` would look like the following:
+
+```json
+{
+  "a": {
+    "b": {"": "b handler"},
+    "c": {"": "c handler"},
+    "": "a handler"
+  },
+  "d": {"": "d handler"}
+}
+```
+
+Now we need to use `lookup` to derive the handler based on the contents of
+`dispatchTree`. We can then unpack that handler to create the view.
+
+***/
+
+// 404 handler in case we request an invalid route
 const fourOhFour: Handler = route.derive(route => {
   return '404 route not found: /' + route.join("/");
 });
