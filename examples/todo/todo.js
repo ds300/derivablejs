@@ -2,6 +2,13 @@ import _, {atom, derivation, transact} from 'havelock'
 import imut, {fromJS} from 'immutable'
 import React from 'react'
 
+// Plese be advised that by writing this I am not endorsing the usage of
+// Havelock with React in this manner. It works fine if you don't need access to
+// the actual DOM nodes, but solving that problem seems like a topic for another
+// time. For now, view this as a taster of what applications woven through
+// Havelock might look like.
+
+
 /*** Global App State ***/
 const nextId = atom(0); // uids for the list items to make react happy
 function getNextId () {
@@ -185,7 +192,7 @@ const pageRender = derivation(() => {
         <input className="new-todo"
                placeholder="What needs to be done?"
                value={newTodoName.get()}
-               onChange={e => newTodoName.set(e.target.value) }
+               onChange={ e => newTodoName.set(e.target.value) }
                onKeyPress={onEnter(() => {
                  transact(() => {
                    todos.swap(newTodo, newTodoName.get());

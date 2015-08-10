@@ -146,13 +146,12 @@ function register (dt: DispatchTree, path: string, handler: Handler): DispatchTr
   return dt.setIn(path2route(path).push(""), handler);
 }
 
-let lookup: (dt: DispatchTree, route: Route) => Handler
-= (dt, route) => {
+function lookup (dt: DispatchTree, route: Route): Handler {
   return dt.getIn(route.push(""));
 }
 
 const fourOhFour: Handler = route.derive(route => {
-  return `404 route not found: /${route.join("/")}`;
+  return '404 route not found: /' + route.join("/");
 });
 
 let chosenHandler: Derivable<Handler> = dispatchTree.derive(lookup, route)
@@ -263,11 +262,11 @@ function lookupWithParams(dt: DispatchTree, route: Route, params: Params): [Hand
   return null;
 }
 
-lookup = (dt, route): [Handler, Params] => {
+function lookup2 (dt: DispatchTree, route): [Handler, Params] {
   return lookupWithParams(dt, route.push(""), <Params>Map()) || [null, <Params>Map()];
 };
 
-let [lookupResult, inlineParams] = raiseTuple(dispatchTree.derive(lookup, route));
+let [lookupResult, inlineParams] = raiseTuple(dispatchTree.derive(lookup2, route));
 
 chosenHandler = lookupResult.or(fourOhFour);
 

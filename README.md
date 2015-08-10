@@ -11,7 +11,6 @@
 
 Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by being the fabric through which your interconnections are woven.
 
-It is fresh as a daisy right now so do give it a try, but perhaps wait a month or two before using it in production.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -85,7 +84,7 @@ transact(() => {
 
 When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep them in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats having [God objects](https://en.wikipedia.org/wiki/God_object) manually bound to the DOM with pure jQuery and `id` attributes\*.
 
-And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artifact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be particularly hard to reproduce and, therefore, to diagnose and fix.
+And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artefact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be very hard to reproduce and, therefore, very hard to diagnose and fix.
 
 Wouldn't it be nice if you never had to worry about that kind of tedious mess again? How much do you think it would be worth?
 
@@ -101,7 +100,7 @@ This sounded like a very good idea to me. But while the latter is conceptually v
 
 Havelock exists to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
 
-\* <em>Count yourself lucky if that sounds as laughably anachronistic as programming on punch cards.</em>
+\* <em>Count yourself lucky if that sounds about as laughably anachronistic as programming on punch cards.</em>
 
 ## Model
 
@@ -119,7 +118,7 @@ The DAG structure is automatically inferred by executing derivation functions in
 
 ### Key Benefits
 
-It is important to note that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which individual parts of it you decide to inspect at any given time.
+It is important to understand that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which individual parts of it you decide to inspect at any given time.
 
 Note also that derivations are totally lazy. They literally never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing *that* with streams.
 
@@ -170,13 +169,28 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 (.log js/console @sum2)
 ; $> 3
-; incorrect! Look:
+; incorrect! should be 4. The cell= macro couldn't figure
+; out that `cells` is a vector containing cells which should
+; be hooked up to the propagation graph.
 
-(.log js/console (reduce + (map deref cells)))
+; the only way to get a cell in the graph is to have it
+; directly referenced in the body of the cell= macro by
+; a single symbol
+
+(let [[one two three] cells]
+  (def sum3 (cell= (reduce + [one two three]))))
+
+(println @sum3)
 ; $> 4
+
+(swap! (cells 0) inc)
+
+(println @sum3)
+; $> 5
+
 ```
 
-So the `cell=` macro is unable to figure out that our `cells` vector contains cells which should be hooked up to the propagation graph. Havelock imposes no such constraints:
+Havelock imposes no such constraints:
 
 ```javascript
 import {atom, derivation, get} from 'havelock'
@@ -193,8 +207,6 @@ sum.react(x => console.log(x));
 cells[0].swap(x => x+1);
 // $> 4
 ```
-
-Sure it's a tad more verbose, but *this is JS*; I'm not a miracle worker.
 
 [Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack can handle runtime graph composition too (like Havelock, it uses dereference-capturing to infer edges). Reagent also does automatic memory management! Unfortunately, it doesn't do transactions and can only do laziness for 'active' derivation branches.
 
@@ -275,16 +287,19 @@ This has not been an exhaustive comparison. There are [some](https://www.meteor.
 
 ## Usage
 
+Havelock is brand spanking new so, while it all seems to work and everything, probably best to consider it alpha quality for the time being.
+
 ##### API
 [See Here](https://ds300.github.com/havelock)
 
 ##### Examples (wip)
-[All Here](https://github.com/ds300/havelock/tree/master/examples/)
+If you want to get a really good feel for what Havelock can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/havelock/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
+
+Others:
 
 - [TodoMVC w/React](https://ds300.github.com/havelock/examples/todo) ([source](https://github.com/ds300/havelock/tree/master/examples/todo))
-- [Example of how to do Routing](https://github.com/ds300/havelock/tree/master/examples/routing)
 - [Example of how to do History](https://github.com/ds300/havelock/tree/master/examples/history)
-- [How to map over Collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching)
+- [How to map over collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching) (also TypeScript)
 
 ##### npm
 Available as `havelock`.

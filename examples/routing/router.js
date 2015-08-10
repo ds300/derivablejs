@@ -59,11 +59,11 @@ var dispatchTree = havelock_1.atom(immutable_1.Map());
 function register(dt, path, handler) {
     return dt.setIn(path2route(path).push(""), handler);
 }
-var lookup = function (dt, route) {
+function lookup(dt, route) {
     return dt.getIn(route.push(""));
-};
+}
 var fourOhFour = route.derive(function (route) {
-    return "404 route not found: /" + route.join("/");
+    return '404 route not found: /' + route.join("/");
 });
 var chosenHandler = dispatchTree.derive(lookup, route)
     .or(fourOhFour);
@@ -122,10 +122,11 @@ function lookupWithParams(dt, route, params) {
     }
     return null;
 }
-lookup = function (dt, route) {
+function lookup2(dt, route) {
     return lookupWithParams(dt, route.push(""), immutable_1.Map()) || [null, immutable_1.Map()];
-};
-var _b = raiseTuple(dispatchTree.derive(lookup, route)), lookupResult = _b[0], inlineParams = _b[1];
+}
+;
+var _b = raiseTuple(dispatchTree.derive(lookup2, route)), lookupResult = _b[0], inlineParams = _b[1];
 chosenHandler = lookupResult.or(fourOhFour);
 var merge = function (x, y) { return x.merge(y); };
 var params = queryParams.derive(merge, inlineParams);
