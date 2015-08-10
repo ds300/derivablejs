@@ -9,10 +9,9 @@
 
 ---
 
-[![Join the chat at https://gitter.im/ds300/havelock](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/havelock?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 Havelock is a truly simple state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by being the fabric through which your interconnections are woven.
 
+[![Join the chat at https://gitter.im/ds300/havelock](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/havelock?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
