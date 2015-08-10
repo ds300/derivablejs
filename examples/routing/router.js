@@ -47,7 +47,7 @@ function path2route(path) {
 //       becomes Map {query: 'something', anotherThing: true}
 function parseQueryString(query) {
     var result = immutable_1.Map().asMutable();
-    var parts = query.split("&");
+    var parts = query.split("&").filter(function (x) { return x != ''; });
     for (var _i = 0; _i < parts.length; _i++) {
         var part = parts[_i];
         var equalsIdx = part.indexOf("=");
@@ -74,12 +74,12 @@ Ok, lets see if that all works:
 console.log(route.get()); //$
 // $> List []
 console.log(queryParams.get()); //$
-// $> Map { "": true }
+// $> Map {}
 hash.set("#/route");
 console.log(route.get()); //$
 // $> List [ "route" ]
 console.log(queryParams.get()); //$
-// $> Map { "": true }
+// $> Map {}
 hash.set("#/some/route");
 console.log(route.get()); //$
 // $> List [ "some", "route" ]

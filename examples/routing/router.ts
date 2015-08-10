@@ -62,7 +62,7 @@ function path2route(path: string): Route {
 function parseQueryString(query: string): Params {
   let result = <Params>Map().asMutable();
 
-  let parts = query.split("&");
+  let parts = query.split("&").filter(x => x != '');
 
   for (let part of parts) {
     let equalsIdx = part.indexOf("=");
@@ -94,13 +94,13 @@ Ok, lets see if that all works:
 console.log(route.get()); //$
 // $> List []
 console.log(queryParams.get()); //$
-// $> Map { "": true }
+// $> Map {}
 
 hash.set("#/route");
 console.log(route.get()); //$
 // $> List [ "route" ]
 console.log(queryParams.get()); //$
-// $> Map { "": true }
+// $> Map {}
 
 hash.set("#/some/route");
 console.log(route.get()); //$
