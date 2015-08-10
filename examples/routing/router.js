@@ -250,9 +250,15 @@ hash.set("#/resource/whatever/home?fruit=banana"); //$
 printRoutes.swap(register, "/:echo", params.derive(function (ps) {
     return ps.get('echo');
 }));
+// /print /print/params and /print/hello should still be there
+hash.set("#/print"); //$
+// $> DOM: pick a thing to print yo
 hash.set("#/print/params?buns=5"); //$
 // $> DOM: the params are:
 // $>   buns: 5
+hash.set("#/print/hello?name=Morty"); //$
+// $> DOM: Hello, Morty!
+// the :echo parameter should pick up anything else
 hash.set("#/print/wub-a-lub-a-dub-dub"); //$
 // $> DOM: wub-a-lub-a-dub-dub
 /***
