@@ -2,28 +2,33 @@
 
 /***
 
+# Propagating Failure
+
 Sometimes as you're threading values through a processing pipeline it can be
 convenient to have a way to say 'if this computation fails, then none of the
-others should even be attempted. Just propogate the failure.'
+others should even be attempted. Just propagate the failure.'
 
-Here's one way to do that.
+Here's how to do that.
 
 ***/
 
 import { atom } from 'havelock'
 
-const char = atom("a");
+const word = atom("hello");
 
-let c = char.derive(char => char.toUpperCase());
-let name = c.derive(c => ({"A": "Adam", "B": "Bertie"})[c]);
+const toUpper = x => x.toUpperCase();
+const spacedOut = x => x.split("").join(" ");
 
-console.log(name.get()); //$
-// $> Adam
+let upper = word.derive(toUpper);
+let spaced = upper.derive(spacedOut);
 
-char.set(null);
+console.log(spaced.get()); //$
+// $> H E L L O
+
+word.set(null);
 
 try {
-  name.get();
+  spaced.get();
 } catch (e) {
   console.log(e); //$
 // $> [TypeError: Cannot read property 'toUpperCase' of null]
@@ -33,7 +38,7 @@ try {
 
 To avoid this we can wrap the uppercasing function in another function which
 checks for null values and propagtes them install of calling the
-function on them.
+function on them. this way the error never gets thrown.
 
 ***/
 
@@ -47,11 +52,16 @@ function maybe (f) {
   }
 }
 
-c = char.derive(maybe(char => char.toUpperCase));
-name = c.derive(maybe(c => ({"A": "Adam", "B": "Bertie"})[c]))
+upper = word.derive(maybe(toUpper));
+spaced = upper.derive(maybe(spacedOut));
 
-console.log(name.get()); //$
+console.log(spaced.get()); //$
 // $> null
+
+word.set("jeff");
+
+console.log(spaced.get()); //$
+// $> J E F F
 
 /***
 
@@ -76,41 +86,38 @@ function maybeE (f) {
   }
 }
 
-c = char.derive(maybeE(c => c.toUpperCase()));
-name = c.derive(maybeE(c => ({"A": "Adam", "B": "Bertie"})[c]))
+upper = word.derive(maybeE(toUpper));
+spaced = upper.derive(maybeE(spacedOut))
 
-console.log(name.get()); //$
+console.log(spaced.get()); //$
+// $> J E F F
+
+word.set(null);
+
+console.log(spaced.get()); //$
 // $> [TypeError: Cannot read property 'toUpperCase' of null]
-
-char.set("b");
-
-console.log(name.get()); //$
-// $> Bertie
 
 
 /***
 
-And you can use the same wrappers for reactions:
+So `spaced.get()` is actually returning the error there, not throwing it.
+
+You can use the same wrappers for reactions:
 
 ***/
 
-let reaction = name.react(maybeE(name => console.log("the name is " + name))); //$
-// $> the name is Bertie
-
-char.set("a"); //$
-// $> the name is Adam
-
-char.set([]); //$
+let reaction = spaced.react(maybeE(spaced => console.log("word: " + spaced))); //$
 // ... no output
 
-char.set(null); //$
+word.set("ablution"); //$
+// $> word: A B L U T I O N
+
+word.set([]); //$
 // ... no output
 
-char.set("b"); //$
-// $> the name is Bertie
+word.set("convivial"); //$
+// $> word: C O N V I V I A L
 
-char.set("y"); //$
-// $> the name is undefined
 
 /***
 
@@ -119,20 +126,20 @@ The wrappers compose too:
 ***/
 const m = f => maybe(maybeE(f));
 
-c = char.derive(m(c => c.toUpperCase()));
-name = c.derive(m(c => ({"A": "Adam", "B": "Bertie"})[c]))
+upper = word.derive(m(toUpper));
+spaced = upper.derive(m(spacedOut));
 
 reaction.stop();
-reaction = name.react(m(name => console.log("the name is " + name))); //$
+reaction = spaced.react(m(spaced => console.log("word: " + spaced))); //$
+// $> word: C O N V I V I A L
+
+word.set("bananas"); //$
+// $> word: B A N A N A S
+
+word.set(null); // caught by maybe //$
 // ... no output
 
-char.set("b"); //$
-// $> the name is Bertie
-
-char.set("x"); // caught by maybe //$
-// ... no output
-
-char.set(null); // caught by maybeE //$
+word.set([]); // caught by maybeE //$
 // ... no output
 
 

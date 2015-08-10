@@ -111,8 +111,17 @@ function processFile(filename, outputJS, outputMD) {
     var compiled = ts.transpile(source, { module: 1 });
     var injectedCompiled = ts.transpile(sourceCapturing, { module: 1 });
     fs_1.writeFileSync(outputJS, compiled);
-    var output = exec.execSync("node", { input: injectedCompiled }).toString();
-    var logs = gatherCapturedLogs(output);
+    var output, logs;
+    try {
+        output = exec.execSync("node", { input: injectedCompiled }).toString();
+        logs = gatherCapturedLogs(output);
+    }
+    catch (e) {
+        output = e.stdout.toString();
+        logs = gatherCapturedLogs(output);
+        var n = Object.keys(logs).length;
+        logs[n] = e.stderr.toString();
+    }
     var injected = injectCaputredLogs(source, logs);
     fs_1.writeFileSync(filename, injected);
     var markdown = toMarkdown(injected);

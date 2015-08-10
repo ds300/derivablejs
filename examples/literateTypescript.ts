@@ -121,8 +121,17 @@ export function processFile(filename: string, outputJS: string, outputMD: string
 
   writeFileSync(outputJS, compiled);
 
-  const output = exec.execSync("node", {input: injectedCompiled}).toString();
-  const logs = gatherCapturedLogs(output);
+  let output, logs;
+  try {
+    output = exec.execSync("node", {input: injectedCompiled}).toString();
+    logs = gatherCapturedLogs(output);
+  } catch (e) {
+    output = e.stdout.toString();
+    logs = gatherCapturedLogs(output);
+    let n = Object.keys(logs).length;
+    logs[n] = e.stderr.toString();
+  }
+  
   const injected = injectCaputredLogs(source, logs);
 
   writeFileSync(filename, injected);
