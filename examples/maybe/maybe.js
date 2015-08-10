@@ -28,8 +28,8 @@ catch (e) {
 /***
 
 To avoid this we can wrap the uppercasing function in another function which
-checks for null values and propagtes them install of calling the
-function on them. this way the error never gets thrown.
+checks for null values and propagates them instead of calling the
+function on them. This way the error never gets thrown.
 
 ***/
 function maybe(f) {
@@ -46,12 +46,12 @@ upper = word.derive(maybe(toUpper));
 spaced = upper.derive(maybe(spacedOut));
 console.log(spaced.get()); //$
 // $> null
+// The nullness of `word` is pulled down through `upper` and `spaced`.
 word.set("jeff");
 console.log(spaced.get()); //$
 // $> J E F F
 /***
 
-That'd definitely better than throwing an error.
 
 But sometimes a derivation function might throw errors even with non-null inputs.
 You could propagate the error using a similar technique:
