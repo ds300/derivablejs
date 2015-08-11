@@ -338,6 +338,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
+1. Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.
 1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
