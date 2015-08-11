@@ -28,8 +28,8 @@ at the end so let's convert the hash into a route and a parameter map
 
 ***/
 var immutable_1 = require('immutable');
-// e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
 function splitHash(hash) {
+    // e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
     var queryIdx = hash.indexOf("?");
     if (queryIdx < 0) {
         return [hash.slice(1), ""];
@@ -38,16 +38,17 @@ function splitHash(hash) {
         return [hash.slice(1, queryIdx), hash.slice(queryIdx + 1)];
     }
 }
-// e.g. 'some/path' or '/some/path' or '/some/path/'
-//       becomes List ['some', 'path']
+var notEmpty = function (s) { return s !== ''; };
 function path2route(path) {
-    return immutable_1.List(path.split("/").filter(function (x) { return x !== ""; }));
+    // e.g. 'some/path' or '/some/path' or '/some/path/'
+    //       becomes List ['some', 'path']
+    return immutable_1.List(path.split("/").filter(notEmpty));
 }
-// e.g. 'query=something&anotherThing'
-//       becomes Map {query: 'something', anotherThing: true}
 function parseQueryString(query) {
+    // e.g. 'query=something&anotherThing'
+    //       becomes Map {query: 'something', anotherThing: true}
     var result = immutable_1.Map().asMutable();
-    var parts = query.split("&").filter(function (x) { return x != ''; });
+    var parts = query.split("&").filter(notEmpty);
     for (var _i = 0; _i < parts.length; _i++) {
         var part = parts[_i];
         var equalsIdx = part.indexOf("=");
@@ -60,6 +61,7 @@ function parseQueryString(query) {
     }
     return result.asImmutable();
 }
+// helper for destructuring derivable tuple
 function raiseTuple(tuple) {
     return [tuple.derive(function (t) { return t[0]; }), tuple.derive(function (t) { return t[1]; })];
 }
@@ -199,6 +201,7 @@ and put them somewhere.
 ***/
 function lookupWithParams(dt, route, params) {
     if (route.size === 0) {
+        // dt is just the matched handler at this point
         return [dt, params];
     }
     else {

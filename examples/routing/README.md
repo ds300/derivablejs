@@ -36,8 +36,8 @@ import { List, Map } from 'immutable';
 type Route = List<string>;
 type Params = Map<string, string | boolean>;
 
-// e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
 function splitHash(hash: string): [string, string] {
+  // e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
   let queryIdx = hash.indexOf("?");
   if (queryIdx < 0) {
     return [hash.slice(1), ""];
@@ -46,18 +46,20 @@ function splitHash(hash: string): [string, string] {
   }
 }
 
-// e.g. 'some/path' or '/some/path' or '/some/path/'
-//       becomes List ['some', 'path']
+const notEmpty = s => s !== '';
+
 function path2route(path: string): Route {
-  return List(path.split("/").filter(x => x !== ""));
+  // e.g. 'some/path' or '/some/path' or '/some/path/'
+  //       becomes List ['some', 'path']
+  return List(path.split("/").filter(notEmpty));
 }
 
-// e.g. 'query=something&anotherThing'
-//       becomes Map {query: 'something', anotherThing: true}
 function parseQueryString(query: string): Params {
+  // e.g. 'query=something&anotherThing'
+  //       becomes Map {query: 'something', anotherThing: true}
   let result = <Params>Map().asMutable();
 
-  let parts = query.split("&").filter(x => x != '');
+  let parts = query.split("&").filter(notEmpty);
 
   for (let part of parts) {
     let equalsIdx = part.indexOf("=");
@@ -71,15 +73,16 @@ function parseQueryString(query: string): Params {
   return result.asImmutable();
 }
 
+// helper for destructuring derivable tuple
 function raiseTuple<a, b>(tuple: Derivable<[a, b]>): [Derivable<a>, Derivable<b>] {
   return [tuple.derive(t => t[0]), tuple.derive(t => t[1])];
 }
 
 const [path, queryString] = raiseTuple(hash.derive(splitHash));
 
-const route = path.derive(path2route);
+const route: Derivable<Route> = path.derive(path2route);
 
-const queryParams = queryString.derive(parseQueryString);
+const queryParams: Derivable<Params> = queryString.derive(parseQueryString);
 ```
 
 
@@ -209,7 +212,7 @@ Yeah that's ok I reckon. The next feature I want to enable is the ability to pro
 parts of your application with contextual dispatch trees, so they don't have to know
 where they should put themselves in the global dispatch tree.
 
-Lenses to the rescue!
+[Lenses](http://ds300.github.io/havelock/#havelock-Lens) to the rescue!
 
 ```typescript
 import { Lens } from 'havelock'
@@ -260,6 +263,7 @@ and put them somewhere.
 ```typescript
 function lookupWithParams(dt: DispatchTree, route: Route, params: Params): [Handler, Params] {
   if (route.size === 0) {
+    // dt is just the matched handler at this point
     return [dt, params];
   } else {
     let child = dt.get(route.first());

@@ -138,9 +138,10 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
-Another major drawback is that Havelock requires one to think and design in terms of pure functions and immutable data being lazily computed, which takes a little while to get comfortable with coming from an OO background. There's no easy way around that, but of course I'd argue that the payoff is well worth any initial drop in productivity.
+Another drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your reactions throw errors. There should be ways to mitigate this for debugging purposes, but I haven't thought about it much yet.
 
-One more drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your derivations throw errors. Fortunately, derivation graphs are just DAGs so it is often quite trivial to find such errors. Also, I think a lack of useful stack traces is endemic in JS framework land so maybe it's more of a given than a drawback?
+A final potential drawback is that Havelock requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming from an OO background.
+
 
 ### Comparison with Previous Work
 
@@ -339,7 +340,8 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
-3. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
+3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
+4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Contributing
 
