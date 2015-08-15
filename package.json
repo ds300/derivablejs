@@ -1,6 +1,6 @@
 {
   "name": "havelock",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Holistic state management with reactive values",
   "author": "David Sheldrick",
   "files": [
