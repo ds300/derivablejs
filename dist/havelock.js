@@ -1038,6 +1038,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             break;
           case DISOWNED:
             var parents = new Set();
+            var didForce = false;
             var _iteratorNormalCompletion11 = true;
             var _didIteratorError11 = false;
             var _iteratorError11 = undefined;
@@ -1052,6 +1053,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (!equals(_parent3._get(), state)) {
                   this._parents = new Set();
                   this._forceGet();
+                  didForce = true;
                   break outer;
                 } else {
                   parents.add(_parent3);
@@ -1072,6 +1074,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
             }
 
+            if (!didForce) {
+              var _iteratorNormalCompletion12 = true;
+              var _didIteratorError12 = false;
+              var _iteratorError12 = undefined;
+
+              try {
+                for (var _iterator12 = parents[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
+                  var _parent4 = _step12.value;
+
+                  _parent4._children.add(this);
+                }
+              } catch (err) {
+                _didIteratorError12 = true;
+                _iteratorError12 = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
+                    _iterator12["return"]();
+                  }
+                } finally {
+                  if (_didIteratorError12) {
+                    throw _iteratorError12;
+                  }
+                }
+              }
+            }
             this._parents = parents;
             this._state = UNCHANGED;
             break;
@@ -1216,34 +1244,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: "onCommit",
       value: function onCommit() {
         if (TXN_CTX.inTransaction()) {
-          var _iteratorNormalCompletion12 = true;
-          var _didIteratorError12 = false;
-          var _iteratorError12 = undefined;
-
-          try {
-            for (var _iterator12 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-              var _step12$value = _slicedToArray(_step12.value, 2);
-
-              var atom = _step12$value[0];
-              var value = _step12$value[1];
-
-              atom.set(value);
-            }
-          } catch (err) {
-            _didIteratorError12 = true;
-            _iteratorError12 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
-                _iterator12["return"]();
-              }
-            } finally {
-              if (_didIteratorError12) {
-                throw _iteratorError12;
-              }
-            }
-          }
-        } else {
           var _iteratorNormalCompletion13 = true;
           var _didIteratorError13 = false;
           var _iteratorError13 = undefined;
@@ -1255,8 +1255,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               var atom = _step13$value[0];
               var value = _step13$value[1];
 
-              atom._value = value;
-              gc_mark(atom, NOOP_ARRAY);
+              atom.set(value);
             }
           } catch (err) {
             _didIteratorError13 = true;
@@ -1272,21 +1271,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
             }
           }
-
-          processReactionQueue(this.reactionQueue);
-
-          // then sweep for a clean finish
+        } else {
           var _iteratorNormalCompletion14 = true;
           var _didIteratorError14 = false;
           var _iteratorError14 = undefined;
 
           try {
             for (var _iterator14 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-              var _step14$value = _slicedToArray(_step14.value, 1);
+              var _step14$value = _slicedToArray(_step14.value, 2);
 
               var atom = _step14$value[0];
+              var value = _step14$value[1];
 
-              gc_sweep(atom);
+              atom._value = value;
+              gc_mark(atom, NOOP_ARRAY);
             }
           } catch (err) {
             _didIteratorError14 = true;
@@ -1302,12 +1300,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
             }
           }
-        }
-      }
-    }, {
-      key: "onAbort",
-      value: function onAbort() {
-        if (!TXN_CTX.inTransaction()) {
+
+          processReactionQueue(this.reactionQueue);
+
+          // then sweep for a clean finish
           var _iteratorNormalCompletion15 = true;
           var _didIteratorError15 = false;
           var _iteratorError15 = undefined;
@@ -1331,6 +1327,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             } finally {
               if (_didIteratorError15) {
                 throw _iteratorError15;
+              }
+            }
+          }
+        }
+      }
+    }, {
+      key: "onAbort",
+      value: function onAbort() {
+        if (!TXN_CTX.inTransaction()) {
+          var _iteratorNormalCompletion16 = true;
+          var _didIteratorError16 = false;
+          var _iteratorError16 = undefined;
+
+          try {
+            for (var _iterator16 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
+              var _step16$value = _slicedToArray(_step16.value, 1);
+
+              var atom = _step16$value[0];
+
+              gc_sweep(atom);
+            }
+          } catch (err) {
+            _didIteratorError16 = true;
+            _iteratorError16 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion16 && _iterator16["return"]) {
+                _iterator16["return"]();
+              }
+            } finally {
+              if (_didIteratorError16) {
+                throw _iteratorError16;
               }
             }
           }
@@ -1578,27 +1606,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return thing.map(deepUnpack);
       } else if (thing.constructor === Object) {
         var result = {};
-        var _iteratorNormalCompletion16 = true;
-        var _didIteratorError16 = false;
-        var _iteratorError16 = undefined;
+        var _iteratorNormalCompletion17 = true;
+        var _didIteratorError17 = false;
+        var _iteratorError17 = undefined;
 
         try {
-          for (var _iterator16 = Object.keys(thing)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-            var prop = _step16.value;
+          for (var _iterator17 = Object.keys(thing)[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
+            var prop = _step17.value;
 
             result[prop] = deepUnpack(thing[prop]);
           }
         } catch (err) {
-          _didIteratorError16 = true;
-          _iteratorError16 = err;
+          _didIteratorError17 = true;
+          _iteratorError17 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion16 && _iterator16["return"]) {
-              _iterator16["return"]();
+            if (!_iteratorNormalCompletion17 && _iterator17["return"]) {
+              _iterator17["return"]();
             }
           } finally {
-            if (_didIteratorError16) {
-              throw _iteratorError16;
+            if (_didIteratorError17) {
+              throw _iteratorError17;
             }
           }
         }
@@ -1626,13 +1654,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       return Havelock.derivation(function () {
         var val = undefined;
-        var _iteratorNormalCompletion17 = true;
-        var _didIteratorError17 = false;
-        var _iteratorError17 = undefined;
+        var _iteratorNormalCompletion18 = true;
+        var _didIteratorError18 = false;
+        var _iteratorError18 = undefined;
 
         try {
-          for (var _iterator17 = args[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-            var arg = _step17.value;
+          for (var _iterator18 = args[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
+            var arg = _step18.value;
 
             val = Havelock.unpack(arg);
             if (val) {
@@ -1640,16 +1668,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
         } catch (err) {
-          _didIteratorError17 = true;
-          _iteratorError17 = err;
+          _didIteratorError18 = true;
+          _iteratorError18 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion17 && _iterator17["return"]) {
-              _iterator17["return"]();
+            if (!_iteratorNormalCompletion18 && _iterator18["return"]) {
+              _iterator18["return"]();
             }
           } finally {
-            if (_didIteratorError17) {
-              throw _iteratorError17;
+            if (_didIteratorError18) {
+              throw _iteratorError18;
             }
           }
         }
@@ -1665,13 +1693,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       return Havelock.derivation(function () {
         var val = undefined;
-        var _iteratorNormalCompletion18 = true;
-        var _didIteratorError18 = false;
-        var _iteratorError18 = undefined;
+        var _iteratorNormalCompletion19 = true;
+        var _didIteratorError19 = false;
+        var _iteratorError19 = undefined;
 
         try {
-          for (var _iterator18 = args[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
-            var arg = _step18.value;
+          for (var _iterator19 = args[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
+            var arg = _step19.value;
 
             val = Havelock.unpack(arg);
             if (!val) {
@@ -1679,16 +1707,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
           }
         } catch (err) {
-          _didIteratorError18 = true;
-          _iteratorError18 = err;
+          _didIteratorError19 = true;
+          _iteratorError19 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion18 && _iterator18["return"]) {
-              _iterator18["return"]();
+            if (!_iteratorNormalCompletion19 && _iterator19["return"]) {
+              _iterator19["return"]();
             }
           } finally {
-            if (_didIteratorError18) {
-              throw _iteratorError18;
+            if (_didIteratorError19) {
+              throw _iteratorError19;
             }
           }
         }

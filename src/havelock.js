@@ -727,13 +727,20 @@ function createDerivationPrototype (havelock, { equals }) {
         break;
       case DISOWNED:
         let parents = new Set();
+        let didForce = false;
         for (let [parent, state] of this._parents) {
           if (!equals(parent._get(), state)) {
             this._parents = new Set();
             this._forceGet();
+            didForce = true;
             break outer;
           } else {
             parents.add(parent);
+          }
+        }
+        if (!didForce) {
+          for (let parent of parents) {
+            parent._children.add(this);
           }
         }
         this._parents = parents;

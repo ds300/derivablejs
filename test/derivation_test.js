@@ -119,3 +119,35 @@ describe("a derivation", () => {
     });
   });
 });
+
+describe("the disowning bug", () => {
+  // a node is disowned when its parents haven't changed
+  // but it wasn't dereferenced during the latest react phase
+  it("used to occur when the disowned child's parents hadn't changed", () => {
+    var root = atom(0);
+    var parent = root.derive(x => x % 2)
+    var child = parent.derive(x => x);
+
+    assert.strictEqual(child.get(), 0);
+
+    parent.react(x => x); // force parent to get turned to stable
+
+    root.set(2);
+
+    assert.strictEqual(child._state, 6); // disowned
+
+    assert.strictEqual(child.get(), 0);
+
+    assert.strictEqual(child._state, 2); // unchanged
+
+    // when the bug existed, the child was no longer in the parent's child set
+    // so the following tests failed
+    root.set(4);
+    assert.strictEqual(child._state, 6); // disowned
+    assert.strictEqual(child.get(), 0);
+    assert.strictEqual(child._state, 2); // unchanged
+    root.set(3);
+    assert.strictEqual(child.get(), 1);
+
+  })
+})
