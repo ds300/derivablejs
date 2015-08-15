@@ -11,6 +11,15 @@ require('babel/register');
  */
 module.exports = function(grunt) {
   grunt.initConfig({
+    concat_sourcemap: {
+      options: {
+      },
+      target: {
+        files: {
+          'dist/havelock.js': ['src/*.js']
+        }
+      }
+    },
     jshint: {
       options: {
         asi: true,
@@ -51,21 +60,12 @@ module.exports = function(grunt) {
   var babel = require('babel');
   var uglify = require('uglify-js');
 
-  grunt.registerTask('compile', function () {
-    var src = 'src/havelock.js';
-    var dest = 'dist/havelock';
-    var code = fs.readFileSync('src/havelock.js');
+  grunt.registerTask('ugly', function () {
+    var src = 'dist/havelock.js';
 
-    var transformed = babel.transform(code, {
-      blacklist: ["es6.tailCall", 'strict'],
-      sourceMaps: true,
-      modules: "ignore",
-    });
-
-    fs.writeFileSync(dest + '.js', transformed.code);
-    fs.writeFileSync(dest + '.js.map', JSON.stringify(transformed.map, null, '\t'));
-
-    var minifyResult = uglify.minify(transformed.code, {
+    var minifyResult = uglify.minify(fs.readFileSync(src).toString(), {
+      inSourceMap: 'dist/havelock.js.map',
+      outSourceMap: 'dist/havelock.min.js.map',
       fromString: true,
       mangle: {
         toplevel: true
@@ -83,7 +83,7 @@ module.exports = function(grunt) {
 
     var minified = minifyResult.code;
     var copyright = fs.readFileSync('resources/COPYRIGHT');
-    fs.writeFileSync(dest + '.min.js', copyright + minified);
+    fs.writeFileSync('dist/havelock.min.js', minified);
   });
 
   var Promise = require("bluebird");
@@ -206,6 +206,7 @@ module.exports = function(grunt) {
     });
   });
 
+  grunt.loadNpmTasks('grunt-concat-sourcemap');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
@@ -214,7 +215,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('docs', 'build documentation', ['clean', 'make-docs'])
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
-  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'compile']);
+  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'concat_sourcemap', 'ugly']);
   grunt.registerTask('test', 'Test built javascript', ['mochaTest']);
   grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats', 'test']);
 }

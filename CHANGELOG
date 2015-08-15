@@ -1,3 +1,13 @@
+0.3.0
+
+- Fallback to ES5 for implementation. Babel was doing weird junk and I don't want
+to have to deal with that again.
+- Introduce `transaction` function. no api docs yet.
+
+0.2.3
+
+Fixed parent management bug for disowned children.
+
 0.2.2
 
 Switched to Apache 2.0 license.
