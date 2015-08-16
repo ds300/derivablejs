@@ -23,13 +23,14 @@ function gc_mark(node, reactions) {
 }
 
 function gc_sweep(node) {
+  var i;
   switch (node._state) {
   case gc_CHANGED:
   case gc_UNCHANGED:
     // changed or unchanged means the node was visited
     // during the react phase, which means we keep it in
     // the graph for the next go round
-    for (var i = node._children.length; i--;) {
+    for (i = node._children.length; i--;) {
       var child = node._children[i];
       gc_sweep(child);
       if (child._state !== gc_STABLE) {
@@ -47,7 +48,7 @@ function gc_sweep(node) {
     // if so, we can avoid recalculating it in future by
     // caching its parents' current values.
     var stashedParentStates = [];
-    for (var i = node._parents.length; i--;) {
+    for (i = node._parents.length; i--;) {
       var parent = node._parents[i];
       if (parent._state !== gc_UNCHANGED) {
         // nope, its parents either have changed or weren't visited,
@@ -68,5 +69,33 @@ function gc_sweep(node) {
     break;
   default:
     throw new Error("can't sweep state " + node._state);
+  }
+}
+
+function gc_abort_sweep(node) {
+  // set everything to unstable, kill all derivation caches and disconnect
+  // the graph
+  var doChildren = false;
+  switch (node._type) {
+  case types_ATOM:
+    node._state = gc_STABLE;
+    doChildren = true;
+    break;
+  case types_DERIVATION:
+  case types_LENS:
+    node._state = gc_NEW;
+    node._value = util_unique;
+    doChildren = true;
+    break;
+  case types_REACTION:
+    node._state = gc_STABLE;
+    doChildren = false;
+    break;
+  }
+  if (doChildren) {
+    for (var i = node._children.length; i--;) {
+      gc_abort_sweep(node._children[i]);
+    }
+    node._children = [];
   }
 }

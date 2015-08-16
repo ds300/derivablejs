@@ -1,4 +1,4 @@
-const parentsStack = [];
+var parentsStack = [];
 
 function parents_capturingParents(f) {
   parentsStack.push([]);

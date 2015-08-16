@@ -3,9 +3,11 @@ var util_keys = Object.keys;
 function util_extend(obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
-    util_keys(other).forEach(function (prop) {
+    var keys = util_keys(other);
+    for (var j = keys.length; j--;) {
+      var prop = keys[j];
       obj[prop] = other[prop];
-    });
+    }
   }
   return obj;
 }
@@ -126,3 +128,5 @@ function util_nextId () {
 function util_slice (a, i) {
   return Array.prototype.slice.call(a, i);
 }
+
+var util_unique = Object.freeze({equals: function () { return false; }});

@@ -1,3 +1,7 @@
+0.3.1
+
+Fix transaction abortion sweep bug.
+
 0.3.0
 
 - Fallback to ES5 for implementation. Babel was doing weird junk and I don't want

@@ -16,9 +16,11 @@ var util_keys = Object.keys;
 function util_extend(obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
-    util_keys(other).forEach(function (prop) {
+    var keys = util_keys(other);
+    for (var j = keys.length; j--;) {
+      var prop = keys[j];
       obj[prop] = other[prop];
-    });
+    }
   }
   return obj;
 }
@@ -140,6 +142,8 @@ function util_slice (a, i) {
   return Array.prototype.slice.call(a, i);
 }
 
+var util_unique = Object.freeze({equals: function () { return false; }});
+
 // node modes
 var gc_NEW = 0,
     gc_CHANGED = 1,
@@ -165,13 +169,14 @@ function gc_mark(node, reactions) {
 }
 
 function gc_sweep(node) {
+  var i;
   switch (node._state) {
   case gc_CHANGED:
   case gc_UNCHANGED:
     // changed or unchanged means the node was visited
     // during the react phase, which means we keep it in
     // the graph for the next go round
-    for (var i = node._children.length; i--;) {
+    for (i = node._children.length; i--;) {
       var child = node._children[i];
       gc_sweep(child);
       if (child._state !== gc_STABLE) {
@@ -189,7 +194,7 @@ function gc_sweep(node) {
     // if so, we can avoid recalculating it in future by
     // caching its parents' current values.
     var stashedParentStates = [];
-    for (var i = node._parents.length; i--;) {
+    for (i = node._parents.length; i--;) {
       var parent = node._parents[i];
       if (parent._state !== gc_UNCHANGED) {
         // nope, its parents either have changed or weren't visited,
@@ -213,7 +218,35 @@ function gc_sweep(node) {
   }
 }
 
-const parentsStack = [];
+function gc_abort_sweep(node) {
+  // set everything to unstable, kill all derivation caches and disconnect
+  // the graph
+  var doChildren = false;
+  switch (node._type) {
+  case types_ATOM:
+    node._state = gc_STABLE;
+    doChildren = true;
+    break;
+  case types_DERIVATION:
+  case types_LENS:
+    node._state = gc_NEW;
+    node._value = util_unique;
+    doChildren = true;
+    break;
+  case types_REACTION:
+    node._state = gc_STABLE;
+    doChildren = false;
+    break;
+  }
+  if (doChildren) {
+    for (var i = node._children.length; i--;) {
+      gc_abort_sweep(node._children[i]);
+    }
+    node._children = [];
+  }
+}
+
+var parentsStack = [];
 
 function parents_capturingParents(f) {
   parentsStack.push([]);
@@ -298,7 +331,7 @@ function transactions_transact (ctx, txn, f) {
   commit(ctx);
 }
 
-function ReactionBase (parent, control) {
+function reactionBase (parent, control) {
   return {
     control: control,
     parent: parent,
@@ -352,6 +385,7 @@ function force (base) {
 }
 
 function reactions_Reaction () {
+  /*jshint validthis:true */
   this._type = types_REACTION;
 }
 
@@ -359,7 +393,7 @@ function reactions_createBase (control, parent) {
   if (control._base) {
     throw new Error("This reaction has already been initialized");
   }
-  control._base = ReactionBase(parent, control);
+  control._base = reactionBase(parent, control);
   return control;
 }
 
@@ -382,7 +416,8 @@ util_extend(reactions_Reaction.prototype, {
 })
 
 function reactions_StandardReaction (f) {
-  reactions_Reaction.call(this);
+  /*jshint validthis:true */
+  this._type = types_REACTION;
   this.react = f;
 }
 
@@ -505,7 +540,8 @@ function derivation_createPrototype (havelock, opts) {
     },
 
     _forceGet: function () {
-      var that = this;
+      var that = this,
+          i;
       var newParents = parents_capturingParents(function () {
         var newState = that._deriver();
         that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
@@ -513,7 +549,7 @@ function derivation_createPrototype (havelock, opts) {
       });
 
       // organise parents
-      for (var i = this._parents.length; i--;) {
+      for (i = this._parents.length; i--;) {
         var possiblyFormerParent = this._parents[i];
         if (!util_arrayContains(newParents, possiblyFormerParent)) {
           util_removeFromArray(possiblyFormerParent._children, this);
@@ -523,20 +559,22 @@ function derivation_createPrototype (havelock, opts) {
       this._parents = newParents;
 
       // add this as child to new parents
-      for (var i = newParents.length; i--;) {
+      for (i = newParents.length; i--;) {
         util_addToArray(newParents[i]._children, this);
       }
     },
 
     _get: function () {
+      var i, parent;
       outer: switch (this._state) {
       case gc_NEW:
       case gc_ORPHANED:
         this._forceGet();
         break;
       case gc_UNSTABLE:
-        for (var i = this._parents.length; i--;) {
-          var parent = this._parents[i], parentState = parent._state;
+        for (i = this._parents.length; i--;) {
+          parent = this._parents[i];
+          var parentState = parent._state;
           if (parentState === gc_UNSTABLE ||
               parentState === gc_ORPHANED ||
               parentState === gc_DISOWNED) {
@@ -555,10 +593,10 @@ function derivation_createPrototype (havelock, opts) {
         break;
       case gc_DISOWNED:
         var parents = [];
-        for (var i = this._parents.length; i--;) {
+        for (i = this._parents.length; i--;) {
           var parentStateTuple = this._parents[i],
-              parent = parentStateTuple[0],
               state = parentStateTuple[1];
+          parent = parentStateTuple[0];
           if (!opts.equals(parent._get(), state)) {
             this._parents = [];
             this._forceGet();
@@ -567,7 +605,7 @@ function derivation_createPrototype (havelock, opts) {
             parents.push(parent);
           }
         }
-        for (var i = parents.length; i--;) {
+        for (i = parents.length; i--;) {
           util_addToArray(parents[i]._children, this);
         }
         this._parents = parents;
@@ -588,7 +626,7 @@ function derivation_construct(obj, deriver) {
   obj._deriver = deriver;
   obj._state = gc_NEW;
   obj._type = types_DERIVATION;
-  obj._value = {};
+  obj._value = util_unique;
   return obj;
 }
 
@@ -668,17 +706,18 @@ function setState (txnState, atom, state) {
 
 util_extend(TransactionState.prototype, {
   onCommit: function () {
+    var i, atomValueTuple;
     var keys = util_keys(this.inTxnValues);
     if (transactions_inTransaction(TXN_CTX)) {
       // push in-txn vals up to current txn
-      for (var i = keys.length; i--;) {
-        var atomValueTuple = this.inTxnValues[keys[i]];
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0].set(atomValueTuple[1]);
       }
     } else {
       // change root state and run reactions.
-      for (var i = keys.length; i--;) {
-        var atomValueTuple = this.inTxnValues[keys[i]];
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0]._value = atomValueTuple[1];
         gc_mark(atomValueTuple[0], NOOP_ARRAY);
       }
@@ -686,7 +725,7 @@ util_extend(TransactionState.prototype, {
       processReactionQueue(this.reactionQueue);
 
       // then sweep for a clean finish
-      for (var i = keys.length; i--;) {
+      for (i = keys.length; i--;) {
         gc_sweep(this.inTxnValues[keys[i]][0]);
       }
     }
@@ -696,7 +735,7 @@ util_extend(TransactionState.prototype, {
     if (!transactions_inTransaction(TXN_CTX)) {
       var keys = util_keys(this.inTxnValues);
       for (var i = keys.length; i--;) {
-        gc_sweep(this.inTxnValues[keys[i]][0]);
+        gc_abort_sweep(this.inTxnValues[keys[i]][0]);
       }
     }
   }

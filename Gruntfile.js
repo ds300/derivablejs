@@ -11,14 +11,14 @@ require('babel/register');
  */
 module.exports = function(grunt) {
   grunt.initConfig({
-    concat_sourcemap: {
+    concat: {
       options: {
+        sourceMap: true
       },
-      target: {
-        files: {
-          'dist/havelock.js': ['src/*.js']
-        }
-      }
+      dist: {
+        src: ['src/*.js'],
+        dest: 'dist/havelock.js',
+      },
     },
     jshint: {
       options: {
@@ -32,6 +32,7 @@ module.exports = function(grunt) {
         immed: true,
         indent: 2,
         iterator: true,
+        newcap: false,
         noarg: true,
         node: true,
         noempty: true,
@@ -40,7 +41,7 @@ module.exports = function(grunt) {
         undef: true,
         unused: 'vars',
       },
-      all: ['src/havelock.js']
+      all: ['dist/havelock.js']
     },
     clean: {
       build: ['dist/*']
@@ -65,7 +66,7 @@ module.exports = function(grunt) {
 
     var minifyResult = uglify.minify(fs.readFileSync(src).toString(), {
       inSourceMap: 'dist/havelock.js.map',
-      outSourceMap: 'dist/havelock.min.js.map',
+      outSourceMap: 'havelock.min.js.map',
       fromString: true,
       mangle: {
         toplevel: true
@@ -73,7 +74,8 @@ module.exports = function(grunt) {
       compress: {
         comparisons: true,
         pure_getters: true,
-        unsafe: true
+        conditionals: true,
+        join_vars: true,
       },
       output: {
         max_line_len: 2048,
@@ -84,6 +86,7 @@ module.exports = function(grunt) {
     var minified = minifyResult.code;
     var copyright = fs.readFileSync('resources/COPYRIGHT');
     fs.writeFileSync('dist/havelock.min.js', minified);
+    fs.writeFileSync('dist/havelock.min.js.map', minifyResult.map.toString());
   });
 
   var Promise = require("bluebird");
@@ -206,7 +209,7 @@ module.exports = function(grunt) {
     });
   });
 
-  grunt.loadNpmTasks('grunt-concat-sourcemap');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
@@ -215,7 +218,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('docs', 'build documentation', ['clean', 'make-docs'])
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
-  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'concat_sourcemap', 'ugly']);
+  grunt.registerTask('build', 'Build distributed javascript', ['clean', 'concat', 'ugly']);
   grunt.registerTask('test', 'Test built javascript', ['mochaTest']);
   grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats', 'test']);
 }

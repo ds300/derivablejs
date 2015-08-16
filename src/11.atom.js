@@ -36,17 +36,18 @@ function setState (txnState, atom, state) {
 
 util_extend(TransactionState.prototype, {
   onCommit: function () {
+    var i, atomValueTuple;
     var keys = util_keys(this.inTxnValues);
     if (transactions_inTransaction(TXN_CTX)) {
       // push in-txn vals up to current txn
-      for (var i = keys.length; i--;) {
-        var atomValueTuple = this.inTxnValues[keys[i]];
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0].set(atomValueTuple[1]);
       }
     } else {
       // change root state and run reactions.
-      for (var i = keys.length; i--;) {
-        var atomValueTuple = this.inTxnValues[keys[i]];
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0]._value = atomValueTuple[1];
         gc_mark(atomValueTuple[0], NOOP_ARRAY);
       }
@@ -54,7 +55,7 @@ util_extend(TransactionState.prototype, {
       processReactionQueue(this.reactionQueue);
 
       // then sweep for a clean finish
-      for (var i = keys.length; i--;) {
+      for (i = keys.length; i--;) {
         gc_sweep(this.inTxnValues[keys[i]][0]);
       }
     }
@@ -64,7 +65,7 @@ util_extend(TransactionState.prototype, {
     if (!transactions_inTransaction(TXN_CTX)) {
       var keys = util_keys(this.inTxnValues);
       for (var i = keys.length; i--;) {
-        gc_sweep(this.inTxnValues[keys[i]][0]);
+        gc_abort_sweep(this.inTxnValues[keys[i]][0]);
       }
     }
   }

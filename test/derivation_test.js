@@ -150,4 +150,36 @@ describe("the disowning bug", () => {
     assert.strictEqual(child.get(), 1);
 
   })
-})
+});
+
+
+describe("derivations inside a transaction", () => {
+  it("can take on temporary values", () => {
+    const a = atom(0);
+    const plusOne = a.derive(a => a + 1);
+
+    assert.strictEqual(plusOne.get(), 1);
+
+    transact(abort => {
+      a.set(1);
+      assert.strictEqual(plusOne.get(), 2);
+      abort();
+    });
+
+    assert.strictEqual(plusOne.get(), 1);
+
+    let thrown = null;
+    try {
+      transact(() => {
+        a.set(2);
+        assert.strictEqual(plusOne.get(), 3);
+        throw "death";
+      });
+    } catch (e) {
+      thrown = e;
+    }
+
+    assert.strictEqual(thrown, "death");
+    assert.strictEqual(plusOne.get(), 1);
+  });
+});

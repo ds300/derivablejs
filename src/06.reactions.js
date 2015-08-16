@@ -1,4 +1,4 @@
-function ReactionBase (parent, control) {
+function reactionBase (parent, control) {
   return {
     control: control,
     parent: parent,
@@ -52,6 +52,7 @@ function force (base) {
 }
 
 function reactions_Reaction () {
+  /*jshint validthis:true */
   this._type = types_REACTION;
 }
 
@@ -59,7 +60,7 @@ function reactions_createBase (control, parent) {
   if (control._base) {
     throw new Error("This reaction has already been initialized");
   }
-  control._base = ReactionBase(parent, control);
+  control._base = reactionBase(parent, control);
   return control;
 }
 
@@ -82,7 +83,8 @@ util_extend(reactions_Reaction.prototype, {
 })
 
 function reactions_StandardReaction (f) {
-  reactions_Reaction.call(this);
+  /*jshint validthis:true */
+  this._type = types_REACTION;
   this.react = f;
 }
 
