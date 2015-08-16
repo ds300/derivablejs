@@ -9,9 +9,16 @@
 
 ---
 
-Havelock is a simple holistic state management library for JavaScript. It believes in the fundamental interconnectedness of all things and contrives to give you cleaner and more robust code by being the fabric through which your interconnections are woven.
+Havelock believes:
+
+ - in the fundamental interconnectedness of all things.
+ - that Functional Reactive Streams are incapable of adroitly modeling continuous application state.
+ - that 'cursor'-based immutable-state-at-the-top libraries are a good idea but unnecessarily restrictive.
+
+Thus Havelock provides a novel immutable-state-anywhere model which allows arbitrary acyclic derivation structures to be computed lazily and reacted to eagerly. It maintains state consistency at all times and requires no manual memory management. It's a mere 3.6kB of pure distilled awesome and you'll wonder how you ever lived without it.
 
 [![Join the chat at https://gitter.im/ds300/havelock](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/havelock?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![npm version](https://badge.fury.io/js/havelock.svg)](http://badge.fury.io/js/havelock)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
