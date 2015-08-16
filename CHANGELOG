@@ -1,3 +1,7 @@
+0.3.2
+
+.d.ts reinstated
+
 0.3.1
 
 Fix transaction abortion sweep bug.
