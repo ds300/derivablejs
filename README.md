@@ -9,13 +9,11 @@
 
 ---
 
-Havelock believes:
+Havelock believes in the fundamental interconnectedness of all things, and embodies an holistic approach to state management which could drastically simplify your code and eliminate a whole class of easy-to-make-and-hard-to-fix bugs.
 
- - in the fundamental interconnectedness of all things.
- - that Functional Reactive Streams are incapable of adroitly modeling continuous application state.
- - that 'cursor'-based immutable-state-at-the-top libraries are a good idea but unnecessarily restrictive.
+It does this by providing a novel composable model of continuous state. [Reactive streams](https://gist.github.com/staltz/868e7e9bc2a7b8c1f754) compose only discretely, which can lead to state inconsistency, while ['cursor'-based models of state](http://omniscientjs.github.io/) are continuous but disallow composition, which severely limits the design space you get to work in. Havelock is the best of both worlds; allowing arbitrary composition while maintaining consistency at all times. It makes an adroit partner to streams and a powerful generalization of cursor-based state.
 
-Thus Havelock provides a novel immutable-state-anywhere model which allows arbitrary acyclic derivation structures to be computed lazily and reacted to eagerly. It maintains state consistency at all times and requires no manual memory management. It's a mere 3.6kB of pure distilled awesome and you'll wonder how you ever lived without it.
+It's only about 3.6kB and chock-full of awesomesauce so why not give it a try.
 
 [![Join the chat at https://gitter.im/ds300/havelock](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/havelock?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![npm version](https://badge.fury.io/js/havelock.svg)](http://badge.fury.io/js/havelock)
@@ -345,7 +343,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 
 ## Future Work
 
-1. Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.
+1. <s>Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.</s> now about 3.6k, but could probably get smaller still
 1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
