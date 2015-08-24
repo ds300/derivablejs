@@ -11,7 +11,7 @@
 
 Havelock believes in the fundamental interconnectedness of all things, and embodies an holistic approach to state management which could drastically simplify your code and eliminate a whole class of easy-to-make-and-hard-to-fix bugs.
 
-It does this by providing a novel composable model of continuous state. [Reactive streams](https://gist.github.com/staltz/868e7e9bc2a7b8c1f754) compose only discretely, which can lead to state inconsistency, while ['cursor'-based models of state](http://omniscientjs.github.io/) are continuous but disallow composition, which severely limits the design space you get to work in. Havelock is the best of both worlds; allowing arbitrary composition while maintaining consistency at all times. It makes an adroit partner to streams and a powerful generalization of cursor-based state.
+Havelock provides a novel composable model of continuous state which is a powerful generalization of cursor-based reactive state as found in libraries like [Om](https://github.com/omcljs/om), [omniscient](http://omniscientjs.github.io/), and [react-cursor](https://github.com/dustingetz/react-cursor).
 
 It's only about 3.6kB and chock-full of awesomesauce so why not give it a try.
 
