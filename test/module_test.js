@@ -105,6 +105,15 @@ describe("the `struct` function", () => {
 
     assert.deepEqual(expected2, grouped.get());
   });
+
+  it("only accepts plain objects or arrays", () => {
+    assert.throws(() => _.struct(3));
+    assert.throws(() => _.struct("blah"));
+    assert.throws(() => _.struct(new Error()));
+    function A() {};
+    assert.throws(() => _.struct(new A()));
+    assert.throws(() => _.struct(/\d+/));
+  });
 });
 
 

@@ -155,9 +155,13 @@ function havelock (config) {
   }
 
   Havelock.struct = function (arg) {
-    return Havelock.derivation(function () {
-      return deepUnpack(arg);
-    })
+    if (arg.constructor === Object || arg instanceof Array) {
+      return Havelock.derivation(function () {
+        return deepUnpack(arg);
+      });
+    } else {
+      throw new Error("`struct` expects plain Object or Array");
+    }
   };
 
   Havelock.ifThenElse = function (a, b, c) { return a.then(b, c) };

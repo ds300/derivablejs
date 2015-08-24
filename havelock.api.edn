@@ -537,7 +537,7 @@
       firstName.set(`William`);
       lastName.set(`Blake`);
     }), 1000);
-    
+
     // ... 1 second later ...
     // $> My name is William Blake
     ```"
@@ -547,7 +547,8 @@
     "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
 
   (struct [obj any] (Derivable any)
-    "Given some potentially nested JavaScript collection containing one or more derivable things,
+    "Given some plain JavaScript `Object` or `Array` (or some nested combination thereof)
+    containing one or more derivable things,
     returns a new derivable representing the input collection with unpacked
     values. e.g.
 

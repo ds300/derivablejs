@@ -1,3 +1,8 @@
+0.4.0
+
+- `transaction` returns value
+- `struct` only accepts plain objects and arrays
+
 0.3.2
 
 .d.ts reinstated
