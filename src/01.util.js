@@ -27,6 +27,10 @@ function _is(a, b) {
   }
 }
 
+function _has(p,o) {
+  return Object.hasOwnProperty.call(o, p);
+}
+
 function _equals(a, b, stackA, stackB) {
   var typeA = _type(a);
   if (typeA !== _type(b)) {
@@ -35,8 +39,12 @@ function _equals(a, b, stackA, stackB) {
 
   if (typeA === 'Boolean' || typeA === 'Number' || typeA === 'String') {
     return typeof a === 'object' ?
-      typeof b === 'object' && util_equals(a.valueOf(), b.valueOf()) :
-      false;
+      typeof b === 'object' && _is(a.valueOf(), b.valueOf()) :
+      _is(a, b);
+  }
+
+  if (_is(a, b)) {
+    return true;
   }
 
   if (typeA === 'RegExp') {
@@ -54,14 +62,9 @@ function _equals(a, b, stackA, stackB) {
       return false;
     }
 
-    var keysA = Object.keys(a);
-    if (keysA.length !== Object.keys(b).length) {
+    var keysA = util_keys(a);
+    if (keysA.length !== util_keys(b).length) {
       return false;
-    }
-
-    if (!stackA) {
-      stackA = [];
-      stackB = [];
     }
 
     var idx = stackA.length - 1;
@@ -77,8 +80,7 @@ function _equals(a, b, stackA, stackB) {
     idx = keysA.length - 1;
     while (idx >= 0) {
       var key = keysA[idx];
-      if (!Object.hasOwnProperty(key, b) ||
-          !util_equals(b[key], a[key], stackA, stackB)) {
+      if (!_has(key, b) || !_equals(b[key], a[key], stackA, stackB)) {
         return false;
       }
       idx -= 1;
@@ -90,16 +92,9 @@ function _equals(a, b, stackA, stackB) {
   return false;
 }
 
-function util_equals (a, b, stackA, stackB) {
-  if ((Object.is && Object.is(a, b)) || _is(a, b)) {
-    return true;
-  }
-  if (!(a && b)) return false;
-
-  return (typeof a.equals === 'function' && a.equals(b)) ||
-         (typeof b.equals === 'function' && b.equals(a)) ||
-         _equals(a, b, stackA, stackB) ||
-         false;
+function util_equals (a, b) {
+  return a && typeof a.equals === 'function' ?
+            a.equals(b) : _equals(a, b, [], []);
 }
 
 function util_addToArray (a, b) {

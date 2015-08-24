@@ -112,4 +112,8 @@ declare module 'havelock' {
   function isLensed(obj: any): boolean;
 
   function isReaction(obj: any): boolean;
+
+  function withEquality(equals: (a: any, b: any) => boolean): any;
+
+  function defaultEquals(a: any, b: any): boolean;
 }

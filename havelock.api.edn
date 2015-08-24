@@ -725,4 +725,12 @@
 
   (isReaction [obj any] boolean
     "Returns true iff `obj` is a {{Reaction}}.")
+
+  (withEquality [equals (=> [a any b any] boolean)] any
+    "Returns a new instance of havelock with a new notion of equality. Does not
+    affect the current instance.")
+
+  (defaultEquals [a any b any] boolean
+    "Havelock's inbuilt equality-checking function. Note that calling
+    {{withEquality}} will not affect the value of this property.")
   )

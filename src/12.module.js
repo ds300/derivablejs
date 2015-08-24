@@ -5,6 +5,7 @@ function havelock (config) {
 
   var Havelock = {
     transact: atom_transact,
+    defaultEquals: util_equals,
     transaction: atom_transaction,
     Reaction: reactions_Reaction,
     isAtom: function (x) {
@@ -206,5 +207,5 @@ function havelock (config) {
 util_extend(exports, havelock());
 exports.withEquality = function (equals) {
   return havelock({equals: equals});
-}
+};
 exports['default'] = exports;

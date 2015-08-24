@@ -367,3 +367,19 @@ describe("the `transaction` function", () => {
     assert.strictEqual(b.get(), 3);
   });
 });
+
+describe("defaultEquals", () => {
+  it("tests whether two values are equal", () => {
+    assert(_.defaultEquals(5, 5));
+    assert(_.defaultEquals("buns", "buns"));
+    assert(_.defaultEquals([1,2,3], [0,1,2].map(x => x+1)));
+    var x = {};
+    x['a'] = 'a';
+    x['b'] = 'b';
+    assert(_.defaultEquals({a: "a", b: 'b'}, x));
+    x['c'] = [1,2,3];
+    assert(_.defaultEquals({a: "a", b: 'b', c: [0,1,2].map(x => x+1)}, x));
+    assert(!_.defaultEquals(!{a: "a", b: 'b', c: [0,2,1].map(x => x+1)}, x));
+    assert(!_.defaultEquals({a: "a", b: 'd', c: [0,1,2].map(x => x+1)}, x));
+  });
+})

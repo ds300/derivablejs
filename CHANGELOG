@@ -1,35 +1,36 @@
-0.4.0
+## 0.4.0
 
-- `transaction` returns value
+- `transaction`-ized functions can now return a value
 - `struct` only accepts plain objects and arrays
+- `defaultEquals` exposed for use when writing custom equality-checking functions.
 
-0.3.2
+## 0.3.2
 
 .d.ts reinstated
 
-0.3.1
+## 0.3.1
 
 Fix transaction abortion sweep bug.
 
-0.3.0
+## 0.3.0
 
 - Fallback to ES5 for implementation. Babel was doing weird junk and I don't want
 to have to deal with that again.
 - Introduce `transaction` function. no api docs yet.
 
-0.2.3
+## 0.2.3
 
 Fixed parent management bug for disowned children.
 
-0.2.2
+## 0.2.2
 
 Switched to Apache 2.0 license.
 
-0.2.1
+## 0.2.1
 
 sorted out npm module to only include dist.
 
-0.2.0
+## 0.2.0
 
 - changed behaviour of method `Derivable::derive` to work like `swap` in terms
   of arguments. e.g. now you can do `let five = three.derive(plus, two)`;
