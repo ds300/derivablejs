@@ -156,8 +156,10 @@ function atom_transaction (f) {
   return function () {
     var args = util_slice(arguments, 0);
     var that = this;
+    var result;
     atom_transact(function () {
-      f.apply(that, args);
+      result = f.apply(that, args);
     });
+    return result;
   }
 }

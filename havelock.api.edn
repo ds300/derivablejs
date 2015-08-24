@@ -518,6 +518,31 @@
     Success!
     ")
 
+  (transaction
+    [f (=> [&args [any]] any)]
+    (=> [&args [any]] any)
+    "Wraps {{f}} such that its body is executed in a transaction. Preserves
+    its input and output semantics.
+
+    ```javascript
+    const firstName = `Joe`,
+    lastName = `Schmoe`;
+
+    derive`My name is ${firstName} ${lastName}`.react(
+      x => console.log(x);
+    );
+    // $> My name is Joe Schmoe
+
+    setTimeout(transaction(() => {
+      firstName.set(`William`);
+      lastName.set(`Blake`);
+    }), 1000);
+    
+    // ... 1 second later ...
+    // $> My name is William Blake
+    ```"
+    (:see-also transact))
+
   (unpack [obj any] any
     "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
 

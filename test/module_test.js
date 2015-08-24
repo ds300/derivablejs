@@ -283,3 +283,78 @@ describe("the lift function", () => {
     assert(equalsExpected);
   });
 });
+
+describe("the `transact` function", () => {
+  it("executes a function in the context of a transaction", () => {
+    const a = atom("a"),
+          b = atom("b");
+
+    let timesChanged = 0;
+
+    _.struct({a, b}).reaction(() => timesChanged++).start();
+
+    assert.strictEqual(timesChanged, 0);
+
+    const setAAndB = (a_val, b_val) => {
+      a.set(a_val);
+      b.set(b_val);
+    };
+
+    setAAndB("aye", "bee");
+
+    assert.strictEqual(timesChanged, 2);
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+
+    transact(() => setAAndB("a", "b"));
+
+    assert.strictEqual(timesChanged, 3);
+    assert.strictEqual(a.get(), "a");
+    assert.strictEqual(b.get(), "b");
+
+    transact(() => setAAndB(5, 6));
+
+    assert.strictEqual(timesChanged, 4);
+    assert.strictEqual(a.get(), 5);
+    assert.strictEqual(b.get(), 6);
+  });
+});
+
+describe("the `transaction` function", () => {
+  it("wraps a function such that its body is executed in a txn", () => {
+    const a = atom("a"),
+          b = atom("b");
+
+    let timesChanged = 0;
+
+    _.struct({a, b}).reaction(() => timesChanged++).start();
+
+    assert.strictEqual(timesChanged, 0);
+
+    const setAAndB = (a_val, b_val) => {
+      a.set(a_val);
+      b.set(b_val);
+      return a_val + b_val;
+    };
+
+    assert.strictEqual(setAAndB("aye", "bee"), "ayebee");
+
+    assert.strictEqual(timesChanged, 2);
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+
+    const tSetAAndB = _.transaction(setAAndB);
+
+    assert.strictEqual(tSetAAndB("a", "b"), "ab");
+
+    assert.strictEqual(timesChanged, 3);
+    assert.strictEqual(a.get(), "a");
+    assert.strictEqual(b.get(), "b");
+
+    assert.strictEqual(tSetAAndB(2, 3), 5);
+
+    assert.strictEqual(timesChanged, 4);
+    assert.strictEqual(a.get(), 2);
+    assert.strictEqual(b.get(), 3);
+  });
+});

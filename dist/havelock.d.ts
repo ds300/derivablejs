@@ -79,6 +79,8 @@ declare module 'havelock' {
 
   function transact(f: () => void): void;
 
+  function transaction(f: (...args: any[]) => any): (...args: any[]) => any;
+
   function unpack(obj: any): any;
 
   function struct(obj: any): Derivable<any>;
