@@ -5,31 +5,32 @@
 # Router
 
 This file will walk you through the implemetation of a simple but powerful
-routing system.
+routing system with Havelock. It is structured in two parts:
 
-## Routing
+1. Data and Functions
+2. Reactive Glue
 
-Everything descends from a raw hash string.
+The first section doesn't involve using Havelock at all, but rather shows how to
+go about designing all the individual components of a routing system from a functional perspective.
+It is written for anyone with JS experience, but if you've done any functional programming with immutable data before it should be *really* easy to follow.
+
+Part 2 shows how to take the inert functional system designed in Part 1, and turn it into a living breathing thing using Havelock.
+
+## Part 1: Data and Functions
+
+The top-level piece of data is the hash fragment at the end of a url. e.g. the url `https://ds300.github.com/#this-is-a-hash-fragment` has a hash fragment `'#this-is-a-hash-fragment'`, and the url `https://ds300.github.com/` has a hash fragment `''`.
+
+We are essentially building a function which transforms a hash fragment into a DOM tree.
+
+To begin, let's examine the types of hash fragments we will be looking at:
+
+- Routes: `'#/some/route'`, `'#/'`, `'#'`, `'#/another/longer/route'`
+- Routes + Query Params: `'#/?name=value&boolean_flag'`, `'#/some/route/with?a=param'`
+
+First we want to split the hash fragment into two parts: the route part and the query part. These are cleverly separated by a question mark. At the same time we can get rid of the `#` character becasue it doesn't mean anything at this stage.
 
 ***/
-var havelock_1 = require('havelock');
-// this is what we'd use in a browser
-function makeRoot() {
-    var hash = havelock_1.atom(window.location.hash);
-    window.addEventListener('hashchange', function () { return hash.set(window.location.hash); });
-    return hash;
-}
-// but this isn't running in a browser so we'll do this:
-var hash = havelock_1.atom("");
-/***
-
-Let's convert the hash into a route. Actually, the hash might have params
-at the end so let's convert the hash into a route and a parameter map
-
-***/
-var immutable_1 = require('immutable');
 function splitHash(hash) {
-    // e.g. '#/some/path?query=something' becomes ['/some/path', 'query=something']
     var queryIdx = hash.indexOf("?");
     if (queryIdx < 0) {
         return [hash.slice(1), ""];
@@ -38,15 +39,40 @@ function splitHash(hash) {
         return [hash.slice(1, queryIdx), hash.slice(queryIdx + 1)];
     }
 }
-var notEmpty = function (s) { return s !== ''; };
-function path2route(path) {
-    // e.g. 'some/path' or '/some/path' or '/some/path/'
-    //       becomes List ['some', 'path']
-    return immutable_1.List(path.split("/").filter(notEmpty));
+console.log(splitHash('#/some/route/with?a=param')); //$
+// $> [ '/some/route/with', 'a=param' ]
+console.log(splitHash('#/some/route')); //$
+// $> [ '/some/route', '' ]
+console.log(splitHash('#/?question=why?&answer=because!')); //$
+// $> [ '/', 'question=why?&answer=because!' ]
+/***
+
+The next step is to parse the route and query parts into more useful forms.
+
+To do this I'm going to use the `List` and `Map` classes from facebook's [immutable](https://facebook.github.io/immutable-js/) library.
+
+***/
+var immutable_1 = require('immutable');
+var notEmpty = function (x) { return x !== ''; };
+function parseRouteString(route) {
+    var parts = route.split("/") // break apart
+        .filter(notEmpty); // canonicalise
+    return immutable_1.List(parts);
 }
+console.log(parseRouteString('/')); //$
+// $> List []
+console.log(parseRouteString('/some/route')); //$
+// $> List [ "some", "route" ]
+// ignores multiple consecutive slashes
+console.log(parseRouteString('/a/very//long/route////indeed///')); //$
+// $> List [ "a", "very", "long", "route", "indeed" ]
+// it should also work without leading slashes
+// this will be useful for things we need to do later
+console.log(parseRouteString('some/route')); //$
+// $> List [ "some", "route" ]
+console.log(parseRouteString('')); //$
+// $> List []
 function parseQueryString(query) {
-    // e.g. 'query=something&anotherThing'
-    //       becomes Map {query: 'something', anotherThing: true}
     var result = immutable_1.Map().asMutable();
     var parts = query.split("&").filter(notEmpty);
     for (var _i = 0; _i < parts.length; _i++) {
@@ -61,71 +87,26 @@ function parseQueryString(query) {
     }
     return result.asImmutable();
 }
-// helper for destructuring derivable tuple
-function raiseTuple(tuple) {
-    return [tuple.derive(function (t) { return t[0]; }), tuple.derive(function (t) { return t[1]; })];
-}
-var _a = raiseTuple(hash.derive(splitHash)), path = _a[0], queryString = _a[1];
-var route = path.derive(path2route);
-var queryParams = queryString.derive(parseQueryString);
-/***
-
-Ok, lets see if that all works:
-
-***/
-console.log(route.get()); //$
-// $> List []
-console.log(queryParams.get()); //$
+console.log(parseQueryString('')); //$
 // $> Map {}
-hash.set("#/route");
-console.log(route.get()); //$
-// $> List [ "route" ]
-console.log(queryParams.get()); //$
-// $> Map {}
-hash.set("#/some/route");
-console.log(route.get()); //$
-// $> List [ "some", "route" ]
-hash.set("#/some/route/with?a=param");
-console.log(route.get()); //$
-// $> List [ "some", "route", "with" ]
-console.log(queryParams.get()); //$
-// $> Map { "a": "param" }
-hash.set("#/some/route/with?a=param&more=params&others&evenmore");
-console.log(route.get()); //$
-// $> List [ "some", "route", "with" ]
-console.log(queryParams.get()); //$
-// $> Map { "a": "param", "more": "params", "others": true, "evenmore": true }
+console.log(parseQueryString('boolean_flag')); //$
+// $> Map { "boolean_flag": true }
+console.log(parseQueryString('name=value')); //$
+// $> Map { "name": "value" }
+console.log(parseQueryString('name=value&boolean_flag&name2=value2')); //$
+// $> Map { "name": "value", "boolean_flag": true, "name2": "value2" }
+console.log(parseQueryString('boolean_flag1&name=value&boolean_flag2')); //$
+immutable_1.Map();
 /***
 
-Seems good enough for now.
+Unfortunately TypeScript doesn't allow recursive type aliases,
+otherwise that `any` at the end there would be `DispatchTree<Handler>`
 
-## Dispatching
+Because we know our `Route`s will never have the empty string as one of their
+constituent parts, we can use the empty string as the key for the handler at a
+particular location in the nested map structure.
 
-I'll refer to the things which render the dom for a particular route as 'handlers'.
-
-In most MVC frameworks handlers are functions or templates with some associated
-data and business logic. With havelock, handlers will simply be Derivables or ordinary
-renderable values.
-It doesn't matter what they derive from or where they came
-from as long as they produce something renderable when dereferenced.
-
-We'll register them in a global nested map structure:
-
-***/
-hash.set("#/home");
-var havelock_2 = require('havelock');
-// unfortunately Typescript doesn't allow recursive type aliases, otherwise that
-// `any` at the end there would be `DispatchTree`
-var dispatchTree = havelock_1.atom(immutable_1.Map());
-function register(dt, path, handler) {
-    return dt.setIn(path2route(path).push(""), handler);
-}
-function lookup(dt, route) {
-    return dt.getIn(route.push(""));
-}
-/***
-
-So, e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` would look like the following:
+e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` would look like the following:
 
 ```json
 {
@@ -136,35 +117,180 @@ So, e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` woul
   },
   "d": {"": "d handler"}
 }
-```
-
-Now we need to use `lookup` to derive the handler based on the contents of
-`dispatchTree`. We can then unpack that handler to create the view.
 
 ***/
-// 404 handler in case we request an invalid route
-var fourOhFour = route.derive(function (route) {
-    return '404 route not found: /' + route.join("/");
-});
-var chosenHandler = dispatchTree.derive(lookup, route)
-    .or(fourOhFour);
-var renderDom = function (dom) { return console.log("DOM: " + dom); };
-var reaction = chosenHandler.derive(havelock_2.unpack).react(renderDom); //$
-// $> DOM: 404 route not found: /home
-dispatchTree.swap(register, '/home', "Hello There World!"); //$
-// $> DOM: Hello There World!
-dispatchTree.swap(register, '/print-params', queryParams.derive(renderParams));
-function renderParams(params) {
-    var result = "the params are:";
-    for (var _i = 0, _a = params.entrySeq().toArray(); _i < _a.length; _i++) {
-        var _b = _a[_i], key = _b[0], val = _b[1];
-        result += "\n  " + key + ": " + val;
-    }
-    return result;
+function register(tree, path, handler) {
+    var route = parseRouteString(path).push('');
+    return tree.setIn(route, handler);
 }
-hash.set("#/print-params?today=thursday&tomorrow=friday&almost=party_time"); //$
+var tree = immutable_1.Map();
+console.log(tree); //$
+// $> Map {}
+tree = register(tree, '/a', 'a handler');
+console.log(tree); //$
+// $> Map { "a": Map { "": "a handler" } }
+tree = register(tree, '/a/b', 'b handler');
+tree = register(tree, '/a/c', 'c handler');
+tree = register(tree, '/d', 'd handler');
+console.log(JSON.stringify(tree, null, '  ')); //$
+// $> {
+// $>   "a": {
+// $>     "": "a handler",
+// $>     "b": {
+// $>       "": "b handler"
+// $>     },
+// $>     "c": {
+// $>       "": "c handler"
+// $>     }
+// $>   },
+// $>   "d": {
+// $>     "": "d handler"
+// $>   }
+// $> }
+/***
+
+If you've ever used modern routing libraries like [sinatra](http://www.sinatrarb.com/),
+[compojure](https://github.com/weavejester/compojure), [klein](https://github.com/chriso/klein.php),
+[jersey](https://jersey.java.net/documentation/latest/jaxrs-resources.html),
+and about a million others, you're probably familiar with the notion of a *path parameter*.
+
+Path params let one define parts of a path which are variable and assigned to a named parameter
+for consumption by the matched handler.
+
+e.g. a handler registered with the path `'resource/:id/stats'` will be matched
+against the route `resource/51/stats`, and might render a page
+which shows statistics about some kind of resource with id `51`.
+
+***/
+tree = register(tree, '/d/:id/e', 'e handler');
+console.log(JSON.stringify(tree, null, '  ')); //$
+// $> {
+// $>   "a": {
+// $>     "": "a handler",
+// $>     "b": {
+// $>       "": "b handler"
+// $>     },
+// $>     "c": {
+// $>       "": "c handler"
+// $>     }
+// $>   },
+// $>   "d": {
+// $>     "": "d handler",
+// $>     ":id": {
+// $>       "e": {
+// $>         "": "e handler"
+// $>       }
+// $>     }
+// $>   }
+// $> }
+/***
+
+So when we retrieve a handler, we also need to retrieve any matched path params.
+
+***/
+function lookup(tree, params, route) {
+    var part = route.first();
+    var child = tree.get(part);
+    if (child) {
+        if (part === '') {
+            // child is the matched handler
+            return [child, params];
+        }
+        else {
+            // child is nested dispatch tree
+            return lookup(child, params, route.shift());
+        }
+    }
+    else {
+        // child not found so look for path param
+        var paramKeys = tree.keySeq()
+            .filter(function (k) { return k.indexOf(':') === 0; })
+            .toArray();
+        for (var _i = 0; _i < paramKeys.length; _i++) {
+            var k = paramKeys[_i];
+            // extract the path param
+            var paramsWithK = params.set(k.slice(1), route.first());
+            // keep looking recursively to find a handler
+            var result = lookup(tree.get(k), paramsWithK, route.shift());
+            // if a handler was found, we can just return it
+            if (result !== null) {
+                return result;
+            }
+        }
+    }
+    return null;
+}
+console.log(lookup(tree, immutable_1.Map(), immutable_1.List(['a', '']))); //$
+// $> [ 'a handler', Map {} ]
+console.log(lookup(tree, immutable_1.Map({ yo: true }), immutable_1.List(['a', '']))); //$
+// $> [ 'a handler', Map { "yo": true } ]
+console.log(lookup(tree, immutable_1.Map(), immutable_1.List(['a', 'b', '']))); //$
+// $> [ 'b handler', Map {} ]
+console.log(lookup(tree, immutable_1.Map(), immutable_1.List(['d', '52', 'e', '']))); //$
+// $> [ 'e handler', Map { "id": "52" } ]
+console.log(lookup(tree, immutable_1.Map({ yo: true }), immutable_1.List(['d', '123', 'e', '']))); //$
+// $> [ 'e handler', Map { "yo": true, "id": "123" } ]
+/***
+
+Believe it or not, we now have all the functional building blocks we need.
+All we're doing is turning a hash fragment and a dispatch tree into a 'handler' and a set of params.
+
+Here's what that looks as one big block of imperative code:
+
+***/
+function hello(params) {
+    var _a = params.toJS(), name = _a.name, caps = _a.caps;
+    name = caps ? name.toUpperCase() : name;
+    return "Well hello there, " + name + ".";
+}
+{
+    var hash = '#/hello/steve?caps';
+}
+var tree = immutable_1.Map();
+tree = register(tree, '/hello/:name', hello);
+var _a = splitHash(hash), path = _a[0], queryString = _a[1];
+var route = parseRouteString(path).push('');
+var qParams = parseQueryString(queryString);
+var _b = lookup(tree, qParams, route), handler = _b[0], params = _b[1];
+console.log(handler(params)); //$
+/***
+
+## Part 2: Reactive Glue
+
+This is essentially a slightly more verbose version of the imperative version
+above.
+
+***/
+var havelock_1 = require('havelock');
+// Here's the root state
+var rootHash = havelock_1.atom("#/hello/steve?caps");
+var dispatchTree = havelock_1.atom(immutable_1.Map());
+// helper for destructuring derivable tuple
+function raiseTuple(tuple) {
+    return [tuple.derive(function (t) { return t[0]; }), tuple.derive(function (t) { return t[1]; })];
+}
+var _c = raiseTuple(rootHash.derive(splitHash)), routeString = _c[0], queryString = _c[1];
+var route = routeString.derive(parseRouteString)
+    .derive(function (r) { return r.push(''); });
+var qParams = queryString.derive(parseQueryString);
+var lookupResult = dispatchTree.derive(lookup, qParams, route)
+    .or([null, qParams]);
+var _d = raiseTuple(lookupResult), matchHandler = _d[0], params = _d[1];
+// handler might be null, in which case do a 404 page
+var handler = matchHandler.or((_e = ["404 route not found: ", ""], _e.raw = ["404 route not found: ", ""], havelock_1.derive(_e, routeString)));
+var dom = handler.derive(havelock_1.unpack);
+dom.react(function (dom) { return console.log("HELLO YES THIS IS DOM:\n  " + dom); }); //$
+// $> HELLO YES THIS IS DOM:
+// $>   404 route not found: /hello/steve
+rootHash.set("#/hello/jessica?caps"); //$
+// $> HELLO YES THIS IS DOM:
+// $>   404 route not found: /hello/jessica
+dispatchTree.swap(register, 'hello/:name', params.derive(hello)); //$
+// $> HELLO YES THIS IS DOM:
+// $>   Well hello there, JESSICA.
+rootHash.set("#/hello/jessica"); //$
 function context(ctx) {
-    var route = path2route(ctx);
+    var route = parseRouteString(ctx);
     return {
         get: function (dt) {
             return dt.getIn(route) || immutable_1.Map();
@@ -174,98 +300,56 @@ function context(ctx) {
         }
     };
 }
-var printRoutes = dispatchTree.lens(context('/print'));
-printRoutes.swap(register, "/params", queryParams.derive(renderParams));
-hash.set("#/print/params?a=b&c"); //$
-// $> DOM: the params are:
-// $>   a: b
-// $>   c: true
-printRoutes.swap(register, "/hello", queryParams.derive(function (ps) {
-    return "Hello, " + ps.get('name') + "!";
-}));
-hash.set("#/print/hello?name=Sadie"); //$
-// $> DOM: Hello, Sadie!
-printRoutes.swap(register, '/', "pick a thing to print yo");
-hash.set("#/print"); //$
-// $> DOM: pick a thing to print yo
 /***
 
-Splendid. The last feature I want to support is inline path parameters, e.g. one should be
-able to specify a path like `/resource/:id/home`, for which a hash like
-`#/resource/32/home` might render the home page of the resource with id `32`.
-
-I don't think I'll need to change the register function for this, but the lookup
-function will definitely need to be expanded in order to accumulate the parameters
-and put them somewhere.
+That's literally it. Here's how you use it:
 
 ***/
-function lookupWithParams(dt, route, params) {
-    if (route.size === 0) {
-        // dt is just the matched handler at this point
-        return [dt, params];
-    }
-    else {
-        var child = dt.get(route.first());
-        if (child) {
-            return lookupWithParams(child, route.shift(), params);
-        }
-        else {
-            // look for param routes
-            var paramKeys = dt.keySeq().filter(function (k) { return k.indexOf(':') === 0; }).toArray();
-            for (var _i = 0; _i < paramKeys.length; _i++) {
-                var k = paramKeys[_i];
-                var result = lookupWithParams(dt.get(k), route.shift(), params.set(k.slice(1), route.first()));
-                if (result) {
-                    return result;
-                }
-            }
-        }
-    }
-    return null;
-}
-function lookup2(dt, route) {
-    return lookupWithParams(dt, route.push(""), immutable_1.Map()) || [null, immutable_1.Map()];
-}
-;
-var _b = raiseTuple(dispatchTree.derive(lookup2, route)), lookupResult = _b[0], inlineParams = _b[1];
-chosenHandler = lookupResult.or(fourOhFour);
-// now merge query params and inline params
-var merge = function (x, y) { return x.merge(y); };
-var params = queryParams.derive(merge, inlineParams);
-// re-bind reaction to use new `chosenHandler`
-reaction.stop();
-reaction = chosenHandler.derive(havelock_2.unpack).react(renderDom);
-; //$
-// $> DOM: pick a thing to print yo
-dispatchTree.swap(register, "resource/:id/home", params.derive(function (params) {
-    var _a = params.toJS(), id = _a.id, fruit = _a.fruit;
-    var result = "This is the home of the resource with id " + id;
-    if (fruit) {
-        result += "\nToday the fruit is " + fruit;
+var printRoutes = dispatchTree.lens(context('/print'));
+printRoutes.swap(register, "/params", params.derive(renderParams));
+function renderParams(params) {
+    var result = "the params are:";
+    for (var _i = 0, _a = params.entrySeq().toArray(); _i < _a.length; _i++) {
+        var _b = _a[_i], key = _b[0], val = _b[1];
+        result += "\n  " + key + ": " + val;
     }
     return result;
-}));
-hash.set("#/resource/343/home"); //$
-// $> DOM: This is the home of the resource with id 343
-hash.set("#/resource/whatever/home?fruit=banana"); //$
-// $> DOM: This is the home of the resource with id whatever
-// $> Today the fruit is banana
-printRoutes.swap(register, "/:echo", params.derive(function (ps) {
-    return ps.get('echo');
-}));
-// /print /print/params and /print/hello should still be there
-hash.set("#/print"); //$
-// $> DOM: pick a thing to print yo
-hash.set("#/print/params?buns=5"); //$
-// $> DOM: the params are:
-// $>   buns: 5
-hash.set("#/print/hello?name=Morty"); //$
-// $> DOM: Hello, Morty!
-// the :echo parameter should pick up anything else
-hash.set("#/print/wub-a-lub-a-dub-dub"); //$
-// $> DOM: wub-a-lub-a-dub-dub
+}
+rootHash.set("#/print/params?a=b&c"); //$
+// $> HELLO YES THIS IS DOM:
+// $>   the params are:
+// $>   a: b
+// $>   c: true
+// you can still set a handler for the empty root.
+printRoutes.swap(register, '/', "pick a thing to print yo");
+rootHash.set("#/print"); //$
+// $> HELLO YES THIS IS DOM:
+// $>   pick a thing to print yo
+// let's try a contextual query param
+printRoutes.swap(register, ':anything', params.derive(function (ps) { return ps.get("anything"); }));
+rootHash.set("#/print/wub-a-lub-a-dub-dub"); //$
+// $> HELLO YES THIS IS DOM:
+// $>   wub-a-lub-a-dub-dub
 /***
 
-I don't know about you, but that's everything I ever wanted in a router right there.
+Also remember that `dom` won't just be re-printed when the rootHash
+changes. Any derivable which a handler depends on feeds into the reactive
+graph. e.g.
 
 ***/
+var now = havelock_1.atom(+new Date());
+function renderDate(date) {
+    return new Date(date).toDateString();
+}
+printRoutes.swap(register, 'now', now.derive(renderDate));
+rootHash.set("#/print/now"); //$
+// $> HELLO YES THIS IS DOM:
+// $>   Tue Aug 25 2015
+// forward a day
+now.swap(function (time) { return time + (1000 * 60 * 60 * 24); }); //$
+// $> HELLO YES THIS IS DOM:
+// $>   Wed Aug 26 2015
+now.swap(function (time) { return time + (1000 * 60 * 60 * 24); }); //$
+var _e;
+// $> HELLO YES THIS IS DOM:
+// $>   Thu Aug 27 2015
