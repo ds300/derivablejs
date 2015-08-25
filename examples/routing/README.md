@@ -148,6 +148,7 @@ e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` would lo
   },
   "d": {"": "d handler"}
 }
+```
 
 ```typescript
 function register<H>(tree: DispatchTree<H>, path: string, handler: H): DispatchTree<H> {

@@ -117,6 +117,7 @@ e.g. the `DispatchTree` containing routes `/a` `/a/b`, `/a/c`, and `/d` would lo
   },
   "d": {"": "d handler"}
 }
+```
 
 ***/
 function register(tree, path, handler) {
