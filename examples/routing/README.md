@@ -374,7 +374,7 @@ const hello = params.derive(params => {
 
 const now = atom(+new Date());
 
-const today = derive`Today is ${now.derive(renderDate)}`; //'
+const today = derive`Today is ${now.derive(renderDate)}`;
 
 function renderDate (date: number) {
   return new Date(date).toDateString();
