@@ -338,13 +338,13 @@ const hash:         Atom<string>                = atom("#/some/route"),
 
 But what is a `Handler` you ask? Well in most systems it is some kind of function
 which transforms a request into a response. But Havelock is all about reactivity and
-ordinary functions are not reactive on their own. Likewise, you need to know *how* to call a function,
+ordinary functions are not reactive on their own. Another problem is that you need to know *how* to call a function,
 and that restricts handlers to having a particular signature or being managed by dependency injection.
 
-And what if a handler function's *other* arguments change state and the DOM needs to be
-re-rendered? Does the handler tell us or do we need to set up some kind of crazy framework junk to make it easier on handler writers?
+And what if a handler function's *other* dependencies change state and the DOM needs to be
+re-rendered? Do the dependencies tell us via some event framework set up alongside the injector? Or do we let the handlers manually trigger dom updates?
 
-Nah, forget that mess. If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
+No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
 
 ***/
 
@@ -394,7 +394,7 @@ const hello = params.derive(params => {
 
 const now = atom(+new Date());
 
-const today = derive`Today's date is ${now.derive(renderDate)}`;
+const today = derive`Today\'s date is ${now.derive(renderDate)}`;
 
 function renderDate (date: number) {
   return new Date(date).toDateString();

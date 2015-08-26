@@ -295,7 +295,7 @@ var hello = params.derive(function (params) {
     return "Well hello there " + name + "!";
 });
 var now = havelock_1.atom(+new Date());
-var today = (_b = ["Today's date is ", ""], _b.raw = ["Today's date is ", ""], havelock_1.derive(_b, now.derive(renderDate)));
+var today = (_b = ["Today's date is ", ""], _b.raw = ["Today\\'s date is ", ""], havelock_1.derive(_b, now.derive(renderDate)));
 function renderDate(date) {
     return new Date(date).toDateString();
 }
