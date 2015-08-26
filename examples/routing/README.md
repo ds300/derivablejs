@@ -22,10 +22,12 @@ We are essentially building a function which transforms a hash fragment into a D
 
 To begin, let's examine the types of hash fragments we will be looking at:
 
-- Routes: `'#/some/route'`, `'#/'`, `'#'`, `'#/another/longer/route'`
-- Routes + Query Params: `'#/?name=value&boolean_flag'`, `'#/some/route/with?a=param'`
+- Routes: `'#/some/route'`, `'#/'`, `'#'`, `''`, `'#/another/longer/route'`
+- Routes + Query Params: `'#/some/route/with?a=param'`, `'#/?name=value&boolean_flag'`
 
-First we want to split the hash fragment into two parts: the route part and the query part. These are cleverly separated by a question mark. At the same time we can get rid of the `#` character becasue it doesn't mean anything at this stage.
+It seems like we want to split the hash fragment into two parts: the route part and the query part. These are cleverly separated by a question mark.
+
+At the same time we can get rid of the `#` character if present because it doesn't mean anything at this stage.
 
 ```typescript
 function splitHash(hash: string): [string, string] {
@@ -45,6 +47,9 @@ console.log(splitHash('#/some/route'));
 
 console.log(splitHash('#/?question=why?&answer=because!')); 
 // $> [ '/', 'question=why?&answer=because!' ]
+
+console.log(splitHash('#/'), splitHash('#'), splitHash('')); 
+// $> [ '/', '' ] [ '', '' ] [ '', '' ]
 ```
 
 
@@ -61,12 +66,13 @@ type Params = Map<string, string | boolean>;
 const notEmpty = x => x !== '';
 
 function parseRouteString (route: string): Route {
-  const parts = route.split("/")        // break apart
-                     .filter(notEmpty); // canonicalise
-  return List(parts);
+  return List(route.split('/').filter(notEmpty));
 }
 
 console.log(parseRouteString('/')); 
+// $> List []
+
+console.log(parseRouteString('')); 
 // $> List []
 
 console.log(parseRouteString('/some/route')); 
@@ -81,8 +87,6 @@ console.log(parseRouteString('/a/very//long/route////indeed///'));
 console.log(parseRouteString('some/route')); 
 // $> List [ "some", "route" ]
 
-console.log(parseRouteString('')); 
-// $> List []
 
 
 function parseQueryString(query: string): Params {
@@ -282,86 +286,129 @@ console.log(lookup(tree, <Params>Map({yo: true}), List(['d', '123', 'e', ''])));
 Believe it or not, we now have all the functional building blocks we need.
 All we're doing is turning a hash fragment and a dispatch tree into a 'handler' and a set of params.
 
-Here's what that looks as one big block of imperative code:
+Here's what that looks like as one big function:
 
 ```typescript
-function hello (params) {
-  let { name, caps } = params.toJS();
-  name = caps ? name.toUpperCase() : name;
-  return `Well hello there, ${name}.`;
+function getHandler<H>(tree: DispatchTree<H>, hash: string): [H, Params] {
+  const [path, queryString] = splitHash(hash);
+  const route = parseRouteString(path).push('');
+  const queryParams = parseQueryString(queryString);
+  return lookup<H>(tree, queryParams, route) || [null, queryParams];
 }
 
-{
-  let hash = '#/hello/steve?caps';
+console.log(getHandler(tree, '#/d/123/e?yo')); 
+// $> [ 'e handler', Map { "yo": true, "id": "123" } ]
 
-  type DOM = string;
-  type Handler = (ps: Params) => DOM;
-
-  let tree = <DispatchTree<Handler>>Map();
-  tree = register<Handler>(tree, '/hello/:name', hello);
-
-  let [path, queryString] = splitHash(hash);
-  let route = parseRouteString(path).push('');
-  let qParams = parseQueryString(queryString);
-  let [handler, params] = lookup<Handler>(tree, qParams, route);
-
-  console.log(handler(params)); 
-// $> Well hello there, STEVE.
-}
+console.log(getHandler(tree, '#/blahblahblah?404=yes')); 
+// $> [ null, Map { "404": "yes" } ]
 ```
 
 
 ## Part 2: Reactive Glue
 
-This is essentially a slightly more verbose version of the imperative version
-above.
+This is where the magic happens.
+
+The reactivity all stems from the global state, which in this case is our dispatch tree and hash fragment.
 
 ```typescript
 import { Derivable, Atom, atom, derive, unpack } from 'havelock';
 
+
+const hash:         Atom<string>                = atom("#/some/route"),
+      dispatchTree: Atom<DispatchTree<Handler>> = atom(<DispatchTree<Handler>>Map());
+```
+
+
+But what is a `Handler` you ask? Well in most systems it is some kind of function
+which transforms a request into a response. But Havelock is all about reactivity and
+ordinary functions are not reactive on their own. Likewise, you need to know *how* to call a function,
+and that restricts handlers to having a particular signature or being managed by dependency injection.
+
+And what if a handler function's *other* arguments change state and the DOM needs to be
+re-rendered? Does the handler tell us or do we need to set up some kind of crazy framework junk to make it easier on handler writers?
+
+Nah, forget that mess. If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
+
+```typescript
 type DOM = string;
 type Handler = Derivable<DOM>;
 
-
-// Here's the root state
-const rootHash: Atom<string> = atom("#/hello/steve?caps");
-const dispatchTree = atom(<DispatchTree<Handler>>Map());
-
-// helper for destructuring derivable tuple
-function raiseTuple<a, b>(tuple: Derivable<[a, b]>): [Derivable<a>, Derivable<b>] {
-  return [tuple.derive(t => t[0]), tuple.derive(t => t[1])];
-}
-
-const [routeString, queryString] = raiseTuple<string, string>(rootHash.derive(splitHash));
-const route = routeString.derive(parseRouteString)
-                         .derive(r => r.push(''));
-const qParams = queryString.derive(parseQueryString);
-const lookupResult = dispatchTree.derive(lookup, qParams, route)
-                                 .or([null, qParams]);
-
-const [matchHandler, params] = raiseTuple<Handler, Params>(lookupResult);
+const lookupResult: Derivable<[Handler, Params]>
+                  = dispatchTree.derive<[Handler, Params]>(getHandler, hash);
 
 // handler might be null, in which case do a 404 page
+const handler: Derivable<Handler> = lookupResult.derive(r => r[0])
+                                                .or(derive`404 not found: ${hash}`),
+      params:  Derivable<Params>  = lookupResult.derive(r => r[1]);
+```
 
-const handler = matchHandler.or(derive`404 route not found: ${routeString}`);
 
-const dom = handler.derive(unpack);
+So now we can derive the dom from the handler by simply upacking it.
 
+```typescript
+const dom: Derivable<DOM> = handler.derive(unpack);
+```
+
+
+Notice that it has the same type as an actual handler. That's because it is.
+All this faffing has been about creating a kind of super-handler whose behaviour
+depends on the state of a hash fragment and dispatch table.
+
+All that's left is to dynamically render the dom.
+
+```typescript
 dom.react(dom => console.log(`HELLO YES THIS IS DOM:\n  ${dom}`)); 
 // $> HELLO YES THIS IS DOM:
-// $>   404 route not found: /hello/steve
+// $>   404 not found: #/some/route
 
-rootHash.set("#/hello/jessica?caps"); 
+hash.set("#/greeting/jessica"); 
 // $> HELLO YES THIS IS DOM:
-// $>   404 route not found: /hello/jessica
+// $>   404 not found: #/greeting/jessica
 
-dispatchTree.swap(register, 'hello/:name', params.derive(hello)); 
-// $> HELLO YES THIS IS DOM:
-// $>   Well hello there, JESSICA.
+const hello = params.derive(params => {
+  let {name, caps} = params.toJS();
+  if (caps) name = name.toUpperCase();
 
-rootHash.set("#/hello/jessica"); 
+  return`Well hello there ${name}!`;
+});
+
+const now = atom(+new Date());
+
+const today = derive`Today's date is ${now.derive(renderDate)}`;
+
+function renderDate (date: number) {
+  return new Date(date).toDateString();
+}
+
+const greeting = derive`${hello}\n  ${today}`;
+
+dispatchTree.swap(register, 'greeting/:name', greeting); 
 // $> HELLO YES THIS IS DOM:
-// $>   Well hello there, jessica.
+// $>   Well hello there jessica!
+// $>   Today's date is Wed Aug 26 2015
+
+hash.set("#/greeting/steve"); 
+// $> HELLO YES THIS IS DOM:
+// $>   Well hello there steve!
+// $>   Today's date is Wed Aug 26 2015
+
+// forward a day
+now.swap(time => time + (1000 * 60 * 60 * 24)); 
+// $> HELLO YES THIS IS DOM:
+// $>   Well hello there steve!
+// $>   Today's date is Thu Aug 27 2015
+
+// and a year
+now.swap(time => time + (1000 * 60 * 60 * 24 * 365)); 
+// $> HELLO YES THIS IS DOM:
+// $>   Well hello there steve!
+// $>   Today's date is Fri Aug 26 2016
+
+
+hash.set("#/greeting/steve?caps"); 
+// $> HELLO YES THIS IS DOM:
+// $>   Well hello there STEVE!
+// $>   Today's date is Fri Aug 26 2016
 ```
 
 
@@ -393,62 +440,38 @@ That's literally it. Here's how you use it:
 ```typescript
 const printRoutes: Atom<DispatchTree<Handler>> = dispatchTree.lens(context('/print'));
 
-printRoutes.swap(register, "/params", params.derive(renderParams));
-
-function renderParams(params: Params) {
-  let result = "the params are:";
-  for (let [key, val] of params.entrySeq().toArray()) {
-    result += `\n  ${key}: ${val}`;
-  }
-  return result;
-}
-
-rootHash.set("#/print/params?a=b&c"); 
+printRoutes.swap(register, "/hello", hello);
+hash.set("#/print/hello?name=Bridget"); 
 // $> HELLO YES THIS IS DOM:
-// $>   the params are:
-// $>   a: b
-// $>   c: true
+// $>   Well hello there Bridget!
 
+printRoutes.swap(register, "/today", today);
+hash.set("#/print/today"); 
+// $> HELLO YES THIS IS DOM:
+// $>   Today's date is Fri Aug 26 2016
 
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
 
-rootHash.set("#/print"); 
+hash.set("#/print"); 
 // $> HELLO YES THIS IS DOM:
 // $>   pick a thing to print yo
 
 // let's try a contextual query param
-printRoutes.swap(register, ':anything', params.derive(ps => ps.get("anything")));
+printRoutes.swap(register, ':echo', params.derive(ps => ps.get("echo")));
 
-rootHash.set("#/print/wub-a-lub-a-dub-dub"); 
+hash.set("#/print/wub-a-lub-a-dub-dub"); 
 // $> HELLO YES THIS IS DOM:
 // $>   wub-a-lub-a-dub-dub
-```
 
-
-Also remember that `dom` won't just be re-printed when the rootHash
-changes. Any derivable which a handler depends on feeds into the reactive
-graph. e.g.
-
-```typescript
-const now = atom(+new Date());
-
-function renderDate (date: number) {
-  return new Date(date).toDateString();
-}
-
-printRoutes.swap(register, 'now', now.derive(renderDate));
-
-rootHash.set("#/print/now"); 
+// it shouldn't override existing routes
+hash.set("#/print"); 
 // $> HELLO YES THIS IS DOM:
-// $>   Tue Aug 25 2015
-
-// forward a day
-now.swap(time => time + (1000 * 60 * 60 * 24)); 
+// $>   pick a thing to print yo
+hash.set("#/print/today"); 
 // $> HELLO YES THIS IS DOM:
-// $>   Wed Aug 26 2015
-
-now.swap(time => time + (1000 * 60 * 60 * 24)); 
+// $>   Today's date is Fri Aug 26 2016
+hash.set("#/print/hello?name=Morty"); 
 // $> HELLO YES THIS IS DOM:
-// $>   Thu Aug 27 2015
+// $>   Well hello there Morty!
 ```
