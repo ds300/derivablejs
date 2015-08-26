@@ -295,7 +295,7 @@ var hello = params.derive(function (params) {
     return "Well hello there " + name + "!";
 });
 var now = havelock_1.atom(+new Date());
-var today = (_b = ["Today's date is ", ""], _b.raw = ["Today\\'s date is ", ""], havelock_1.derive(_b, now.derive(renderDate)));
+var today = (_b = ["Today is ", ""], _b.raw = ["Today is ", ""], havelock_1.derive(_b, now.derive(renderDate))); //'
 function renderDate(date) {
     return new Date(date).toDateString();
 }
@@ -303,21 +303,21 @@ var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], havelock_1.de
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today's date is Wed Aug 26 2015
+// $>   Today is Wed Aug 26 2015
 hash.set("#/greeting/steve"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Wed Aug 26 2015
+// $>   Today is Wed Aug 26 2015
 // forward a day
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Thu Aug 27 2015
+// $>   Today is Thu Aug 27 2015
 // and a year
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24 * 365); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 hash.set("#/greeting/steve?caps"); //$
 function context(ctx) {
     var route = parseRouteString(ctx);
@@ -343,7 +343,7 @@ hash.set("#/print/hello?name=Bridget"); //$
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
 hash.set("#/print"); //$
@@ -360,7 +360,7 @@ hash.set("#/print"); //$
 // $>   pick a thing to print yo
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 hash.set("#/print/hello?name=Morty"); //$
 var _a, _b, _c;
 // $> HELLO YES THIS IS DOM:

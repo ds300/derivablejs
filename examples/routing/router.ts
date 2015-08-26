@@ -394,7 +394,7 @@ const hello = params.derive(params => {
 
 const now = atom(+new Date());
 
-const today = derive`Today\'s date is ${now.derive(renderDate)}`;
+const today = derive`Today is ${now.derive(renderDate)}`; //'
 
 function renderDate (date: number) {
   return new Date(date).toDateString();
@@ -405,30 +405,30 @@ const greeting = derive`${hello}\n  ${today}`;
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today's date is Wed Aug 26 2015
+// $>   Today is Wed Aug 26 2015
 
 hash.set("#/greeting/steve"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Wed Aug 26 2015
+// $>   Today is Wed Aug 26 2015
 
 // forward a day
 now.swap(time => time + (1000 * 60 * 60 * 24)); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Thu Aug 27 2015
+// $>   Today is Thu Aug 27 2015
 
 // and a year
 now.swap(time => time + (1000 * 60 * 60 * 24 * 365)); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 
 
 hash.set("#/greeting/steve?caps"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there STEVE!
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 
 /***
 
@@ -470,7 +470,7 @@ hash.set("#/print/hello?name=Bridget"); //$
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
@@ -492,7 +492,7 @@ hash.set("#/print"); //$
 // $>   pick a thing to print yo
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today's date is Fri Aug 26 2016
+// $>   Today is Fri Aug 26 2016
 hash.set("#/print/hello?name=Morty"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there Morty!
