@@ -263,16 +263,31 @@ The reactivity all stems from the global state, which in this case is our dispat
 ***/
 var havelock_1 = require('havelock');
 var hash = havelock_1.atom("#/some/route"), dispatchTree = havelock_1.atom(immutable_1.Map());
+/***
+
+But what is a `Handler` you ask? Well in most systems it is some kind of function
+which transforms a request into a response. But Havelock is all about reactivity and
+ordinary functions are not reactive on their own. Another problem is that you need to know *how* to call a function,
+and that restricts handlers to having a particular signature or being managed by dependency injection.
+
+And what if a handler function's *other* dependencies change state and the DOM needs to be
+re-rendered? Do the dependencies tell us via some event framework set up alongside the injector? Or do we let the handlers manually trigger dom updates?
+
+No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
+
+***/
+var havelock_2 = require('havelock');
 var lookupResult = dispatchTree.derive(getHandler, hash);
 // handler might be null, in which case do a 404 page
 var handler = lookupResult.derive(function (r) { return r[0]; })
-    .or((_a = ["404 not found: ", ""], _a.raw = ["404 not found: ", ""], havelock_1.derive(_a, hash))), params = lookupResult.derive(function (r) { return r[1]; });
+    .or((_a = ["404 not found: ", ""], _a.raw = ["404 not found: ", ""], havelock_2.derive(_a, hash))), params = lookupResult.derive(function (r) { return r[1]; });
 /***
 
 So now we can derive the dom from the handler by simply upacking it.
 
 ***/
-var dom = handler.derive(havelock_1.unpack);
+var havelock_3 = require('havelock');
+var dom = handler.derive(havelock_3.unpack);
 /***
 
 Notice that it has the same type as an actual handler. That's because it is.
@@ -295,11 +310,11 @@ var hello = params.derive(function (params) {
     return "Well hello there " + name + "!";
 });
 var now = havelock_1.atom(+new Date());
-var today = (_b = ["Today is ", ""], _b.raw = ["Today is ", ""], havelock_1.derive(_b, now.derive(renderDate)));
+var today = (_b = ["Today is ", ""], _b.raw = ["Today is ", ""], havelock_2.derive(_b, now.derive(renderDate)));
 function renderDate(date) {
     return new Date(date).toDateString();
 }
-var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], havelock_1.derive(_c, hello, today));
+var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], havelock_2.derive(_c, hello, today));
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!

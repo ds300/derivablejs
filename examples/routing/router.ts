@@ -328,7 +328,7 @@ The reactivity all stems from the global state, which in this case is our dispat
 
 ***/
 
-import { Derivable, Atom, atom, derive, unpack } from 'havelock';
+import { Atom, atom } from 'havelock';
 
 
 const hash:         Atom<string>                = atom("#/some/route"),
@@ -348,6 +348,8 @@ No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes aw
 
 ***/
 
+import { Derivable, derive } from 'havelock';
+
 type DOM = string;
 type Handler = Derivable<DOM>;
 
@@ -364,6 +366,8 @@ const handler: Derivable<Handler> = lookupResult.derive(r => r[0])
 So now we can derive the dom from the handler by simply upacking it.
 
 ***/
+
+import { unpack } from 'havelock';
 
 const dom: Derivable<DOM> = handler.derive(unpack);
 

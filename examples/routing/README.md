@@ -311,7 +311,7 @@ This is where the magic happens.
 The reactivity all stems from the global state, which in this case is our dispatch tree and hash fragment.
 
 ```typescript
-import { Derivable, Atom, atom, derive, unpack } from 'havelock';
+import { Atom, atom } from 'havelock';
 
 
 const hash:         Atom<string>                = atom("#/some/route"),
@@ -330,6 +330,8 @@ re-rendered? Do the dependencies tell us via some event framework set up alongsi
 No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
 
 ```typescript
+import { Derivable, derive } from 'havelock';
+
 type DOM = string;
 type Handler = Derivable<DOM>;
 
@@ -346,6 +348,8 @@ const handler: Derivable<Handler> = lookupResult.derive(r => r[0])
 So now we can derive the dom from the handler by simply upacking it.
 
 ```typescript
+import { unpack } from 'havelock';
+
 const dom: Derivable<DOM> = handler.derive(unpack);
 ```
 
