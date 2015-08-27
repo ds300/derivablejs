@@ -332,7 +332,8 @@ function reactionBase (parent, control) {
     parent: parent,
     _state: gc_STABLE,
     active: false,
-    _type: types_REACTION
+    _type: types_REACTION,
+    uid: util_nextId()
   }
 }
 
@@ -663,16 +664,9 @@ function lens_construct(derivation, parent, descriptor) {
   return derivation;
 }
 
-var inReactCycle = false;
-
 function processReactionQueue (rq) {
-  inReactCycle = true;
-  try {
-    for (var i = rq.length; i--;) {
-      reactions_maybeReact(rq[i]);
-    }
-  } finally {
-    inReactCycle = false;
+  for (var i = rq.length; i--;) {
+    reactions_maybeReact(rq[i]);
   }
 }
 
@@ -773,10 +767,7 @@ function atom_createPrototype (havelock, opts) {
     },
 
     set: function (value) {
-      if (inReactCycle) {
-        throw new Error("Trying to set atom state during reaction phase. This" +
-                        " is an error. Use middleware for cascading changes.");
-      }
+
       this._validate(value);
       if (!opts.equals(value, this._value)) {
         this._state = gc_CHANGED;

@@ -1,3 +1,8 @@
+## 0.4.1
+
+Cyclical graph structures now allowed. You get stack overflows if you make an
+infinitely-repeating cycle.
+
 ## 0.4.0
 
 - `transaction`-ized functions can now return a value

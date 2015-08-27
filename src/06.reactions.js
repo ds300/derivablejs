@@ -4,7 +4,8 @@ function reactionBase (parent, control) {
     parent: parent,
     _state: gc_STABLE,
     active: false,
-    _type: types_REACTION
+    _type: types_REACTION,
+    uid: util_nextId()
   }
 }
 
