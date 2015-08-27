@@ -313,7 +313,6 @@ The reactivity all stems from the global state, which in this case is our dispat
 ```typescript
 import { Atom, atom } from 'havelock';
 
-
 const hash:         Atom<string>                = atom("#/some/route"),
       dispatchTree: Atom<DispatchTree<Handler>> = atom(<DispatchTree<Handler>>Map());
 ```
