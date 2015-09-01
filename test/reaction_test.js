@@ -274,7 +274,7 @@ describe("tickers", () => {
     a.set("g");
     ticker3.tick();
     assert.strictEqual(b, "g");
-    
+
     ticker1.release();
     ticker2.release();
     ticker3.release();
@@ -309,5 +309,18 @@ describe("tickers", () => {
 
     assert.strictEqual(b, "c");
 
+  });
+
+  it("cannot be used after being released", () => {
+    let t1 = _.ticker();
+    let t2 = _.ticker();
+
+    t1.release();
+
+    assert.throws(() => t1.release());
+
+    t2.release();
+
+    assert.throws(() => t2.tick());
   });
 });

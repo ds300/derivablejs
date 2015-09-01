@@ -863,11 +863,12 @@ function atom_ticker () {
       ticker.tick();
     },
     release: function () {
+      if (done) throw new Error('ticker already released');
       if (--ticker.refCount === 0) {
         ticker.stop();
         ticker = null;
-        done = true;
       }
+      done = true;
     }
   };
 }
