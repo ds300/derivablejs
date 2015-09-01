@@ -188,45 +188,20 @@ describe("a reaction", () => {
 });
 
 describe("setting the values of atoms in a reaction phase", () => {
-  it("is ok as long as no infinitely-repeating cycles are created", () => {
-    const a = atom(0);
+  it("is ok as long as no cycles are created", () => {
+    const a = atom("a");
 
-    const b = atom(0);
+    const b = atom("b");
 
-    b.react(b => a.set(b + "a"));
+    a.react(a => b.set(b.get() + a));
 
-    b.set("a");
+    assert.strictEqual(b.get(), "ba");
 
-    assert.strictEqual(a.get(), "aa");
+    a.set("aa");
 
-    // stack overflow
-    assert.throws(() => a.react(a => b.set(a)));
+    assert.strictEqual(b.get(), "baaa");
 
-    // iteratively calculate square root x of n to d decimal places
-
-    const n = atom(16);
-    const x = atom(1);
-    const d = atom(4);
-
-    const calcError = _.lift((n, x) => (n - Math.pow(x, 2)) / (x * 2));
-    const decimalPlaces = (n, d) => Math.round((n * Math.pow(10, d))) / Math.pow(10, d);
-
-    const error = calcError(n, x).derive(decimalPlaces, d);
-
-    // this will keep going until error stops changing
-    error.react(e => x.set(x.get() + e));
-
-    assert.strictEqual(x.get(), 4);
-
-    n.set(2);
-
-    assert.strictEqual(x.get(), 1.4142);
-    assert.notStrictEqual(x.get(), 1.41421);
-
-    d.set(5);
-    assert.strictEqual(x.get(), 1.41421);
-
-    d.set(10);
-    assert.strictEqual(x.get(), 1.4142135624);
+    // havelock disallows
+    assert.throws(() => b.react(b => a.set(b)));
   });
 })

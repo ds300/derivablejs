@@ -220,5 +220,5 @@ module.exports = function(grunt) {
   grunt.registerTask('lint', 'Lint all source javascript', ['jshint']);
   grunt.registerTask('build', 'Build distributed javascript', ['clean', 'concat', 'ugly']);
   grunt.registerTask('test', 'Test built javascript', ['mochaTest']);
-  grunt.registerTask('default', 'Lint, build and test.', ['lint', 'build', 'make-docs' , 'stats', 'test']);
+  grunt.registerTask('default', 'Lint, build and test.', ['build', 'lint', 'make-docs' , 'stats', 'test']);
 }

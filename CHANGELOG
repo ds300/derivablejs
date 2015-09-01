@@ -1,3 +1,8 @@
+## 0.4.2
+
+Cyclical graph structures disallowed again. They are nice but incompatible with
+havelock's central tenets of laziness, consistency, and automatic memory management.
+
 ## 0.4.1
 
 Cyclical graph structures now allowed. You get stack overflows if you make an

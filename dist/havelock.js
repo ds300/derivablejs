@@ -333,7 +333,8 @@ function reactionBase (parent, control) {
     _state: gc_STABLE,
     active: false,
     _type: types_REACTION,
-    uid: util_nextId()
+    uid: util_nextId(),
+    reacting: false
   }
 }
 
@@ -372,9 +373,17 @@ function reactions_maybeReact (base) {
 }
 
 function force (base) {
+  if (base.reacting) {
+    throw new Error('Cyclical reaction detected. Don\'t do this!');
+  }
   if (base.control.react) {
     base._state = gc_STABLE;
-    base.control.react(base.parent._get());
+    try {
+      base.reacting = true;
+      base.control.react(base.parent._get());
+    } finally {
+      base.reacting = false;
+    }
   } else {
       throw new Error("No reaction function available.");
   }
