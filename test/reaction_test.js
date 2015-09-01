@@ -204,4 +204,123 @@ describe("setting the values of atoms in a reaction phase", () => {
     // havelock disallows
     assert.throws(() => b.react(b => a.set(b)));
   });
-})
+});
+
+describe("tickers", () => {
+  it("allow reacting at custom intervals", () => {
+    const a = atom("a");
+
+    const ticker = _.ticker();
+
+    let b = "b";
+
+    a.reaction(a => b = a).start();
+
+    assert.strictEqual(b, "b");
+
+    a.set("c");
+
+    assert.strictEqual(b, "b");
+
+    a.set("d");
+
+    assert.strictEqual(b, "b");
+
+    ticker.tick();
+
+    assert.strictEqual(b, "d");
+
+    a.set("e");
+
+    assert.strictEqual(b, "d");
+
+    a.set("f");
+
+    assert.strictEqual(b, "d");
+
+    ticker.tick();
+
+    assert.strictEqual(b, "f");
+
+    ticker.release();
+  });
+
+  it("can be used by more than one piece of the stack", () => {
+    const a = atom("a");
+    const ticker1 = _.ticker();
+    const ticker2 = _.ticker();
+    const ticker3 = _.ticker();
+
+    assert(ticker1 !== ticker2);
+    assert(ticker1 !== ticker3);
+    assert(ticker2 !== ticker3);
+
+    let b = "b";
+
+    a.reaction(a => b = a).start();
+    assert.strictEqual(b, "b");
+    a.set("c");
+    assert.strictEqual(b, "b");
+    a.set("d");
+    assert.strictEqual(b, "b");
+    ticker1.tick();
+    assert.strictEqual(b, "d");
+    a.set("e");
+    assert.strictEqual(b, "d");
+    a.set("f");
+    assert.strictEqual(b, "d");
+    ticker2.tick();
+    assert.strictEqual(b, "f");
+    a.set("g");
+    ticker3.tick();
+    assert.strictEqual(b, "g");
+
+    ticker1.release();
+    ticker2.release();
+    ticker3.release();
+  });
+
+  it("are reference counted", () => {
+    const a = atom(null);
+    let b = "b";
+
+    a.reaction(a => b = a).start();
+
+    a.set("a");
+
+    assert.strictEqual(b, "a");
+
+    const ticker1 = _.ticker();
+    const ticker2 = _.ticker();
+    const ticker3 = _.ticker();
+
+    a.set("b");
+
+    assert.strictEqual(b, "a");
+
+    ticker1.release();
+    assert.strictEqual(b, "a");
+    ticker2.release();
+    assert.strictEqual(b, "a");
+    ticker3.release();
+    assert.strictEqual(b, "b");
+
+    a.set("c");
+
+    assert.strictEqual(b, "c");
+
+  });
+
+  it("cannot be used after being released", () => {
+    let t1 = _.ticker();
+    let t2 = _.ticker();
+
+    t1.release();
+
+    assert.throws(() => t1.release());
+
+    t2.release();
+
+    assert.throws(() => t2.tick());
+  });
+});

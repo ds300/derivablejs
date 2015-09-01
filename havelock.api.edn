@@ -733,4 +733,21 @@
   (defaultEquals [a any b any] boolean
     "Havelock's inbuilt equality-checking function. Note that calling
     {{withEquality}} will not affect the value of this property.")
+
+  (:interface
+    Ticker
+    "Tickers provide a facility for running reactions globally at custom
+    intervals. Tickers have a lifecycle which begins when they are created by
+    the {{ticker}} function and end when their `.release()` method is invoked.
+    A ticker may not be used after it has been released.
+
+    While at least one ticker is alive, the {{Atom::set}} method will not cause
+    reactions to be run."
+    (tick [] void
+      "Runs all pending reactions")
+    (release [] void
+      "Releases this ticker, rendering it useless")
+    (:see-also ticker))
+  (ticker [] Ticker
+    "Creates a new {{Ticker}}")
   )
