@@ -1,6 +1,6 @@
 {
   "name": "havelock",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Functional Reactive State for JavaScript & TypeScript",
   "author": "David Sheldrick",
   "files": [
