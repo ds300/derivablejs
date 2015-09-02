@@ -229,7 +229,6 @@ div.method > h4, div.function-signature > h4 {
 }
 
 div.interface, div.function, div.class {
-  border-top: 2px solid #e9e9e9;
   margin: 3.2em 0em;
 }
 
