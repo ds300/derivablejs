@@ -116,4 +116,13 @@ declare module 'havelock' {
   function withEquality(equals: (a: any, b: any) => boolean): any;
 
   function defaultEquals(a: any, b: any): boolean;
+
+  export interface Ticker {
+
+    tick(): void;
+
+    release(): void;
+  }
+
+  function ticker(): Ticker;
 }

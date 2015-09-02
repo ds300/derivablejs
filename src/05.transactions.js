@@ -63,3 +63,19 @@ function transactions_transact (ctx, txn, f) {
   }
   commit(ctx);
 }
+
+function transactions_ticker (ctx, txnConstructor) {
+  begin(ctx, txnConstructor());
+  var disposed = false;
+  return {
+    tick: function () {
+      if (disposed) throw new Error("can't tick disposed ticker");
+      commit(ctx);
+      begin(ctx, txnConstructor());
+    },
+    stop: function () {
+      if (disposed) throw new Error("ticker already disposed");
+      commit(ctx);
+    }
+  }
+}

@@ -326,6 +326,22 @@ function transactions_transact (ctx, txn, f) {
   commit(ctx);
 }
 
+function transactions_ticker (ctx, txnConstructor) {
+  begin(ctx, txnConstructor());
+  var disposed = false;
+  return {
+    tick: function () {
+      if (disposed) throw new Error("can't tick disposed ticker");
+      commit(ctx);
+      begin(ctx, txnConstructor());
+    },
+    stop: function () {
+      if (disposed) throw new Error("ticker already disposed");
+      commit(ctx);
+    }
+  }
+}
+
 function reactionBase (parent, control) {
   return {
     control: control,
@@ -829,6 +845,34 @@ function atom_transaction (f) {
   }
 }
 
+var ticker = null;
+
+function atom_ticker () {
+  if (ticker) {
+    ticker.refCount++;
+  } else {
+    ticker = transactions_ticker(TXN_CTX, function () {
+      return new TransactionState();
+    });
+    ticker.refCount = 1;
+  }
+  var done = false;
+  return {
+    tick: function () {
+      if (done) throw new Error('tyring to use ticker after release');
+      ticker.tick();
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      if (--ticker.refCount === 0) {
+        ticker.stop();
+        ticker = null;
+      }
+      done = true;
+    }
+  };
+}
+
 var defaultConfig = { equals: util_equals };
 
 function havelock (config) {
@@ -838,6 +882,7 @@ function havelock (config) {
     transact: atom_transact,
     defaultEquals: util_equals,
     transaction: atom_transaction,
+    ticker: atom_ticker,
     Reaction: reactions_Reaction,
     isAtom: function (x) {
       return x && (x._type === types_ATOM || x._type === types_LENS);

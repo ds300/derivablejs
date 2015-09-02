@@ -153,3 +153,31 @@ function atom_transaction (f) {
     return result;
   }
 }
+
+var ticker = null;
+
+function atom_ticker () {
+  if (ticker) {
+    ticker.refCount++;
+  } else {
+    ticker = transactions_ticker(TXN_CTX, function () {
+      return new TransactionState();
+    });
+    ticker.refCount = 1;
+  }
+  var done = false;
+  return {
+    tick: function () {
+      if (done) throw new Error('tyring to use ticker after release');
+      ticker.tick();
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      if (--ticker.refCount === 0) {
+        ticker.stop();
+        ticker = null;
+      }
+      done = true;
+    }
+  };
+}

@@ -7,6 +7,7 @@ function havelock (config) {
     transact: atom_transact,
     defaultEquals: util_equals,
     transaction: atom_transaction,
+    ticker: atom_ticker,
     Reaction: reactions_Reaction,
     isAtom: function (x) {
       return x && (x._type === types_ATOM || x._type === types_LENS);
