@@ -10,6 +10,9 @@ var gc_NEW = 0,
 function gc_mark(node, reactions) {
   // make everything unstable
   if (node._type === types_REACTION) {
+    if (node.reacting) {
+      throw new Error("Cycle detected! Don't do this!");
+    }
     reactions.push(node);
   } else {
     for (var i = node._children.length; i--;) {

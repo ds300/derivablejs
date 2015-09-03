@@ -204,6 +204,21 @@ describe("setting the values of atoms in a reaction phase", () => {
     // havelock disallows
     assert.throws(() => b.react(b => a.set(b)));
   });
+
+  it("is not allowed if the atom in question is upstream of the reaction", () => {
+    const n = atom(3);
+
+    // currently 1
+    const nmod2 = n.derive(x => x % 2);
+
+    const double = n => n * 2;
+
+    const r = nmod2.reaction(_ => n.swap(double)).start();
+
+    assert.throws(() => n.set(2));
+    // nmod2 becomes 0, reaction triggers n being set to 4
+    // reaction caught up in sweep again, identified as cycle
+  });
 });
 
 describe("tickers", () => {

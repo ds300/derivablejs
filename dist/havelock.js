@@ -151,6 +151,9 @@ var gc_NEW = 0,
 function gc_mark(node, reactions) {
   // make everything unstable
   if (node._type === types_REACTION) {
+    if (node.reacting) {
+      throw new Error("Cycle detected! Don't do this!");
+    }
     reactions.push(node);
   } else {
     for (var i = node._children.length; i--;) {
@@ -389,9 +392,7 @@ function reactions_maybeReact (base) {
 }
 
 function force (base) {
-  if (base.reacting) {
-    throw new Error('Cyclical reaction detected. Don\'t do this!');
-  }
+  // base.reacting check now in gc_mark; total solution there as opposed to here
   if (base.control.react) {
     base._state = gc_STABLE;
     try {

@@ -45,9 +45,7 @@ function reactions_maybeReact (base) {
 }
 
 function force (base) {
-  if (base.reacting) {
-    throw new Error('Cyclical reaction detected. Don\'t do this!');
-  }
+  // base.reacting check now in gc_mark; total solution there as opposed to here
   if (base.control.react) {
     base._state = gc_STABLE;
     try {
