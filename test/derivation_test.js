@@ -117,6 +117,21 @@ describe("a derivation", () => {
         () => assert(true, "yay")
       ).get()();
     });
+
+    const nonexistent = atom(null);
+    assert(nonexistent.some(false, true).get(), "null doesn't exist");
+
+    nonexistent.set(false);
+    assert(nonexistent.some(true, false).get(), "false exists");
+
+    nonexistent.set(void 0);
+    assert(nonexistent.some(false, true).get(), "undefined doesn't exist");
+
+    nonexistent.set("");
+    assert(nonexistent.some(true, false).get(), "the empty string exists");
+
+    nonexistent.set(0);
+    assert(nonexistent.some(true, false).get(), "zero exists");
   });
 });
 

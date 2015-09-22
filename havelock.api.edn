@@ -216,6 +216,10 @@
       this.and(thenD).or(elseD);
       ```")
 
+    (some [thenD any, elseD any] (Derivable any)
+      "Returns a derivable which represents the value of {{thenD}} if this is
+      not `null` or `undefined`, otherwise {{elseD}}.")
+
     (not [] (Derivable boolean)
       "Returns a derivable which represents the boolean complement of the
       truthiness of the the value represented by this.
@@ -597,6 +601,8 @@
     ```"
 
     (:see-also unpack Derivable::then))
+
+  (some [condition any thenD any elseD any] (Derivable any))
 
   (or [&conditions [any]] (Derivable any)
     "Returns a derivable which encapsulates the first value in {{&conditions}}

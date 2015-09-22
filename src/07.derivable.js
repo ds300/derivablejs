@@ -83,6 +83,12 @@ function derivable_createPrototype (havelock, opts) {
       });
     },
 
+    some: function (thenClause, elseClause) {
+      return this.derive(function (x) {
+        return havelock.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+      });
+    },
+
     not: function () {
       return this.derive(function (x) { return !x; });
     },

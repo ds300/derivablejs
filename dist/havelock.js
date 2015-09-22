@@ -534,6 +534,12 @@ function derivable_createPrototype (havelock, opts) {
       });
     },
 
+    some: function (thenClause, elseClause) {
+      return this.derive(function (x) {
+        return havelock.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+      });
+    },
+
     not: function () {
       return this.derive(function (x) { return !x; });
     },
@@ -1043,6 +1049,23 @@ function havelock (config) {
   };
 
   Havelock.ifThenElse = function (a, b, c) { return a.then(b, c) };
+
+  Havelock.ifThenElse = function (testValue, thenClause, elseClause) {
+    return Havelock.derivation(function () {
+      return Havelock.unpack(
+        Havelock.unpack(testValue) ? thenClause : elseClause
+      );
+    });
+  }
+
+  Havelock.some = function (testValue, thenClause, elseClause) {
+    return Havelock.derivation(function () {
+      var x = Havelock.unpack(testValue);
+      return Havelock.unpack(
+        x === null || x === (void 0) ? elseClause : thenClause
+      );
+    });
+  };
 
   Havelock.or = function () {
     var args = arguments;
