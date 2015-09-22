@@ -87,7 +87,7 @@ declare module 'havelock' {
 
   function struct(obj: any): Derivable<any>;
 
-  function ifThenElse(condition: Derivable<any>, thenD: any, elseD: any): Derivable<any>;
+  function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
   function some(condition: any, thenD: any, elseD: any): Derivable<any>;
 
