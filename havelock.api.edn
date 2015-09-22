@@ -578,7 +578,7 @@
     // $> C stands for Chris
     ```")
 
-  (ifThenElse [condition (Derivable any) thenD any elseD any] (Derivable any)
+  (ifThenElse [condition any thenD any elseD any] (Derivable any)
     "Returns a derivable which encapsulates the value `unpack(thenD)` when the
     value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is
     falsey.
@@ -602,7 +602,9 @@
 
     (:see-also unpack Derivable::then))
 
-  (some [condition any thenD any elseD any] (Derivable any))
+  (some [condition any thenD any elseD any] (Derivable any)
+    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
+    value encapsulated by `{{condition}}` is not null or undefined.")
 
   (or [&conditions [any]] (Derivable any)
     "Returns a derivable which encapsulates the first value in {{&conditions}}
