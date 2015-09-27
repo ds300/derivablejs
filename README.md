@@ -376,7 +376,7 @@ That was fun but now I intend to become a professional and competent engineer, w
 
 I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I think South-East Asian cuisine is where it's at, cuisine-wise. But most of the others are pretty great too.
 
-I'm free from November and might be willing to do remote work or move anywhere in Western Europe for the right job. Email me.
+I'm free from January 2016 and might be willing to do remote work or move anywhere in Western Europe for the right job. Email me if you want to do the dance.
 
 ## License
 
