@@ -1,6 +1,12 @@
+## 0.6.0
+
+`some` fn and method for derivables. Like `if` but for null/undefined checks
+rather than truthiness checks.
+
 ## 0.5.1
 
 Cycle checks now catch all cases.
+=======
 
 ## 0.5.0
 

@@ -382,4 +382,21 @@ describe("defaultEquals", () => {
     assert(!_.defaultEquals(!{a: "a", b: 'b', c: [0,2,1].map(x => x+1)}, x));
     assert(!_.defaultEquals({a: "a", b: 'd', c: [0,1,2].map(x => x+1)}, x));
   });
-})
+});
+
+
+describe("the some function", () => {
+  it("branches on the existence of a value", () => {
+    assert(_.some(atom(null), false, true), "null doesn't exist");
+    assert(_.some(atom(void 0), false, true), "undefined doesn't exist");
+    assert(_.some(atom(false), true, false), "false exists");
+    assert(_.some(atom(""), true, false), "the empty string exists");
+  });
+
+  it("should also work with normal values", () => {
+    assert(_.some(null, false, true), "null doesn't exist");
+    assert(_.some(void 0, false, true), "undefined doesn't exist");
+    assert(_.some(false, true, false), "false exists");
+    assert(_.some("", true, false), "the empty string exists");
+  });
+});
