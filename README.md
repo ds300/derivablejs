@@ -1,8 +1,7 @@
 <h1 align="center">DerivableJS</h1>
 <h3 align="center">Observable State done Right</h3>
 
-[![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable)
+[![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable)
 ---
 
 DerivableJS is a JavaScript implementation of **Derivables**.
