@@ -1,3 +1,7 @@
+## 0.7.0
+
+Rename Havelock to DerivableJS
+
 ## 0.6.0
 
 `some` fn and method for derivables. Like `if` but for null/undefined checks
