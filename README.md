@@ -119,10 +119,10 @@ A final potential drawback is that DerivableJS requires one to think and design 
 DerivableJS is still quite new, but has been used for serious stuff in production. I think it is safe to consider it beta quality at this point.
 
 ##### API
-[See Here](https://ds300.github.com/derivable)
+[See Here](https://ds300.github.com/derivablejs)
 
 ##### Examples (wip)
-If you want to get a really good feel for what DerivableJS can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/derivable/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
+If you want to get a really good feel for what DerivableJS can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/derivablejs/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
 
 Others:
 
