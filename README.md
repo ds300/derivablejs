@@ -1,22 +1,12 @@
-<h1 align="center">Havelock</h1>
-<h3 align="center">Functional Reactive State</h3>
-<p align="center">
-<strong>Totally Lazy</strong> — <strong>Always Consistent</strong> — <strong>Zero Leakage</strong>
-</p>
-<p align="center">
-<em>Si Non Confectus, Non Reficiat</em>
-</p>
+<h1 align="center">DerivableJS</h1>
+<h3 align="center">Derivables are Observable State done Correctly</h3>
 
+[![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable)
 ---
 
-Havelock believes in the fundamental interconnectedness of all things, and embodies an holistic approach to state management which could drastically simplify your code and eliminate a whole class of easy-to-make-and-hard-to-fix bugs.
+DerivableJS is a JavaScript implementation of **Derivables**.
 
-Havelock provides a novel composable model of continuous state which is a powerful generalization of cursor-based reactive state as found in libraries like [Om](https://github.com/omcljs/om), [omniscient](http://omniscientjs.github.io/), and [react-cursor](https://github.com/dustingetz/react-cursor).
-
-It's only about 3.6kB and chock-full of awesomesauce so why not give it a try.
-
-[![Join the chat at https://gitter.im/ds300/havelock](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/havelock?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![npm version](https://badge.fury.io/js/havelock.svg)](http://badge.fury.io/js/havelock)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -44,17 +34,30 @@ It's only about 3.6kB and chock-full of awesomesauce so why not give it a try.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Derivables
 
-## Quick Demo: {greeting}, {name}!
+Derivables are a radically simplifying paradigm shift in our approach to managing application state. They are liberating like switching from manual memory management to garbage collection, and they are profound like switching from OO to FP.
+
+They make it trivially easy to maintain consistent (i.e. sense-making) state at all times without requiring us to keep it all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts.
+
+There are two types of Derivable:
+
+- **Atoms** are simple references to immutable values.
+- **Derivations** represent pure transformation of values held in atoms.
+
+Changes in atoms or derivations can be monitored by **Reactions** which do not encapsulate values and exist
+solely for side-effects and resource management.
+
+Let's have a look at a tiny example app which greets the user:
 
 ```javascript
-import {atom, derive, transact} from 'havelock'
+import {atom, derive, transact} from 'derivable'
 
 // global application state
-const countryCode = atom("en");
-const name = atom("World");
+const name = atom("World");     // the name of the user  
+const countryCode = atom("en"); // for i18n
 
-// static constants
+// static constants don't need to be wrapped
 const greetings = {
   en: "Hello",
   de: "Hallo",
@@ -65,7 +68,7 @@ const greetings = {
 
 // derive a greeting message based on the user's name and country.
 const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive`${greeting}, ${name}!`; // tagged template string magic!
+const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
 
 // set up a side-effecting reaction to print the message
 message.react(msg => console.log(msg));
@@ -85,52 +88,22 @@ transact(() => {
 // $> Bonjour, Étienne!
 ```
 
+The structure of this example can be depicted as the following DAG:
 
-## Rationale
+<img src="https://ds300.github.com/derivablejs/img/example.svg" align="center" width="89%"/>
 
-When writing client-side JavaScript it is often convenient to keep our application state in disparate little mutable chunks. We rightfully organize these chunks such that they correspond to distinct responsibilities, and then we invent magic frameworkey gubbins to keep them in sync with our views. Think Angular Scopes, Ember Models, Knockout View Models, etc. This seems like a wonderful idea, and it certainly beats having [God objects](https://en.wikipedia.org/wiki/God_object) manually bound to the DOM with pure jQuery and `id` attributes\*.
+The DAG edges are automatically inferred by DerivableJS. It is important to understand that they (the edges) do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. When you change the value of an atom, it's whole propagation graph updates in atomic accord. There is no accessible point in time between the fact of changing an atom and the fact of it's dependents becoming aware of the change.
 
-And but still one question remains particularly irksome: how do we keep those chunks in sync with each other? Their responsibilities may be distinct, but true independence is rare. Modern MV[*whatever*] frameworks don't seem to have a compelling solution for this and we tend to propagate state changes manually with events and callbacks. This is a complex and fragile way to go about things, especially for sophisticated applications that grow over time; it becomes increasingly difficult to modify or add new features to a system without affecting other parts of it as a bizarre artefact of how state changes are imperatively propagated. The kinds of bugs that result from mismanaging state propagation can also be very hard to reproduce and, therefore, very hard to diagnose and fix.
+To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
 
-Wouldn't it be nice if you never had to worry about that kind of tedious mess again? How much do you think it would be worth?
+This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra stuff involving topological sorting).
 
-Wonder no more! The core concept is very simple: your stateful components never change their state directly. Instead they delegate to some centralized third party who becomes responsible for applying the change and propagating it. Then your components just need to subscribe to this third party, or some subsidiary thereof, in order to be notified of pertinent changes. This detangles the callback web and you end up with a lovely simple callback tree.
+The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just in time, on demand. This is another huge win because:
 
-The popularity of this line of thinking has been on the rise as a result of Facebook preaching about their [Flux](https://facebook.github.io/flux/) architecture. There's a good video on the Flux landing page which explains the whole deal with that. Evan Czaplicki, the creator of [Elm](https://github.com/evancz/elm-architecture-tutorial#the-elm-architecture), is another tireless progenitor of enthusiasm for these concepts who also gives [really good talk](https://www.youtube.com/watch?v=Agu6jipKfYw). But the most direct source of inspiration for this library is actually [re-frame](https://github.com/day8/re-frame). Specifically re-frame's README which includes a compelling discourse on the particular brand of Flux-ish-ness Havelock aims to serve. So **go read the re-frame README**. For real. Do it. It's seriously great.
+- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change-time if they are actually used by a reaction.
+- It allows derivations to be automatically garbage collected when you don't need them any more, just like any other object. This is simple to the max! In fact, you don't need any special knowledge to avoid memory leaks with DerivableJS—it Just Works.
+- It permits true short-circuiting boolean logic in derivation structures, which turns out to be extraordinarily practical.
 
-But because you're a busy person and I'm into the whole brevity thing, here's the tl;dr:
-
-> Keeping disparate pieces of mutable state consistent is hard. Keeping one piece of immutable state consistent is a matter of course. Let's do the latter.
-
-This sounded like a very good idea to me. But while the latter is conceptually very simple, it is [by no means easy](http://www.infoq.com/presentations/Simple-Made-Easy) with just the tools JS provides.
-
-Havelock exists to fill this gap—to make global immutable state easy, or much eas*ier* at the very least. It does this by providing simple and safe means for deriving those convenient little chunks from a single source of truth. If you like, you can think of it as magic frameworkey gubbins to keep your state in sync with your state.
-
-\* <em>Count yourself lucky if that sounds about as laughably anachronistic as programming on punch cards.</em>
-
-## Model
-
-Speaking of which, Havelock exposes three main types:
-
-- **Atoms** are mutable references intended to hold immutable values.
-- **Derivations** represent applications of pure functions to values held in atoms.
-- **Reactions** are passive observers reacting to changes in atoms (possibly via derivations). Unlike the above, they do not encapsulate a value and exist solely for side-effects and resource management.
-
-These three types are connected together in DAGs with atoms at the roots. The example at the top of this document can be depicted as follows:
-
-<img src="https://ds300.github.com/havelock/img/example.svg" align="center" width="89%"/>
-
-The DAG structure is automatically inferred by executing derivation functions in a special context which allows Havelock to capture dereferences of immediate parents.
-
-### Key Benefits
-
-It is important to understand that the edges between nodes in the graph above do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. The (atoms + derivations) part of the graph is conceptually a single gestalt reference to a [value](https://www.youtube.com/watch?v=-6BsiVyC1kM). In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The derivations are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which individual parts of it you decide to inspect at any given time.
-
-Note also that derivations are totally lazy. They literally never do wasteful computation. This allows derivation graphs to incorporate short-circuiting boolean logic. Try doing *that* with streams.
-
-The other key benefit over streams is that there is no need to clean up after yourself when the derivation structure changes or you no longer need a particular derivation branch. No memory leaks! This is simple to the max, and it makes the library practical to use on its own rather than as part of a framework.
-
-All this isn't to say that streams and channels are bad, just different. Events are discrete in time, state is continuous. Stop conflating the two and use Havelock for your state!
 
 ### Tradeoffs
 
@@ -139,205 +112,56 @@ You may be wondering how these benefits are achieved. The answer is simple: mark
 * When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 * The sweep phase involves yet another probably-whole-graph traversal.
 
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps Havelock isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) for how to reduce the traversal overhead after v1.0.0 drops.
+So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps DerivableJS isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) for how to reduce the traversal overhead after v1.0.0 drops.
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
 Another drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your reactions throw errors. There should be ways to mitigate this for debugging purposes, but I haven't thought about it much yet.
 
-A final potential drawback is that Havelock requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming from an OO background.
-
-
-### Comparison with Previous Work
-
-*DISCLAIMER: At the time of writing, these comparisons are valid to the best of my knowledge. If you use or maintain one of the mentioned libraries and discover that this section is out of date or full of lies at conception, please let me know and I'll edit or annotate where appropriate.*
-
-[Javelin](https://github.com/tailrecursion/javelin) has similar functionality to Havelock, but with *eager* change propagation. It provides transactions and has a good consistency story. The major downside is that the eagerness means it requires manual memory management. It also exclusively uses macrology to infer the structure of derivation graphs. This means graphs can only be composed lexically, i.e. at compile time. A simple, if utterly contrived, example of why this is a downside:
-
-```clojure
-(ns test
-  (:require-macros [tailrecursion.javelin :refer [cell=]])
-  (:require [tailrecursion.javelin :refer [cell]]))
-
-(def cells (mapv cell (range 3)))
-
-(def sum (cell= (reduce + cells)))
-
-(.log js/console @sum)
-
-; $> [object Object][object Object][object Object]
-
-; it tried to add the cells together, not their values
-
-; let's manually deref the cells so it can get at their values
-(def sum2 (cell= (reduce + (map deref cells))))
-
-(.log js/console @sum2)
-; $> 3
-; correct!
-
-(swap! (cells 0) inc)
-
-(.log js/console @sum2)
-; $> 3
-; incorrect! should be 4. The cell= macro couldn't figure
-; out that `cells` is a vector containing cells which should
-; be hooked up to the propagation graph.
-
-; the only way to get a cell in the graph is to have it
-; directly referenced in the body of the cell= macro by
-; a single symbol
-
-(let [[one two three] cells]
-  (def sum3 (cell= (reduce + [one two three]))))
-
-(println @sum3)
-; $> 4
-
-(swap! (cells 0) inc)
-
-(println @sum3)
-; $> 5
-
-```
-
-Havelock imposes no such constraints:
-
-```javascript
-import {atom, derivation, get} from 'havelock'
-
-const cells = [0,1,2].map(atom);
-
-const add = (a, b) => a + b;
-
-const sum = derivation(() => cells.map(get).reduce(add));
-
-sum.react(x => console.log(x));
-// $> 3
-
-cells[0].swap(x => x+1);
-// $> 4
-```
-
-[Reagent](https://github.com/reagent-project/reagent)'s `atom`/`reaction` stack can handle runtime graph composition too (like Havelock, it uses dereference-capturing to infer edges). Reagent also does automatic memory management! Unfortunately, it doesn't do transactions and can only do laziness for 'active' derivation branches.
-
-```clojure
-(ns test-ratom
-  (:require-macros [reagent.ratom :refer [reaction run!]])
-  (:require [reagent.ratom :refer [atom]]))
-
-(def root (atom "hello"))
-
-(def fst (reaction (.log js/console "LOG:" (first @root))))
-
-@fst
-; $> LOG: h
-@fst
-; $> LOG: h
-; ... etc. No laziness because graph is disconnected.
-
-; run!-ing connects the graph
-(run! @fst)
-; $> LOG: h
-
-; ... and laziness kicks in
-@fst
-@fst
-```
-
-Reagent also fails to provide consistency guarantees. To illustrate:
-
-```clojure
-(ns test-ratom
-  (:require-macros [reagent.ratom :refer [reaction run!]])
-  (:require [reagent.ratom :refer [atom]]))
-
-(def root (atom "hello"))
-
-(def fst (reaction (first @root)))
-
-(def lst (reaction (last @root)))
-
-(run! (.log js/console @fst @lst))
-; $> h o
-
-(reset! root "bye")
-; $> b o
-; $> b e
-```
-
-At no point did `root` contain a word which starts with 'b' and ends with 'o', and yet from reading the console output you would be forgiven for thinking otherwise. In FRP-speak this is called a 'glitch'. Havelock is glitch-free.
-
-The one major issue with both of these libraries is that they require ClojureScript and many of us aren't lucky enough to be able to use it in production.
-
-So what's available in vanilla JS land? The silk.co engineering team [have apparently done something similar](http://engineering.silk.co/post/80056130804/reactive-programming-in-javascript), but it requires manual memory management and doesn't seem to be publicly available anyway.
-
-More promising is [Knockout's Observables](http://knockoutjs.com/documentation/observables.html) + [Pure Computed Observables](http://knockoutjs.com/documentation/computed-pure.html) which seem to get the job done, but are tied to Knockout itself. They also have no facility for transactions and are glitchy:
-
-```javascript
-const root = ko.observable("hello");
-
-const fst = ko.pureComputed(() => root()[0]);
-
-const lst = ko.pureComputed(() => {
-  let word = root();
-  return word[word.length-1];
-});
-
-ko.computed(() =>  console.log(fst(), lst());
-// $> h o
-
-root("bye");
-// $> b o
-// $> b e
-```
-
-With the partial exception of Knockout, all of the above libraries are also guilty of lexically conflating derivation with reaction. These two concerns have different requirements and different goals, and I would argue that making them visually distinct improves code readability and encourages cleaner design.
-
-This has not been an exhaustive comparison. There are [some](https://www.meteor.com/tracker) [other](https://github.com/Raynos/observ) [libraries](https://github.com/polymer/observe-js) with similar shortcomings, but we've gone through the meaty stuff already. There are also many libraries on other platforms. The closest thing I managed to find to Havelock was [Shiny's Reactivity model](http://shiny.rstudio.com/articles/reactivity-overview.html).
+A final potential drawback is that DerivableJS requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming from an OO background.
 
 ## Usage
 
-Havelock is brand spanking new so, while it all seems to work and everything, probably best to consider it alpha quality for the time being.
+DerivableJS is still quite new, but has been used for serious stuff in production. I think it is safe to consider it beta quality at this point.
 
 ##### API
-[See Here](https://ds300.github.com/havelock)
+[See Here](https://ds300.github.com/derivable)
 
 ##### Examples (wip)
-If you want to get a really good feel for what Havelock can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/havelock/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
+If you want to get a really good feel for what DerivableJS can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/derivable/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
 
 Others:
 
-- [TodoMVC w/React](https://ds300.github.com/havelock/examples/todo) ([source](https://github.com/ds300/havelock/tree/master/examples/todo))
-- [Null/Error propagation](https://github.com/ds300/havelock/tree/master/examples/maybe/README.md)
-- [Mapping over collections with caching](https://github.com/ds300/havelock/tree/master/examples/caching/README.md)
-- [Example of how to do History](https://github.com/ds300/havelock/tree/master/examples/history)
+- [TodoMVC w/React](https://ds300.github.com/derivablejs/examples/todo) ([source](https://github.com/ds300/derivablejs/tree/master/examples/todo))
+- [Null/Error propagation](https://github.com/ds300/derivablejs/tree/master/examples/maybe/README.md)
+- [Mapping over collections with caching](https://github.com/ds300/derivablejs/tree/master/examples/caching/README.md)
+- [Example of how to do History](https://github.com/ds300/derivablejs/tree/master/examples/history)
 
 ##### npm
-Available as `havelock`.
+Available as `derivable`.
 
 ##### Browser
-Either with browserify or, if need be, import `dist/havelock.min.js` directly (find it at `window.Havelock`).
+Either with browserify or, if need be, import `dist/derivable.min.js` directly (find it at `window.Derivable`).
 
 ##### Batteries Not Included
-Havelock expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
+DerivableJS expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
 
 ##### Equality Woes
 JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
 
-If the data you're threading through Havelock needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
+If the data you're threading through DerivableJS needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
 
-If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. Mori), then you'll need to re-initialize Havelock with a custom equality function.
+If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. Mori), then you'll need to re-initialize DerivableJS with a custom equality function.
 
 ```javascript
-import { withEquality } from 'havelock'
+import { withEquality } from 'derivable'
 
 const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 ```
 
 ## 1.0.0 Roadmap
 
-Havelock's API will be unstable until version 1.0.0 is released. This will happen on or before January 1st 2016, whereafter the project will use [Semantic Versioning](http://semver.org/).
+DerivableJS's API will be unstable until version 1.0.0 is released. This will happen on or before January 1st 2016, whereafter the project will use [Semantic Versioning](http://semver.org/).
 
 The purpose for this delay is to gather [suggestions and feedback](#contributing) from the community to help shape the core API, but it's a fairly small library so hopefully these things won't take too long.
 
@@ -347,7 +171,7 @@ The purpose for this delay is to gather [suggestions and feedback](#contributing
 1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
-4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness Havelock currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
+4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness DerivableJS currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Contributing
 
@@ -361,22 +185,6 @@ Special thanks to:
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin for their invaluable mentorship.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
-
-## Hire Me
-
-If this project is useful to you, consider supporting the author by giving him a new job!
-
-A little about me:
-
-I want to work with and learn from awesome software engineers while tackling deeply interesting problems. The kinds of problems that have you waking up early because you can't wait to start thinking about them again.
-
-I've been on the fraying edges of NLP academia since finishing my CompSci BSc in 2013. First as a PhD student and then as a Research Fellow/Code Monkey thing. During that time I've done a lot of serious JVM data processing stuff using Clojure (<3) and Java, plus a whole bunch of full-stack web development.
-
-That was fun but now I intend to become a professional and competent engineer, which seems like a very hard thing to accomplish alone in an academic setting.
-
-I like to read and daydream about compilers and VMs. I like to read novels which deftly say something touching about humans. I can juggle 7 balls a bit. I play musical instruments and ride bicycles and watch stupid funny junk on youtube. I have an obscenely cool sister (seriously it's just not fair on the rest of us). I think South-East Asian cuisine is where it's at, cuisine-wise. But most of the others are pretty great too.
-
-I'm free from January 2016 and might be willing to do remote work or move anywhere in Western Europe for the right job. Email me if you want to do the dance.
 
 ## License
 

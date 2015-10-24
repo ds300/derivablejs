@@ -9,7 +9,7 @@ If you identify a bug, feel free to submit a pull request to master with the fix
 When submitting your first pull request, please add a comment with the following:
 
 ```
-I license my contributions to the Havelock project under the Apache License 2.0.
+I license my contributions to the DerivableJS project under the Apache License 2.0.
 ```
 
 ## Code style
