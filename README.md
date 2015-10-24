@@ -32,7 +32,7 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 Derivables are a radically simplifying paradigm shift in our approach to managing application state. They are liberating like switching from manual memory management to garbage collection, and they are profound like switching from OO to FP.
 
-They make it trivially easy to maintain consistent (i.e. sense-making) state at all times without requiring us to keep it all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts.
+Sickening hyperbole aside, Derivables really do make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts.
 
 There are two types of Derivable:
 
@@ -112,7 +112,7 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 Another drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your reactions throw errors. There should be ways to mitigate this for debugging purposes, but I haven't thought about it much yet.
 
-A final potential drawback is that DerivableJS requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming from an OO background.
+A final potential drawback is that DerivableJS requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming directly from an OO background.
 
 ## Usage
 
