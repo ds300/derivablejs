@@ -1,5 +1,5 @@
 <h1 align="center">DerivableJS</h1>
-<h3 align="center">Derivables are Observable State done Correctly</h3>
+<h3 align="center">Observable State done Right</h3>
 
 [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable)
@@ -12,12 +12,8 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [Quick Demo: {greeting}, {name}!](#quick-demo-greeting-name)
-- [Rationale](#rationale)
-- [Model](#model)
-  - [Key Benefits](#key-benefits)
+- [Derivables](#derivables)
   - [Tradeoffs](#tradeoffs)
-  - [Comparison with Previous Work](#comparison-with-previous-work)
 - [Usage](#usage)
       - [API](#api)
       - [Examples (wip)](#examples-wip)
@@ -29,7 +25,6 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 - [Future Work](#future-work)
 - [Contributing](#contributing)
 - [Thanks](#thanks)
-- [Hire Me](#hire-me)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -94,13 +89,13 @@ The structure of this example can be depicted as the following DAG:
 
 The DAG edges are automatically inferred by DerivableJS. It is important to understand that they (the edges) do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. When you change the value of an atom, it's whole propagation graph updates in atomic accord. There is no accessible point in time between the fact of changing an atom and the fact of it's dependents becoming aware of the change.
 
-To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value, our single source of truth, is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
+To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
 
-This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra stuff involving topological sorting).
+This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra stuff involving topological sorting, and even then only in a single threaded environment).
 
-The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just in time, on demand. This is another huge win because:
+The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just in time—on demand. This is another huge win because:
 
-- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change-time if they are actually used by a reaction.
+- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change time if they (the derivations) are actually used by an affected reaction. So, for example, you can declare an eternal relationship between *n* and *n*<sup>2</sup> without needing to fear the cost of re-computing *n*<sup>2</sup> every time *n* changes. That fear is transferred to whoever decides that they want to know the value of *n*<sup>2</sup> at all times, which is just how it should be.
 - It allows derivations to be automatically garbage collected when you don't need them any more, just like any other object. This is simple to the max! In fact, you don't need any special knowledge to avoid memory leaks with DerivableJS—it Just Works.
 - It permits true short-circuiting boolean logic in derivation structures, which turns out to be extraordinarily practical.
 
