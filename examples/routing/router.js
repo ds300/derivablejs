@@ -1,20 +1,20 @@
-/// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
+/// <reference path="./node_modules/derivable/dist/derivable.d.ts"/>
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
 /***
 
 # Router
 
 This file will walk you through the implemetation of a simple but powerful
-routing system with Havelock. It is structured in two parts:
+routing system with DerivableJS. It is structured in two parts:
 
 1. Data and Functions
 2. Reactive Glue
 
-The first section doesn't involve using Havelock at all, but rather shows how to
+The first section doesn't involve using Derivables at all, but rather shows how to
 go about designing all the individual components of a routing system from a functional perspective.
 It is written for anyone with JS experience, but if you've done any functional programming with immutable data before it should be *really* easy to follow.
 
-Part 2 shows how to take the inert functional system designed in Part 1, and turn it into a living breathing thing using Havelock.
+Part 2 shows how to take the inert functional system designed in Part 1, and turn it into a living breathing thing using Derivables.
 
 ## Part 1: Data and Functions
 
@@ -261,12 +261,12 @@ The reactivity all stems from the global state, which in this case is our dispat
 
 
 ***/
-var havelock_1 = require('havelock');
-var hash = havelock_1.atom("#/some/route"), dispatchTree = havelock_1.atom(immutable_1.Map());
+var derivable_1 = require('derivable');
+var hash = derivable_1.atom("#/some/route"), dispatchTree = derivable_1.atom(immutable_1.Map());
 /***
 
 But what is a `Handler` you ask? Well in most systems it is some kind of function
-which transforms a request into a response. But Havelock is all about reactivity and
+which transforms a request into a response. But Derivables are all about reactivity and
 ordinary functions are not reactive on their own. Another problem is that you need to know *how* to call a function,
 and that restricts handlers to having a particular signature or being managed by dependency injection.
 
@@ -276,18 +276,18 @@ re-rendered? Do the dependencies tell us via some event framework set up alongsi
 No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
 
 ***/
-var havelock_2 = require('havelock');
+var derivable_2 = require('derivable');
 var lookupResult = dispatchTree.derive(getHandler, hash);
 // handler might be null, in which case do a 404 page
 var handler = lookupResult.derive(function (r) { return r[0]; })
-    .or((_a = ["404 not found: ", ""], _a.raw = ["404 not found: ", ""], havelock_2.derive(_a, hash))), params = lookupResult.derive(function (r) { return r[1]; });
+    .or((_a = ["404 not found: ", ""], _a.raw = ["404 not found: ", ""], derivable_2.derive(_a, hash))), params = lookupResult.derive(function (r) { return r[1]; });
 /***
 
 So now we can derive the dom from the handler by simply upacking it.
 
 ***/
-var havelock_3 = require('havelock');
-var dom = handler.derive(havelock_3.unpack);
+var derivable_3 = require('derivable');
+var dom = handler.derive(derivable_3.unpack);
 /***
 
 Notice that it has the same type as an actual handler. That's because it is.
@@ -309,30 +309,30 @@ var hello = params.derive(function (params) {
         name = name.toUpperCase();
     return "Well hello there " + name + "!";
 });
-var now = havelock_1.atom(+new Date());
-var today = (_b = ["Today is ", ""], _b.raw = ["Today is ", ""], havelock_2.derive(_b, now.derive(renderDate)));
+var now = derivable_1.atom(+new Date());
+var today = (_b = ["Today is ", ""], _b.raw = ["Today is ", ""], derivable_2.derive(_b, now.derive(renderDate)));
 function renderDate(date) {
     return new Date(date).toDateString();
 }
-var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], havelock_2.derive(_c, hello, today));
+var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], derivable_2.derive(_c, hello, today));
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today is Wed Aug 26 2015
+// $>   Today is Sat Oct 24 2015
 hash.set("#/greeting/steve"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Wed Aug 26 2015
+// $>   Today is Sat Oct 24 2015
 // forward a day
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Thu Aug 27 2015
+// $>   Today is Sun Oct 25 2015
 // and a year
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24 * 365); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 hash.set("#/greeting/steve?caps"); //$
 function context(ctx) {
     var route = parseRouteString(ctx);
@@ -358,7 +358,7 @@ hash.set("#/print/hello?name=Bridget"); //$
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
 hash.set("#/print"); //$
@@ -375,7 +375,7 @@ hash.set("#/print"); //$
 // $>   pick a thing to print yo
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 hash.set("#/print/hello?name=Morty"); //$
 var _a, _b, _c;
 // $> HELLO YES THIS IS DOM:

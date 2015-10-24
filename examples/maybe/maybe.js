@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
+/// <reference path="./node_modules/derivable/dist/derivable.d.ts"/>
 /***
 
 # Propagating Failure
@@ -10,14 +10,14 @@ others should even be attempted. Just propagate the failure.'
 Here's how to do that.
 
 ***/
-var havelock_1 = require('havelock');
-var word = havelock_1.atom("hello");
+var derivable_1 = require('derivable');
+var word = derivable_1.atom("hello");
 var toUpper = function (x) { return x.toUpperCase(); };
 var spacedOut = function (x) { return x.split("").join(" "); };
 var upper = word.derive(toUpper);
 var spaced = upper.derive(spacedOut);
 console.log(spaced.get()); //$
-// $> H E L L O
+// $> H E L L O buns
 word.set(null);
 try {
     spaced.get();

@@ -1,4 +1,4 @@
-import _, {atom, derive, derivation, transact} from '../dist/havelock';
+import _, {atom, derive, derivation, transact} from '../dist/derivable';
 import assert from 'assert';
 import { label } from './util';
 
@@ -16,7 +16,7 @@ describe("a derivation", () => {
     assert.strictEqual(kiloBytes.get(), 1024 * 1024)
   });
 
-  it("can also be created via the derivation function in the havelock package", () => {
+  it("can also be created via the derivation function in the derivable package", () => {
     megaBytes = derivation(() => orderUp(kiloBytes.get()));
     assert.strictEqual(megaBytes.get(), 1024);
   });

@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, transact, Reaction} from '../dist/havelock';
+import _, {atom, transact, Reaction} from '../dist/derivable';
 import assert from 'assert';
 
 describe("a reaction", () => {
@@ -201,7 +201,7 @@ describe("setting the values of atoms in a reaction phase", () => {
 
     assert.strictEqual(b.get(), "baaa");
 
-    // havelock disallows
+    // derivable disallows
     assert.throws(() => b.react(b => a.set(b)));
   });
 

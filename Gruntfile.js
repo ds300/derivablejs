@@ -17,7 +17,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: ['src/*.js'],
-        dest: 'dist/havelock.js',
+        dest: 'dist/derivable.js',
       },
     },
     jshint: {
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
         undef: true,
         unused: 'vars',
       },
-      all: ['dist/havelock.js']
+      all: ['dist/derivable.js']
     },
     clean: {
       build: ['dist/*']
@@ -62,11 +62,11 @@ module.exports = function(grunt) {
   var uglify = require('uglify-js');
 
   grunt.registerTask('ugly', function () {
-    var src = 'dist/havelock.js';
+    var src = 'dist/derivable.js';
 
     var minifyResult = uglify.minify(fs.readFileSync(src).toString(), {
-      inSourceMap: 'dist/havelock.js.map',
-      outSourceMap: 'havelock.min.js.map',
+      inSourceMap: 'dist/derivable.js.map',
+      outSourceMap: 'derivable.min.js.map',
       fromString: true,
       mangle: {
         toplevel: true
@@ -80,13 +80,13 @@ module.exports = function(grunt) {
       output: {
         max_line_len: 2048,
       },
-      reserved: ['module', 'define', 'Havelock']
+      reserved: ['module', 'define', 'Derivable']
     });
 
     var minified = minifyResult.code;
     var copyright = fs.readFileSync('resources/COPYRIGHT');
-    fs.writeFileSync('dist/havelock.min.js', minified);
-    fs.writeFileSync('dist/havelock.min.js.map', minifyResult.map.toString());
+    fs.writeFileSync('dist/derivable.min.js', minified);
+    fs.writeFileSync('dist/derivable.min.js.map', minifyResult.map.toString());
   });
 
   var Promise = require("bluebird");
@@ -94,8 +94,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('make-docs', function () {
     var script = "docgen/target/docgen.js";
-    var api = "havelock.api.edn";
-    var tsOut = "dist/havelock.d.ts";
+    var api = "derivable.api.edn";
+    var tsOut = "dist/derivable.d.ts";
     var htmlOut = "index.html";
 
     if (!fs.existsSync("docs")) {
@@ -158,12 +158,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('stats', function () {
     Promise.all([
-      execp('cat dist/havelock.js | wc -c'),
-      execp('git show master:dist/havelock.js | wc -c'),
-      execp('cat dist/havelock.min.js | wc -c'),
-      execp('git show master:dist/havelock.min.js | wc -c'),
-      execp('cat dist/havelock.min.js | gzip -c | wc -c'),
-      execp('git show master:dist/havelock.min.js | gzip -c | wc -c'),
+      execp('cat dist/derivable.js | wc -c'),
+      execp('git show master:dist/derivable.js | wc -c'),
+      execp('cat dist/derivable.min.js | wc -c'),
+      execp('git show master:dist/derivable.min.js | wc -c'),
+      execp('cat dist/derivable.min.js | gzip -c | wc -c'),
+      execp('git show master:dist/derivable.min.js | gzip -c | wc -c'),
     ]).then(function (results) {
       return results.map(function (result) { return parseInt(result); });
     }).then(function (results) {

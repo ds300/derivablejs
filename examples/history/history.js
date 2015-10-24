@@ -1,5 +1,5 @@
 import imut from 'immutable'
-import { atom } from 'havelock'
+import { atom } from 'derivable'
 
 function clamp (a, b, c) {
   return Math.min(Math.max(a, b), c);

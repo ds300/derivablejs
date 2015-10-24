@@ -8,7 +8,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "havelock": "^0.2.1",
     "immutable": "^3.7.4",
     "typescript": "^1.5.3"
   },

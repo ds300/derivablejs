@@ -31,7 +31,9 @@ function drainQueue() {
         currentQueue = queue;
         queue = [];
         while (++queueIndex < len) {
-            currentQueue[queueIndex].run();
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
         }
         queueIndex = -1;
         len = queue.length;
@@ -83,7 +85,6 @@ process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
-// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
@@ -91,26 +92,6 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],2:[function(require,module,exports){
-var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/**
- *  Copyright (c) 2015, David Sheldrick.
- *  All rights reserved.
- *
- *  This source code is licensed under the BSD-style license found in the
- *  LICENSE file in the root directory of this source tree.
- */
-
 // UMD loader
 (function (global, factory) {
   "use strict";
@@ -119,1694 +100,1113 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   } else if (typeof exports !== "undefined") {
     factory(exports);
   } else {
-    factory(global.Havelock = {});
+    factory(global.Derivable = {});
   }
 })(this, function (exports) {
-  "use strict";
-  /*
-  
-       $$\   $$\ $$$$$$$$\ $$$$$$\ $$\
-       $$ |  $$ |\__$$  __|\_$$  _|$$ |
-       $$ |  $$ |   $$ |     $$ |  $$ |
-       $$ |  $$ |   $$ |     $$ |  $$ |
-       $$ |  $$ |   $$ |     $$ |  $$ |
-       $$ |  $$ |   $$ |     $$ |  $$ |
-       \$$$$$$  |   $$ |   $$$$$$\ $$$$$$$$\
-        \______/    \__|   \______|\________|
-  
-  */
+"use strict";
 
-  function extend(obj) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
+var util_keys = Object.keys;
 
-    try {
-      for (var _len = arguments.length, others = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        others[_key - 1] = arguments[_key];
-      }
-
-      for (var _iterator = others[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var other = _step.value;
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = Object.keys(other)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var prop = _step2.value;
-
-            obj[prop] = other[prop];
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator["return"]) {
-          _iterator["return"]();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    return obj;
-  }
-
-  function util_symbolValues(obj) {
-    return Object.getOwnPropertySymbols(obj).map(function (s) {
-      return obj[s];
-    });
-  }
-
-  function _type(obj) {
-    return Object.prototype.toString.call(obj).slice(8, -1);
-  }
-
-  function _is(a, b) {
-    // SameValue algorithm
-    if (a === b) {
-      // Steps 1-5, 7-10
-      // Steps 6.b-6.e: +0 != -0
-      return a !== 0 || 1 / a === 1 / b;
-    } else {
-      // Step 6.a: NaN == NaN
-      return a !== a && b !== b;
+function util_extend(obj) {
+  for (var i = 1; i < arguments.length; i++) {
+    var other = arguments[i];
+    var keys = util_keys(other);
+    for (var j = keys.length; j--;) {
+      var prop = keys[j];
+      obj[prop] = other[prop];
     }
   }
+  return obj;
+}
 
-  function _equals(a, b, stackA, stackB) {
-    var typeA = _type(a);
-    if (typeA !== _type(b)) {
-      return false;
-    }
+function _type(obj) {
+  return Object.prototype.toString.call(obj).slice(8, -1);
+}
 
-    if (typeA === 'Boolean' || typeA === 'Number' || typeA === 'String') {
-      return typeof a === 'object' ? typeof b === 'object' && util_equals(a.valueOf(), b.valueOf()) : false;
-    }
+function _is(a, b) {
+  // SameValue algorithm
+  if (a === b) { // Steps 1-5, 7-10
+    // Steps 6.b-6.e: +0 != -0
+    return a !== 0 || 1 / a === 1 / b;
+  } else {
+    // Step 6.a: NaN == NaN
+    return a !== a && b !== b;
+  }
+}
 
-    if (typeA === 'RegExp') {
-      // RegExp equality algorithm: http://stackoverflow.com/a/10776635
-      return a.source === b.source && a.global === b.global && a.ignoreCase === b.ignoreCase && a.multiline === b.multiline && a.sticky === b.sticky && a.unicode === b.unicode;
-    }
+function _has(p,o) {
+  return Object.hasOwnProperty.call(o, p);
+}
 
-    if (Object(a) === a) {
-      if (typeA === 'Date' && a.getTime() !== b.getTime()) {
-        return false;
-      }
-
-      var keysA = Object.keys(a);
-      if (keysA.length !== Object.keys(b).length) {
-        return false;
-      }
-
-      if (!stackA) {
-        stackA = [];
-        stackB = [];
-      }
-
-      var idx = stackA.length - 1;
-      while (idx >= 0) {
-        if (stackA[idx] === a) {
-          return stackB[idx] === b;
-        }
-        idx -= 1;
-      }
-
-      stackA[stackA.length] = a;
-      stackB[stackB.length] = b;
-      idx = keysA.length - 1;
-      while (idx >= 0) {
-        var key = keysA[idx];
-        if (!Object.hasOwnProperty(key, b) || !util_equals(b[key], a[key], stackA, stackB)) {
-          return false;
-        }
-        idx -= 1;
-      }
-      stackA.pop();
-      stackB.pop();
-      return true;
-    }
+function _equals(a, b, stackA, stackB) {
+  var typeA = _type(a);
+  if (typeA !== _type(b)) {
     return false;
   }
 
-  function util_equals(a, b, stackA, stackB) {
-    if (Object.is && Object.is(a, b) || _is(a, b)) {
-      return true;
-    }
-    if (!(a && b)) return false;
-
-    return typeof a.equals === 'function' && a.equals(b) || typeof b.equals === 'function' && b.equals(a) || _equals(a, b, stackA, stackB) || false;
+  if (typeA === 'Boolean' || typeA === 'Number' || typeA === 'String') {
+    return typeof a === 'object' ?
+      typeof b === 'object' && _is(a.valueOf(), b.valueOf()) :
+      _is(a, b);
   }
 
-  /*
-  
-       $$$$$$\   $$$$$$\
-      $$  __$$\ $$  __$$\
-      $$ /  \__|$$ /  \__|
-      $$ |$$$$\ $$ |
-      $$ |\_$$ |$$ |
-      $$ |  $$ |$$ |  $$\
-      \$$$$$$  |\$$$$$$  |
-       \______/  \______/
-  
-  */
+  if (_is(a, b)) {
+    return true;
+  }
 
-  // node modes
-  var NEW = 0,
-      CHANGED = 1,
-      UNCHANGED = 2,
-      ORPHANED = 3,
-      UNSTABLE = 4,
-      STABLE = 5,
-      DISOWNED = 6,
+  if (typeA === 'RegExp') {
+    // RegExp equality algorithm: http://stackoverflow.com/a/10776635
+    return (a.source === b.source) &&
+           (a.global === b.global) &&
+           (a.ignoreCase === b.ignoreCase) &&
+           (a.multiline === b.multiline) &&
+           (a.sticky === b.sticky) &&
+           (a.unicode === b.unicode);
+  }
 
-  // core types
-  ATOM = Symbol("ATOM"),
-      DERIVATION = Symbol("DERIVATION"),
-      LENS = Symbol("LENS"),
-      REACTION = Symbol("REACTION");
+  if (Object(a) === a) {
+    if (typeA === 'Date' && a.getTime() !== b.getTime()) {
+      return false;
+    }
 
-  function gc_mark(node, reactions) {
-    if (node._type === REACTION) {
-      reactions.push(node);
-    } else {
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
+    var keysA = util_keys(a);
+    if (keysA.length !== util_keys(b).length) {
+      return false;
+    }
 
-      try {
-        for (var _iterator3 = node._children[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var child = _step3.value;
+    var idx = stackA.length - 1;
+    while (idx >= 0) {
+      if (stackA[idx] === a) {
+        return stackB[idx] === b;
+      }
+      idx -= 1;
+    }
 
-          if (child._state !== UNSTABLE) {
-            child._state = UNSTABLE;
-            gc_mark(child, reactions);
-          }
-        }
-      } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-            _iterator3["return"]();
-          }
-        } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
-          }
-        }
+    stackA[stackA.length] = a;
+    stackB[stackB.length] = b;
+    idx = keysA.length - 1;
+    while (idx >= 0) {
+      var key = keysA[idx];
+      if (!_has(key, b) || !_equals(b[key], a[key], stackA, stackB)) {
+        return false;
+      }
+      idx -= 1;
+    }
+    stackA.pop();
+    stackB.pop();
+    return true;
+  }
+  return false;
+}
+
+function util_equals (a, b) {
+  return a && typeof a.equals === 'function' ?
+            a.equals(b) : _equals(a, b, [], []);
+}
+
+function util_addToArray (a, b) {
+  var i = a.indexOf(b);
+  if (i < 0) {
+    a.push(b);
+  }
+}
+
+function util_removeFromArray (a, b) {
+  var i = a.indexOf(b);
+  if (i >= 0) {
+    a.splice(i, 1);
+  }
+}
+
+function util_arrayContains (a, b) {
+  return a.indexOf(b) >= 0;
+}
+
+var nextId = 0;
+function util_nextId () {
+  return nextId++;
+}
+
+function util_slice (a, i) {
+  return Array.prototype.slice.call(a, i);
+}
+
+var util_unique = Object.freeze({equals: function () { return false; }});
+
+// node modes
+var gc_NEW = 0,
+    gc_CHANGED = 1,
+    gc_UNCHANGED = 2,
+    gc_ORPHANED = 3,
+    gc_UNSTABLE = 4,
+    gc_STABLE = 5,
+    gc_DISOWNED = 6;
+
+function gc_mark(node, reactions) {
+  // make everything unstable
+  if (node._type === types_REACTION) {
+    if (node.reacting) {
+      throw new Error("Cycle detected! Don't do this!");
+    }
+    reactions.push(node);
+  } else {
+    for (var i = node._children.length; i--;) {
+      var child = node._children[i];
+      if (child._state !== gc_UNSTABLE) {
+        child._state = gc_UNSTABLE;
+        gc_mark(child, reactions);
       }
     }
   }
+}
 
-  function gc_sweep(node) {
-    switch (node._state) {
-      case CHANGED:
-      case UNCHANGED:
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
+function gc_sweep(node) {
+  var i;
+  switch (node._state) {
+  case gc_CHANGED:
+  case gc_UNCHANGED:
+    // changed or unchanged means the node was visited
+    // during the react phase, which means we keep it in
+    // the graph for the next go round
+    for (i = node._children.length; i--;) {
+      var child = node._children[i];
+      gc_sweep(child);
+      if (child._state !== gc_STABLE) {
+        node._children.splice(i, 1);
+      }
+    }
+    node._state = gc_STABLE;
+    break;
+  case gc_UNSTABLE:
+    // unstable means the node was not visited during
+    // the react phase, which means we kick it out of the
+    // graph.
 
-        try {
-          for (var _iterator4 = node._children[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var child = _step4.value;
-
-            gc_sweep(child);
-          }
-        } catch (err) {
-          _didIteratorError4 = true;
-          _iteratorError4 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-              _iterator4["return"]();
-            }
-          } finally {
-            if (_didIteratorError4) {
-              throw _iteratorError4;
-            }
-          }
-        }
-
-        node._state = STABLE;
+    // but first we check if all of its parents were unchanged
+    // if so, we can avoid recalculating it in future by
+    // caching its parents' current values.
+    var stashedParentStates = [];
+    for (i = node._parents.length; i--;) {
+      var parent = node._parents[i];
+      if (parent._state !== gc_UNCHANGED) {
+        // nope, its parents either have changed or weren't visited,
+        // so we have to orphan this node
+        node._state = gc_ORPHANED;
         break;
-      case UNSTABLE:
-        var stashedParentStates = [];
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
+      }
+      stashedParentStates.push([parent, parent._value]);
+    }
+    if (node._state !== gc_ORPHANED) {
+      node._state = gc_DISOWNED;
+      node._parents = stashedParentStates;
+    }
+    break;
+  case gc_STABLE:
+  case gc_ORPHANED:
+  case gc_DISOWNED:
+    break;
+  default:
+    throw new Error("can't sweep state " + node._state);
+  }
+}
 
-        try {
-          for (var _iterator5 = node._parents[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var _parent = _step5.value;
+function gc_abort_sweep(node) {
+  // set everything to unstable, kill all derivation caches and disconnect
+  // the graph
+  var doChildren = false;
+  switch (node._type) {
+  case types_ATOM:
+    node._state = gc_STABLE;
+    doChildren = true;
+    break;
+  case types_DERIVATION:
+  case types_LENS:
+    node._state = gc_NEW;
+    node._value = util_unique;
+    doChildren = true;
+    break;
+  case types_REACTION:
+    node._state = gc_STABLE;
+    doChildren = false;
+    break;
+  }
+  if (doChildren) {
+    for (var i = node._children.length; i--;) {
+      gc_abort_sweep(node._children[i]);
+    }
+    node._children = [];
+  }
+}
 
-            if (_parent._state === CHANGED) {
-              node._state = ORPHANED;
-            }
-            _parent._children.remove(node);
-            stashedParentStates.push([_parent, _parent._value]);
-          }
-        } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-              _iterator5["return"]();
-            }
-          } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
-            }
-          }
+var parentsStack = [];
+
+function parents_capturingParents(f) {
+  parentsStack.push([]);
+  f();
+  return parentsStack.pop();
+}
+
+function parents_maybeCaptureParent(p) {
+  if (parentsStack.length > 0) {
+    util_addToArray(parentsStack[parentsStack.length - 1], p);
+  }
+}
+
+var types_ATOM = "ATOM",
+    types_DERIVATION = "DERIVATION",
+    types_LENS = "LENS",
+    types_REACTION = "REACTION";
+
+var RUNNING = 0,
+    COMPLETED = 1,
+    ABORTED = 3;
+
+var TransactionAbortion = {};
+
+function abortTransaction() {
+  throw TransactionAbortion;
+}
+
+function transactions_newContext () {
+  return {currentTxn: null};
+}
+
+function transactions_inTransaction (ctx) {
+  return ctx.currentTxn !== null;
+}
+
+function transactions_currentTransaction (ctx) {
+  return ctx.currentTxn;
+}
+
+function begin (ctx, txn) {
+  txn._parent = ctx.currentTxn;
+  txn._state = RUNNING;
+  ctx.currentTxn = txn;
+}
+
+function popTransaction (ctx, cb) {
+  var txn = ctx.currentTxn;
+  ctx.currentTxn = txn._parent;
+  if (txn._state !== RUNNING) {
+    throw new Error("unexpected state: " + txn._state);
+  }
+  cb(txn);
+}
+
+function commit (ctx) {
+  popTransaction(ctx, function (txn) {
+    txn._state = COMPLETED;
+    txn.onCommit && txn.onCommit();
+  });
+}
+
+function abort (ctx) {
+  popTransaction(ctx, function (txn) {
+    txn._state = ABORTED;
+    txn.onAbort && txn.onAbort();
+  });
+}
+
+function transactions_transact (ctx, txn, f) {
+  begin(ctx, txn);
+  try {
+    f(abortTransaction);
+  } catch (e) {
+    abort(ctx);
+    if (e !== TransactionAbortion) {
+      throw e;
+    } else {
+      return;
+    }
+  }
+  commit(ctx);
+}
+
+function transactions_ticker (ctx, txnConstructor) {
+  begin(ctx, txnConstructor());
+  var disposed = false;
+  return {
+    tick: function () {
+      if (disposed) throw new Error("can't tick disposed ticker");
+      commit(ctx);
+      begin(ctx, txnConstructor());
+    },
+    stop: function () {
+      if (disposed) throw new Error("ticker already disposed");
+      commit(ctx);
+    }
+  }
+}
+
+function reactionBase (parent, control) {
+  return {
+    control: control,
+    parent: parent,
+    _state: gc_STABLE,
+    active: false,
+    _type: types_REACTION,
+    uid: util_nextId(),
+    reacting: false
+  }
+}
+
+function stop (base) {
+  util_removeFromArray(base.parent._children, base);
+  base.active = false;
+  base.control.onStop && base.control.onStop();
+}
+
+function start (base) {
+  util_addToArray(base.parent._children, base);
+  base.active = true;
+  base.control.onStart && base.control.onStart();
+  base.parent._get();
+}
+
+function reactions_maybeReact (base) {
+  if (base._state === gc_UNSTABLE) {
+    var parent = base.parent, parentState = parent._state;
+    if (parentState === gc_UNSTABLE ||
+        parentState === gc_ORPHANED ||
+        parentState === gc_DISOWNED ||
+        parentState === gc_NEW) {
+      parent._get();
+    }
+    parentState = parent._state;
+
+    if (parentState === gc_UNCHANGED) {
+      base._state = gc_STABLE;
+    } else if (parentState === gc_CHANGED) {
+      force(base);
+    } else {
+        throw new Error("invalid parent state: " + parentState);
+    }
+  }
+}
+
+function force (base) {
+  // base.reacting check now in gc_mark; total solution there as opposed to here
+  if (base.control.react) {
+    base._state = gc_STABLE;
+    try {
+      base.reacting = true;
+      base.control.react(base.parent._get());
+    } finally {
+      base.reacting = false;
+    }
+  } else {
+      throw new Error("No reaction function available.");
+  }
+}
+
+function reactions_Reaction () {
+  /*jshint validthis:true */
+  this._type = types_REACTION;
+}
+
+function reactions_createBase (control, parent) {
+  if (control._base) {
+    throw new Error("This reaction has already been initialized");
+  }
+  control._base = reactionBase(parent, control);
+  return control;
+}
+
+util_extend(reactions_Reaction.prototype, {
+  start: function () {
+    start(this._base);
+    return this;
+  },
+  stop: function () {
+    stop(this._base);
+    return this;
+  },
+  force: function () {
+    force(this._base);
+    return this;
+  },
+  isRunning: function () {
+    return this._base.active;
+  }
+})
+
+function reactions_StandardReaction (f) {
+  /*jshint validthis:true */
+  this._type = types_REACTION;
+  this.react = f;
+}
+
+util_extend(reactions_StandardReaction.prototype, reactions_Reaction.prototype);
+
+function reactions_anonymousReaction (descriptor) {
+  return util_extend(new reactions_Reaction(), descriptor);
+}
+
+function derivable_createPrototype (D, opts) {
+  var x = {
+    /**
+     * Creates a derived value whose state will always be f applied to this
+     * value
+     */
+    derive: function (f, a, b, c, d) {
+      var that = this;
+      switch (arguments.length) {
+      case 0:
+        return that;
+      case 1:
+        return D.derivation(function () {
+          return f(that.get());
+        });
+      case 2:
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a));
+        });
+      case 3:
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a), D.unpack(b));
+        });
+      case 4:
+        return D.derivation(function () {
+          return f(that.get(),
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c));
+        });
+      case 5:
+        return D.derivation(function () {
+          return f(that.get(),
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c),
+                   D.unpack(d));
+        });
+      default:
+        var args = ([that]).concat(util_slice(arguments, 1));
+        return D.derivation(function () {
+          return f.apply(null, args.map(D.unpack));
+        });
+      }
+    },
+
+    reaction: function (f) {
+      if (typeof f === 'function') {
+        return reactions_createBase(new reactions_StandardReaction(f), this);
+      } else if (f instanceof reactions_Reaction) {
+        return reactions_createBase(f, this);
+      } else if (f && f.react) {
+        return reactions_createBase(reactions_anonymousReaction(f), this);
+      } else {
+        throw new Error("Unrecognized type for reaction " + f);
+      }
+    },
+
+    react: function (f) {
+      return this.reaction(f).start().force();
+    },
+
+    get: function () {
+      parents_maybeCaptureParent(this);
+      return this._get(); // abstract protected method, in Java parlance
+    },
+
+    is: function (other) {
+      return D.lift(opts.equals)(this, other);
+    },
+
+    and: function (other) {
+      return this.derive(function (x) {return x && D.unpack(other);});
+    },
+
+    or: function (other) {
+      return this.derive(function (x) {return x || D.unpack(other);});
+    },
+
+    then: function (thenClause, elseClause) {
+      return this.derive(function (x) {
+        return D.unpack(x ? thenClause : elseClause);
+      });
+    },
+
+    some: function (thenClause, elseClause) {
+      return this.derive(function (x) {
+        return D.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+      });
+    },
+
+    not: function () {
+      return this.derive(function (x) { return !x; });
+    },
+  };
+  x.switch = function () {
+    var args = arguments;
+    return this.derive(function (x) {
+      var i;
+      for (i = 0; i < args.length-1; i+=2) {
+        if (opts.equals(x, D.unpack(args[i]))) {
+          return D.unpack(args[i+1]);
         }
+      }
+      if (i === args.length - 1) {
+        return D.unpack(args[i]);
+      }
+    });
+  };
+  return x;
+}
 
-        if (node._state !== ORPHANED) {
-          node._state = DISOWNED;
-          node._parents = stashedParentStates;
+function derivation_createPrototype (D, opts) {
+  return {
+    _clone: function () {
+      return D.derivation(this._deriver);
+    },
+
+    _forceGet: function () {
+      var that = this,
+          i;
+      var newParents = parents_capturingParents(function () {
+        var newState = that._deriver();
+        that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
+        that._value = newState;
+      });
+
+      // organise parents
+      for (i = this._parents.length; i--;) {
+        var possiblyFormerParent = this._parents[i];
+        if (!util_arrayContains(newParents, possiblyFormerParent)) {
+          util_removeFromArray(possiblyFormerParent._children, this);
         }
+      }
+
+      this._parents = newParents;
+
+      // add this as child to new parents
+      for (i = newParents.length; i--;) {
+        util_addToArray(newParents[i]._children, this);
+      }
+    },
+
+    _get: function () {
+      var i, parent;
+      outer: switch (this._state) {
+      case gc_NEW:
+      case gc_ORPHANED:
+        this._forceGet();
         break;
-      case STABLE:
+      case gc_UNSTABLE:
+        for (i = this._parents.length; i--;) {
+          parent = this._parents[i];
+          var parentState = parent._state;
+          if (parentState === gc_UNSTABLE ||
+              parentState === gc_ORPHANED ||
+              parentState === gc_DISOWNED) {
+            parent._get();
+          }
+          parentState = parent._state;
+          if (parentState === gc_CHANGED) {
+            this._forceGet();
+            break outer;
+          } else if (!(parentState === gc_STABLE ||
+                       parentState === gc_UNCHANGED)) {
+            throw new Error("invalid parent mode: " + parentState);
+          }
+        }
+        this._state = gc_UNCHANGED;
+        break;
+      case gc_DISOWNED:
+        var parents = [];
+        for (i = this._parents.length; i--;) {
+          var parentStateTuple = this._parents[i],
+              state = parentStateTuple[1];
+          parent = parentStateTuple[0];
+          if (!opts.equals(parent._get(), state)) {
+            this._parents = [];
+            this._forceGet();
+            break outer;
+          } else {
+            parents.push(parent);
+          }
+        }
+        for (i = parents.length; i--;) {
+          util_addToArray(parents[i]._children, this);
+        }
+        this._parents = parents;
+        this._state = gc_UNCHANGED;
         break;
       default:
-        throw new Error("It should be impossible to sweep" + (" nodes with mode: " + node._state));
+        // noop
+      }
+
+      return this._value;
     }
   }
+}
 
-  /*
-  
-       $$$$$$\  $$$$$$$$\ $$$$$$$$\
-      $$  __$$\ $$  _____|\__$$  __|
-      $$ /  \__|$$ |         $$ |
-      \$$$$$$\  $$$$$\       $$ |
-       \____$$\ $$  __|      $$ |
-      $$\   $$ |$$ |         $$ |
-      \$$$$$$  |$$$$$$$$\    $$ |
-       \______/ \________|   \__|
-  
-  */
+function derivation_construct(obj, deriver) {
+  obj._children = [];
+  obj._parents = [];
+  obj._deriver = deriver;
+  obj._state = gc_NEW;
+  obj._type = types_DERIVATION;
+  obj._value = util_unique;
+  return obj;
+}
 
-  /**
-   *  === CUSTOM SET IMPLEMENTATION ===
-   *
-   * for child/parent relationships. only need to support add, remove and
-   * iterate. Using identity for equality and ._id properties for map keys.
-  
-   * use an array-based set to begin with, when it gets size > 16, switch to map.
-   * switch back down at size 8
-  
-   * 16/8 are educated guesses based on other implementations I've seen.
-   * An empirical study on the best numbers to choose may be forthcoming if
-   * perfomance turns out to be an issue. Or maybe something altogether different.
-   */
-  var useMapAtSize = 16;
-  var goBackToArrayAtSize = 8;
-
-  var MapSet = (function () {
-    function MapSet(items) {
-      _classCallCheck(this, MapSet);
-
-      this._map = {};
-      this._size = 0;
-      var _iteratorNormalCompletion6 = true;
-      var _didIteratorError6 = false;
-      var _iteratorError6 = undefined;
-
-      try {
-        for (var _iterator6 = items[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-          var item = _step6.value;
-
-          this.add(item);
-        }
-      } catch (err) {
-        _didIteratorError6 = true;
-        _iteratorError6 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-            _iterator6["return"]();
-          }
-        } finally {
-          if (_didIteratorError6) {
-            throw _iteratorError6;
-          }
-        }
-      }
-    }
-
-    _createClass(MapSet, [{
-      key: "add",
-      value: function add(elem) {
-        this._map[elem._id] = elem;
-        this._size++;
-        return this;
-      }
-    }, {
-      key: "remove",
-      value: function remove(elem) {
-        delete this._map[elem._id];
-        if (--this._size <= goBackToArrayAtSize) {
-          return new ArraySet(util_symbolValues(this._map));
-        }
-        return this;
-      }
-    }, {
-      key: Symbol.iterator,
-      value: function value() {
-        var keys = Object.keys(this._map);
-        var vals = new Array(keys.length);
-        var _iteratorNormalCompletion7 = true;
-        var _didIteratorError7 = false;
-        var _iteratorError7 = undefined;
-
-        try {
-          for (var _iterator7 = keys[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-            var k = _step7.value;
-
-            vals.push(this._map[k]);
-          }
-        } catch (err) {
-          _didIteratorError7 = true;
-          _iteratorError7 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-              _iterator7["return"]();
-            }
-          } finally {
-            if (_didIteratorError7) {
-              throw _iteratorError7;
-            }
-          }
-        }
-
-        return vals[Symbol.iterator]();
-      }
-    }]);
-
-    return MapSet;
-  })();
-
-  var ArraySet = (function () {
-    function ArraySet(items) {
-      _classCallCheck(this, ArraySet);
-
-      this._array = items || [];
-    }
-
-    _createClass(ArraySet, [{
-      key: "add",
-      value: function add(elem) {
-        if (this._array.indexOf(elem) < 0) {
-          this._array.push(elem);
-          if (this.length === useMapAtSize) {
-            return new MapSet(this._array);
-          } else {
-            return this;
-          }
-        }
-        return this;
-      }
-    }, {
-      key: "remove",
-      value: function remove(elem) {
-        var idx = this._array.indexOf(elem);
-        if (idx >= 0) {
-          if (idx === this._array.length - 1) {
-            this._array.pop();
-          } else {
-            this._array[idx] = this._array.pop();
-          }
-        }
-        return this;
-      }
-    }, {
-      key: Symbol.iterator,
-      value: function value() {
-        return this._array.slice(0)[Symbol.iterator]();
-      }
-    }]);
-
-    return ArraySet;
-  })();
-
-  var Set = (function () {
-    function Set() {
-      _classCallCheck(this, Set);
-
-      this._set = new ArraySet();
-    }
-
-    _createClass(Set, [{
-      key: "add",
-      value: function add(elem) {
-        this._set = this._set.add(elem);
-      }
-    }, {
-      key: "remove",
-      value: function remove(elem) {
-        this._set = this._set.remove(elem);
-      }
-    }, {
-      key: Symbol.iterator,
-      value: function value() {
-        return this._set[Symbol.iterator]();
-      }
-    }]);
-
-    return Set;
-  })()
-
-  /*
-  
-      $$$$$$$\   $$$$$$\  $$$$$$$\  $$$$$$$$\ $$\   $$\ $$$$$$$$\  $$$$$$\
-      $$  __$$\ $$  __$$\ $$  __$$\ $$  _____|$$$\  $$ |\__$$  __|$$  __$$\
-      $$ |  $$ |$$ /  $$ |$$ |  $$ |$$ |      $$$$\ $$ |   $$ |   $$ /  \__|
-      $$$$$$$  |$$$$$$$$ |$$$$$$$  |$$$$$\    $$ $$\$$ |   $$ |   \$$$$$$\
-      $$  ____/ $$  __$$ |$$  __$$< $$  __|   $$ \$$$$ |   $$ |    \____$$\
-      $$ |      $$ |  $$ |$$ |  $$ |$$ |      $$ |\$$$ |   $$ |   $$\   $$ |
-      $$ |      $$ |  $$ |$$ |  $$ |$$$$$$$$\ $$ | \$$ |   $$ |   \$$$$$$  |
-      \__|      \__|  \__|\__|  \__|\________|\__|  \__|   \__|    \______/
-  
-  */
-
-  /*== Parents Capturing ==*/
-  ;
-
-  var parentsStack = [];
-
-  function capturingParents(f) {
-    parentsStack.push(new Set());
-    f();
-    return parentsStack.pop();
-  }
-
-  function maybeCaptureParent(p) {
-    if (parentsStack.length > 0) {
-      parentsStack[parentsStack.length - 1].add(p);
+function mutable_createPrototype (D, _) {
+  return {
+    swap: function (f) {
+      var args = util_slice(arguments, 0);
+      args[0] = this.get();
+      return this.set(f.apply(null, args));
+    },
+    lens: function (lensDescriptor) {
+      return D.lens(this, lensDescriptor);
     }
   }
+}
 
-  /*
-  
-  $$$$$$$$\ $$\   $$\ $$\   $$\  $$$$$$\
-  \__$$  __|$$ |  $$ |$$$\  $$ |$$  __$$\
-     $$ |   \$$\ $$  |$$$$\ $$ |$$ /  \__|
-     $$ |    \$$$$  / $$ $$\$$ |\$$$$$$\
-     $$ |    $$  $$<  $$ \$$$$ | \____$$\
-     $$ |   $$  /\$$\ $$ |\$$$ |$$\   $$ |
-     $$ |   $$ /  $$ |$$ | \$$ |\$$$$$$  |
-     \__|   \__|  \__|\__|  \__| \______/
-  
-  */
-
-  var RUNNING = Symbol("running"),
-      COMPLETED = Symbol("completed"),
-      ABORTED = Symbol("aborted");
-
-  var $parent = Symbol("parent_txn");
-  var $state = Symbol("txn_value");
-
-  var TransactionAbortion = Symbol("abort that junk yo");
-
-  function abortTransaction() {
-    throw TransactionAbortion;
-  }
-
-  var TransactionContext = (function () {
-    function TransactionContext() {
-      _classCallCheck(this, TransactionContext);
-
-      this.currentTxn = null;
-    }
-
-    _createClass(TransactionContext, [{
-      key: "inTransaction",
-      value: function inTransaction() {
-        return this.currentTxn !== null;
-      }
-    }, {
-      key: "currentTransaction",
-      value: function currentTransaction() {
-        return this.currentTxn;
-      }
-    }, {
-      key: "_begin",
-      value: function _begin(txn) {
-        txn[$parent] = this.currentTxn;
-        txn[$state] = RUNNING;
-        this.currentTxn = txn;
-      }
-    }, {
-      key: "_popTransaction",
-      value: function _popTransaction(name, cb) {
-        var txn = this.currentTxn;
-        this.currentTxn = txn[$parent];
-        if (txn[$state] !== RUNNING) {
-          throw new Error("Must be in state 'RUNNING' to " + name + " transaction." + (" Was in state " + txn[$state] + "."));
-        }
-        cb(txn);
-      }
-    }, {
-      key: "_commit",
-      value: function _commit() {
-        this._popTransaction("commit", function (txn) {
-          txn[$state] = COMPLETED;
-          txn.onCommit && txn.onCommit();
-        });
-      }
-    }, {
-      key: "_abort",
-      value: function _abort() {
-        this._popTransaction("abort", function (txn) {
-          txn[$state] = ABORTED;
-          txn.onAbort && txn.onAbort();
-        });
-      }
-    }, {
-      key: "transact",
-      value: function transact(txn, f) {
-        this._begin(txn);
-        try {
-          f(abortTransaction);
-          this._commit();
-        } catch (e) {
-          this._abort();
-          if (e !== TransactionAbortion) {
-            throw e;
-          }
-        }
-      }
-    }]);
-
-    return TransactionContext;
-  })()
-
-  /*
-  
-      $$$$$$$\  $$$$$$$$\  $$$$$$\   $$$$$$\ $$$$$$$$\ $$\   $$\
-      $$  __$$\ $$  _____|$$  __$$\ $$  __$$\\__$$  __|$$$\  $$ |
-      $$ |  $$ |$$ |      $$ /  $$ |$$ /  \__|  $$ |   $$$$\ $$ |
-      $$$$$$$  |$$$$$\    $$$$$$$$ |$$ |        $$ |   $$ $$\$$ |
-      $$  __$$< $$  __|   $$  __$$ |$$ |        $$ |   $$ \$$$$ |
-      $$ |  $$ |$$ |      $$ |  $$ |$$ |  $$\   $$ |   $$ |\$$$ |
-      $$ |  $$ |$$$$$$$$\ $$ |  $$ |\$$$$$$  |  $$ |   $$ | \$$ |
-      \__|  \__|\________|\__|  \__| \______/   \__|   \__|  \__|
-  
-  */
-
-  ;
-
-  var ReactionBase = (function () {
-    function ReactionBase(parent, control) {
-      _classCallCheck(this, ReactionBase);
-
-      this.control = control;
-      this.parent = parent;
-      this._state = STABLE;
-      this._uid = Symbol("my_uid");
-      this.active = false;
-      this._type = REACTION;
-    }
-
-    _createClass(ReactionBase, [{
-      key: "stop",
-      value: function stop() {
-        this.parent._children.remove(this);
-        this.active = false;
-        this.control.onStop && this.control.onStop();
-      }
-    }, {
-      key: "start",
-      value: function start() {
-        this.parent._children.add(this);
-        this.active = true;
-        this.control.onStart && this.control.onStart();
-        this.parent._get(); // set up bi-directional link
-      }
-    }, {
-      key: "maybeReact",
-      value: function maybeReact() {
-        if (this._state === UNSTABLE) {
-          if (this.parent._state === UNSTABLE || this.parent._state === ORPHANED || this.parent._state === DISOWNED || this.parent._state === NEW) {
-            this.parent._get();
-          }
-
-          switch (this.parent._state) {
-            case UNCHANGED:
-              this._state = STABLE;
-              break;
-            case CHANGED:
-              this.force();
-              break;
-            // should never be STABLE, as this only gets called during react phase
-            default:
-              throw new Error("invalid mode for parent: " + this.parent._state);
-          }
-        }
-      }
-    }, {
-      key: "force",
-      value: function force() {
-        if (this.control.react) {
-          this._state = STABLE;
-          this.control.react(this.parent._get());
-        } else {
-          throw new Error("No reaction function available.");
-        }
-      }
-    }]);
-
-    return ReactionBase;
-  })();
-
-  var Reaction = (function () {
-    function Reaction() {
-      _classCallCheck(this, Reaction);
-
-      this._type = REACTION;
-    }
-
-    _createClass(Reaction, [{
-      key: "_createBase",
-      value: function _createBase(parent) {
-        if (this._base) {
-          throw new Error("This reaction has already been initialized");
-        }
-        this._base = new ReactionBase(parent, this);
-        return this;
-      }
-    }, {
-      key: "start",
-      value: function start() {
-        this._base.start();
-        return this;
-      }
-    }, {
-      key: "stop",
-      value: function stop() {
-        this._base.stop();
-        return this;
-      }
-    }, {
-      key: "force",
-      value: function force() {
-        this._base.force();
-        return this;
-      }
-    }, {
-      key: "isRunning",
-      value: function isRunning() {
-        return this._base.active;
-      }
-
-      // lifecycle methods go here
-      // onStart, onStop
-    }]);
-
-    return Reaction;
-  })();
-
-  var StandardReaction = (function (_Reaction) {
-    _inherits(StandardReaction, _Reaction);
-
-    function StandardReaction(f) {
-      _classCallCheck(this, StandardReaction);
-
-      _get(Object.getPrototypeOf(StandardReaction.prototype), "constructor", this).call(this);
-      this.react = f;
-    }
-
-    return StandardReaction;
-  })(Reaction);
-
-  function anonymousReaction(descriptor) {
-    return extend(new Reaction(), descriptor);
-  }
-
-  /*
-  
-      $$$$$$$\  $$$$$$$\  $$\    $$\  $$$$$$\  $$$$$$$\  $$\       $$$$$$$$\
-      $$  __$$\ $$  __$$\ $$ |   $$ |$$  __$$\ $$  __$$\ $$ |      $$  _____|
-      $$ |  $$ |$$ |  $$ |$$ |   $$ |$$ /  $$ |$$ |  $$ |$$ |      $$ |
-      $$ |  $$ |$$$$$$$  |\$$\  $$  |$$$$$$$$ |$$$$$$$\ |$$ |      $$$$$\
-      $$ |  $$ |$$  __$$<  \$$\$$  / $$  __$$ |$$  __$$\ $$ |      $$  __|
-      $$ |  $$ |$$ |  $$ |  \$$$  /  $$ |  $$ |$$ |  $$ |$$ |      $$ |
-      $$$$$$$  |$$ |  $$ |   \$  /   $$ |  $$ |$$$$$$$  |$$$$$$$$\ $$$$$$$$\
-      \_______/ \__|  \__|    \_/    \__|  \__|\_______/ \________|\________|
-  
-  */
-
-  function createDerivablePrototype(havelock, _ref2) {
-    var equals = _ref2.equals;
-
-    return _defineProperty({
-      /**
-       * Creates a derived value whose state will always be f applied to this
-       * value
-       */
-      derive: function derive(f, a, b, c, d) {
-        var _this = this;
-
-        switch (arguments.length) {
-          case 0:
-            return this;
-          case 1:
-            return havelock.derivation(function () {
-              return f(_this.get());
-            });
-          case 2:
-            return havelock.derivation(function () {
-              return f(_this.get(), havelock.unpack(a));
-            });
-          case 3:
-            return havelock.derivation(function () {
-              return f(_this.get(), havelock.unpack(a), havelock.unpack(b));
-            });
-          case 4:
-            return havelock.derivation(function () {
-              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c));
-            });
-          case 5:
-            return havelock.derivation(function () {
-              return f(_this.get(), havelock.unpack(a), havelock.unpack(b), havelock.unpack(c), havelock.unpack(d));
-            });
-          default:
-            var args = [this].concat(Array.prototype.slice.call(arguments, 1));
-            return havelock.derivation(function () {
-              return f.apply(null, args.map(havelock.unpack));
-            });
-        }
-      },
-
-      reaction: function reaction(f) {
-        if (typeof f === 'function') {
-          return new StandardReaction(f)._createBase(this);
-        } else if (f instanceof Reaction) {
-          return f._createBase(this);
-        } else if (f && f.react) {
-          return anonymousReaction(f)._createBase(this);
-        } else {
-          throw new Error("Unrecognized type for reaction " + f);
-        }
-      },
-
-      react: function react(f) {
-        return this.reaction(f).start().force();
-      },
-
-      get: function get() {
-        maybeCaptureParent(this);
-        return this._get(); // abstract protected method, in Java parlance
-      },
-
-      is: function is(other) {
-        return havelock.lift(equals)(this, other);
-      },
-
-      and: function and(other) {
-        return this.derive(function (x) {
-          return x && havelock.unpack(other);
-        });
-      },
-
-      or: function or(other) {
-        return this.derive(function (x) {
-          return x || havelock.unpack(other);
-        });
-      },
-
-      then: function then(thenClause, elseClause) {
-        return this.derive(function (x) {
-          return havelock.unpack(x ? thenClause : elseClause);
-        });
-      },
-
-      not: function not() {
-        return this.derive(function (x) {
-          return !x;
-        });
-      }
-
-    }, "switch", function _switch() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      return this.derive(function (x) {
-        var i = undefined;
-        for (i = 0; i < args.length - 1; i += 2) {
-          if (equals(x, havelock.unpack(args[i]))) {
-            return havelock.unpack(args[i + 1]);
-          }
-        }
-        if (i === args.length - 1) {
-          return havelock.unpack(args[i]);
-        }
+function lens_createPrototype(D, _) {
+  return {
+    _clone: function () {
+      return D.lens(this._parent, {
+        get: this._getter,
+        set: this._setter
       });
-    });
-  }
+    },
 
-  /*
-  
-    $$$$$$$\  $$$$$$$\  $$\    $$\ $$$$$$$$\ $$$$$$\  $$$$$$\  $$\   $$\
-    $$  __$$\ $$  __$$\ $$ |   $$ |\__$$  __|\_$$  _|$$  __$$\ $$$\  $$ |
-    $$ |  $$ |$$ |  $$ |$$ |   $$ |   $$ |     $$ |  $$ /  $$ |$$$$\ $$ |
-    $$ |  $$ |$$$$$$$  |\$$\  $$  |   $$ |     $$ |  $$ |  $$ |$$ $$\$$ |
-    $$ |  $$ |$$  __$$<  \$$\$$  /    $$ |     $$ |  $$ |  $$ |$$ \$$$$ |
-    $$ |  $$ |$$ |  $$ |  \$$$  /     $$ |     $$ |  $$ |  $$ |$$ |\$$$ |
-    $$$$$$$  |$$ |  $$ |   \$  /      $$ |   $$$$$$\  $$$$$$  |$$ | \$$ |
-    \_______/ \__|  \__|    \_/       \__|   \______| \______/ \__|  \__|
-  
-  */
-
-  function createDerivationPrototype(havelock, _ref3) {
-    var equals = _ref3.equals;
-
-    return {
-      _clone: function _clone() {
-        return havelock.derivation(this._deriver);
-      },
-
-      _forceGet: function _forceGet() {
-        var _this2 = this;
-
-        var newParents = capturingParents(function () {
-          var newState = _this2._deriver();
-          _this2._state = equals(newState, _this2._value) ? UNCHANGED : CHANGED;
-          _this2._value = newState;
-        });
-
-        // organise parents
-        var _iteratorNormalCompletion8 = true;
-        var _didIteratorError8 = false;
-        var _iteratorError8 = undefined;
-
-        try {
-          for (var _iterator8 = this._parents[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-            var possiblyFormerParent = _step8.value;
-
-            if (!newParents[possiblyFormerParent._uid]) {
-              // definitely former parent
-              possiblyFormerParent._children.remove(this);
-            }
-          }
-        } catch (err) {
-          _didIteratorError8 = true;
-          _iteratorError8 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-              _iterator8["return"]();
-            }
-          } finally {
-            if (_didIteratorError8) {
-              throw _iteratorError8;
-            }
-          }
-        }
-
-        this._parents = newParents;
-
-        var _iteratorNormalCompletion9 = true;
-        var _didIteratorError9 = false;
-        var _iteratorError9 = undefined;
-
-        try {
-          for (var _iterator9 = newParents[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-            var p = _step9.value;
-
-            p._children.add(this);
-          }
-        } catch (err) {
-          _didIteratorError9 = true;
-          _iteratorError9 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
-              _iterator9["return"]();
-            }
-          } finally {
-            if (_didIteratorError9) {
-              throw _iteratorError9;
-            }
-          }
-        }
-      },
-
-      _get: function _get() {
-        outer: switch (this._state) {
-          case NEW:
-          case ORPHANED:
-            this._forceGet();
-            break;
-          case UNSTABLE:
-            var _iteratorNormalCompletion10 = true;
-            var _didIteratorError10 = false;
-            var _iteratorError10 = undefined;
-
-            try {
-              for (var _iterator10 = this._parents[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-                var _parent2 = _step10.value;
-
-                if (_parent2._state === UNSTABLE || _parent2._state === ORPHANED || _parent2._state === DISOWNED) {
-                  _parent2._get();
-                }
-                switch (_parent2._state) {
-                  case STABLE:
-                  case UNCHANGED:
-                    // noop
-                    break;
-                  case CHANGED:
-                    this._forceGet();
-                    break outer;
-                  default:
-                    throw new Error("invalid parent mode: " + _parent2._state);
-                }
-              }
-            } catch (err) {
-              _didIteratorError10 = true;
-              _iteratorError10 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
-                  _iterator10["return"]();
-                }
-              } finally {
-                if (_didIteratorError10) {
-                  throw _iteratorError10;
-                }
-              }
-            }
-
-            this._state = UNCHANGED;
-            break;
-          case DISOWNED:
-            var parents = new Set();
-            var _iteratorNormalCompletion11 = true;
-            var _didIteratorError11 = false;
-            var _iteratorError11 = undefined;
-
-            try {
-              for (var _iterator11 = this._parents[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-                var _step11$value = _slicedToArray(_step11.value, 2);
-
-                var _parent3 = _step11$value[0];
-                var state = _step11$value[1];
-
-                if (!equals(_parent3._get(), state)) {
-                  this._parents = new Set();
-                  this._forceGet();
-                  break outer;
-                } else {
-                  parents.add(_parent3);
-                }
-              }
-            } catch (err) {
-              _didIteratorError11 = true;
-              _iteratorError11 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion11 && _iterator11["return"]) {
-                  _iterator11["return"]();
-                }
-              } finally {
-                if (_didIteratorError11) {
-                  throw _iteratorError11;
-                }
-              }
-            }
-
-            this._parents = parents;
-            this._state = UNCHANGED;
-            break;
-          default:
-          // noop
-        }
-
-        return this._value;
-      }
-    };
-  }
-
-  function createDerivation(obj, deriver) {
-    obj._uid = Symbol("my_uid");
-    obj._children = new Set();
-    obj._parents = new Set();
-    obj._deriver = deriver;
-    obj._state = NEW;
-    obj._type = DERIVATION;
-    obj._value = Symbol("null");
-    return obj;
-  }
-
-  /*
-  
-      $$\      $$\ $$\   $$\ $$$$$$$$\  $$$$$$\  $$$$$$$\  $$\       $$$$$$$$\
-      $$$\    $$$ |$$ |  $$ |\__$$  __|$$  __$$\ $$  __$$\ $$ |      $$  _____|
-      $$$$\  $$$$ |$$ |  $$ |   $$ |   $$ /  $$ |$$ |  $$ |$$ |      $$ |
-      $$\$$\$$ $$ |$$ |  $$ |   $$ |   $$$$$$$$ |$$$$$$$\ |$$ |      $$$$$\
-      $$ \$$$  $$ |$$ |  $$ |   $$ |   $$  __$$ |$$  __$$\ $$ |      $$  __|
-      $$ |\$  /$$ |$$ |  $$ |   $$ |   $$ |  $$ |$$ |  $$ |$$ |      $$ |
-      $$ | \_/ $$ |\$$$$$$  |   $$ |   $$ |  $$ |$$$$$$$  |$$$$$$$$\ $$$$$$$$\
-      \__|     \__| \______/    \__|   \__|  \__|\_______/ \________|\________|
-  
-  */
-
-  function createMutablePrototype(havelock, _) {
-    return {
-      swap: function swap(f) {
-        for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-          args[_key3 - 1] = arguments[_key3];
-        }
-
-        return this.set(f.apply(null, [this.get()].concat(args)));
-      },
-      lens: function lens(lensDescriptor) {
-        return havelock.lens(this, lensDescriptor);
-      }
-    };
-  }
-
-  /*
-  
-      $$\       $$$$$$$$\ $$\   $$\  $$$$$$\
-      $$ |      $$  _____|$$$\  $$ |$$  __$$\
-      $$ |      $$ |      $$$$\ $$ |$$ /  \__|
-      $$ |      $$$$$\    $$ $$\$$ |\$$$$$$\
-      $$ |      $$  __|   $$ \$$$$ | \____$$\
-      $$ |      $$ |      $$ |\$$$ |$$\   $$ |
-      $$$$$$$$\ $$$$$$$$\ $$ | \$$ |\$$$$$$  |
-      \________|\________|\__|  \__| \______/
-  
-  */
-
-  function createLensPrototype(havelock, _) {
-    return {
-      _clone: function _clone() {
-        return havelock.lens(this._parent, {
-          get: this._getter,
-          set: this._setter
-        });
-      },
-
-      set: function set(value) {
-        this._parent.set(this._setter(this._parent._get(), value));
-        return this;
-      }
-    };
-  }
-
-  function createLens(derivation, parent, descriptor) {
-    derivation._getter = descriptor.get;
-    derivation._setter = descriptor.set;
-    derivation._parent = parent;
-    derivation._type = LENS;
-
-    return derivation;
-  }
-
-  /*
-  
-     $$$$$$\ $$$$$$$$\  $$$$$$\  $$\      $$\
-    $$  __$$\\__$$  __|$$  __$$\ $$$\    $$$ |
-    $$ /  $$ |  $$ |   $$ /  $$ |$$$$\  $$$$ |
-    $$$$$$$$ |  $$ |   $$ |  $$ |$$\$$\$$ $$ |
-    $$  __$$ |  $$ |   $$ |  $$ |$$ \$$$  $$ |
-    $$ |  $$ |  $$ |   $$ |  $$ |$$ |\$  /$$ |
-    $$ |  $$ |  $$ |    $$$$$$  |$$ | \_/ $$ |
-    \__|  \__|  \__|    \______/ \__|     \__|
-  
-  */
-
-  var inReactCycle = false;
-
-  function processReactionQueue(rq) {
-    inReactCycle = true;
-    rq.forEach(function (r) {
-      return r.maybeReact();
-    });
-    inReactCycle = false;
-  }
-
-  var TXN_CTX = new TransactionContext();
-
-  var NOOP_ARRAY = { push: function push() {} };
-
-  var AtomicTransactionState = (function () {
-    function AtomicTransactionState() {
-      _classCallCheck(this, AtomicTransactionState);
-
-      this.inTxnValues = {};
-      this.reactionQueue = [];
+    set: function (value) {
+      this._parent.set(this._setter(this._parent._get(), value));
+      return this;
     }
-
-    _createClass(AtomicTransactionState, [{
-      key: "getState",
-      value: function getState(atom) {
-        var inTxnValue = this.inTxnValues[atom._uid];
-        if (inTxnValue) {
-          return inTxnValue[1];
-        } else {
-          return atom._value;
-        }
-      }
-    }, {
-      key: "setState",
-      value: function setState(atom, state) {
-        this.inTxnValues[atom._uid] = [atom, state];
-        gc_mark(atom, this.reactionQueue);
-      }
-    }, {
-      key: "onCommit",
-      value: function onCommit() {
-        if (TXN_CTX.inTransaction()) {
-          var _iteratorNormalCompletion12 = true;
-          var _didIteratorError12 = false;
-          var _iteratorError12 = undefined;
-
-          try {
-            for (var _iterator12 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-              var _step12$value = _slicedToArray(_step12.value, 2);
-
-              var atom = _step12$value[0];
-              var value = _step12$value[1];
-
-              atom.set(value);
-            }
-          } catch (err) {
-            _didIteratorError12 = true;
-            _iteratorError12 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
-                _iterator12["return"]();
-              }
-            } finally {
-              if (_didIteratorError12) {
-                throw _iteratorError12;
-              }
-            }
-          }
-        } else {
-          var _iteratorNormalCompletion13 = true;
-          var _didIteratorError13 = false;
-          var _iteratorError13 = undefined;
-
-          try {
-            for (var _iterator13 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
-              var _step13$value = _slicedToArray(_step13.value, 2);
-
-              var atom = _step13$value[0];
-              var value = _step13$value[1];
-
-              atom._value = value;
-              gc_mark(atom, NOOP_ARRAY);
-            }
-          } catch (err) {
-            _didIteratorError13 = true;
-            _iteratorError13 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion13 && _iterator13["return"]) {
-                _iterator13["return"]();
-              }
-            } finally {
-              if (_didIteratorError13) {
-                throw _iteratorError13;
-              }
-            }
-          }
-
-          processReactionQueue(this.reactionQueue);
-
-          // then sweep for a clean finish
-          var _iteratorNormalCompletion14 = true;
-          var _didIteratorError14 = false;
-          var _iteratorError14 = undefined;
-
-          try {
-            for (var _iterator14 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-              var _step14$value = _slicedToArray(_step14.value, 1);
-
-              var atom = _step14$value[0];
-
-              gc_sweep(atom);
-            }
-          } catch (err) {
-            _didIteratorError14 = true;
-            _iteratorError14 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion14 && _iterator14["return"]) {
-                _iterator14["return"]();
-              }
-            } finally {
-              if (_didIteratorError14) {
-                throw _iteratorError14;
-              }
-            }
-          }
-        }
-      }
-    }, {
-      key: "onAbort",
-      value: function onAbort() {
-        if (!TXN_CTX.inTransaction()) {
-          var _iteratorNormalCompletion15 = true;
-          var _didIteratorError15 = false;
-          var _iteratorError15 = undefined;
-
-          try {
-            for (var _iterator15 = util_symbolValues(this.inTxnValues)[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
-              var _step15$value = _slicedToArray(_step15.value, 1);
-
-              var atom = _step15$value[0];
-
-              gc_sweep(atom);
-            }
-          } catch (err) {
-            _didIteratorError15 = true;
-            _iteratorError15 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion15 && _iterator15["return"]) {
-                _iterator15["return"]();
-              }
-            } finally {
-              if (_didIteratorError15) {
-                throw _iteratorError15;
-              }
-            }
-          }
-        }
-      }
-    }]);
-
-    return AtomicTransactionState;
-  })();
-
-  function createAtomPrototype(havelock, _ref4) {
-    var equals = _ref4.equals;
-
-    return {
-      _clone: function _clone() {
-        return havelock.atom(this._value);
-      },
-
-      withValidator: function withValidator(f) {
-        var _this3 = this;
-
-        if (f === null) {
-          return this._clone();
-        }if (typeof f === 'function') {
-          var _ret = (function () {
-            var result = _this3._clone();
-            var existing = _this3._validator;
-            if (existing) {
-              result._validator = function (x) {
-                return f(x) && existing(x);
-              };
-            } else {
-              result._validator = f;
-            }
-            return {
-              v: result
-            };
-          })();
-
-          if (typeof _ret === "object") return _ret.v;
-        } else {
-          throw new Error(".withValidator expects function or null");
-        }
-      },
-
-      validate: function validate() {
-        this._validate(this.get());
-      },
-
-      _validate: function _validate(value) {
-        var validationResult = this._validator && this._validator(value);
-        if (this._validator && validationResult !== true) {
-          throw new Error("Failed validation with value: '" + value + "'." + (" Validator returned '" + validationResult + "' "));
-        }
-      },
-
-      set: function set(value) {
-        if (inReactCycle) {
-          throw new Error("Trying to set atom state during reaction phase. This" + " is an error. Use middleware for cascading changes.");
-        }
-        this._validate(value);
-        if (!equals(value, this._value)) {
-          this._state = CHANGED;
-
-          if (TXN_CTX.inTransaction()) {
-            TXN_CTX.currentTransaction().setState(this, value);
-          } else {
-            this._value = value;
-
-            var reactionQueue = [];
-            gc_mark(this, reactionQueue);
-            processReactionQueue(reactionQueue);
-            gc_sweep(this);
-          }
-        }
-        return this;
-      },
-
-      _get: function _get() {
-        if (TXN_CTX.inTransaction()) {
-          return TXN_CTX.currentTransaction().getState(this);
-        }
-        return this._value;
-      }
-    };
   }
+}
 
-  function constructAtom(atom, value) {
-    atom._uid = Symbol("my_uid");
-    atom._children = new Set();
-    atom._state = STABLE;
-    atom._value = value;
-    atom._type = ATOM;
-    return atom;
+function lens_construct(derivation, parent, descriptor) {
+  derivation._getter = descriptor.get;
+  derivation._setter = descriptor.set;
+  derivation._parent = parent;
+  derivation._type = types_LENS;
+
+  return derivation;
+}
+
+function processReactionQueue (rq) {
+  for (var i = rq.length; i--;) {
+    reactions_maybeReact(rq[i]);
   }
+}
 
-  function transact(f) {
-    TXN_CTX.transact(new AtomicTransactionState(), f);
+var TXN_CTX = transactions_newContext();
+
+var NOOP_ARRAY = {push: function () {}};
+
+function TransactionState () {
+  this.inTxnValues = {};
+  this.reactionQueue = [];
+}
+
+function getState (txnState, atom) {
+  var inTxnValue = txnState.inTxnValues[atom._uid];
+  if (inTxnValue) {
+    return inTxnValue[1];
+  } else {
+    return atom._value;
   }
+}
 
-  /*
-  
-      $$\      $$\  $$$$$$\  $$$$$$$\  $$\   $$\ $$\       $$$$$$$$\
-      $$$\    $$$ |$$  __$$\ $$  __$$\ $$ |  $$ |$$ |      $$  _____|
-      $$$$\  $$$$ |$$ /  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$ |
-      $$\$$\$$ $$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$$$$\
-      $$ \$$$  $$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$  __|
-      $$ |\$  /$$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |      $$ |
-      $$ | \_/ $$ | $$$$$$  |$$$$$$$  |\$$$$$$  |$$$$$$$$\ $$$$$$$$\
-      \__|     \__| \______/ \_______/  \______/ \________|\________|
-  
-  */
+function setState (txnState, atom, state) {
+  txnState.inTxnValues[atom._uid] = [atom, state];
+  gc_mark(atom, txnState.reactionQueue);
+}
 
-  var defaultConfig = { equals: util_equals };
-
-  function havelock() {
-    var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-    config = extend({}, defaultConfig, config);
-
-    var Havelock = {
-      transact: transact,
-      Reaction: Reaction,
-      isAtom: function isAtom(x) {
-        return x && (x._type === ATOM || x._type === LENS);
-      },
-      isDerivable: function isDerivable(x) {
-        return x && (x._type === ATOM || x._type === LENS || x._type === DERIVATION);
-      },
-      isDerivation: function isDerivation(x) {
-        return x && (x._type === DERIVATION || x._type === LENS);
-      },
-      isLensed: function isLensed(x) {
-        return x && x._type === LENS;
-      },
-      isReaction: function isReaction(x) {
-        return x && x._type === REACTION;
+util_extend(TransactionState.prototype, {
+  onCommit: function () {
+    var i, atomValueTuple;
+    var keys = util_keys(this.inTxnValues);
+    if (transactions_inTransaction(TXN_CTX)) {
+      // push in-txn vals up to current txn
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
+        atomValueTuple[0].set(atomValueTuple[1]);
       }
-    };
-
-    var Derivable = createDerivablePrototype(Havelock, config);
-    var Mutable = createMutablePrototype(Havelock, config);
-
-    var Atom = extend({}, Mutable, Derivable, createAtomPrototype(Havelock, config));
-
-    var Derivation = extend({}, Derivable, createDerivationPrototype(Havelock, config));
-
-    var Lens = extend({}, Mutable, Derivation, createLensPrototype(Havelock, config));
-
-    /**
-     * Constructs a new atom whose state is the given value
-     */
-    Havelock.atom = function (val) {
-      return constructAtom(Object.create(Atom), val);
-    };
-
-    /**
-     * Sets the e's state to be f applied to e's current state and args
-     */
-    Havelock.swap = function (e, f, args) {
-      return e.set(f.apply(null, [e.get()].concat(args))).get();
-    };
-
-    Havelock.derivation = function (f) {
-      return createDerivation(Object.create(Derivation), f);
-    };
-    /**
-     * Creates a new derivation. Can also be used as a template string tag.
-     */
-    Havelock.derive = function (a) {
-      if (a instanceof Array) {
-        return deriveString.apply(null, arguments);
-      } else if (arguments.length > 0) {
-        return Derivable.derive.apply(a, Array.prototype.slice.call(arguments, 1));
-      } else {
-        throw new Error("Wrong arity for derive. Expecting 1+ args");
-      }
-    };
-
-    function deriveString(parts) {
-      for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-        args[_key4 - 1] = arguments[_key4];
+    } else {
+      // change root state and run reactions.
+      for (i = keys.length; i--;) {
+        atomValueTuple = this.inTxnValues[keys[i]];
+        atomValueTuple[0]._value = atomValueTuple[1];
+        gc_mark(atomValueTuple[0], NOOP_ARRAY);
       }
 
-      return Havelock.derivation(function () {
-        var s = "";
-        for (var i = 0; i < parts.length; i++) {
-          s += parts[i];
-          if (i < args.length) {
-            s += Havelock.unpack(args[i]);
-          }
-        }
-        return s;
-      });
+      processReactionQueue(this.reactionQueue);
+
+      // then sweep for a clean finish
+      for (i = keys.length; i--;) {
+        gc_sweep(this.inTxnValues[keys[i]][0]);
+      }
     }
+  },
 
-    /**
-     * creates a new lens
-     */
-    Havelock.lens = function (parent, descriptor) {
-      var lens = Object.create(Lens);
-      return createLens(createDerivation(lens, function () {
-        return descriptor.get(parent.get());
-      }), parent, descriptor);
-    };
-
-    /**
-     * dereferences a thing if it is dereferencable, otherwise just returns it.
-     */
-    Havelock.unpack = function (thing) {
-      if (Havelock.isDerivable(thing)) {
-        return thing.get();
-      } else {
-        return thing;
+  onAbort: function () {
+    if (!transactions_inTransaction(TXN_CTX)) {
+      var keys = util_keys(this.inTxnValues);
+      for (var i = keys.length; i--;) {
+        gc_abort_sweep(this.inTxnValues[keys[i]][0]);
       }
-    };
+    }
+  }
+})
 
-    /**
-     * lifts a non-monadic function to work on derivables
-     */
-    Havelock.lift = function (f) {
-      return function () {
-        var args = arguments;
-        return Havelock.derivation(function () {
-          return f.apply(this, Array.prototype.map.call(args, Havelock.unpack));
-        });
-      };
-    };
 
-    /**
-     * sets a to v, returning v
-     */
-    Havelock.set = function (a, v) {
-      return a.set(v);
-    };
+function atom_createPrototype (D, opts) {
+  return {
+    _clone: function () {
+      return D.atom(this._value);
+    },
 
-    Havelock.get = function (d) {
-      return d.get();
-    };
-
-    function deepUnpack(thing) {
-      if (Havelock.isDerivable(thing)) {
-        return thing.get();
-      } else if (thing instanceof Array) {
-        return thing.map(deepUnpack);
-      } else if (thing.constructor === Object) {
-        var result = {};
-        var _iteratorNormalCompletion16 = true;
-        var _didIteratorError16 = false;
-        var _iteratorError16 = undefined;
-
-        try {
-          for (var _iterator16 = Object.keys(thing)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-            var prop = _step16.value;
-
-            result[prop] = deepUnpack(thing[prop]);
-          }
-        } catch (err) {
-          _didIteratorError16 = true;
-          _iteratorError16 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion16 && _iterator16["return"]) {
-              _iterator16["return"]();
-            }
-          } finally {
-            if (_didIteratorError16) {
-              throw _iteratorError16;
-            }
-          }
+    withValidator: function (f) {
+      if (f === null) {
+        return this._clone();
+      } if (typeof f === 'function') {
+        var result = this._clone();
+        var existing = this._validator;
+        if (existing) {
+          result._validator = function (x) { return f(x) && existing(x); }
+        } else {
+          result._validator = f;
         }
-
         return result;
       } else {
-        return thing;
+        throw new Error(".withValidator expects function or null");
       }
+    },
+
+    validate: function () {
+      this._validate(this.get());
+    },
+
+    _validate: function (value) {
+      var validationResult = this._validator && this._validator(value);
+      if (this._validator && validationResult !== true) {
+        throw new Error("Failed validation with value: '" + value + "'." +
+                        " Validator returned '" + validationResult + "' ");
+      }
+    },
+
+    set: function (value) {
+
+      this._validate(value);
+      if (!opts.equals(value, this._value)) {
+        this._state = gc_CHANGED;
+
+        if (transactions_inTransaction(TXN_CTX)) {
+          setState(transactions_currentTransaction(TXN_CTX), this, value);
+        } else {
+          this._value = value;
+
+          var reactionQueue = [];
+          gc_mark(this, reactionQueue);
+          processReactionQueue(reactionQueue);
+          gc_sweep(this);
+        }
+      }
+      return this;
+    },
+
+    _get: function () {
+      if (transactions_inTransaction(TXN_CTX)) {
+        return getState(transactions_currentTransaction(TXN_CTX), this);
+      }
+      return this._value;
     }
+  };
+}
 
-    Havelock.struct = function (arg) {
-      return Havelock.derivation(function () {
-        return deepUnpack(arg);
-      });
-    };
+function atom_construct (atom, value) {
+  atom._uid = util_nextId();
+  atom._children = [];
+  atom._state = gc_STABLE;
+  atom._value = value;
+  atom._type = types_ATOM;
+  return atom;
+}
 
-    Havelock.ifThenElse = function (a, b, c) {
-      return a.then(b, c);
-    };
+function atom_transact (f) {
+  transactions_transact(TXN_CTX, new TransactionState(), f);
+}
 
-    Havelock.or = function () {
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
+function atom_transaction (f) {
+  return function () {
+    var args = util_slice(arguments, 0);
+    var that = this;
+    var result;
+    atom_transact(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  }
+}
+
+var ticker = null;
+
+function atom_ticker () {
+  if (ticker) {
+    ticker.refCount++;
+  } else {
+    ticker = transactions_ticker(TXN_CTX, function () {
+      return new TransactionState();
+    });
+    ticker.refCount = 1;
+  }
+  var done = false;
+  return {
+    tick: function () {
+      if (done) throw new Error('tyring to use ticker after release');
+      ticker.tick();
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      if (--ticker.refCount === 0) {
+        ticker.stop();
+        ticker = null;
       }
+      done = true;
+    }
+  };
+}
 
-      return Havelock.derivation(function () {
-        var val = undefined;
-        var _iteratorNormalCompletion17 = true;
-        var _didIteratorError17 = false;
-        var _iteratorError17 = undefined;
+var defaultConfig = { equals: util_equals };
 
-        try {
-          for (var _iterator17 = args[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-            var arg = _step17.value;
+function constructModule (config) {
+  config = util_extend({}, defaultConfig, config || {});
 
-            val = Havelock.unpack(arg);
-            if (val) {
-              break;
-            }
-          }
-        } catch (err) {
-          _didIteratorError17 = true;
-          _iteratorError17 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion17 && _iterator17["return"]) {
-              _iterator17["return"]();
-            }
-          } finally {
-            if (_didIteratorError17) {
-              throw _iteratorError17;
-            }
-          }
+  var D = {
+    transact: atom_transact,
+    defaultEquals: util_equals,
+    transaction: atom_transaction,
+    ticker: atom_ticker,
+    Reaction: reactions_Reaction,
+    isAtom: function (x) {
+      return x && (x._type === types_ATOM || x._type === types_LENS);
+    },
+    isDerivable: function (x) {
+      return x && (x._type === types_ATOM ||
+                   x._type === types_LENS ||
+                   x._type === types_DERIVATION);
+    },
+    isDerivation: function (x) {
+      return x && (x._type === types_DERIVATION || x._type === types_LENS)
+    },
+    isLensed: function (x) {
+      return x && x._type === types_LENS;
+    },
+    isReaction: function (x) {
+      return x && x._type === types_REACTION;
+    },
+  };
+
+  var Derivable  = derivable_createPrototype(D, config);
+  var Mutable    = mutable_createPrototype(D, config);
+
+  var Atom       = util_extend({}, Mutable, Derivable,
+                               atom_createPrototype(D, config));
+
+  var Derivation = util_extend({}, Derivable,
+                               derivation_createPrototype(D, config));
+
+  var Lens       = util_extend({}, Mutable, Derivation,
+                              lens_createPrototype(D, config));
+
+
+  /**
+   * Constructs a new atom whose state is the given value
+   */
+  D.atom = function (val) {
+    return atom_construct(Object.create(Atom), val);
+  };
+
+  /**
+   * Sets the e's state to be f applied to e's current state and args
+   */
+  D.swap = function (atom, f) {
+    var args = util_slice(arguments, 1);
+    args[0] = atom.get();
+    return atom.set(f.apply(null, args));
+  };
+
+  D.derivation = function (f) {
+    return derivation_construct(Object.create(Derivation), f);
+  };
+
+  /**
+   * Creates a new derivation. Can also be used as a template string tag.
+   */
+  D.derive = function (a) {
+    if (a instanceof Array) {
+      return deriveString.apply(null, arguments);
+    } else if (arguments.length > 0) {
+      return Derivable.derive.apply(a, util_slice(arguments, 1));
+    } else {
+      throw new Error("Wrong arity for derive. Expecting 1+ args");
+    }
+  };
+
+  function deriveString (parts) {
+    var args = util_slice(arguments, 1);
+    return D.derivation(function () {
+      var s = "";
+      for (var i=0; i<parts.length; i++) {
+        s += parts[i];
+        if (i < args.length) {
+          s += D.unpack(args[i]);
         }
-
-        return val;
-      });
-    };
-
-    Havelock.and = function () {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
       }
-
-      return Havelock.derivation(function () {
-        var val = undefined;
-        var _iteratorNormalCompletion18 = true;
-        var _didIteratorError18 = false;
-        var _iteratorError18 = undefined;
-
-        try {
-          for (var _iterator18 = args[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
-            var arg = _step18.value;
-
-            val = Havelock.unpack(arg);
-            if (!val) {
-              break;
-            }
-          }
-        } catch (err) {
-          _didIteratorError18 = true;
-          _iteratorError18 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion18 && _iterator18["return"]) {
-              _iterator18["return"]();
-            }
-          } finally {
-            if (_didIteratorError18) {
-              throw _iteratorError18;
-            }
-          }
-        }
-
-        return val;
-      });
-    };
-
-    Havelock.not = function (x) {
-      return x.not();
-    };
-
-    Havelock.switchCase = function (x) {
-      for (var _len7 = arguments.length, args = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
-        args[_key7 - 1] = arguments[_key7];
-      }
-
-      return Derivable["switch"].apply(x, args);
-    };
-
-    return Havelock;
+      return s;
+    });
   }
 
-  extend(exports, havelock());
-  exports.withEquality = function (equals) {
-    return havelock({ equals: equals });
+  /**
+   * creates a new lens
+   */
+  D.lens = function (parent, descriptor) {
+    var lens = Object.create(Lens);
+    return lens_construct(
+      derivation_construct(
+        lens,
+        function () { return descriptor.get(parent.get()); }
+      ),
+      parent,
+      descriptor
+    );
   };
-  exports['default'] = exports;
+
+  /**
+   * dereferences a thing if it is dereferencable, otherwise just returns it.
+   */
+  D.unpack = function (thing) {
+    if (D.isDerivable(thing)) {
+      return thing.get();
+    } else {
+      return thing;
+    }
+  };
+
+  /**
+   * lifts a non-monadic function to work on derivables
+   */
+  D.lift = function (f) {
+    return function () {
+      var args = arguments;
+      var that = this;
+      return D.derivation(function () {
+        return f.apply(that, Array.prototype.map.call(args, D.unpack));
+      });
+    }
+  };
+
+  /**
+   * sets a to v, returning v
+   */
+  D.set = function (a, v) {
+    return a.set(v);
+  };
+
+  D.get = function (d) {
+    return d.get();
+  };
+
+  function deepUnpack (thing) {
+    if (D.isDerivable(thing)) {
+      return thing.get();
+    } else if (thing instanceof Array) {
+      return thing.map(deepUnpack);
+    } else if (thing.constructor === Object) {
+      var result = {};
+      var keys = util_keys(thing);
+      for (var i = keys.length; i--;) {
+        var prop = keys[i];
+        result[prop] = deepUnpack(thing[prop]);
+      }
+      return result;
+    } else {
+      return thing;
+    }
+  }
+
+  D.struct = function (arg) {
+    if (arg.constructor === Object || arg instanceof Array) {
+      return D.derivation(function () {
+        return deepUnpack(arg);
+      });
+    } else {
+      throw new Error("`struct` expects plain Object or Array");
+    }
+  };
+
+  D.ifThenElse = function (a, b, c) { return a.then(b, c) };
+
+  D.ifThenElse = function (testValue, thenClause, elseClause) {
+    return D.derivation(function () {
+      return D.unpack(
+        D.unpack(testValue) ? thenClause : elseClause
+      );
+    });
+  }
+
+  D.some = function (testValue, thenClause, elseClause) {
+    return D.derivation(function () {
+      var x = D.unpack(testValue);
+      return D.unpack(
+        x === null || x === (void 0) ? elseClause : thenClause
+      );
+    });
+  };
+
+  D.or = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (val) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
+  D.and = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (!val) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
+  D.not = function (x) { return x.derive(function (x) { return !x; }); };
+
+  D.switchCase = function (x) {
+    return Derivable.switch.apply(x, util_slice(arguments, 1));
+  };
+
+  return D;
+}
+
+util_extend(exports, constructModule());
+exports.withEquality = function (equals) {
+  return constructModule({equals: equals});
+};
+exports['default'] = exports;
+
 });
 
-// push in-txn vals up to current txn
 
-// change root state and run reactions.
 },{}],3:[function(require,module,exports){
 /**
  *  Copyright (c) 2014-2015, Facebook, Inc.
@@ -1878,7 +1278,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function wrapIndex(iter, index) {
-    return index >= 0 ? (+index) : ensureSize(iter) + (+index);
+    // This implements "is array index" which the ECMAString spec defines as:
+    //     A String property name P is an array index if and only if
+    //     ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal
+    //     to 2^32−1.
+    // However note that we're currently calling ToNumber() instead of ToUint32()
+    // which should be improved in the future, as floating point numbers should
+    // not be accepted as an array index.
+    if (typeof index !== 'number') {
+      var numIndex = +index;
+      if ('' + numIndex !== index) {
+        return NaN;
+      }
+      index = numIndex;
+    }
+    return index < 0 ? ensureSize(iter) + index : index;
   }
 
   function returnTrue() {
@@ -2548,7 +1962,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var src_Math__imul =
     typeof Math.imul === 'function' && Math.imul(0xffffffff, 2) === -2 ?
     Math.imul :
-    function src_Math__imul(a, b) {
+    function imul(a, b) {
       a = a | 0; // int
       b = b | 0; // int
       var c = a & 0xffff;
@@ -3099,6 +2513,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   function sliceFactory(iterable, begin, end, useKeys) {
     var originalSize = iterable.size;
 
+    // Sanitize begin & end using this shorthand for ToInt32(argument)
+    // http://www.ecma-international.org/ecma-262/6.0/#sec-toint32
+    if (begin !== undefined) {
+      begin = begin | 0;
+    }
+    if (end !== undefined) {
+      end = end | 0;
+    }
+
     if (wholeSlice(begin, end, originalSize)) {
       return iterable;
     }
@@ -3125,7 +2548,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var sliceSeq = makeSequence(iterable);
 
-    sliceSeq.size = sliceSize;
+    // If iterable.size is undefined, the size of the realized sliceSeq is
+    // unknown at this point unless the number of items to slice is 0
+    sliceSeq.size = sliceSize === 0 ? sliceSize : iterable.size && sliceSize || undefined;
 
     if (!useKeys && isSeq(iterable) && sliceSize >= 0) {
       sliceSeq.get = function (index, notSetValue) {
@@ -3574,7 +2999,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     function src_Map__Map(value) {
       return value === null || value === undefined ? emptyMap() :
-        isMap(value) ? value :
+        isMap(value) && !isOrdered(value) ? value :
         emptyMap().withMutations(function(map ) {
           var iter = KeyedIterable(value);
           assertNotInfinite(iter.size);
@@ -4421,12 +3846,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     List.prototype.get = function(index, notSetValue) {
       index = wrapIndex(this, index);
-      if (index < 0 || index >= this.size) {
-        return notSetValue;
+      if (index >= 0 && index < this.size) {
+        index += this._origin;
+        var node = listNodeFor(this, index);
+        return node && node.array[index & MASK];
       }
-      index += this._origin;
-      var node = listNodeFor(this, index);
-      return node && node.array[index & MASK];
+      return notSetValue;
     };
 
     // @pragma Modification
@@ -4622,29 +4047,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     VNode.prototype.removeAfter = function(ownerID, level, index) {
-      if (index === level ? 1 << level : 0 || this.array.length === 0) {
+      if (index === (level ? 1 << level : 0) || this.array.length === 0) {
         return this;
       }
       var sizeIndex = ((index - 1) >>> level) & MASK;
       if (sizeIndex >= this.array.length) {
         return this;
       }
-      var removingLast = sizeIndex === this.array.length - 1;
+
       var newChild;
       if (level > 0) {
         var oldChild = this.array[sizeIndex];
         newChild = oldChild && oldChild.removeAfter(ownerID, level - SHIFT, index);
-        if (newChild === oldChild && removingLast) {
+        if (newChild === oldChild && sizeIndex === this.array.length - 1) {
           return this;
         }
       }
-      if (removingLast && !newChild) {
-        return this;
-      }
+
       var editable = editableVNode(this, ownerID);
-      if (!removingLast) {
-        editable.array.pop();
-      }
+      editable.array.splice(sizeIndex + 1);
       if (newChild) {
         editable.array[sizeIndex] = newChild;
       }
@@ -4735,6 +4156,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   function updateList(list, index, value) {
     index = wrapIndex(list, index);
+
+    if (index !== index) {
+      return list;
+    }
 
     if (index >= list.size || index < 0) {
       return list.withMutations(function(list ) {
@@ -4827,6 +4252,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function setListBounds(list, begin, end) {
+    // Sanitize begin & end using this shorthand for ToInt32(argument)
+    // http://www.ecma-international.org/ecma-262/6.0/#sec-toint32
+    if (begin !== undefined) {
+      begin = begin | 0;
+    }
+    if (end !== undefined) {
+      end = end | 0;
+    }
     var owner = list.__ownerID || new OwnerID();
     var oldOrigin = list._origin;
     var oldCapacity = list._capacity;
@@ -5339,7 +4772,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     function src_Set__Set(value) {
       return value === null || value === undefined ? emptySet() :
-        isSet(value) ? value :
+        isSet(value) && !isOrdered(value) ? value :
         emptySet().withMutations(function(set ) {
           var iter = SetIterable(value);
           assertNotInfinite(iter.size);
@@ -6084,10 +5517,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return reify(this, concatFactory(this, values));
     },
 
-    contains: function(searchValue) {
-      return this.includes(searchValue);
-    },
-
     includes: function(searchValue) {
       return this.some(function(value ) {return is(value, searchValue)});
     },
@@ -6377,7 +5806,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     hashCode: function() {
       return this.__hash || (this.__hash = hashIterable(this));
-    },
+    }
 
 
     // ### Internal
@@ -6400,6 +5829,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   IterablePrototype.inspect =
   IterablePrototype.toSource = function() { return this.toString(); };
   IterablePrototype.chain = IterablePrototype.flatMap;
+  IterablePrototype.contains = IterablePrototype.includes;
 
   // Temporary warning about using length
   (function () {
@@ -6470,7 +5900,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           function(k, v)  {return mapper.call(context, k, v, this$0)}
         ).flip()
       );
-    },
+    }
 
   });
 
@@ -6525,7 +5955,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (numArgs === 0 || (numArgs === 2 && !removeNum)) {
         return this;
       }
-      index = resolveBegin(index, this.size);
+      // If index is negative, it should resolve relative to the size of the
+      // collection. However size may be expensive to compute if not cached, so
+      // only call count() if the number is in fact negative.
+      index = resolveBegin(index, index < 0 ? this.count() : this.size);
       var spliced = this.slice(0, index);
       return reify(
         this,
@@ -6598,7 +6031,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var iterables = arrCopy(arguments);
       iterables[0] = this;
       return reify(this, zipWithFactory(this, zipper, iterables));
-    },
+    }
 
   });
 
@@ -6624,7 +6057,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     keySeq: function() {
       return this.valueSeq();
-    },
+    }
 
   });
 
@@ -6728,7 +6161,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     Repeat: Repeat,
 
     is: is,
-    fromJS: fromJS,
+    fromJS: fromJS
 
   };
 
@@ -26458,9 +25891,9 @@ module.exports = require('./lib/React');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _havelock = require('havelock');
+var _derivable = require('derivable');
 
-var _havelock2 = _interopRequireDefault(_havelock);
+var _derivable2 = _interopRequireDefault(_derivable);
 
 var _immutable = require('immutable');
 
@@ -26468,20 +25901,25 @@ var _immutable2 = _interopRequireDefault(_immutable);
 
 var _react = require('react');
 
-/*** Global App State ***/
-
 var _react2 = _interopRequireDefault(_react);
 
-var nextId = (0, _havelock.atom)(0); // uids for the list items to make react happy
+// Plese be advised that by writing this I am not endorsing the usage of
+// Derivables with React in this manner. It works fine if you don't need access to
+// the actual DOM nodes, but solving that problem seems like a topic for another
+// time. For now, view this as a taster of what applications woven through
+// DerivableJS might look like.
+
+/*** Global App State ***/
+var nextId = (0, _derivable.atom)(0); // uids for the list items to make react happy
 function getNextId() {
-  return _havelock2['default'].swap(nextId, function (x) {
+  return _derivable2['default'].swap(nextId, function (x) {
     return x + 1;
   });
 }
 
-var todos = (0, _havelock.atom)((0, _immutable.fromJS)([]));
-var hash = (0, _havelock.atom)(window.location.hash);
-var newTodoName = (0, _havelock.atom)("");
+var todos = (0, _derivable.atom)((0, _immutable.fromJS)([]));
+var hash = (0, _derivable.atom)(window.location.hash);
+var newTodoName = (0, _derivable.atom)("");
 
 window.addEventListener('hashchange', function () {
   hash.set(window.location.hash);
@@ -26597,7 +26035,7 @@ function renderTodo(_ref, idx) {
       hide = _showing === "active" && complete || _showing === "completed" && !complete;
 
   var handleNameChange = function handleNameChange(ev) {
-    (0, _havelock.transact)(function () {
+    (0, _derivable.transact)(function () {
       todos.swap(editTodo, idx, ev.target.value);
       todos.swap(editingTodo, idx, false);
     });
@@ -26636,7 +26074,7 @@ function renderTodo(_ref, idx) {
 }
 
 // list itself as derivable
-var todosRender = (0, _havelock.derivation)(function () {
+var todosRender = (0, _derivable.derivation)(function () {
   var allDone = allComplete.get();
   return _react2['default'].createElement(
     'section',
@@ -26665,7 +26103,7 @@ var todosRender = (0, _havelock.derivation)(function () {
 });
 
 // footer as derivable
-var footerRender = (0, _havelock.derivation)(function () {
+var footerRender = (0, _derivable.derivation)(function () {
   var select = function select(name) {
     return showing.get() === name ? 'selected' : "";
   };
@@ -26725,7 +26163,7 @@ var footerRender = (0, _havelock.derivation)(function () {
   );
 });
 
-var pageRender = (0, _havelock.derivation)(function () {
+var pageRender = (0, _derivable.derivation)(function () {
   return _react2['default'].createElement(
     'section',
     { className: 'todoapp' },
@@ -26744,7 +26182,7 @@ var pageRender = (0, _havelock.derivation)(function () {
           return newTodoName.set(e.target.value);
         },
         onKeyPress: onEnter(function () {
-          (0, _havelock.transact)(function () {
+          (0, _derivable.transact)(function () {
             todos.swap(newTodo, newTodoName.get());
             newTodoName.set("");
           });
@@ -26784,4 +26222,4 @@ var Derivable = _react2['default'].createClass({
 
 _react2['default'].render(_react2['default'].createElement(Derivable, { render: pageRender }), document.getElementById("main"));
 
-},{"havelock":2,"immutable":3,"react":158}]},{},[159]);
+},{"derivable":2,"immutable":3,"react":158}]},{},[159]);

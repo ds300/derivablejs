@@ -1,8 +1,8 @@
 /**
- * This TypeScript file was generated from havelock.api.edn.
+ * This TypeScript file was generated from derivable.api.edn.
  * Please change that file and re-run `grunt docs` to modify this file.
  */
-declare module 'havelock' {
+declare module 'derivable' {
 
   export interface Derivable<T> {
 

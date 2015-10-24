@@ -1,5 +1,5 @@
 /**
- * This has nothing to do with Havelock. It's just a cross between a literate
+ * This has nothing to do with DerivableJS. It's just a cross between a literate
  * typescript compiler and a repl. To see it in use: run grunt in the /routing
  * example folder. Then insert a console log somewhere in the file, followed by //$
  * on the same line and save it.
@@ -15,7 +15,7 @@
  * the //$ bits get removed before the markdown is emitted.
  */
 
-/// <reference path="node_modules/typescript/bin/typescript.d.ts" />
+/// <reference path="node_modules/typescript/lib/typescript.d.ts" />
 /// <reference path="typings/node/node.d.ts" />
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -131,7 +131,7 @@ export function processFile(filename: string, outputJS: string, outputMD: string
     let n = Object.keys(logs).length;
     logs[n] = e.stderr.toString();
   }
-  
+
   const injected = injectCaputredLogs(source, logs);
 
   writeFileSync(filename, injected);

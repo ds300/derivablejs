@@ -6,7 +6,7 @@
   } else if (typeof exports !== "undefined") {
     factory(exports);
   } else {
-    factory(global.Havelock = {});
+    factory(global.Derivable = {});
   }
 })(this, function (exports) {
 "use strict";
@@ -449,7 +449,7 @@ function reactions_anonymousReaction (descriptor) {
   return util_extend(new reactions_Reaction(), descriptor);
 }
 
-function derivable_createPrototype (havelock, opts) {
+function derivable_createPrototype (D, opts) {
   var x = {
     /**
      * Creates a derived value whose state will always be f applied to this
@@ -461,36 +461,36 @@ function derivable_createPrototype (havelock, opts) {
       case 0:
         return that;
       case 1:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get());
         });
       case 2:
-        return havelock.derivation(function () {
-          return f(that.get(), havelock.unpack(a));
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a));
         });
       case 3:
-        return havelock.derivation(function () {
-          return f(that.get(), havelock.unpack(a), havelock.unpack(b));
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a), D.unpack(b));
         });
       case 4:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get(),
-                   havelock.unpack(a),
-                   havelock.unpack(b),
-                   havelock.unpack(c));
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c));
         });
       case 5:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get(),
-                   havelock.unpack(a),
-                   havelock.unpack(b),
-                   havelock.unpack(c),
-                   havelock.unpack(d));
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c),
+                   D.unpack(d));
         });
       default:
         var args = ([that]).concat(util_slice(arguments, 1));
-        return havelock.derivation(function () {
-          return f.apply(null, args.map(havelock.unpack));
+        return D.derivation(function () {
+          return f.apply(null, args.map(D.unpack));
         });
       }
     },
@@ -517,26 +517,26 @@ function derivable_createPrototype (havelock, opts) {
     },
 
     is: function (other) {
-      return havelock.lift(opts.equals)(this, other);
+      return D.lift(opts.equals)(this, other);
     },
 
     and: function (other) {
-      return this.derive(function (x) {return x && havelock.unpack(other);});
+      return this.derive(function (x) {return x && D.unpack(other);});
     },
 
     or: function (other) {
-      return this.derive(function (x) {return x || havelock.unpack(other);});
+      return this.derive(function (x) {return x || D.unpack(other);});
     },
 
     then: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return havelock.unpack(x ? thenClause : elseClause);
+        return D.unpack(x ? thenClause : elseClause);
       });
     },
 
     some: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return havelock.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+        return D.unpack(x === null || x === (void 0) ? elseClause : thenClause);
       });
     },
 
@@ -549,22 +549,22 @@ function derivable_createPrototype (havelock, opts) {
     return this.derive(function (x) {
       var i;
       for (i = 0; i < args.length-1; i+=2) {
-        if (opts.equals(x, havelock.unpack(args[i]))) {
-          return havelock.unpack(args[i+1]);
+        if (opts.equals(x, D.unpack(args[i]))) {
+          return D.unpack(args[i+1]);
         }
       }
       if (i === args.length - 1) {
-        return havelock.unpack(args[i]);
+        return D.unpack(args[i]);
       }
     });
   };
   return x;
 }
 
-function derivation_createPrototype (havelock, opts) {
+function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return havelock.derivation(this._deriver);
+      return D.derivation(this._deriver);
     },
 
     _forceGet: function () {
@@ -658,7 +658,7 @@ function derivation_construct(obj, deriver) {
   return obj;
 }
 
-function mutable_createPrototype (havelock, _) {
+function mutable_createPrototype (D, _) {
   return {
     swap: function (f) {
       var args = util_slice(arguments, 0);
@@ -666,15 +666,15 @@ function mutable_createPrototype (havelock, _) {
       return this.set(f.apply(null, args));
     },
     lens: function (lensDescriptor) {
-      return havelock.lens(this, lensDescriptor);
+      return D.lens(this, lensDescriptor);
     }
   }
 }
 
-function lens_createPrototype(havelock, _) {
+function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return havelock.lens(this._parent, {
+      return D.lens(this._parent, {
         get: this._getter,
         set: this._setter
       });
@@ -763,10 +763,10 @@ util_extend(TransactionState.prototype, {
 })
 
 
-function atom_createPrototype (havelock, opts) {
+function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return havelock.atom(this._value);
+      return D.atom(this._value);
     },
 
     withValidator: function (f) {
@@ -882,10 +882,10 @@ function atom_ticker () {
 
 var defaultConfig = { equals: util_equals };
 
-function havelock (config) {
+function constructModule (config) {
   config = util_extend({}, defaultConfig, config || {});
 
-  var Havelock = {
+  var D = {
     transact: atom_transact,
     defaultEquals: util_equals,
     transaction: atom_transaction,
@@ -910,43 +910,43 @@ function havelock (config) {
     },
   };
 
-  var Derivable  = derivable_createPrototype(Havelock, config);
-  var Mutable    = mutable_createPrototype(Havelock, config);
+  var Derivable  = derivable_createPrototype(D, config);
+  var Mutable    = mutable_createPrototype(D, config);
 
   var Atom       = util_extend({}, Mutable, Derivable,
-                               atom_createPrototype(Havelock, config));
+                               atom_createPrototype(D, config));
 
   var Derivation = util_extend({}, Derivable,
-                               derivation_createPrototype(Havelock, config));
+                               derivation_createPrototype(D, config));
 
   var Lens       = util_extend({}, Mutable, Derivation,
-                              lens_createPrototype(Havelock, config));
+                              lens_createPrototype(D, config));
 
 
   /**
    * Constructs a new atom whose state is the given value
    */
-  Havelock.atom = function (val) {
+  D.atom = function (val) {
     return atom_construct(Object.create(Atom), val);
   };
 
   /**
    * Sets the e's state to be f applied to e's current state and args
    */
-  Havelock.swap = function (atom, f) {
+  D.swap = function (atom, f) {
     var args = util_slice(arguments, 1);
     args[0] = atom.get();
     return atom.set(f.apply(null, args));
   };
 
-  Havelock.derivation = function (f) {
+  D.derivation = function (f) {
     return derivation_construct(Object.create(Derivation), f);
   };
 
   /**
    * Creates a new derivation. Can also be used as a template string tag.
    */
-  Havelock.derive = function (a) {
+  D.derive = function (a) {
     if (a instanceof Array) {
       return deriveString.apply(null, arguments);
     } else if (arguments.length > 0) {
@@ -958,12 +958,12 @@ function havelock (config) {
 
   function deriveString (parts) {
     var args = util_slice(arguments, 1);
-    return Havelock.derivation(function () {
+    return D.derivation(function () {
       var s = "";
       for (var i=0; i<parts.length; i++) {
         s += parts[i];
         if (i < args.length) {
-          s += Havelock.unpack(args[i]);
+          s += D.unpack(args[i]);
         }
       }
       return s;
@@ -973,7 +973,7 @@ function havelock (config) {
   /**
    * creates a new lens
    */
-  Havelock.lens = function (parent, descriptor) {
+  D.lens = function (parent, descriptor) {
     var lens = Object.create(Lens);
     return lens_construct(
       derivation_construct(
@@ -988,8 +988,8 @@ function havelock (config) {
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.
    */
-  Havelock.unpack = function (thing) {
-    if (Havelock.isDerivable(thing)) {
+  D.unpack = function (thing) {
+    if (D.isDerivable(thing)) {
       return thing.get();
     } else {
       return thing;
@@ -999,12 +999,12 @@ function havelock (config) {
   /**
    * lifts a non-monadic function to work on derivables
    */
-  Havelock.lift = function (f) {
+  D.lift = function (f) {
     return function () {
       var args = arguments;
       var that = this;
-      return Havelock.derivation(function () {
-        return f.apply(that, Array.prototype.map.call(args, Havelock.unpack));
+      return D.derivation(function () {
+        return f.apply(that, Array.prototype.map.call(args, D.unpack));
       });
     }
   };
@@ -1012,16 +1012,16 @@ function havelock (config) {
   /**
    * sets a to v, returning v
    */
-  Havelock.set = function (a, v) {
+  D.set = function (a, v) {
     return a.set(v);
   };
 
-  Havelock.get = function (d) {
+  D.get = function (d) {
     return d.get();
   };
 
   function deepUnpack (thing) {
-    if (Havelock.isDerivable(thing)) {
+    if (D.isDerivable(thing)) {
       return thing.get();
     } else if (thing instanceof Array) {
       return thing.map(deepUnpack);
@@ -1038,9 +1038,9 @@ function havelock (config) {
     }
   }
 
-  Havelock.struct = function (arg) {
+  D.struct = function (arg) {
     if (arg.constructor === Object || arg instanceof Array) {
-      return Havelock.derivation(function () {
+      return D.derivation(function () {
         return deepUnpack(arg);
       });
     } else {
@@ -1048,31 +1048,31 @@ function havelock (config) {
     }
   };
 
-  Havelock.ifThenElse = function (a, b, c) { return a.then(b, c) };
+  D.ifThenElse = function (a, b, c) { return a.then(b, c) };
 
-  Havelock.ifThenElse = function (testValue, thenClause, elseClause) {
-    return Havelock.derivation(function () {
-      return Havelock.unpack(
-        Havelock.unpack(testValue) ? thenClause : elseClause
+  D.ifThenElse = function (testValue, thenClause, elseClause) {
+    return D.derivation(function () {
+      return D.unpack(
+        D.unpack(testValue) ? thenClause : elseClause
       );
     });
   }
 
-  Havelock.some = function (testValue, thenClause, elseClause) {
-    return Havelock.derivation(function () {
-      var x = Havelock.unpack(testValue);
-      return Havelock.unpack(
+  D.some = function (testValue, thenClause, elseClause) {
+    return D.derivation(function () {
+      var x = D.unpack(testValue);
+      return D.unpack(
         x === null || x === (void 0) ? elseClause : thenClause
       );
     });
   };
 
-  Havelock.or = function () {
+  D.or = function () {
     var args = arguments;
-    return Havelock.derivation(function () {
+    return D.derivation(function () {
       var val;
       for (var i = 0; i < args.length; i++) {
-        val = Havelock.unpack(args[i]);
+        val = D.unpack(args[i]);
         if (val) {
           break;
         }
@@ -1081,12 +1081,12 @@ function havelock (config) {
     });
   };
 
-  Havelock.and = function () {
+  D.and = function () {
     var args = arguments;
-    return Havelock.derivation(function () {
+    return D.derivation(function () {
       var val;
       for (var i = 0; i < args.length; i++) {
-        val = Havelock.unpack(args[i]);
+        val = D.unpack(args[i]);
         if (!val) {
           break;
         }
@@ -1095,21 +1095,21 @@ function havelock (config) {
     });
   };
 
-  Havelock.not = function (x) { return x.derive(function (x) { return !x; }); };
+  D.not = function (x) { return x.derive(function (x) { return !x; }); };
 
-  Havelock.switchCase = function (x) {
+  D.switchCase = function (x) {
     return Derivable.switch.apply(x, util_slice(arguments, 1));
   };
 
-  return Havelock;
+  return D;
 }
 
-util_extend(exports, havelock());
+util_extend(exports, constructModule());
 exports.withEquality = function (equals) {
-  return havelock({equals: equals});
+  return constructModule({equals: equals});
 };
 exports['default'] = exports;
 
 });
 
-//# sourceMappingURL=havelock.js.map
+//# sourceMappingURL=derivable.js.map

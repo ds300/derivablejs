@@ -2,7 +2,7 @@
   "use strict";
 
   var maxHeadHeight = 200;
-  var minHeadHeight = 50;
+  var minHeadHeight = 45;
   var maxHeadPadding = 40;
   var minHeadPadding = 5;
 
@@ -13,8 +13,8 @@
     var padding = minHeadPadding + ((maxHeadPadding - minHeadPadding) * ((maxHeadHeight - minHeadHeight) / (maxHeadHeight - minHeadHeight)));
     head.style.padding = padding + "px 0px";
     title.style.fontSize = (maxHeadHeight - (padding * 2)) * 0.7;
-    var pageScroll = Havelock.atom(window.scrollY);
-    var tocScroll = Havelock.atom(toc.scrollTop);
+    var pageScroll = Derivable.atom(window.scrollY);
+    var tocScroll = Derivable.atom(toc.scrollTop);
 
     window.addEventListener('scroll', function () { pageScroll.set(window.scrollY); });
     toc.addEventListener('scroll', function () { tocScroll.set(this.scrollTop); });

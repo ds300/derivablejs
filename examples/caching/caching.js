@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
+/// <reference path="./node_modules/derivable/dist/derivable.d.ts"/>
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
 /***
 
@@ -10,19 +10,19 @@ You've got a derivable list of values, and you want to map some function over
 them to create a new derivable list of values. Here's the obvious way to do it:
 
 ***/
-var havelock_1 = require('havelock');
-var _ = require('havelock');
+var derivable_1 = require('derivable');
+var _ = require('derivable');
 var immutable_1 = require('immutable');
 var $ = require('immutable');
 // helper function for mapping over immutable lists eagerly
 var mapping = function (f) { return function (xs) { return xs.map(f).toList(); }; };
-var numbers = havelock_1.atom(immutable_1.List([1, 2, 3]));
+var numbers = derivable_1.atom(immutable_1.List([1, 2, 3]));
 var doubled = numbers.derive(mapping(function (x) { return x * 2; }));
 /***
 
 The problem with this is that each time `numbers` changes, every item in it is reprocessed. This isn't so bad when all you're doing is doubling an integer, but it would be nice to have a way to avoid doing the mapping for values that don't change. This could be very beneficial if the cost of the mapping dwarfs the overhead involved in figuring out which items have changed etc.
 
-Another related problem situation is if you have a list whose contents might change in any way, but you want to react to changes in list items individually. There's no obvious way to do that with havelock straight out of the box.
+Another related problem situation is if you have a list whose contents might change in any way, but you want to react to changes in list items individually. There's no obvious way to do that with Derivables straight out of the box.
 
 Let's call the first problem 'the mapping problem' and the second 'the reacting problem' for brevity's sake.
 
@@ -78,6 +78,7 @@ The reason this is only a partial solution is that if `xs` changes in length, al
 ***/
 numbers.set(immutable_1.List([1, 2, 3, 4]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> 2
 // $> 1
 // $> 2
 // $> 3
@@ -170,10 +171,10 @@ Unfortunately, we're not quite there yet. Look what happens if you add a number 
 ***/
 numbers.set(immutable_1.List([0, 1, 2, 3, 4]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> 3
 // $> 0
 // $> 1
 // $> 2
-// $> 3
 // $> 4
 // $> cd: List [ 0, 2, 4, 6, 8 ]
 /***
@@ -290,9 +291,11 @@ console.log("cd:", cachedDoubled.get()); //$
 // $> cd: List [ 2, 4, 6 ]
 numbers.set(immutable_1.List([1, 2, 2]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> undefined
 // $> cd: List [ 2, 4, 4 ]
 numbers.set(immutable_1.List([2, 2, 2, 2, 2, 2, 2]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> undefined
 // $> cd: List [ 4, 4, 4, 4, 4, 4, 4 ]
 /***
 
@@ -341,7 +344,7 @@ var resplodeU = function (uf, r, xs) {
     });
     return null;
 };
-var things = havelock_1.atom($.fromJS([{ id: 0, name: "Zero" }, { id: 1, name: "One" }]));
+var things = derivable_1.atom($.fromJS([{ id: 0, name: "Zero" }, { id: 1, name: "One" }]));
 var id = function (x) { return x.get('id'); };
 var log = function (x) { return console.log("id: " + id(x) + ", name: " + x.get('name')); };
 resplodeU(id, log, things); //$
@@ -397,7 +400,7 @@ resplodeU = function (uf, r, xs) {
     return reaction;
 };
 // new things because otherwise we'de be getting reactions from before
-var things2 = havelock_1.atom($.fromJS([{ id: 0, name: "Zero" }, { id: 1, name: "One" }]));
+var things2 = derivable_1.atom($.fromJS([{ id: 0, name: "Zero" }, { id: 1, name: "One" }]));
 var reaction = resplodeU(id, log, things2).start().force(); //$
 // $> id: 0, name: Zero
 // $> id: 1, name: One

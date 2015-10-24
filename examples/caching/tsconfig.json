@@ -15,7 +15,7 @@
         "suppressImplicitAnyIndexErrors": true
     },
     "dependencies": {
-        "havelock": "^0.1.2",
+        "derivable": "^0.7.0",
         "immutable": "^3.7.4"
     },
     "filesGlob": [
@@ -24,6 +24,7 @@
         "!./node_modules/**/*"
     ],
     "files": [
-        "./caching.ts"
-    ]
+        "caching.ts"
+    ],
+    "exclude": []
 }
