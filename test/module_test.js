@@ -1,5 +1,5 @@
 import imut from 'immutable';
-import _, {atom, derive, derivation, transact} from '../dist/havelock';
+import _, {atom, derive, derivation, transact} from '../dist/derivable';
 import assert from 'assert';
 
 describe("the `is*` fns", () => {

@@ -1,5 +1,5 @@
-(:module havelock
-  "Havelock is an holistic state management library. This is its API documentation.
+(:module derivable
+  "DerivableJS is an holistic state management library. This is its API documentation.
   "
 
   (:interface (Derivable T)
@@ -16,7 +16,7 @@
       xTimesTwo.get();
       // => 8
       ```"
-    (:see-also havelock::derive))
+    (:see-also derivable::derive))
 
     ((derive A E) [f (=> [value T a A] E) a A] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
@@ -31,7 +31,7 @@
       // => 8
       ```
       "
-    (:see-also havelock::derive))
+    (:see-also derivable::derive))
 
     ((derive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
@@ -49,11 +49,11 @@
       // => 40
       ```
       "
-      (:see-also havelock::derive unpack))
+      (:see-also derivable::derive unpack))
 
     ((derive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E)
       "Any-arity version of above. Unpacks all args."
-      (:see-also havelock::derive unpack))
+      (:see-also derivable::derive unpack))
 
     (reaction [r (Reaction T)] (Reaction T)
       "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
@@ -173,7 +173,7 @@
       // => `some`
       ```
 
-      Due to havelock's laziness, we can be sure that the derivation of
+      Due to derivable's laziness, we can be sure that the derivation of
       `condition` (the string splitting bit) will only ever be evaluated
       when `condition` contains a truthy value.")
 
@@ -278,7 +278,7 @@
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
       ```"
-      (:see-also havelock::swap))
+      (:see-also derivable::swap))
     ((lens E) [lens (Lens T E)] (Atom E)
       "Returns a new atom connected to this one via the logic encapsulated by
       {{lens}}."
@@ -735,11 +735,11 @@
     "Returns true iff `obj` is a {{Reaction}}.")
 
   (withEquality [equals (=> [a any b any] boolean)] any
-    "Returns a new instance of havelock with a new notion of equality. Does not
+    "Returns a new instance of derivable with a new notion of equality. Does not
     affect the current instance.")
 
   (defaultEquals [a any b any] boolean
-    "Havelock's inbuilt equality-checking function. Note that calling
+    "DerivableJS's inbuilt equality-checking function. Note that calling
     {{withEquality}} will not affect the value of this property.")
 
   (:interface

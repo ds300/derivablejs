@@ -3,16 +3,16 @@
 # Router
 
 This file will walk you through the implemetation of a simple but powerful
-routing system with Havelock. It is structured in two parts:
+routing system with DerivableJS. It is structured in two parts:
 
 1. Data and Functions
 2. Reactive Glue
 
-The first section doesn't involve using Havelock at all, but rather shows how to
+The first section doesn't involve using Derivables at all, but rather shows how to
 go about designing all the individual components of a routing system from a functional perspective.
 It is written for anyone with JS experience, but if you've done any functional programming with immutable data before it should be *really* easy to follow.
 
-Part 2 shows how to take the inert functional system designed in Part 1, and turn it into a living breathing thing using Havelock.
+Part 2 shows how to take the inert functional system designed in Part 1, and turn it into a living breathing thing using Derivables.
 
 ## Part 1: Data and Functions
 
@@ -311,7 +311,7 @@ This is where the magic happens.
 The reactivity all stems from the global state, which in this case is our dispatch tree and hash fragment.
 
 ```typescript
-import { Atom, atom } from 'havelock';
+import { Atom, atom } from 'derivable';
 
 const hash:         Atom<string>                = atom("#/some/route"),
       dispatchTree: Atom<DispatchTree<Handler>> = atom(<DispatchTree<Handler>>Map());
@@ -319,7 +319,7 @@ const hash:         Atom<string>                = atom("#/some/route"),
 
 
 But what is a `Handler` you ask? Well in most systems it is some kind of function
-which transforms a request into a response. But Havelock is all about reactivity and
+which transforms a request into a response. But Derivables are all about reactivity and
 ordinary functions are not reactive on their own. Another problem is that you need to know *how* to call a function,
 and that restricts handlers to having a particular signature or being managed by dependency injection.
 
@@ -329,7 +329,7 @@ re-rendered? Do the dependencies tell us via some event framework set up alongsi
 No way, forget that mess! If we make `Handler` a `Derivable<DOM>` it all goes away. They can then depend on whatever they like and we don't need to know or care, and the dom gets re-rendered whenever their dependencies change.
 
 ```typescript
-import { Derivable, derive } from 'havelock';
+import { Derivable, derive } from 'derivable';
 
 type DOM = string;
 type Handler = Derivable<DOM>;
@@ -347,7 +347,7 @@ const handler: Derivable<Handler> = lookupResult.derive(r => r[0])
 So now we can derive the dom from the handler by simply upacking it.
 
 ```typescript
-import { unpack } from 'havelock';
+import { unpack } from 'derivable';
 
 const dom: Derivable<DOM> = handler.derive(unpack);
 ```
@@ -388,30 +388,30 @@ const greeting = derive`${hello}\n  ${today}`;
 dispatchTree.swap(register, 'greeting/:name', greeting); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today is Wed Aug 26 2015
+// $>   Today is Sat Oct 24 2015
 
 hash.set("#/greeting/steve"); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Wed Aug 26 2015
+// $>   Today is Sat Oct 24 2015
 
 // forward a day
 now.swap(time => time + (1000 * 60 * 60 * 24)); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Thu Aug 27 2015
+// $>   Today is Sun Oct 25 2015
 
 // and a year
 now.swap(time => time + (1000 * 60 * 60 * 24 * 365)); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 
 
 hash.set("#/greeting/steve?caps"); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there STEVE!
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 ```
 
 
@@ -419,10 +419,10 @@ The final bit of functionality we're going to add is the ability to contextualiz
 the dispatch tree. This will make it possible for different parts of your application to add
 their own routes to the global dispatch tree without needing to know exactly where to put them.
 
-[Lenses](http://ds300.github.io/havelock/#havelock-Lens) to the rescue!
+[Lenses](http://ds300.github.io/derivablejs/#derivable-Lens) to the rescue!
 
 ```typescript
-import { Lens } from 'havelock'
+import { Lens } from 'derivable'
 
 function context<H>(ctx: string): Lens<DispatchTree<H>, DispatchTree<H>> {
   const route = parseRouteString(ctx);
@@ -451,7 +451,7 @@ hash.set("#/print/hello?name=Bridget");
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); 
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
@@ -473,7 +473,7 @@ hash.set("#/print");
 // $>   pick a thing to print yo
 hash.set("#/print/today"); 
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Fri Aug 26 2016
+// $>   Today is Mon Oct 24 2016
 hash.set("#/print/hello?name=Morty"); 
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there Morty!

@@ -1,21 +1,3 @@
-/**
- * This has nothing to do with Havelock. It's just a cross between a literate
- * typescript compiler and a repl. To see it in use: run grunt in the /routing
- * example folder. Then insert a console log somewhere in the file, followed by //$
- * on the same line and save it.
- * .e.g.
- *
- *    console.log(`yo`); //$
- *
- * hit save and wait... then suddenly
- *
- *    console.log(`yo`); //$
- *    // $> yo
- *
- * the //$ bits get removed before the markdown is emitted.
- */
-/// <reference path="node_modules/typescript/bin/typescript.d.ts" />
-/// <reference path="typings/node/node.d.ts" />
 var fs_1 = require('fs');
 var ts = require('typescript');
 var exec = require('child_process');

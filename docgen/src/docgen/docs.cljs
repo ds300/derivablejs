@@ -321,12 +321,12 @@
   (binding [*namespace* (make-namespace module)]
     (html/render
       [:html
-        [:head [:title "Havelock API Documentation"]
+        [:head [:title "DerivableJS API Documentation"]
                [:meta {:charset "utf-8"}]
                [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
                [:script {:src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"}]
                [:script (html/raw "hljs.initHighlightingOnLoad();")]
-               [:script {:src "dist/havelock.min.js"}]
+               [:script {:src "dist/derivable.min.js"}]
                [:script {:src "resources/js/sticky.js"}]
                (stylesheet "http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700")
                (stylesheet "http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic")
@@ -342,10 +342,10 @@
               [:div#toc (toc module [])]]
             [:div#head
               [:h1#title
-                [:a.github {:href "https://github.com/ds300/havelock"
+                [:a.github {:href "https://github.com/ds300/derivablejs"
                             :title "See me in the Githubs"}
                     (icon :github)]
-                "Havelock API"]]
+                "DerivableJS API"]]
             [:div#gradient-bit]
             [:div#page (gen module [])
-             [:p.footer [:em "This documentation was generated from the file "] [:code "havelock.api.edn"] "."]]]]])))
+             [:p.footer [:em "This documentation was generated from the file "] [:code "derivable.api.edn"] "."]]]]])))

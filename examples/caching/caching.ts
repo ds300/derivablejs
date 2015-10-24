@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
+/// <reference path="./node_modules/derivable/dist/derivable.d.ts"/>
 /// <reference path="./node_modules/immutable/dist/immutable.d.ts"/>
 
 /***
@@ -11,8 +11,8 @@ You've got a derivable list of values, and you want to map some function over
 them to create a new derivable list of values. Here's the obvious way to do it:
 
 ***/
-import {atom, Atom, Derivable} from 'havelock';
-import * as _ from 'havelock';
+import {atom, Atom, Derivable} from 'derivable';
+import * as _ from 'derivable';
 import {List, Map} from 'immutable';
 import * as $ from 'immutable';
 
@@ -26,7 +26,7 @@ const doubled: Derivable<List<number>> = numbers.derive(mapping(x => x * 2));
 
 The problem with this is that each time `numbers` changes, every item in it is reprocessed. This isn't so bad when all you're doing is doubling an integer, but it would be nice to have a way to avoid doing the mapping for values that don't change. This could be very beneficial if the cost of the mapping dwarfs the overhead involved in figuring out which items have changed etc.
 
-Another related problem situation is if you have a list whose contents might change in any way, but you want to react to changes in list items individually. There's no obvious way to do that with havelock straight out of the box.
+Another related problem situation is if you have a list whose contents might change in any way, but you want to react to changes in list items individually. There's no obvious way to do that with Derivables straight out of the box.
 
 Let's call the first problem 'the mapping problem' and the second 'the reacting problem' for brevity's sake.
 
@@ -96,6 +96,7 @@ The reason this is only a partial solution is that if `xs` changes in length, al
 numbers.set(List([1, 2, 3, 4]));
 
 console.log("cd:", cachedDoubled.get()); //$
+// $> 2
 // $> 1
 // $> 2
 // $> 3
@@ -210,10 +211,10 @@ Unfortunately, we're not quite there yet. Look what happens if you add a number 
 numbers.set(List([0,1,2,3,4]));
 
 console.log("cd:", cachedDoubled.get()); //$
+// $> 3
 // $> 0
 // $> 1
 // $> 2
-// $> 3
 // $> 4
 // $> cd: List [ 0, 2, 4, 6, 8 ]
 
@@ -380,10 +381,12 @@ console.log("cd:", cachedDoubled.get()); //$
 
 numbers.set(List([1,2,2]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> undefined
 // $> cd: List [ 2, 4, 4 ]
 
 numbers.set(List([2,2,2,2,2,2,2]));
 console.log("cd:", cachedDoubled.get()); //$
+// $> undefined
 // $> cd: List [ 4, 4, 4, 4, 4, 4, 4 ]
 
 /***
@@ -409,8 +412,8 @@ console.log("cd:", cachedDoubled.get()); //$
 
 numbers.set(List([1,2,3,4,5,6,7,8,9,10]));
 console.log("cd:", cachedDoubled.get()); //$
-// $> 9
 // $> 10
+// $> 9
 // $> cd: List [ 18, 20, 18, 20, 18, 20, 18, 20, 18, 20 ]
 
 /***
@@ -428,7 +431,7 @@ to disallowing duplicate IDs. At least for the time being.
 
 ***/
 
-import { Reaction } from 'havelock'
+import { Reaction } from 'derivable'
 
 let resplodeU: <T, U>(uf: (v: T) => U, r: (v: T) => void, xs: Derivable<List<T>>) => any
 = <T, U>(uf, r, xs) => {

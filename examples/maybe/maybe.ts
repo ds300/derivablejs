@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/havelock/dist/havelock.d.ts"/>
+/// <reference path="./node_modules/derivable/dist/derivable.d.ts"/>
 
 /***
 
@@ -12,7 +12,7 @@ Here's how to do that.
 
 ***/
 
-import { atom } from 'havelock'
+import { atom } from 'derivable'
 
 const word = atom("hello");
 

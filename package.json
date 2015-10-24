@@ -1,14 +1,14 @@
 {
-  "name": "havelock",
-  "version": "0.6.0",
+  "name": "derivable",
+  "version": "0.7.0",
   "description": "Functional Reactive State for JavaScript & TypeScript",
   "author": "David Sheldrick",
   "files": [
     "dist"
   ],
-  "main": "dist/havelock.js",
+  "main": "dist/derivable.js",
   "typescript": {
-    "definition": "dist/havelock.d.ts"
+    "definition": "dist/derivable.d.ts"
   },
   "keywords": [
     "immutable",
@@ -38,10 +38,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ds300/havelock"
+    "url": "https://github.com/ds300/derivablejs"
   },
   "bugs": {
-    "url": "https://github.com/ds300/havelock/issues"
+    "url": "https://github.com/ds300/derivablejs/issues"
   },
   "license": "Apache 2.0"
 }

@@ -9,7 +9,7 @@ others should even be attempted. Just propagate the failure.'
 Here's how to do that.
 
 ```typescript
-import { atom } from 'havelock'
+import { atom } from 'derivable'
 
 const word = atom("hello");
 

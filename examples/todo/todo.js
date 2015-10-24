@@ -1,12 +1,12 @@
-import _, {atom, derivation, transact} from 'havelock'
+import _, {atom, derivation, transact} from 'derivable'
 import imut, {fromJS} from 'immutable'
 import React from 'react'
 
 // Plese be advised that by writing this I am not endorsing the usage of
-// Havelock with React in this manner. It works fine if you don't need access to
+// Derivables with React in this manner. It works fine if you don't need access to
 // the actual DOM nodes, but solving that problem seems like a topic for another
 // time. For now, view this as a taster of what applications woven through
-// Havelock might look like.
+// DerivableJS might look like.
 
 
 /*** Global App State ***/

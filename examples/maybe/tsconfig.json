@@ -20,6 +20,7 @@
         "!./node_modules/**/*"
     ],
     "files": [
-        "./maybe.ts"
-    ]
+        "maybe.ts"
+    ],
+    "exclude": []
 }

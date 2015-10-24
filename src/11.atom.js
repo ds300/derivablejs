@@ -65,10 +65,10 @@ util_extend(TransactionState.prototype, {
 })
 
 
-function atom_createPrototype (havelock, opts) {
+function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return havelock.atom(this._value);
+      return D.atom(this._value);
     },
 
     withValidator: function (f) {

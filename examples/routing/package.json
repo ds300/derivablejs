@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "havelock": "^0.2.1",
+    "derivable": "^0.7.0",
     "immutable": "^3.7.4"
   },
   "devDependencies": {
