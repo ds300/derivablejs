@@ -87,7 +87,7 @@ The structure of this example can be depicted as the following DAG:
 
 <img src="https://ds300.github.com/derivablejs/img/example.svg" align="center" width="89%"/>
 
-The DAG edges are automatically inferred by DerivableJS. It is important to understand that they (the edges) do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. When you change the value of an atom, it's whole propagation graph updates in atomic accord. There is no accessible point in time between the fact of changing an atom and the fact of it's dependents becoming aware of the change.
+The DAG edges are automatically inferred by DerivableJS. It is important to understand that they (the edges) do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. When you change the value of an atom, its whole propagation graph updates in atomic accord. There is no accessible point in time between the fact of changing an atom and the fact of its dependents becoming aware of the change.
 
 To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
 
