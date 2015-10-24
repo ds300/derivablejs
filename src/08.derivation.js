@@ -1,7 +1,7 @@
-function derivation_createPrototype (havelock, opts) {
+function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return havelock.derivation(this._deriver);
+      return D.derivation(this._deriver);
     },
 
     _forceGet: function () {

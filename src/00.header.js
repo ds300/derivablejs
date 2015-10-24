@@ -6,7 +6,7 @@
   } else if (typeof exports !== "undefined") {
     factory(exports);
   } else {
-    factory(global.Havelock = {});
+    factory(global.Derivable = {});
   }
 })(this, function (exports) {
 "use strict";

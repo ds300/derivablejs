@@ -1,4 +1,4 @@
-function derivable_createPrototype (havelock, opts) {
+function derivable_createPrototype (D, opts) {
   var x = {
     /**
      * Creates a derived value whose state will always be f applied to this
@@ -10,36 +10,36 @@ function derivable_createPrototype (havelock, opts) {
       case 0:
         return that;
       case 1:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get());
         });
       case 2:
-        return havelock.derivation(function () {
-          return f(that.get(), havelock.unpack(a));
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a));
         });
       case 3:
-        return havelock.derivation(function () {
-          return f(that.get(), havelock.unpack(a), havelock.unpack(b));
+        return D.derivation(function () {
+          return f(that.get(), D.unpack(a), D.unpack(b));
         });
       case 4:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get(),
-                   havelock.unpack(a),
-                   havelock.unpack(b),
-                   havelock.unpack(c));
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c));
         });
       case 5:
-        return havelock.derivation(function () {
+        return D.derivation(function () {
           return f(that.get(),
-                   havelock.unpack(a),
-                   havelock.unpack(b),
-                   havelock.unpack(c),
-                   havelock.unpack(d));
+                   D.unpack(a),
+                   D.unpack(b),
+                   D.unpack(c),
+                   D.unpack(d));
         });
       default:
         var args = ([that]).concat(util_slice(arguments, 1));
-        return havelock.derivation(function () {
-          return f.apply(null, args.map(havelock.unpack));
+        return D.derivation(function () {
+          return f.apply(null, args.map(D.unpack));
         });
       }
     },
@@ -66,26 +66,26 @@ function derivable_createPrototype (havelock, opts) {
     },
 
     is: function (other) {
-      return havelock.lift(opts.equals)(this, other);
+      return D.lift(opts.equals)(this, other);
     },
 
     and: function (other) {
-      return this.derive(function (x) {return x && havelock.unpack(other);});
+      return this.derive(function (x) {return x && D.unpack(other);});
     },
 
     or: function (other) {
-      return this.derive(function (x) {return x || havelock.unpack(other);});
+      return this.derive(function (x) {return x || D.unpack(other);});
     },
 
     then: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return havelock.unpack(x ? thenClause : elseClause);
+        return D.unpack(x ? thenClause : elseClause);
       });
     },
 
     some: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return havelock.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+        return D.unpack(x === null || x === (void 0) ? elseClause : thenClause);
       });
     },
 
@@ -98,12 +98,12 @@ function derivable_createPrototype (havelock, opts) {
     return this.derive(function (x) {
       var i;
       for (i = 0; i < args.length-1; i+=2) {
-        if (opts.equals(x, havelock.unpack(args[i]))) {
-          return havelock.unpack(args[i+1]);
+        if (opts.equals(x, D.unpack(args[i]))) {
+          return D.unpack(args[i+1]);
         }
       }
       if (i === args.length - 1) {
-        return havelock.unpack(args[i]);
+        return D.unpack(args[i]);
       }
     });
   };

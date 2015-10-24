@@ -1,7 +1,7 @@
-function lens_createPrototype(havelock, _) {
+function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return havelock.lens(this._parent, {
+      return D.lens(this._parent, {
         get: this._getter,
         set: this._setter
       });
