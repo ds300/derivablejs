@@ -1,3 +1,8 @@
+## 0.7.1
+
+Fix bug where parents were being traversed in the wrong order during reaction
+phases. This precluded true laziness in some cases.
+
 ## 0.7.0
 
 Rename Havelock to DerivableJS
