@@ -600,7 +600,7 @@ function derivation_createPrototype (D, opts) {
         this._forceGet();
         break;
       case gc_UNSTABLE:
-        for (i = this._parents.length; i--;) {
+        for (i = 0; i < this._parents.length; i++) {
           parent = this._parents[i];
           var parentState = parent._state;
           if (parentState === gc_UNSTABLE ||
@@ -621,7 +621,7 @@ function derivation_createPrototype (D, opts) {
         break;
       case gc_DISOWNED:
         var parents = [];
-        for (i = this._parents.length; i--;) {
+        for (i = 0; i < this._parents.length; i++) {
           var parentStateTuple = this._parents[i],
               state = parentStateTuple[1];
           parent = parentStateTuple[0];

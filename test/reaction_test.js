@@ -338,4 +338,22 @@ describe("tickers", () => {
 
     assert.throws(() => t2.tick());
   });
+
+  it("should not cause parents to be investigated in the wrong order", () => {
+    const a = atom(null);
+    const b = a.derive(a => a.toString());
+    const c = a.then(b, 'a is null');
+
+    let expecting = 'a is null';
+
+    c.react(c => assert.strictEqual(c, expecting));
+
+    expecting = 'some other string';
+
+    a.set('some other string');
+
+    expecting = 'a is null';
+    // this would throw if subject to wrong-order bug
+    a.set(null);
+  });
 });
