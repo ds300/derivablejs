@@ -30,9 +30,18 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 ## Derivables
 
-Derivables are a radically simplifying paradigm shift in our approach to managing application state. They are liberating like switching from manual memory management to garbage collection, and they are profound like switching from OO to FP.
+Derivables are an embodiment of the notion that **changes in state should not cause state changes**, i.e. if the value of some piece of state A depends on the value of some piece of state B, updates to B should atomically update A; there shouldn't be two separate state change events because when this happens you get inconsistent (i.e. nonsensical) state and bugs are never far away when your state gets inconsistent.
 
-Sickening hyperbole aside, Derivables really do make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts.
+Derivables make it trivial to maintain consistent state at all times without requiring that it be kept all in one place (although Derivables are extremely cool even if you do keep all your state in one place; keep reading). This is a huge win for those of us who develop complex systems with lots of moving parts.
+
+They do this by allowing you to make declarative statements about how your bits of state are related. e.g. '*n* squared is *n* multiplied by itself' would look like:
+
+```javascript
+const n_squared = n.derive(n => n * n);
+```
+
+This doesn't compute *n*<sup>2</2>, it just declares a derivation relationship between `n_squared` and `n`
+
 
 There are two types of Derivable:
 
