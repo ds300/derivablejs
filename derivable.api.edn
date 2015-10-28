@@ -55,26 +55,26 @@
       "Any-arity version of above. Unpacks all args."
       (:see-also derivable::derive unpack))
 
-    (reaction [r (Reaction T)] (Reaction T)
+    (reactor [r (Reactor T)] (Reactor T)
       "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
-      reaction. i.e. it should not have been linked to any other derivable
-      in the past. For examples see {{Reaction}}")
+      reactor. i.e. it should not have been linked to any other derivable
+      in the past. For examples see {{Reactor}}")
 
-    (reaction [f (=> [value T] void)] (Reaction T)
-      "Creates a new {{Reaction}} based on {{f}} being applied to this derivable. e.g.
+    (reactor [f (=> [value T] void)] (Reactor T)
+      "Creates a new {{Reactor}} based on {{f}} being applied to this derivable. e.g.
 
       ```javascript
       const x = atom(4);
-      const r = x.reaction(x => console.log(`x is`, x));
+      const r = x.reactor(x => console.log(`x is`, x));
 
       x.set(8);
 
-      // .reaction creats the reaction, but doesn't start it,
+      // .reactor creats the reactor, but doesn't start it,
       // so nothing gets printed yet
 
       r.start();
 
-      // now that the reaction has started it will respond
+      // now that the reactor has started it will respond
       // to changes in x
 
       x.set(16);
@@ -84,9 +84,9 @@
       // $> x is 32
       ```")
 
-    (react [r (Reaction T)] (Reaction T)
+    (react [r (Reactor T)] (Reactor T)
       "Creates a link between {{r}} and this derivable. Starts
-      and forces the reaction before returning it. i.e.
+      and forces the reactor before returning it. i.e.
 
       ```javascript
       derivable.react(r);
@@ -95,12 +95,12 @@
       is equivalent to
 
       ```javascript
-      derivable.reaction(r).start().force();
+      derivable.reactor(r).start().force();
       ```")
 
-    (react [f (=> [value T] void)] (Reaction T)
-      "Creates a new {{Reaction}} based on {{f}} being applied to this derivable.
-      Starts and forces the reaction before returning it. i.e.
+    (react [f (=> [value T] void)] (Reactor T)
+      "Creates a new {{Reactor}} based on {{f}} being applied to this derivable.
+      Starts and forces the reactor before returning it. i.e.
 
       ```javascript
       derivable.react(f);
@@ -109,7 +109,7 @@
       is equivalent to
 
       ```javascript
-      derivable.reaction(f).start().force();
+      derivable.reactor(f).start().force();
       ```")
 
     (get [] T
@@ -378,34 +378,48 @@
 
       Called with `this` set to `null`."))
 
-  (:class (Reaction T)
-    "A Reaction is a stateful object which can be attached to a particular
-    derivable. Changes in this derivable will cause a Reaction to be executed."
+  (:class (Reactor T)
+    "A Reactor is a stateful object which can be attached to a particular
+    derivable. Changes in this derivable will cause a Reactor to be executed."
     (:constructor [])
-    (start [] (Reaction T)
-      "Starts this reaction. After this is called, any changes in the derivable
-      to which the reaction is attached will cause the reaction's .{{react}}
+    (start [] (Reactor T)
+      "Starts this reactor. After this is called, any changes in the derivable
+      to which the reactor is attached will cause the reactor's .{{react}}
       method to be called.
 
-      Calls the {{onStart}} method if defined.")
-    (stop [] (Reaction T)
-      "Stops this reaction. Changes in the attached derivable will no longer
+      Calls the {{onStart}} method if defined.
+
+      This method is a no-op if the reactor is already active"
+      (:see-also isActive))
+    (stop [] (Reactor T)
+      "Stops this reactor. Changes in the attached derivable will no longer
       cause reaction.
 
-      Calls the {{onStop}} method if defined.")
-    (force [] (Reaction T)
+      Calls the {{onStop}} method if defined.
+
+      This method is a no-op if this reactor is already inactive"
+      (:see-also isActive))
+    (force [] (Reactor T)
       "Forces reaction.")
+    (isActive [] boolean
+      "Returns true iff the reactor is actively listening to changes in a
+      derivable")
+    (orphan [] (Reactor T)
+      "Turns a dependent reactor into an independent reactor.
+
+      This method is a no-op if the reactor is already independent.")
     (react [value T] void
       (:note "*Abstract<br/>Required*")
       "This method is responsible for carrying out reactive side-effects based
       on {{value}}.")
     (onStart [] void
       (:note "*Abstract*")
-      "Called when the reaction is started. Use for acquiring resources.")
+      "Called when the reactor is started. Use for acquiring resources.")
     (onStop [] void
       (:note "*Abstract*")
-      "Called when the reaction is stopped. Use for releasing resources."
+      "Called when the reactor is stopped. Use for releasing resources."
       (:see-also stop start))
+
     )
 
   ((atom T) [value T] (Atom T)
@@ -505,7 +519,7 @@
     // $> My name is Tigran Schmoe
     ```
 
-    Doh! Tigran Schmoe isn't a person! We certainly don't want reactions to think
+    Doh! Tigran Schmoe isn't a person! We certainly don't want reactors to think
     he is, that could be totally confusing for someone.
 
     {{transact}} to the rescue! Let's abort the previous mission and try changing
@@ -731,8 +745,8 @@
     "Returns true iff {{obj}} is a *lensed* atom."
     (:see-also Lens Atom::lens))
 
-  (isReaction [obj any] boolean
-    "Returns true iff `obj` is a {{Reaction}}.")
+  (isReactor [obj any] boolean
+    "Returns true iff `obj` is a {{Reactor}}.")
 
   (withEquality [equals (=> [a any b any] boolean)] any
     "Returns a new instance of derivable with a new notion of equality. Does not
