@@ -1,4 +1,4 @@
-function reactionBase (parent, control) {
+function reactorBase (parent, control) {
   return {
     control: control,
     parent: parent,
@@ -23,7 +23,7 @@ function start (base) {
   base.parent._get();
 }
 
-function reactions_maybeReact (base) {
+function reactors_maybeReact (base) {
   if (base._state === gc_UNSTABLE) {
     var parent = base.parent, parentState = parent._state;
     if (parentState === gc_UNSTABLE ||
@@ -55,24 +55,24 @@ function force (base) {
       base.reacting = false;
     }
   } else {
-      throw new Error("No reaction function available.");
+      throw new Error("No reactor function available.");
   }
 }
 
-function reactions_Reaction () {
+function reactors_Reactor () {
   /*jshint validthis:true */
   this._type = types_REACTION;
 }
 
-function reactions_createBase (control, parent) {
+function reactors_createBase (control, parent) {
   if (control._base) {
-    throw new Error("This reaction has already been initialized");
+    throw new Error("This reactor has already been initialized");
   }
-  control._base = reactionBase(parent, control);
+  control._base = reactorBase(parent, control);
   return control;
 }
 
-util_extend(reactions_Reaction.prototype, {
+util_extend(reactors_Reactor.prototype, {
   start: function () {
     start(this._base);
     return this;
@@ -90,14 +90,14 @@ util_extend(reactions_Reaction.prototype, {
   }
 })
 
-function reactions_StandardReaction (f) {
+function reactors_StandardReactor (f) {
   /*jshint validthis:true */
   this._type = types_REACTION;
   this.react = f;
 }
 
-util_extend(reactions_StandardReaction.prototype, reactions_Reaction.prototype);
+util_extend(reactors_StandardReactor.prototype, reactors_Reactor.prototype);
 
-function reactions_anonymousReaction (descriptor) {
-  return util_extend(new reactions_Reaction(), descriptor);
+function reactors_anonymousReactor (descriptor) {
+  return util_extend(new reactors_Reactor(), descriptor);
 }

@@ -44,20 +44,20 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
-    reaction: function (f) {
+    reactor: function (f) {
       if (typeof f === 'function') {
-        return reactions_createBase(new reactions_StandardReaction(f), this);
-      } else if (f instanceof reactions_Reaction) {
-        return reactions_createBase(f, this);
+        return reactors_createBase(new reactors_StandardReactor(f), this);
+      } else if (f instanceof reactors_Reactor) {
+        return reactors_createBase(f, this);
       } else if (f && f.react) {
-        return reactions_createBase(reactions_anonymousReaction(f), this);
+        return reactors_createBase(reactors_anonymousReactor(f), this);
       } else {
-        throw new Error("Unrecognized type for reaction " + f);
+        throw new Error("Unrecognized type for reactor " + f);
       }
     },
 
     react: function (f) {
-      return this.reaction(f).start().force();
+      return this.reactor(f).start().force();
     },
 
     get: function () {

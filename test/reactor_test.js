@@ -1,15 +1,15 @@
 import imut from 'immutable';
-import _, {atom, transact, Reaction} from '../dist/derivable';
+import _, {atom, transact, Reactor} from '../dist/derivable';
 import assert from 'assert';
 
-describe("a reaction", () => {
+describe("a reactor", () => {
   let counter = atom(0);
   let inc = n => n+1
   let history = imut.List();
   let action = null;
-  let reaction = counter.react(function (n) {
-    reaction && assert.strictEqual(this, reaction,
-                                   "`this` is bound to the reaction");
+  let reactor = counter.react(function (n) {
+    reactor && assert.strictEqual(this, reactor,
+                                   "`this` is bound to the reactor");
     history = history.push(n);
     action && action();
   });
@@ -41,7 +41,7 @@ describe("a reaction", () => {
     counter.swap(inc);
     checkHistory(imut.List([0, 1, 2, 3]), "history has changed");
     // now check it stops
-    reaction.stop();
+    reactor.stop();
     counter.swap(inc); // now 4 but shouldn't get put in history
 
     checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changud again");
@@ -53,7 +53,7 @@ describe("a reaction", () => {
     // check it still isn't changing
     counter.swap(inc); // now 5 but shouldn't get put in history
     checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again 2");
-    reaction.start(); // restart but don't force
+    reactor.start(); // restart but don't force
     checkHistory(imut.List([0, 1, 2, 3]), "no history change 3");
     counter.swap(inc); // now 6 but should get put in history
     checkHistory(imut.List([0, 1, 2, 3, 6]), "history changed again!");
@@ -72,8 +72,8 @@ describe("a reaction", () => {
     checkHistory(imut.List([0, 1, 2, 3, 6, 8]), "eight");
   });
 
-  it("can be exteded via the Reaction class", () => {
-    class NTimesReaction extends Reaction {
+  it("can be exteded via the Reactor class", () => {
+    class NTimesReactor extends Reactor {
       constructor (n, f) {
         super();
         this.n = n;
@@ -101,16 +101,16 @@ describe("a reaction", () => {
 
     const thing = atom("one");
     let things = imut.List();
-    const reaction = new NTimesReaction(5, x => things = things.push(x));
+    const reactor = new NTimesReactor(5, x => things = things.push(x));
 
-    assert.strictEqual(false, reaction.running, "reaction should be stopped");
-    thing.reaction(reaction);
-    assert.strictEqual(false, reaction.running, "reaction should be stopped 2");
-    reaction.start();
-    assert.strictEqual(true, reaction.running, "reaction should be started");
+    assert.strictEqual(false, reactor.running, "reactor should be stopped");
+    thing.reactor(reactor);
+    assert.strictEqual(false, reactor.running, "reactor should be stopped 2");
+    reactor.start();
+    assert.strictEqual(true, reactor.running, "reactor should be started");
     assert(things.equals(imut.List()), "things is empty");
 
-    reaction.force();
+    reactor.force();
     assert(things.equals(imut.List(["one"])), "one");
     thing.set("two");
     assert(things.equals(imut.List(["one", "two"])), "two");
@@ -121,35 +121,35 @@ describe("a reaction", () => {
     thing.set("five");
     assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
           "five");
-    assert.strictEqual(reaction.running, false, "reaction should have stopped");
+    assert.strictEqual(reactor.running, false, "reactor should have stopped");
     thing.set("six");
     assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
           "not six");
 
-    reaction.reset(1);
+    reactor.reset(1);
 
-    assert.strictEqual(reaction.running, true,
-                       "reaction should have restarted");
+    assert.strictEqual(reactor.running, true,
+                       "reactor should have restarted");
 
-    reaction.force();
+    reactor.force();
 
     assert(things.equals(imut.List(["one", "two", "three",
                                     "four", "five", "six"])),
           "yes six");
 
-    assert.strictEqual(reaction.running, false, "reaction should have stopped");
+    assert.strictEqual(reactor.running, false, "reactor should have stopped");
   });
 
   it(`can't be initialized twice`, () => {
 
     let a = atom(0);
-    let reaction = a.reaction(n => console.log(n));
+    let reactor = a.reactor(n => console.log(n));
     assert.throws(() => {
-      atom(0).react(reaction);
+      atom(0).react(reactor);
     });
-    reaction = a.reaction(n => console.log(n));
+    reactor = a.reactor(n => console.log(n));
     assert.throws(() => {
-      a.react(reaction);
+      a.react(reactor);
     });
   });
 
@@ -205,7 +205,7 @@ describe("setting the values of atoms in a reaction phase", () => {
     assert.throws(() => b.react(b => a.set(b)));
   });
 
-  it("is not allowed if the atom in question is upstream of the reaction", () => {
+  it("is not allowed if the atom in question is upstream of the reactor", () => {
     const n = atom(3);
 
     // currently 1
@@ -213,11 +213,11 @@ describe("setting the values of atoms in a reaction phase", () => {
 
     const double = n => n * 2;
 
-    const r = nmod2.reaction(_ => n.swap(double)).start();
+    const r = nmod2.reactor(_ => n.swap(double)).start();
 
     assert.throws(() => n.set(2));
-    // nmod2 becomes 0, reaction triggers n being set to 4
-    // reaction caught up in sweep again, identified as cycle
+    // nmod2 becomes 0, reactor triggers n being set to 4
+    // reactor caught up in sweep again, identified as cycle
   });
 });
 
@@ -229,7 +229,7 @@ describe("tickers", () => {
 
     let b = "b";
 
-    a.reaction(a => b = a).start();
+    a.reactor(a => b = a).start();
 
     assert.strictEqual(b, "b");
 
@@ -272,7 +272,7 @@ describe("tickers", () => {
 
     let b = "b";
 
-    a.reaction(a => b = a).start();
+    a.reactor(a => b = a).start();
     assert.strictEqual(b, "b");
     a.set("c");
     assert.strictEqual(b, "b");
@@ -299,7 +299,7 @@ describe("tickers", () => {
     const a = atom(null);
     let b = "b";
 
-    a.reaction(a => b = a).start();
+    a.reactor(a => b = a).start();
 
     a.set("a");
 

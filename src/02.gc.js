@@ -7,19 +7,19 @@ var gc_NEW = 0,
     gc_STABLE = 5,
     gc_DISOWNED = 6;
 
-function gc_mark(node, reactions) {
+function gc_mark(node, reactors) {
   // make everything unstable
   if (node._type === types_REACTION) {
     if (node.reacting) {
       throw new Error("Cycle detected! Don't do this!");
     }
-    reactions.push(node);
+    reactors.push(node);
   } else {
     for (var i = node._children.length; i--;) {
       var child = node._children[i];
       if (child._state !== gc_UNSTABLE) {
         child._state = gc_UNSTABLE;
-        gc_mark(child, reactions);
+        gc_mark(child, reactors);
       }
     }
   }
