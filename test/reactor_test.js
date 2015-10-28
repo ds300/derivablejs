@@ -357,3 +357,116 @@ describe("tickers", () => {
     a.set(null);
   });
 });
+
+describe("dependent reactors", () => {
+  it("are invoked after their parent reactors", () => {
+    const arr = atom([0, 1, 2]);
+
+    // set up reactor to print 3rd elem of arr, but don't start it
+    const A = arr.reactor(arr => assert.strictEqual('2', arr[2].toString()));
+
+    // instead control it by reacting to the length of the array
+    const B = arr.derive(a => a.length).react(len => {
+      if (len >= 3) {
+        if (!A.isActive()) A.start().force();
+      } else {
+        A.stop();
+      }
+    });
+    // $> 2
+
+    // should not throw
+    arr.set([0,1]);
+  });
+
+  it("are stopped before their parent reactors", () => {
+    const state = atom('a');
+    const stops = [];
+    const A = state.reactor({
+      react: () => null,
+      onStop: () => stops.push('A')
+    });
+    const B = state.react({
+      react: state => {
+        if (state === 'a') {
+          A.start().force();
+        } else {
+          A.stop();
+        }
+      },
+      onStop: () => stops.push('B')
+    });
+
+    B.stop();
+    assert.deepEqual(stops, ['A', 'B']);
+
+    stops.splice(0, 2);
+    assert.deepEqual(stops, []);
+
+    assert(!A.isActive());
+    assert(!B.isActive());
+
+    const C = state.react({
+      react: state => {
+        if (state === 'a') {
+          B.start().force();
+        } else {
+          B.stop();
+        }
+      },
+      onStop: () => stops.push('C')
+    });
+
+    assert(A.isActive());
+    assert(B.isActive());
+
+    C.stop();
+
+    assert.deepEqual(stops, ['A', 'B', 'C']);
+
+  });
+
+
+  it("can be 'orphaned' to make them independent like before", () => {
+    const arr = atom([0, 1, 2]);
+
+    // set up reactor to print 3rd elem of arr, but don't start it
+    const A = arr.reactor(arr => assert.strictEqual('2', arr[2].toString()));
+
+    assert(!A.isActive());
+    // instead control it by reacting to the length of the array
+    const B = arr.derive(a => a.length).react(len => {
+      if (len >= 3) {
+        if (!A.isActive()) A.start().force().orphan();
+      } else {
+        A.stop();
+      }
+    });
+    // $> 2
+
+    assert(A.isActive());
+    assert(B.isActive());
+
+    B.stop();
+
+    assert(A.isActive());
+    assert(!B.isActive());
+  });
+
+  it("can't invole cyclical dependencies", () => {
+    const state = atom('a');
+
+    let A;
+    const B = state.reactor(state => {
+      A.stop();
+      A.start().force();
+    });
+
+    A = state.reactor(state => {
+      B.stop();
+      B.start().force();
+    });
+
+    assert.throws(() => B.start().force());
+  })
+});
