@@ -356,6 +356,15 @@ describe("tickers", () => {
     // this would throw if subject to wrong-order bug
     a.set(null);
   });
+
+  it("can be created in reactors", () => {
+    const a = atom('a');
+
+    _.transact(() => {
+      a.set('b');
+      a.react(a => console.log(a));
+    });
+  });
 });
 
 describe("dependent reactors", () => {
@@ -468,5 +477,5 @@ describe("dependent reactors", () => {
     });
 
     assert.throws(() => B.start().force());
-  })
+  });
 });
