@@ -32,13 +32,13 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 Derivables make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place (although Derivables are still extremely useful if you manage to do that. Keep reading!). This is a huge win for those of us who develop complex systems with lots of moving parts.
 
-They embody the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically update A.
+They embody the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*.
 
-They do this by allowing you to make elegant declarative statements about how your bits of state are related.
+Derivables enable this by allowing you to make elegant declarative statements about how your bits of state are related, and then doing clever computer-sciency stuff when you update the 'root' state.
 
 There are two types of Derivable:
 
-- **Atoms** are simple references to immutable values.
+- **Atoms** are simple references to immutable values. They are the roots; the ground truth from which all else is derived.
 - **Derivations** represent pure transformation of values held in atoms.
 
 Changes in atoms or derivations can be monitored and reacted to by **Reactors** which do not encapsulate values and exist
