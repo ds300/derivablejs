@@ -34,7 +34,7 @@ Derivables make it trivial to maintain consistent (i.e. sense-making) state at a
 
 This whole library embodies the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. This seems to be something that most people don't have a handle on, and it causes serious mess in our brains and code.
 
-Derivables provide this handle by enabling you to make elegant declarative statements about how your bits of state are related, and then doing clever computer-sciency stuff when you update any bits of 'root' state, keeping everyone in check.
+Derivables clean that mess up by enabling you to make elegant declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent 100% of the time.
 
 There are two types of Derivable:
 
