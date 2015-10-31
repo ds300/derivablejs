@@ -17,7 +17,7 @@ var spacedOut = function (x) { return x.split("").join(" "); };
 var upper = word.derive(toUpper);
 var spaced = upper.derive(spacedOut);
 console.log(spaced.get()); //$
-// $> H E L L O buns
+// $> H E L L O
 word.set(null);
 try {
     spaced.get();
@@ -83,10 +83,10 @@ console.log(spaced.get()); //$
 
 So `spaced.get()` is actually returning the error there, not throwing it.
 
-You can use the same wrappers for reactions:
+You can use the same wrappers for reactors:
 
 ***/
-var reaction = spaced.react(maybeE(function (spaced) { return console.log("word: " + spaced); })); //$
+var reactor = spaced.react(maybeE(function (spaced) { return console.log("word: " + spaced); })); //$
 // ... no output
 word.set("ablution"); //$
 // $> word: A B L U T I O N
@@ -102,8 +102,8 @@ The wrappers compose too:
 var m = function (f) { return maybe(maybeE(f)); };
 upper = word.derive(m(toUpper));
 spaced = upper.derive(m(spacedOut));
-reaction.stop();
-reaction = spaced.react(m(function (spaced) { return console.log("word: " + spaced); })); //$
+reactor.stop();
+reactor = spaced.react(m(function (spaced) { return console.log("word: " + spaced); })); //$
 // $> word: C O N V I V I A L
 word.set("bananas"); //$
 // $> word: B A N A N A S

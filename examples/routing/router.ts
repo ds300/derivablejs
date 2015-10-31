@@ -408,30 +408,30 @@ const greeting = derive`${hello}\n  ${today}`;
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today is Sat Oct 24 2015
+// $>   Today is Sat Oct 31 2015
 
 hash.set("#/greeting/steve"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Sat Oct 24 2015
+// $>   Today is Sat Oct 31 2015
 
 // forward a day
 now.swap(time => time + (1000 * 60 * 60 * 24)); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Sun Oct 25 2015
+// $>   Today is Sun Nov 01 2015
 
 // and a year
 now.swap(time => time + (1000 * 60 * 60 * 24 * 365)); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 
 
 hash.set("#/greeting/steve?caps"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there STEVE!
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 
 /***
 
@@ -473,7 +473,7 @@ hash.set("#/print/hello?name=Bridget"); //$
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
@@ -495,7 +495,7 @@ hash.set("#/print"); //$
 // $>   pick a thing to print yo
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 hash.set("#/print/hello?name=Morty"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there Morty!
