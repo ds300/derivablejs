@@ -1,6 +1,6 @@
-function processReactionQueue (rq) {
+function processReactorQueue (rq) {
   for (var i = rq.length; i--;) {
-    reactions_maybeReact(rq[i]);
+    reactors_maybeReact(rq[i]);
   }
 }
 
@@ -10,7 +10,7 @@ var NOOP_ARRAY = {push: function () {}};
 
 function TransactionState () {
   this.inTxnValues = {};
-  this.reactionQueue = [];
+  this.reactorQueue = [];
 }
 
 function getState (txnState, atom) {
@@ -24,7 +24,7 @@ function getState (txnState, atom) {
 
 function setState (txnState, atom, state) {
   txnState.inTxnValues[atom._uid] = [atom, state];
-  gc_mark(atom, txnState.reactionQueue);
+  gc_mark(atom, txnState.reactorQueue);
 }
 
 util_extend(TransactionState.prototype, {
@@ -38,14 +38,14 @@ util_extend(TransactionState.prototype, {
         atomValueTuple[0].set(atomValueTuple[1]);
       }
     } else {
-      // change root state and run reactions.
+      // change root state and run reactors.
       for (i = keys.length; i--;) {
         atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0]._value = atomValueTuple[1];
         gc_mark(atomValueTuple[0], NOOP_ARRAY);
       }
 
-      processReactionQueue(this.reactionQueue);
+      processReactorQueue(this.reactorQueue);
 
       // then sweep for a clean finish
       for (i = keys.length; i--;) {
@@ -111,9 +111,9 @@ function atom_createPrototype (D, opts) {
         } else {
           this._value = value;
 
-          var reactionQueue = [];
-          gc_mark(this, reactionQueue);
-          processReactionQueue(reactionQueue);
+          var reactorQueue = [];
+          gc_mark(this, reactorQueue);
+          processReactorQueue(reactorQueue);
           gc_sweep(this);
         }
       }

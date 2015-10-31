@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "derivable": "^0.7.0",
+    "derivable": "^0.8.0",
     "immutable": "^3.7.4"
   },
   "devDependencies": {

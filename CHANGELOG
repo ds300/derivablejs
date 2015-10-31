@@ -1,3 +1,25 @@
+## 0.8.0
+
+BREAKING CHANGES:
+
+- Reaction class renamed to Reactor
+- Derivable#reaction method renamed to Derivable#reactor
+
+Other Changes
+
+Reactors can now 'depend' on other reactors. That is, if Reactor A starts
+Reactor B (via the Reactor#start method), B is said to be dependent on A. If A
+is stopped, B will be also be stopped (but if A is started, B is not also
+started). More importantly, if A and B need to react to the same change, A is
+guaranteed to react *before* B. This lets reactors control each other's
+lifecycles without fear of race conditions.
+
+Reactors now have a method Reactor#orphan which removes any dependency the
+reactor has.
+
+A minor bug involving creating reactors within transactions was fixed.
+
+
 ## 0.7.1
 
 Fix bug where parents were being traversed in the wrong order during reaction

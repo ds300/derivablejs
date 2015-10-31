@@ -98,7 +98,6 @@ console.log(parseQueryString('name=value')); //$
 console.log(parseQueryString('name=value&boolean_flag&name2=value2')); //$
 // $> Map { "name": "value", "boolean_flag": true, "name2": "value2" }
 console.log(parseQueryString('boolean_flag1&name=value&boolean_flag2')); //$
-immutable_1.Map();
 /***
 
 Unfortunately TypeScript doesn't allow recursive type aliases,
@@ -318,21 +317,21 @@ var greeting = (_c = ["", "\n  ", ""], _c.raw = ["", "\\n  ", ""], derivable_2.d
 dispatchTree.swap(register, 'greeting/:name', greeting); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there jessica!
-// $>   Today is Sat Oct 24 2015
+// $>   Today is Sat Oct 31 2015
 hash.set("#/greeting/steve"); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Sat Oct 24 2015
+// $>   Today is Sat Oct 31 2015
 // forward a day
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Sun Oct 25 2015
+// $>   Today is Sun Nov 01 2015
 // and a year
 now.swap(function (time) { return time + (1000 * 60 * 60 * 24 * 365); }); //$
 // $> HELLO YES THIS IS DOM:
 // $>   Well hello there steve!
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 hash.set("#/greeting/steve?caps"); //$
 function context(ctx) {
     var route = parseRouteString(ctx);
@@ -358,7 +357,7 @@ hash.set("#/print/hello?name=Bridget"); //$
 printRoutes.swap(register, "/today", today);
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 // you can still set a handler for the empty root.
 printRoutes.swap(register, '/', "pick a thing to print yo");
 hash.set("#/print"); //$
@@ -375,7 +374,7 @@ hash.set("#/print"); //$
 // $>   pick a thing to print yo
 hash.set("#/print/today"); //$
 // $> HELLO YES THIS IS DOM:
-// $>   Today is Mon Oct 24 2016
+// $>   Today is Mon Oct 31 2016
 hash.set("#/print/hello?name=Morty"); //$
 var _a, _b, _c;
 // $> HELLO YES THIS IS DOM:

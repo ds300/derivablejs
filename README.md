@@ -30,17 +30,18 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 ## Derivables
 
-Derivables are a radically simplifying paradigm shift in our approach to managing application state. They are liberating like switching from manual memory management to garbage collection, and they are profound like switching from OO to FP.
+Derivables make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts because it eradicates an entire class of subtle-but-devastating bugs along with all the incidental complexity they fed upon, allowing us to spend more quality time getting intimate with our problem domain.
 
-Sickening hyperbole aside, Derivables really do make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts.
+This library satisfies the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+
+Derivables clean that mess up by enabling you to make elegant declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent 100% of the time.
 
 There are two types of Derivable:
 
-- **Atoms** are simple references to immutable values.
-- **Derivations** represent pure transformation of values held in atoms.
+- **Atoms** are simple references to immutable values. They are the roots; the ground truth from which all else is derived.
+- **Derivations** represent pure (as in function) transformation of values held in atoms.
 
-Changes in atoms or derivations can be monitored by **Reactions** which do not encapsulate values and exist
-solely for side-effects and resource management.
+Changes in atoms or derivations can be monitored by **Reactors**, which do not encapsulate values and exist solely for executing side-effects in reaction to state changes. Reactors can also be stopped and restarted when appropriate, and offer lifecycle hooks for the sake of resource management.
 
 Let's have a look at a tiny example app which greets the user:
 
@@ -64,11 +65,10 @@ const greetings = {
 const greeting = countryCode.derive(cc => greetings[cc]);
 const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
 
-// set up a side-effecting reaction to print the message
+// set up a Reactor to print the message every time it changes
 message.react(msg => console.log(msg));
 // $> Hello, World!
 
-// reactions are automatically re-run when their inputs change
 countryCode.set("de");
 // $> Hallo, World!
 name.set("Dagmar");
@@ -92,9 +92,9 @@ To put it another way: the (atoms + derivations) part of the graph is conceptual
 
 This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra stuff involving topological sorting, and even then only in a single threaded environment).
 
-The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just in time—on demand. This is another huge win because:
+The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just-in-time, i.e. on demand. This is another huge win because:
 
-- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change time if they (the derivations) are actually used by an affected reaction. So, for example, you can declare an eternal relationship between *n* and *n*<sup>2</sup> without needing to fear the cost of re-computing *n*<sup>2</sup> every time *n* changes. That fear is transferred to whoever decides that they want to know the value of *n*<sup>2</sup> at all times, which is just how it should be.
+- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change time if they (the derivations) are actually used by an affected reactor. So, for example, you can declare an eternal relationship between *n* and *n*<sup>2</sup> without needing to fear the cost of re-computing *n*<sup>2</sup> every time *n* changes. That fear is transferred to whoever decides that they want to know the value of *n*<sup>2</sup> at all times, which is just how it should be.
 - It allows derivations to be automatically garbage collected when you don't need them any more, just like any other object. This is simple to the max! In fact, you don't need any special knowledge to avoid memory leaks with DerivableJS—it Just Works.
 - It permits true short-circuiting boolean logic in derivation structures, which turns out to be extraordinarily practical.
 
@@ -103,7 +103,7 @@ The other thing which truly sets derivations apart is that they are *totally laz
 
 You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
 
-* When an atom is changed, its entire derivation graph is traversed and 'marked'. All active dependent reactions are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
+* When an atom is changed, its entire derivation graph is traversed and 'marked'. All active reactors found in the graph are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
 * The sweep phase involves yet another probably-whole-graph traversal.
 
 So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps DerivableJS isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) for how to reduce the traversal overhead after v1.0.0 drops.
@@ -155,14 +155,14 @@ const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 
 ## 1.0.0 Roadmap
 
-DerivableJS's API will be unstable until version 1.0.0 is released. This will happen on or before January 1st 2016, whereafter the project will use [Semantic Versioning](http://semver.org/).
+DerivableJS's API will be unstable until version 1.0.0 is released, whereafter the project will use [Semantic Versioning](http://semver.org/).
 
-The purpose for this delay is to gather [suggestions and feedback](#contributing) from the community to help shape the core API, but it's a fairly small library so hopefully these things won't take too long.
+I plan to wait for the project to pick up a bit more steam so I can get serious community feedback before pumping out a 1.0.0 release. This is to allow for breaking changes if the need arises.
 
 ## Future Work
 
 1. <s>Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.</s> now about 3.6k, but could probably get smaller still
-1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactions rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
+1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactors rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
 3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
 4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness DerivableJS currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.

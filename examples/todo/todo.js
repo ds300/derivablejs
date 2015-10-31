@@ -212,16 +212,16 @@ const Derivable = React.createClass({
   getInitialState () {
     return {
       vdom: this.props.render.get(),
-      reaction: this.props.render.reaction(vdom => {
+      reactor: this.props.render.reactor(vdom => {
         this.setState({vdom});
       })
     };
   },
   componentWillMount () {
-    this.state.reaction.start();
+    this.state.reactor.start();
   },
   componentWillUnmount () {
-    this.state.reaction.stop();
+    this.state.reactor.stop();
   },
   render () {
     return this.state.vdom;

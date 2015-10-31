@@ -20,7 +20,7 @@
         "!./node_modules/**/*"
     ],
     "files": [
-        "router.ts"
+        "./router.ts"
     ],
     "exclude": []
 }

@@ -11,11 +11,11 @@ declare module 'derivable' {
     derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
-    reaction(r: Reaction<T>): Reaction<T>;
-    reaction(f: (value: T) => void): Reaction<T>;
+    reactor(r: Reactor<T>): Reactor<T>;
+    reactor(f: (value: T) => void): Reactor<T>;
 
-    react(r: Reaction<T>): Reaction<T>;
-    react(f: (value: T) => void): Reaction<T>;
+    react(r: Reactor<T>): Reactor<T>;
+    react(f: (value: T) => void): Reactor<T>;
 
     get(): T;
 
@@ -50,15 +50,19 @@ declare module 'derivable' {
     set(source: ParentType, value: ChildType): ParentType;
   }
 
-  export class Reaction<T> {
+  export class Reactor<T> {
 
     constructor ();
 
-    start(): Reaction<T>;
+    start(): Reactor<T>;
 
-    stop(): Reaction<T>;
+    stop(): Reactor<T>;
 
-    force(): Reaction<T>;
+    force(): Reactor<T>;
+
+    isActive(): boolean;
+
+    orphan(): Reactor<T>;
 
     react(value: T): void;
 
@@ -115,7 +119,7 @@ declare module 'derivable' {
 
   function isLensed(obj: any): boolean;
 
-  function isReaction(obj: any): boolean;
+  function isReactor(obj: any): boolean;
 
   function withEquality(equals: (a: any, b: any) => boolean): any;
 
