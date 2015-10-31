@@ -23,11 +23,15 @@ declare module 'derivable' {
 
     and(other: any): Derivable<any>;
 
+    mAnd(other: any): Derivable<any>;
+
     or(other: any): Derivable<any>;
+
+    mOr(other: any): Derivable<any>;
 
     then(thenD: any, elseD: any): Derivable<any>;
 
-    some(thenD: any, elseD: any): Derivable<any>;
+    mThen(thenD: any, elseD: any): Derivable<any>;
 
     not(): Derivable<boolean>;
 
@@ -93,11 +97,15 @@ declare module 'derivable' {
 
   function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
-  function some(condition: any, thenD: any, elseD: any): Derivable<any>;
+  function mIfThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
   function or(...conditions: any[]): Derivable<any>;
 
+  function mOr(...conditions: any[]): Derivable<any>;
+
   function and(...conditions: any[]): Derivable<any>;
+
+  function mAnd(...conditions: any[]): Derivable<any>;
 
   function not(d: Derivable<any>): Derivable<boolean>;
 

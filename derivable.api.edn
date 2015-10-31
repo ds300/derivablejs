@@ -177,6 +177,11 @@
       `condition` (the string splitting bit) will only ever be evaluated
       when `condition` contains a truthy value.")
 
+    (mAnd [other any] (Derivable any)
+      "Returns a derivable which represents {{other}} iff this derivable doesn't
+      represent `null` or `undefined`. Otherwise the returned derivable
+      representsthe same value as this derivable.")
+
     (or [other any] (Derivable any)
       "Returns a derivable which represents the boolean OR composition of the
       values held in this and {{other}}.
@@ -206,6 +211,11 @@
       // => `second`
       ```")
 
+    (mOr [other any] (Derivable any)
+      "Returns a derivable which represents {{other}} iff this derivable
+      represents `null` or `undefined`. Otherwise represents the same value as
+      this derivable")
+
     (then [thenD any, elseD any] (Derivable any)
       "Returns a derivable which represents the value of {{thenD}} if this is
       truthy, or {{elseD}} otherwise.
@@ -216,7 +226,7 @@
       this.and(thenD).or(elseD);
       ```")
 
-    (some [thenD any, elseD any] (Derivable any)
+    (mThen [thenD any, elseD any] (Derivable any)
       "Returns a derivable which represents the value of {{thenD}} if this is
       not `null` or `undefined`, otherwise {{elseD}}.")
 
@@ -616,9 +626,10 @@
 
     (:see-also unpack Derivable::then))
 
-  (some [condition any thenD any elseD any] (Derivable any)
+  (mIfThenElse [condition any thenD any elseD any] (Derivable any)
     "Returns a derivable which encapsulates the value `unpack(thenD)` when the
-    value encapsulated by `{{condition}}` is not null or undefined.")
+    value encapsulated by {{condition}} is not null or undefined."
+    (:see-also Derivable::mThen))
 
   (or [&conditions [any]] (Derivable any)
     "Returns a derivable which encapsulates the first value in {{&conditions}}
@@ -638,6 +649,11 @@
     ```"
     (:see-also Derivable::or))
 
+  (mOr [&conditions [any]] (Derivable any)
+    "Returns a derivable which encapsulates the first non-(null-or-undefined)
+    value in the unpacked conditions."
+    (:see-also Derivable::mOr))
+
   (and [&conditions [any]] (Derivable any)
     "Returns a derivable which represents the last value in {{&conditions}} iff
     all values are truthy when passed through {{unpack}}. Otherwise it represents
@@ -651,6 +667,11 @@
     // => 0
     ```"
     (:see-also Derivable::and))
+
+  (mAnd [&conditions [any]] (Derivable any)
+    "Returns a derivable which represents the last value in {{&conditions}} iff
+    all values are not null or undefined. Otherwise it returns null or
+    undefined.")
 
   (not [d (Derivable any)] (Derivable boolean)
     "Returns a derivable which represents the boolean complement of the

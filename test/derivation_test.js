@@ -1,5 +1,6 @@
 import _, {atom, derive, derivation, transact} from '../dist/derivable';
 import assert from 'assert';
+import { fromJS } from 'immutable'
 import { label } from './util';
 
 describe("a derivation", () => {
@@ -119,19 +120,63 @@ describe("a derivation", () => {
     });
 
     const nonexistent = atom(null);
-    assert(nonexistent.some(false, true).get(), "null doesn't exist");
+    assert(nonexistent.mThen(false, true).get(), "null doesn't exist");
 
     nonexistent.set(false);
-    assert(nonexistent.some(true, false).get(), "false exists");
+    assert(nonexistent.mThen(true, false).get(), "false exists");
 
     nonexistent.set(void 0);
-    assert(nonexistent.some(false, true).get(), "undefined doesn't exist");
+    assert(nonexistent.mThen(false, true).get(), "undefined doesn't exist");
 
     nonexistent.set("");
-    assert(nonexistent.some(true, false).get(), "the empty string exists");
+    assert(nonexistent.mThen(true, false).get(), "the empty string exists");
 
     nonexistent.set(0);
-    assert(nonexistent.some(true, false).get(), "zero exists");
+    assert(nonexistent.mThen(true, false).get(), "zero exists");
+
+
+    const nestedStuff = atom(fromJS({a: {b: {c: false}}}));
+    const get = (x, y) => x.get(y);
+    const innermost = nestedStuff.mDerive(get, 'a')
+                                 .mDerive(get, 'b')
+                                 .mDerive(get, 'c')
+                                 .mOr('not found');
+
+    assert.strictEqual(innermost.get(), false);
+
+    nestedStuff.set(fromJS({a: {b: {c: 'found'}}}));
+
+    assert.strictEqual(innermost.get(), 'found');
+
+    nestedStuff.set(fromJS({a: {b: {d: 'd'}}}));
+
+    assert.strictEqual(innermost.get(), 'not found');
+
+    nestedStuff.set(fromJS({a: {d: {d: 'd'}}}));
+
+    assert.strictEqual(innermost.get(), 'not found');
+
+    nestedStuff.set(fromJS({d: {d: {d: 'd'}}}));
+
+    assert.strictEqual(innermost.get(), 'not found');
+
+    nestedStuff.set(null);
+
+    assert.strictEqual(innermost.get(), 'not found');
+
+    const thingOr = nestedStuff.mOr('not there');
+    assert.strictEqual(thingOr.get(), 'not there');
+
+    nestedStuff.set(false);
+    assert.strictEqual(thingOr.get(), false);
+
+    const thingAnd = nestedStuff.mAnd('yes there');
+
+    assert.strictEqual(thingAnd.get(), 'yes there');
+
+    nestedStuff.set(null);
+
+    assert.strictEqual(thingAnd.get(), null);
   });
 });
 

@@ -139,6 +139,10 @@ function util_slice (a, i) {
 
 var util_unique = Object.freeze({equals: function () { return false; }});
 
+function util_some (x) {
+  return (x !== null) && (x !== void 0);
+}
+
 // node modes
 var gc_NEW = 0,
     gc_CHANGED = 1,
@@ -560,6 +564,8 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
+
+
     reactor: function (f) {
       if (typeof f === 'function') {
         return reactors_createBase(new reactors_StandardReactor(f), this);
@@ -599,10 +605,22 @@ function derivable_createPrototype (D, opts) {
       });
     },
 
-    some: function (thenClause, elseClause) {
+    mThen: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return D.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+        return D.unpack(util_some(x) ? thenClause : elseClause);
       });
+    },
+
+    mOr: function (other) {
+      return this.mThen(this, other);
+    },
+
+    mDerive: function () {
+      return this.mThen(this.derive.apply(this, arguments));
+    },
+
+    mAnd: function (other) {
+      return this.mThen(other, this);
     },
 
     not: function () {
@@ -1113,6 +1131,21 @@ function constructModule (config) {
     }
   };
 
+  D.destruct = function (arg) {
+    var args = arguments;
+    var result = [];
+    for (var i = 1; i < args.length; i++) {
+      result.push(D.lookup(arg, args[i]));
+    }
+    return result;
+  };
+
+  D.lookup = function (arg, prop) {
+    return D.derivation(function () {
+      return D.unpack(arg)[D.unpack(prop)];
+    })
+  };
+
   D.ifThenElse = function (a, b, c) { return a.then(b, c) };
 
   D.ifThenElse = function (testValue, thenClause, elseClause) {
@@ -1123,11 +1156,11 @@ function constructModule (config) {
     });
   }
 
-  D.some = function (testValue, thenClause, elseClause) {
+  D.mIfThenElse = function (testValue, thenClause, elseClause) {
     return D.derivation(function () {
       var x = D.unpack(testValue);
       return D.unpack(
-        x === null || x === (void 0) ? elseClause : thenClause
+        util_some(x) ? thenClause : elseClause
       );
     });
   };
@@ -1146,6 +1179,20 @@ function constructModule (config) {
     });
   };
 
+  D.mOr = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (util_some(val)) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
   D.and = function () {
     var args = arguments;
     return D.derivation(function () {
@@ -1153,6 +1200,20 @@ function constructModule (config) {
       for (var i = 0; i < args.length; i++) {
         val = D.unpack(args[i]);
         if (!val) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
+  D.mAnd = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (!util_some(val)) {
           break;
         }
       }
