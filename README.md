@@ -30,16 +30,16 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 ## Derivables
 
-Derivables make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts because it eradicates a whole class of subtle-but-devastating bugs along with all the incidental complexity they fed upon, allowing us to spend more time focused on our problem domain.
+Derivables make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts because it eradicates an entire class of subtle-but-devastating bugs along with all the incidental complexity they fed upon, allowing us to spend more quality time getting intimate with our problem domain.
 
-This whole library embodies the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. This seems to be something that most people don't have a handle on, and it causes serious mess in our brains and code.
+This library satisfies the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
 Derivables clean that mess up by enabling you to make elegant declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent 100% of the time.
 
 There are two types of Derivable:
 
 - **Atoms** are simple references to immutable values. They are the roots; the ground truth from which all else is derived.
-- **Derivations** represent pure transformation of values held in atoms.
+- **Derivations** represent pure (as in function) transformation of values held in atoms.
 
 Changes in atoms or derivations can be monitored by **Reactors**, which do not encapsulate values and exist solely for executing side-effects in reaction to state changes. Reactors can also be stopped and restarted when appropriate, and offer lifecycle hooks for the sake of resource management.
 
