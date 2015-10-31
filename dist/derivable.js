@@ -148,19 +148,19 @@ var gc_NEW = 0,
     gc_STABLE = 5,
     gc_DISOWNED = 6;
 
-function gc_mark(node, reactions) {
+function gc_mark(node, reactors) {
   // make everything unstable
   if (node._type === types_REACTION) {
     if (node.reacting) {
       throw new Error("Cycle detected! Don't do this!");
     }
-    reactions.push(node);
+    reactors.push(node);
   } else {
     for (var i = node._children.length; i--;) {
       var child = node._children[i];
       if (child._state !== gc_UNSTABLE) {
         child._state = gc_UNSTABLE;
-        gc_mark(child, reactions);
+        gc_mark(child, reactors);
       }
     }
   }
@@ -184,27 +184,32 @@ function gc_sweep(node) {
     node._state = gc_STABLE;
     break;
   case gc_UNSTABLE:
-    // unstable means the node was not visited during
-    // the react phase, which means we kick it out of the
-    // graph.
+    if (node._type === types_REACTION) {
+      // only happens when reaction created in transaction. see issue #14
+      node._state = gc_STABLE;
+    } else {
+      // unstable means the node was not visited during
+      // the react phase, which means we kick it out of the
+      // graph.
 
-    // but first we check if all of its parents were unchanged
-    // if so, we can avoid recalculating it in future by
-    // caching its parents' current values.
-    var stashedParentStates = [];
-    for (i = node._parents.length; i--;) {
-      var parent = node._parents[i];
-      if (parent._state !== gc_UNCHANGED) {
-        // nope, its parents either have changed or weren't visited,
-        // so we have to orphan this node
-        node._state = gc_ORPHANED;
-        break;
+      // but first we check if all of its parents were unchanged
+      // if so, we can avoid recalculating it in future by
+      // caching its parents' current values.
+      var stashedParentStates = [];
+      for (i = node._parents.length; i--;) {
+        var parent = node._parents[i];
+        if (parent._state !== gc_UNCHANGED) {
+          // nope, its parents either have changed or weren't visited,
+          // so we have to orphan this node
+          node._state = gc_ORPHANED;
+          break;
+        }
+        stashedParentStates.push([parent, parent._value]);
       }
-      stashedParentStates.push([parent, parent._value]);
-    }
-    if (node._state !== gc_ORPHANED) {
-      node._state = gc_DISOWNED;
-      node._parents = stashedParentStates;
+      if (node._state !== gc_ORPHANED) {
+        node._state = gc_DISOWNED;
+        node._parents = stashedParentStates;
+      }
     }
     break;
   case gc_STABLE:
@@ -345,48 +350,102 @@ function transactions_ticker (ctx, txnConstructor) {
   }
 }
 
-function reactionBase (parent, control) {
+function reactorBase (parent, control) {
   return {
-    control: control,
-    parent: parent,
+    control: control,      // the actual object the user gets
+    parent: parent,        // the parent derivable
+    parentReactor: null,
+    dependentReactors: [],
     _state: gc_STABLE,
-    active: false,
+    active: false,         // whether or not listening for changes in parent
     _type: types_REACTION,
     uid: util_nextId(),
-    reacting: false
+    reacting: false,       // whether or not reaction function being invoked
+    stopping: false,
+    yielding: false,       // whether or not letting parentReactor react first
+  }
+}
+var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
+
+function stop (base) {
+  if (base.active) {
+    if (base.stopping) {
+      throw Error(cycleMsg);
+    }
+    try {
+      base.stopping = true;
+      while (base.dependentReactors.length) {
+        var dr = base.dependentReactors.pop();
+        stop(dr);
+      }
+    } finally {
+      util_removeFromArray(base.parent._children, base);
+      if (base.parentReactor) {
+        orphan(base);
+      }
+      base.active = false;
+      base.stopping = false;
+    }
+    base.control.onStop && base.control.onStop();
   }
 }
 
-function stop (base) {
-  util_removeFromArray(base.parent._children, base);
-  base.active = false;
-  base.control.onStop && base.control.onStop();
-}
+var parentReactorStack = [];
 
 function start (base) {
-  util_addToArray(base.parent._children, base);
-  base.active = true;
-  base.control.onStart && base.control.onStart();
-  base.parent._get();
+  if (!base.active) {
+    util_addToArray(base.parent._children, base);
+    base.active = true;
+    base.parent._get();
+    // capture reactor dependency relationships
+    var len = parentReactorStack.length;
+    if (len > 0) {
+      base.parentReactor = parentReactorStack[len - 1];
+      util_addToArray(base.parentReactor.dependentReactors, base);
+    }
+
+    base.control.onStart && base.control.onStart();
+  }
 }
 
-function reactions_maybeReact (base) {
-  if (base._state === gc_UNSTABLE) {
-    var parent = base.parent, parentState = parent._state;
-    if (parentState === gc_UNSTABLE ||
-        parentState === gc_ORPHANED ||
-        parentState === gc_DISOWNED ||
-        parentState === gc_NEW) {
-      parent._get();
-    }
-    parentState = parent._state;
+function orphan (base) {
+  if (base.parentReactor) {
+    util_removeFromArray(base.parentReactor.dependentReactors, base);
+    base.parentReactor = null;
+  }
+}
 
-    if (parentState === gc_UNCHANGED) {
-      base._state = gc_STABLE;
-    } else if (parentState === gc_CHANGED) {
-      force(base);
-    } else {
-        throw new Error("invalid parent state: " + parentState);
+function reactors_maybeReact (base) {
+  if (base.yielding) {
+    throw Error(cycleMsg);
+  }
+  if (base.active && base._state === gc_UNSTABLE) {
+    if (base.parentReactor !== null) {
+      try {
+        base.yielding = true;
+        reactors_maybeReact(base.parentReactor);
+      } finally {
+        base.yielding = false;
+      }
+    }
+    // parent might have deactivated this one
+    if (base.active) {
+      var parent = base.parent, parentState = parent._state;
+      if (parentState === gc_UNSTABLE ||
+          parentState === gc_ORPHANED ||
+          parentState === gc_DISOWNED ||
+          parentState === gc_NEW) {
+        parent._get();
+      }
+      parentState = parent._state;
+
+      if (parentState === gc_UNCHANGED) {
+        base._state = gc_STABLE;
+      } else if (parentState === gc_CHANGED) {
+        force(base);
+      } else {
+          throw new Error("invalid parent state: " + parentState);
+      }
     }
   }
 }
@@ -397,29 +456,31 @@ function force (base) {
     base._state = gc_STABLE;
     try {
       base.reacting = true;
+      parentReactorStack.push(base);
       base.control.react(base.parent._get());
     } finally {
+      parentReactorStack.pop();
       base.reacting = false;
     }
   } else {
-      throw new Error("No reaction function available.");
+      throw new Error("No reactor function available.");
   }
 }
 
-function reactions_Reaction () {
+function reactors_Reactor () {
   /*jshint validthis:true */
   this._type = types_REACTION;
 }
 
-function reactions_createBase (control, parent) {
+function reactors_createBase (control, parent) {
   if (control._base) {
-    throw new Error("This reaction has already been initialized");
+    throw new Error("This reactor has already been initialized");
   }
-  control._base = reactionBase(parent, control);
+  control._base = reactorBase(parent, control);
   return control;
 }
 
-util_extend(reactions_Reaction.prototype, {
+util_extend(reactors_Reactor.prototype, {
   start: function () {
     start(this._base);
     return this;
@@ -432,21 +493,25 @@ util_extend(reactions_Reaction.prototype, {
     force(this._base);
     return this;
   },
-  isRunning: function () {
+  isActive: function () {
     return this._base.active;
+  },
+  orphan: function () {
+    orphan(this._base);
+    return this;
   }
-})
+});
 
-function reactions_StandardReaction (f) {
+function reactors_StandardReactor (f) {
   /*jshint validthis:true */
   this._type = types_REACTION;
   this.react = f;
 }
 
-util_extend(reactions_StandardReaction.prototype, reactions_Reaction.prototype);
+util_extend(reactors_StandardReactor.prototype, reactors_Reactor.prototype);
 
-function reactions_anonymousReaction (descriptor) {
-  return util_extend(new reactions_Reaction(), descriptor);
+function reactors_anonymousReactor (descriptor) {
+  return util_extend(new reactors_Reactor(), descriptor);
 }
 
 function derivable_createPrototype (D, opts) {
@@ -495,20 +560,20 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
-    reaction: function (f) {
+    reactor: function (f) {
       if (typeof f === 'function') {
-        return reactions_createBase(new reactions_StandardReaction(f), this);
-      } else if (f instanceof reactions_Reaction) {
-        return reactions_createBase(f, this);
+        return reactors_createBase(new reactors_StandardReactor(f), this);
+      } else if (f instanceof reactors_Reactor) {
+        return reactors_createBase(f, this);
       } else if (f && f.react) {
-        return reactions_createBase(reactions_anonymousReaction(f), this);
+        return reactors_createBase(reactors_anonymousReactor(f), this);
       } else {
-        throw new Error("Unrecognized type for reaction " + f);
+        throw new Error("Unrecognized type for reactor " + f);
       }
     },
 
     react: function (f) {
-      return this.reaction(f).start().force();
+      return this.reactor(f).start().force();
     },
 
     get: function () {
@@ -696,9 +761,9 @@ function lens_construct(derivation, parent, descriptor) {
   return derivation;
 }
 
-function processReactionQueue (rq) {
+function processReactorQueue (rq) {
   for (var i = rq.length; i--;) {
-    reactions_maybeReact(rq[i]);
+    reactors_maybeReact(rq[i]);
   }
 }
 
@@ -708,7 +773,7 @@ var NOOP_ARRAY = {push: function () {}};
 
 function TransactionState () {
   this.inTxnValues = {};
-  this.reactionQueue = [];
+  this.reactorQueue = [];
 }
 
 function getState (txnState, atom) {
@@ -722,7 +787,7 @@ function getState (txnState, atom) {
 
 function setState (txnState, atom, state) {
   txnState.inTxnValues[atom._uid] = [atom, state];
-  gc_mark(atom, txnState.reactionQueue);
+  gc_mark(atom, txnState.reactorQueue);
 }
 
 util_extend(TransactionState.prototype, {
@@ -736,14 +801,14 @@ util_extend(TransactionState.prototype, {
         atomValueTuple[0].set(atomValueTuple[1]);
       }
     } else {
-      // change root state and run reactions.
+      // change root state and run reactors.
       for (i = keys.length; i--;) {
         atomValueTuple = this.inTxnValues[keys[i]];
         atomValueTuple[0]._value = atomValueTuple[1];
         gc_mark(atomValueTuple[0], NOOP_ARRAY);
       }
 
-      processReactionQueue(this.reactionQueue);
+      processReactorQueue(this.reactorQueue);
 
       // then sweep for a clean finish
       for (i = keys.length; i--;) {
@@ -809,9 +874,9 @@ function atom_createPrototype (D, opts) {
         } else {
           this._value = value;
 
-          var reactionQueue = [];
-          gc_mark(this, reactionQueue);
-          processReactionQueue(reactionQueue);
+          var reactorQueue = [];
+          gc_mark(this, reactorQueue);
+          processReactorQueue(reactorQueue);
           gc_sweep(this);
         }
       }
@@ -890,7 +955,7 @@ function constructModule (config) {
     defaultEquals: util_equals,
     transaction: atom_transaction,
     ticker: atom_ticker,
-    Reaction: reactions_Reaction,
+    Reactor: reactors_Reactor,
     isAtom: function (x) {
       return x && (x._type === types_ATOM || x._type === types_LENS);
     },
@@ -905,7 +970,7 @@ function constructModule (config) {
     isLensed: function (x) {
       return x && x._type === types_LENS;
     },
-    isReaction: function (x) {
+    isReactor: function (x) {
       return x && x._type === types_REACTION;
     },
   };

@@ -31,13 +31,13 @@ describe("lenses", () => {
     assert.equal("one", one.get());
 
 
-    let reactions = 0;
+    let reactors = 0;
 
-    one.react(() => reactions++);
+    one.react(() => reactors++);
 
-    assert.equal(1, reactions);
+    assert.equal(1, reactors);
     one.set("five");
-    assert.equal(2, reactions);
+    assert.equal(2, reactors);
 
     assert(imut.fromJS(["zero", "five", "two"]).equals(things.get()));
   });

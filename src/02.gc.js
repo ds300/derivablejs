@@ -7,19 +7,19 @@ var gc_NEW = 0,
     gc_STABLE = 5,
     gc_DISOWNED = 6;
 
-function gc_mark(node, reactions) {
+function gc_mark(node, reactors) {
   // make everything unstable
   if (node._type === types_REACTION) {
     if (node.reacting) {
       throw new Error("Cycle detected! Don't do this!");
     }
-    reactions.push(node);
+    reactors.push(node);
   } else {
     for (var i = node._children.length; i--;) {
       var child = node._children[i];
       if (child._state !== gc_UNSTABLE) {
         child._state = gc_UNSTABLE;
-        gc_mark(child, reactions);
+        gc_mark(child, reactors);
       }
     }
   }
@@ -43,27 +43,32 @@ function gc_sweep(node) {
     node._state = gc_STABLE;
     break;
   case gc_UNSTABLE:
-    // unstable means the node was not visited during
-    // the react phase, which means we kick it out of the
-    // graph.
+    if (node._type === types_REACTION) {
+      // only happens when reaction created in transaction. see issue #14
+      node._state = gc_STABLE;
+    } else {
+      // unstable means the node was not visited during
+      // the react phase, which means we kick it out of the
+      // graph.
 
-    // but first we check if all of its parents were unchanged
-    // if so, we can avoid recalculating it in future by
-    // caching its parents' current values.
-    var stashedParentStates = [];
-    for (i = node._parents.length; i--;) {
-      var parent = node._parents[i];
-      if (parent._state !== gc_UNCHANGED) {
-        // nope, its parents either have changed or weren't visited,
-        // so we have to orphan this node
-        node._state = gc_ORPHANED;
-        break;
+      // but first we check if all of its parents were unchanged
+      // if so, we can avoid recalculating it in future by
+      // caching its parents' current values.
+      var stashedParentStates = [];
+      for (i = node._parents.length; i--;) {
+        var parent = node._parents[i];
+        if (parent._state !== gc_UNCHANGED) {
+          // nope, its parents either have changed or weren't visited,
+          // so we have to orphan this node
+          node._state = gc_ORPHANED;
+          break;
+        }
+        stashedParentStates.push([parent, parent._value]);
       }
-      stashedParentStates.push([parent, parent._value]);
-    }
-    if (node._state !== gc_ORPHANED) {
-      node._state = gc_DISOWNED;
-      node._parents = stashedParentStates;
+      if (node._state !== gc_ORPHANED) {
+        node._state = gc_DISOWNED;
+        node._parents = stashedParentStates;
+      }
     }
     break;
   case gc_STABLE:

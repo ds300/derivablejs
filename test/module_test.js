@@ -7,7 +7,7 @@ describe("the `is*` fns", () => {
     let a = atom(0);
     let d = a.derive(x => x * 2);
     let l = a.lens({get: x => x * 2, set: (_, x) => x / 2});
-    let r = d.reaction(x => console.log(x));
+    let r = d.reactor(x => console.log(x));
 
     assert(_.isAtom(a), "a is an atom");
     assert(!_.isAtom(d), "d is not an atom");
@@ -24,10 +24,10 @@ describe("the `is*` fns", () => {
     assert(!_.isLensed(d), "d is not a lens");
     assert(!_.isLensed(r), "r is not a lens");
 
-    assert(!_.isReaction(a), "a is a reaction");
-    assert(!_.isReaction(d), "d is a reaction");
-    assert(!_.isReaction(l), "l is a reaction");
-    assert(_.isReaction(r), "r is a reaction");
+    assert(!_.isReactor(a), "a is a reactor");
+    assert(!_.isReactor(d), "d is a reactor");
+    assert(!_.isReactor(l), "l is a reactor");
+    assert(_.isReactor(r), "r is a reactor");
 
     assert(_.isDerivable(a), "a is derivable");
     assert(_.isDerivable(d), "d is derivable");
@@ -300,7 +300,7 @@ describe("the `transact` function", () => {
 
     let timesChanged = 0;
 
-    _.struct({a, b}).reaction(() => timesChanged++).start();
+    _.struct({a, b}).reactor(() => timesChanged++).start();
 
     assert.strictEqual(timesChanged, 0);
 
@@ -336,7 +336,7 @@ describe("the `transaction` function", () => {
 
     let timesChanged = 0;
 
-    _.struct({a, b}).reaction(() => timesChanged++).start();
+    _.struct({a, b}).reactor(() => timesChanged++).start();
 
     assert.strictEqual(timesChanged, 0);
 

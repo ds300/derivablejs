@@ -8,7 +8,7 @@ function constructModule (config) {
     defaultEquals: util_equals,
     transaction: atom_transaction,
     ticker: atom_ticker,
-    Reaction: reactions_Reaction,
+    Reactor: reactors_Reactor,
     isAtom: function (x) {
       return x && (x._type === types_ATOM || x._type === types_LENS);
     },
@@ -23,7 +23,7 @@ function constructModule (config) {
     isLensed: function (x) {
       return x && x._type === types_LENS;
     },
-    isReaction: function (x) {
+    isReactor: function (x) {
       return x && x._type === types_REACTION;
     },
   };
