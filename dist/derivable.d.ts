@@ -11,6 +11,11 @@ declare module 'derivable' {
     derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
+    mDerive<E>(f: (value: T) => E): Derivable<E>;
+    mDerive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
+    mDerive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
+    mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
+
     reactor(r: Reactor<T>): Reactor<T>;
     reactor(f: (value: T) => void): Reactor<T>;
 
@@ -86,6 +91,11 @@ declare module 'derivable' {
   function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
   function derive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
   function derive(strings: string[], ...things: any[]): Derivable<string>;
+
+  function mDerive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
+  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
+  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
+  function mDerive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
 
   function transact(f: () => void): void;
 

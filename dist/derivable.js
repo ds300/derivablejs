@@ -1053,6 +1053,10 @@ function constructModule (config) {
     });
   }
 
+  D.mDerive = function (a) {
+    return Derivable.mDerive.apply(a, util_slice(arguments, 1));
+  };
+
   /**
    * creates a new lens
    */
