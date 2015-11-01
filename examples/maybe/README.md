@@ -96,10 +96,10 @@ console.log(spaced.get());
 
 So `spaced.get()` is actually returning the error there, not throwing it.
 
-You can use the same wrappers for reactions:
+You can use the same wrappers for reactors:
 
 ```typescript
-let reaction = spaced.react(maybeE(spaced => console.log("word: " + spaced))); 
+let reactor = spaced.react(maybeE(spaced => console.log("word: " + spaced))); 
 // ... no output
 
 word.set("ablution"); 
@@ -121,8 +121,8 @@ const m = f => maybe(maybeE(f));
 upper = word.derive(m(toUpper));
 spaced = upper.derive(m(spacedOut));
 
-reaction.stop();
-reaction = spaced.react(m(spaced => console.log("word: " + spaced))); 
+reactor.stop();
+reactor = spaced.react(m(spaced => console.log("word: " + spaced))); 
 // $> word: C O N V I V I A L
 
 word.set("bananas"); 
