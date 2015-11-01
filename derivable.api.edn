@@ -675,12 +675,13 @@
     (:see-also unpack Derivable::then))
 
   (mIfThenElse [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
-    value encapsulated by {{condition}} is not null or undefined."
+    "Returns a derivable which represents {{thenD}} when the
+    value encapsulated by {{condition}} is not null or undefined. Otherwise
+    the returned derivable represents {{elseD}}."
     (:see-also Derivable::mThen))
 
   (or [&conditions [any]] (Derivable any)
-    "Returns a derivable which encapsulates the first value in {{&conditions}}
+    "Returns a derivable which represents the first value in {{&conditions}}
     which is truthy when passed through {{unpack}};
 
     ```javascript
