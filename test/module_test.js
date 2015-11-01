@@ -140,6 +140,26 @@ describe("boolean logic", () => {
     assert.strictEqual(aORb.get(), false, "false | false = false");
     assert.strictEqual(NOTa.get(), true, "!false = true");
   });
+
+  it("is mirrored for dealing with null/undefined", () => {
+    let a = atom(false),
+        b = atom(false),
+        aANDb = _.mIfThenElse(_.mAnd(a, b), true, false),
+        aORb = _.mIfThenElse(_.mOr(a, b), true, false);
+
+    assert.strictEqual(aANDb.get(), true, "false m& false m= true");
+    assert.strictEqual(aORb.get(), true, "false m| false m= true");
+
+    a.set(null);
+
+    assert.strictEqual(aANDb.get(), false, "null m& false m= false");
+    assert.strictEqual(aORb.get(), true, "null m| false m= true");
+
+    b.set(null);
+
+    assert.strictEqual(aANDb.get(), false, "null m& null m= false");
+    assert.strictEqual(aORb.get(), false, "null m| null m= false");
+  })
 });
 
 
@@ -385,18 +405,41 @@ describe("defaultEquals", () => {
 });
 
 
-describe("the some function", () => {
+describe("the mIfThenElse function", () => {
   it("branches on the existence of a value", () => {
-    assert(_.some(atom(null), false, true), "null doesn't exist");
-    assert(_.some(atom(void 0), false, true), "undefined doesn't exist");
-    assert(_.some(atom(false), true, false), "false exists");
-    assert(_.some(atom(""), true, false), "the empty string exists");
+    assert(_.mIfThenElse(atom(null), false, true), "null doesn't exist");
+    assert(_.mIfThenElse(atom(void 0), false, true), "undefined doesn't exist");
+    assert(_.mIfThenElse(atom(false), true, false), "false exists");
+    assert(_.mIfThenElse(atom(""), true, false), "the empty string exists");
   });
 
   it("should also work with normal values", () => {
-    assert(_.some(null, false, true), "null doesn't exist");
-    assert(_.some(void 0, false, true), "undefined doesn't exist");
-    assert(_.some(false, true, false), "false exists");
-    assert(_.some("", true, false), "the empty string exists");
+    assert(_.mIfThenElse(null, false, true), "null doesn't exist");
+    assert(_.mIfThenElse(void 0, false, true), "undefined doesn't exist");
+    assert(_.mIfThenElse(false, true, false), "false exists");
+    assert(_.mIfThenElse("", true, false), "the empty string exists");
+  });
+});
+
+describe("the lookup function", () => {
+  it("looks up things in other things using javascript property access", () => {
+    
+  })
+})
+
+describe("the destruct function", () => {
+  it("destructures derivables", () => {
+    const s = atom({a: "aye", b: "bee", c: "cee"});
+    let [a, b, c] = _.destruct(s, 'a', 'b', 'c');
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    // swap a and c over
+
+    const aKey = atom('c');
+    const cKey = atom('a');
+    [a, b, c] = _.destruct(s, aKey, 'b', cKey);
   });
 });

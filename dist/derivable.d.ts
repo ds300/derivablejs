@@ -11,6 +11,11 @@ declare module 'derivable' {
     derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
+    mDerive<E>(f: (value: T) => E): Derivable<E>;
+    mDerive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
+    mDerive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
+    mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
+
     reactor(r: Reactor<T>): Reactor<T>;
     reactor(f: (value: T) => void): Reactor<T>;
 
@@ -23,11 +28,15 @@ declare module 'derivable' {
 
     and(other: any): Derivable<any>;
 
+    mAnd(other: any): Derivable<any>;
+
     or(other: any): Derivable<any>;
+
+    mOr(other: any): Derivable<any>;
 
     then(thenD: any, elseD: any): Derivable<any>;
 
-    some(thenD: any, elseD: any): Derivable<any>;
+    mThen(thenD: any, elseD: any): Derivable<any>;
 
     not(): Derivable<boolean>;
 
@@ -83,6 +92,11 @@ declare module 'derivable' {
   function derive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
   function derive(strings: string[], ...things: any[]): Derivable<string>;
 
+  function mDerive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
+  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
+  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
+  function mDerive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
+
   function transact(f: () => void): void;
 
   function transaction(f: (...args: any[]) => any): (...args: any[]) => any;
@@ -91,13 +105,21 @@ declare module 'derivable' {
 
   function struct(obj: any): Derivable<any>;
 
+  function lookup(obj: Derivable<any>, key: any): Derivable<any>;
+
+  function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
+
   function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
-  function some(condition: any, thenD: any, elseD: any): Derivable<any>;
+  function mIfThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
   function or(...conditions: any[]): Derivable<any>;
 
+  function mOr(...conditions: any[]): Derivable<any>;
+
   function and(...conditions: any[]): Derivable<any>;
+
+  function mAnd(...conditions: any[]): Derivable<any>;
 
   function not(d: Derivable<any>): Derivable<boolean>;
 

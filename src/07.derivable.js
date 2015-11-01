@@ -44,6 +44,8 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
+
+
     reactor: function (f) {
       if (typeof f === 'function') {
         return reactors_createBase(new reactors_StandardReactor(f), this);
@@ -83,10 +85,22 @@ function derivable_createPrototype (D, opts) {
       });
     },
 
-    some: function (thenClause, elseClause) {
+    mThen: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return D.unpack(x === null || x === (void 0) ? elseClause : thenClause);
+        return D.unpack(util_some(x) ? thenClause : elseClause);
       });
+    },
+
+    mOr: function (other) {
+      return this.mThen(this, other);
+    },
+
+    mDerive: function () {
+      return this.mThen(this.derive.apply(this, arguments));
+    },
+
+    mAnd: function (other) {
+      return this.mThen(other, this);
     },
 
     not: function () {

@@ -1,3 +1,34 @@
+## 0.9.0
+
+BREAKING CHANGES:
+
+- `some` function renamed to `mIfThenElse`
+- `Derivable#some` method renamed to `mThen`
+
+I know this is uglier, but is ultimately consistent with the following:
+
+New Stuff:
+
+- `Derivable#mDerive` for nil-shortcutting derivations, e.g.
+
+  `atom(null).mDerive(x => x.toString()).get()` simply returns `null`, doesn't
+  throw an error. Think of it like the elvis operator in c#.
+
+- `Derivable#mOr` for nil-only 'or' semantics e.g.
+
+  `atom(false).mOr(5) === false` while `atom(false).or(5) === 5`
+
+- `Derivable#mAnd` for nil-only 'and' semantics e.g.
+
+  `atom('').mAnd(5) === 5` while `atom('').and(5) === ''`
+
+- top level functions `mDerive`, `mOr` and `mAnd` for the above.
+
+- top level function `lookup` for performing ordinary javascript property lookup
+  on derivables.
+
+- top level function `destruct` for destructuring derivables. <3 this function.
+
 ## 0.8.0
 
 BREAKING CHANGES:
@@ -37,7 +68,6 @@ rather than truthiness checks.
 ## 0.5.1
 
 Cycle checks now catch all cases.
-=======
 
 ## 0.5.0
 

@@ -55,6 +55,30 @@
       "Any-arity version of above. Unpacks all args."
       (:see-also derivable::derive unpack))
 
+    ((mDerive E) [f (=> [value T] E)] (Derivable E)
+      "nil-shortcutting version of {{derive}}. e.g.
+
+      ```javascript
+      const x = atom(null);
+      const timesTwo = (n) => n * 2;
+      const xTimesTwo = x.derive(timesTwo);
+      const mXTimesTwo = x.mDerive(timesTwo);
+
+      mXTimesTwo.get();
+      // => null
+
+      xTimesTwo.get();
+      // throws error because we try to multiply null by 2
+
+      ```"
+    (:see-also derivable::mDerive))
+
+    ((mDerive A E) [f (=> [value T a A] E) a A] (Derivable E))
+
+    ((mDerive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E))
+
+    ((mDerive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E))
+
     (reactor [r (Reactor T)] (Reactor T)
       "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
       reactor. i.e. it should not have been linked to any other derivable
@@ -177,6 +201,11 @@
       `condition` (the string splitting bit) will only ever be evaluated
       when `condition` contains a truthy value.")
 
+    (mAnd [other any] (Derivable any)
+      "Returns a derivable which represents {{other}} iff this derivable doesn't
+      represent `null` or `undefined`. Otherwise the returned derivable
+      representsthe same value as this derivable.")
+
     (or [other any] (Derivable any)
       "Returns a derivable which represents the boolean OR composition of the
       values held in this and {{other}}.
@@ -206,6 +235,11 @@
       // => `second`
       ```")
 
+    (mOr [other any] (Derivable any)
+      "Returns a derivable which represents {{other}} iff this derivable
+      represents `null` or `undefined`. Otherwise represents the same value as
+      this derivable")
+
     (then [thenD any, elseD any] (Derivable any)
       "Returns a derivable which represents the value of {{thenD}} if this is
       truthy, or {{elseD}} otherwise.
@@ -216,7 +250,7 @@
       this.and(thenD).or(elseD);
       ```")
 
-    (some [thenD any, elseD any] (Derivable any)
+    (mThen [thenD any, elseD any] (Derivable any)
       "Returns a derivable which represents the value of {{thenD}} if this is
       not `null` or `undefined`, otherwise {{elseD}}.")
 
@@ -495,6 +529,22 @@
 
     ```")
 
+  ((mDerive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
 
@@ -592,6 +642,54 @@
     // $> C stands for Chris
     ```")
 
+  (lookup [obj (Derivable any) key any] (Derivable any)
+    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
+    {{key}} may be derivable. e.g.
+
+    ```javascript
+    const obj = atom({k: `v`});
+    const k = atom(`y`);
+    const v = lookup(obj, k);
+
+    v.get();
+    // => undefined
+
+    k.set(`k`);
+
+    v.get();
+    // => `v`
+    ```")
+
+  (destruct [obj (Derivable any) &keys [any]] [(Derivable any)]
+    "Returns an array of derivables representing respective lookups of {{&keys}}
+    in {{obj}}. e.g.
+
+    ```javascript
+    const obj = atom({a: `A`, 'b-*&': `B`});
+    const [a, b, c] = destruct(obj, 'a', 'b-*&', 'c');
+
+    a.get();
+    // => `A`
+    b.get();
+    // => `B`
+    c.get();
+    // => undefined
+    ```
+
+    It uses ordinary property access so it also works for arrays.
+
+    ```javascript
+    const arr = atom([`zeroth`,`oneth`]);
+    const [a, b, c] = destruct(arr, 0, 1, 2);
+
+    a.get();
+    // => `zeroth`
+    b.get();
+    // => `oneth`
+    c.get();
+    // => undefined
+    ```")
+
   (ifThenElse [condition any thenD any elseD any] (Derivable any)
     "Returns a derivable which encapsulates the value `unpack(thenD)` when the
     value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is
@@ -616,12 +714,14 @@
 
     (:see-also unpack Derivable::then))
 
-  (some [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
-    value encapsulated by `{{condition}}` is not null or undefined.")
+  (mIfThenElse [condition any thenD any elseD any] (Derivable any)
+    "Returns a derivable which represents {{thenD}} when the
+    value encapsulated by {{condition}} is not null or undefined. Otherwise
+    the returned derivable represents {{elseD}}."
+    (:see-also Derivable::mThen))
 
   (or [&conditions [any]] (Derivable any)
-    "Returns a derivable which encapsulates the first value in {{&conditions}}
+    "Returns a derivable which represents the first value in {{&conditions}}
     which is truthy when passed through {{unpack}};
 
     ```javascript
@@ -638,6 +738,11 @@
     ```"
     (:see-also Derivable::or))
 
+  (mOr [&conditions [any]] (Derivable any)
+    "Returns a derivable which encapsulates the first non-(null-or-undefined)
+    value in the unpacked conditions."
+    (:see-also Derivable::mOr))
+
   (and [&conditions [any]] (Derivable any)
     "Returns a derivable which represents the last value in {{&conditions}} iff
     all values are truthy when passed through {{unpack}}. Otherwise it represents
@@ -651,6 +756,11 @@
     // => 0
     ```"
     (:see-also Derivable::and))
+
+  (mAnd [&conditions [any]] (Derivable any)
+    "Returns a derivable which represents the last value in {{&conditions}} iff
+    all values are not null or undefined. Otherwise it returns null or
+    undefined.")
 
   (not [d (Derivable any)] (Derivable boolean)
     "Returns a derivable which represents the boolean complement of the

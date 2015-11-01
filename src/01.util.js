@@ -125,3 +125,7 @@ function util_slice (a, i) {
 }
 
 var util_unique = Object.freeze({equals: function () { return false; }});
+
+function util_some (x) {
+  return (x !== null) && (x !== void 0);
+}

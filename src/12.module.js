@@ -88,6 +88,10 @@ function constructModule (config) {
     });
   }
 
+  D.mDerive = function (a) {
+    return Derivable.mDerive.apply(a, util_slice(arguments, 1));
+  };
+
   /**
    * creates a new lens
    */
@@ -166,6 +170,21 @@ function constructModule (config) {
     }
   };
 
+  D.destruct = function (arg) {
+    var args = arguments;
+    var result = [];
+    for (var i = 1; i < args.length; i++) {
+      result.push(D.lookup(arg, args[i]));
+    }
+    return result;
+  };
+
+  D.lookup = function (arg, prop) {
+    return D.derivation(function () {
+      return D.unpack(arg)[D.unpack(prop)];
+    })
+  };
+
   D.ifThenElse = function (a, b, c) { return a.then(b, c) };
 
   D.ifThenElse = function (testValue, thenClause, elseClause) {
@@ -176,11 +195,11 @@ function constructModule (config) {
     });
   }
 
-  D.some = function (testValue, thenClause, elseClause) {
+  D.mIfThenElse = function (testValue, thenClause, elseClause) {
     return D.derivation(function () {
       var x = D.unpack(testValue);
       return D.unpack(
-        x === null || x === (void 0) ? elseClause : thenClause
+        util_some(x) ? thenClause : elseClause
       );
     });
   };
@@ -199,6 +218,20 @@ function constructModule (config) {
     });
   };
 
+  D.mOr = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (util_some(val)) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
   D.and = function () {
     var args = arguments;
     return D.derivation(function () {
@@ -206,6 +239,20 @@ function constructModule (config) {
       for (var i = 0; i < args.length; i++) {
         val = D.unpack(args[i]);
         if (!val) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+
+  D.mAnd = function () {
+    var args = arguments;
+    return D.derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = D.unpack(args[i]);
+        if (!util_some(val)) {
           break;
         }
       }
