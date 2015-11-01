@@ -95,6 +95,10 @@ declare module 'derivable' {
 
   function struct(obj: any): Derivable<any>;
 
+  function lookup(obj: Derivable<any>, key: any): Derivable<any>;
+
+  function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
+
   function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
   function mIfThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;

@@ -602,6 +602,54 @@
     // $> C stands for Chris
     ```")
 
+  (lookup [obj (Derivable any) key any] (Derivable any)
+    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
+    {{key}} may be derivable. e.g.
+
+    ```javascript
+    const obj = atom({k: `v`});
+    const k = atom(`y`);
+    const v = lookup(obj, k);
+
+    v.get();
+    // => undefined
+
+    k.set(`k`);
+
+    v.get();
+    // => `v`
+    ```")
+
+  (destruct [obj (Derivable any) &keys [any]] [(Derivable any)]
+    "Returns an array of derivables representing respective lookups of {{&keys}}
+    in {{obj}}. e.g.
+
+    ```javascript
+    const obj = atom({a: `A`, 'b-*&': `B`});
+    const [a, b, c] = destruct(obj, 'a', 'b-*&', 'c');
+
+    a.get();
+    // => `A`
+    b.get();
+    // => `B`
+    c.get();
+    // => undefined
+    ```
+
+    It uses ordinary property access so it also works for arrays.
+
+    ```javascript
+    const arr = atom([`zeroth`,`oneth`]);
+    const [a, b, c] = destruct(arr, 0, 1, 2);
+
+    a.get();
+    // => `zeroth`
+    b.get();
+    // => `oneth`
+    c.get();
+    // => undefined
+    ```")
+
   (ifThenElse [condition any thenD any elseD any] (Derivable any)
     "Returns a derivable which encapsulates the value `unpack(thenD)` when the
     value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is

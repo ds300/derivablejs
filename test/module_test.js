@@ -421,6 +421,11 @@ describe("the mIfThenElse function", () => {
   });
 });
 
+describe("the lookup function", () => {
+  it("looks up things in other things using javascript property access", () => {
+    
+  })
+})
 
 describe("the destruct function", () => {
   it("destructures derivables", () => {
