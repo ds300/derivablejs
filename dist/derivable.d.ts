@@ -73,6 +73,8 @@ declare module 'derivable' {
 
     orphan(): Reactor<T>;
 
+    adopt(child: Reactor<any>): Reactor<T>;
+
     react(value: T): void;
 
     onStart(): void;

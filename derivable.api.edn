@@ -442,6 +442,10 @@
       "Turns a dependent reactor into an independent reactor.
 
       This method is a no-op if the reactor is already independent.")
+    (adopt [child (Reactor any)] (Reactor T)
+      "Makes the child transiently dependent on this reactor iff they are both
+      active. If the child is active but this reactor is not, the child is
+      stopped. If the child reactor is not active, adoption is a noop.")
     (react [value T] void
       (:note "*Abstract<br/>Required*")
       "This method is responsible for carrying out reactive side-effects based
