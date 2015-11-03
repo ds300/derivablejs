@@ -462,6 +462,36 @@ describe("dependent reactors", () => {
     assert(!B.isActive());
   });
 
+  it("can be 'adopted' to make them dependent temporarily regardless of "
+                       + "the context in which they were started", () => {
+    const x = atom(0);
+    const A = x.react(() => {});
+    const B = x.react(() => {});
+
+    B.stop();
+
+    assert(A.isActive());
+
+    B.adopt(A);
+
+    assert(!A.isActive());
+
+    A.start();
+    assert(A.isActive());
+
+    B.start();
+    B.stop();
+    assert(A.isActive());
+
+    B.start();
+    assert(A.isActive());
+    B.adopt(A);
+    assert(A.isActive());
+    B.stop();
+    assert(!A.isActive());
+
+  })
+
   it("can't invole cyclical dependencies", () => {
     const state = atom('a');
 

@@ -419,6 +419,16 @@ function orphan (base) {
   }
 }
 
+function adopt (parentBase, childBase) {
+  orphan(childBase);
+  if (parentBase.active) {
+    childBase.parentReactor = parentBase;
+    util_addToArray(parentBase.dependentReactors, childBase);
+  } else {
+    stop(childBase);
+  }
+}
+
 function reactors_maybeReact (base) {
   if (base.yielding) {
     throw Error(cycleMsg);
@@ -502,6 +512,13 @@ util_extend(reactors_Reactor.prototype, {
   },
   orphan: function () {
     orphan(this._base);
+    return this;
+  },
+  adopt: function (child) {
+    if (child._type !== types_REACTION) {
+      throw Error("reactors can only adopt reactors");
+    }
+    adopt(this._base, child._base);
     return this;
   }
 });
