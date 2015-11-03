@@ -1,3 +1,10 @@
+## 0.9.1
+
+New Stuff:
+
+- `adopt` method for allowing reactors to become dependent without needing to be
+  started in a reaction cycle. Should have been in 0.8.0.
+
 ## 0.9.0
 
 BREAKING CHANGES:
