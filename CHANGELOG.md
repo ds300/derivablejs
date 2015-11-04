@@ -1,3 +1,18 @@
+## 0.9.2
+
+#### Use more conservative equality checks.
+
+This library was using Ramda.js' equality function which does deep
+equality checking on ordinary javascript objects. That's all fine, except not
+when it sometimes throws up false positives! The newest version fixed that, but
+I don't feel comfortable using Ramda's stuff anymore.
+
+Luckily, most of the time identity checks are all we need, and they're lovely
+and fast.
+
+People can, of course, still inject their own equality junk if they need extra
+protection against redundant computation.
+
 ## 0.9.1
 
 New Stuff:
