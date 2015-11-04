@@ -389,19 +389,21 @@ describe("the `transaction` function", () => {
 });
 
 describe("defaultEquals", () => {
-  it("tests whether two values are equal", () => {
+  it("tests whether two values are strictly equal", () => {
     assert(_.defaultEquals(5, 5));
     assert(_.defaultEquals("buns", "buns"));
-    assert(_.defaultEquals([1,2,3], [0,1,2].map(x => x+1)));
+    assert(!_.defaultEquals([1,2,3], [0,1,2].map(x => x+1)));
     var x = {};
     x['a'] = 'a';
     x['b'] = 'b';
-    assert(_.defaultEquals({a: "a", b: 'b'}, x));
-    x['c'] = [1,2,3];
-    assert(_.defaultEquals({a: "a", b: 'b', c: [0,1,2].map(x => x+1)}, x));
-    assert(!_.defaultEquals(!{a: "a", b: 'b', c: [0,2,1].map(x => x+1)}, x));
-    assert(!_.defaultEquals({a: "a", b: 'd', c: [0,1,2].map(x => x+1)}, x));
+    assert(!_.defaultEquals({a: "a", b: 'b'}, x));
   });
+  it("delegates to a .equals method if present", () => {
+    var x = {equals: () => true};
+    var y = {equals: () => false};
+    assert(_.defaultEquals(x, y));
+    assert(!_.defaultEquals(y, x));
+  })
 });
 
 
@@ -423,7 +425,7 @@ describe("the mIfThenElse function", () => {
 
 describe("the lookup function", () => {
   it("looks up things in other things using javascript property access", () => {
-    
+
   })
 })
 
