@@ -22,7 +22,7 @@
 
 (defn path-href
   ([path]
-    (str "#" (join "-" path)))
+   (str "#" (join "-" path)))
   ([path name] (path-href (conj (vec path) name))))
 
 (defn do-resolve [namespace path [name & others]]
@@ -94,11 +94,11 @@
     (interpose [:.punct ", "] (map #(gen % path) params))
     [:.punct ")"]])
 
-(def type-subheadings [ [ast/Module     "Modules"   ]
-                        [ast/Function   "Functions" ]
-                        [ast/Class      "Classes"   ]
-                        [ast/Interface  "Interfaces"]
-                        [ast/Property   "Properties"] ])
+(def type-subheadings [[ast/Module     "Modules"]
+                       [ast/Function   "Functions"]
+                       [ast/Class      "Classes"]
+                       [ast/Interface  "Interfaces"]
+                       [ast/Property   "Properties"]])
 
 (defn toc-grouped [members path]
   (let [groups (group-by type members)]
@@ -192,7 +192,7 @@
          [:h3.code
            [:.punct "function "]
            [:.function name (when-not do-individual-type-args
-                          (gen-type-args (:type-args (first signatures)) (conj path name)))]]
+                              (gen-type-args (:type-args (first signatures)) (conj path name)))]]
          (gen-docs docs (conj path name))
          (for [{:keys [type-args params return-type docs]} signatures]
            [:div.function-signature
@@ -313,9 +313,9 @@
       (gen return-type path)]))
 
 (defn stylesheet [href]
-  [:link { :rel  "stylesheet"
-           :type "text/css"
-           :href href        }])
+  [:link {:rel  "stylesheet"
+          :type "text/css"
+          :href href}])
 
 (defn generate-module-docs [module]
   (binding [*namespace* (make-namespace module)]

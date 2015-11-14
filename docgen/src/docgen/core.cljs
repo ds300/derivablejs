@@ -17,13 +17,15 @@
 
 (defn make-d-ts [in-file module]
   (str
-"/**
+   "/**
  * This TypeScript file was generated from " in-file ".
  * Please change that file and re-run `grunt docs` to modify this file.
  */
 "
-  (->typescript module)
-  "\n"))
+   (->typescript module)
+   "\n\n"
+   "export = derivable"
+   "\n"))
 
 
 
@@ -33,7 +35,7 @@
                  read-string
                  ast/parse-module)]
     (spit out-html-file (generate-module-docs module))
-    (spit out-ts-file (make-d-ts in-file module))
-    ))
+    (spit out-ts-file (make-d-ts in-file module))))
+
 
 (set! *main-cli-fn* -main)

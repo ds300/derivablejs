@@ -7,6 +7,7 @@
     "dist"
   ],
   "main": "dist/derivable.js",
+  "typings": "dist/derivable.d.ts",
   "typescript": {
     "definition": "dist/derivable.d.ts"
   },

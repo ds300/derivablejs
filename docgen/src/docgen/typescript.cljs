@@ -12,10 +12,10 @@
 
 (defn all->ts
   ([coll]
-    (reduce str (map ->typescript coll)))
+   (reduce str (map ->typescript coll)))
 
   ([coll depth]
-    (reduce str (map #(->typescript % depth) coll))))
+   (reduce str (map #(->typescript % depth) coll))))
 
 (defn render-type-args [type-args]
   (if (seq type-args)
@@ -101,7 +101,7 @@
   TypeScripty
   (->typescript [{:keys [name members]} depth]
     (str (space depth)
-         "declare module '" name "' " (render-members members depth))))
+         "declare module " name " " (render-members members depth))))
 
 (defn render-class-or-interface
   [type {:keys [name type-args members extends]} depth]

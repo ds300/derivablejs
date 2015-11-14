@@ -2,7 +2,7 @@
  * This TypeScript file was generated from derivable.api.edn.
  * Please change that file and re-run `grunt docs` to modify this file.
  */
-declare module 'derivable' {
+declare module derivable {
 
   export interface Derivable<T> {
 
@@ -158,3 +158,5 @@ declare module 'derivable' {
 
   function ticker(): Ticker;
 }
+
+export = derivable
