@@ -1,3 +1,11 @@
+## 0.9.3
+
+#### TypeScript .d.ts resolution/syntax fixed
+
+It seems like the typescript compiler now figures out how to get the typings
+for an npm module by interrogating the "typings" field in its project.json. It
+also seems like .d.ts files are now expected to explicitly declare an export.
+
 ## 0.9.2
 
 #### Use more conservative equality checks.
