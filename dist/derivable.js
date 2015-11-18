@@ -186,9 +186,14 @@ function gc_abort_sweep(node) {
 var parentsStack = [];
 
 function parents_capturingParents(f) {
+  var i = parentsStack.length;
   parentsStack.push([]);
-  f();
-  return parentsStack.pop();
+  try {
+    f();
+    return parentsStack[i];
+  } finally {
+    parentsStack.pop();
+  }
 }
 
 function parents_maybeCaptureParent(p) {
@@ -591,6 +596,11 @@ function derivable_createPrototype (D, opts) {
   return x;
 }
 
+var DEBUG_MODE = false;
+function derivation_setDebugMode(val) {
+  DEBUG_MODE = !!val;
+}
+
 function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
@@ -601,7 +611,17 @@ function derivation_createPrototype (D, opts) {
       var that = this,
           i;
       var newParents = parents_capturingParents(function () {
-        var newState = that._deriver();
+        var newState;
+        if (DEBUG_MODE) {
+          newState = that._deriver();
+        } else {
+          try {
+            newState = that._deriver();
+          } catch (e) {
+            console.error(that._stack);
+            throw e;
+          }
+        }
         that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
         that._value = newState;
       });
@@ -685,6 +705,10 @@ function derivation_construct(obj, deriver) {
   obj._state = gc_NEW;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
+
+  if (DEBUG_MODE) {
+    obj._stack = Error().stack;
+  }
   return obj;
 }
 
@@ -918,6 +942,7 @@ function constructModule (config) {
   var D = {
     transact: atom_transact,
     defaultEquals: util_equals,
+    setDebugMode: derivation_setDebugMode,
     transaction: atom_transaction,
     ticker: atom_ticker,
     Reactor: reactors_Reactor,
