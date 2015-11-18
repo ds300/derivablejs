@@ -6,6 +6,7 @@ function constructModule (config) {
   var D = {
     transact: atom_transact,
     defaultEquals: util_equals,
+    setDebugMode: util_setDebugMode,
     transaction: atom_transaction,
     ticker: atom_ticker,
     Reactor: reactors_Reactor,

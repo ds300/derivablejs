@@ -8,7 +8,17 @@ function derivation_createPrototype (D, opts) {
       var that = this,
           i;
       var newParents = parents_capturingParents(function () {
-        var newState = that._deriver();
+        var newState;
+        if (!util_DEBUG_MODE) {
+          newState = that._deriver();
+        } else {
+          try {
+            newState = that._deriver();
+          } catch (e) {
+            console.error(that._stack);
+            throw e;
+          }
+        }
         that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
         that._value = newState;
       });
@@ -92,5 +102,10 @@ function derivation_construct(obj, deriver) {
   obj._state = gc_NEW;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
+
+  if (util_DEBUG_MODE) {
+    obj._stack = Error().stack;
+  }
+
   return obj;
 }

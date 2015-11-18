@@ -149,6 +149,8 @@ declare module derivable {
 
   function defaultEquals(a: any, b: any): boolean;
 
+  function setDebugMode(debugMode: boolean): void;
+
   export interface Ticker {
 
     tick(): void;
