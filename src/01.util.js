@@ -59,3 +59,8 @@ var util_unique = Object.freeze({equals: function () { return false; }});
 function util_some (x) {
   return (x !== null) && (x !== void 0);
 }
+
+var util_DEBUG_MODE = false;
+function util_setDebugMode(val) {
+  util_DEBUG_MODE = !!val;
+}

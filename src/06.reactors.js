@@ -1,5 +1,5 @@
 function reactorBase (parent, control) {
-  return {
+  var base = {
     control: control,      // the actual object the user gets
     parent: parent,        // the parent derivable
     parentReactor: null,
@@ -11,7 +11,11 @@ function reactorBase (parent, control) {
     reacting: false,       // whether or not reaction function being invoked
     stopping: false,
     yielding: false,       // whether or not letting parentReactor react first
+  };
+  if (util_DEBUG_MODE) {
+    base.stack = Error().stack;
   }
+  return base;
 }
 var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
 
@@ -115,7 +119,16 @@ function force (base) {
     try {
       base.reacting = true;
       parentReactorStack.push(base);
-      base.control.react(base.parent._get());
+      if (!util_DEBUG_MODE) {
+        base.control.react(base.parent._get());
+      } else {
+        try {
+          base.control.react(base.parent._get());
+        } catch (e) {
+          console.error(base.stack);
+          throw e;
+        }
+      }
     } finally {
       parentReactorStack.pop();
       base.reacting = false;

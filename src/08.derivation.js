@@ -1,8 +1,3 @@
-var DEBUG_MODE = false;
-function derivation_setDebugMode(val) {
-  DEBUG_MODE = !!val;
-}
-
 function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
@@ -14,7 +9,7 @@ function derivation_createPrototype (D, opts) {
           i;
       var newParents = parents_capturingParents(function () {
         var newState;
-        if (!DEBUG_MODE) {
+        if (!util_DEBUG_MODE) {
           newState = that._deriver();
         } else {
           try {
@@ -108,7 +103,7 @@ function derivation_construct(obj, deriver) {
   obj._type = types_DERIVATION;
   obj._value = util_unique;
 
-  if (DEBUG_MODE) {
+  if (util_DEBUG_MODE) {
     obj._stack = Error().stack;
   }
 

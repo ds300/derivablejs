@@ -73,6 +73,11 @@ function util_some (x) {
   return (x !== null) && (x !== void 0);
 }
 
+var util_DEBUG_MODE = false;
+function util_setDebugMode(val) {
+  util_DEBUG_MODE = !!val;
+}
+
 // node modes
 var gc_NEW = 0,
     gc_CHANGED = 1,
@@ -290,7 +295,7 @@ function transactions_ticker (ctx, txnConstructor) {
 }
 
 function reactorBase (parent, control) {
-  return {
+  var base = {
     control: control,      // the actual object the user gets
     parent: parent,        // the parent derivable
     parentReactor: null,
@@ -302,7 +307,11 @@ function reactorBase (parent, control) {
     reacting: false,       // whether or not reaction function being invoked
     stopping: false,
     yielding: false,       // whether or not letting parentReactor react first
+  };
+  if (util_DEBUG_MODE) {
+    base.stack = Error().stack;
   }
+  return base;
 }
 var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
 
@@ -406,7 +415,16 @@ function force (base) {
     try {
       base.reacting = true;
       parentReactorStack.push(base);
-      base.control.react(base.parent._get());
+      if (!util_DEBUG_MODE) {
+        base.control.react(base.parent._get());
+      } else {
+        try {
+          base.control.react(base.parent._get());
+        } catch (e) {
+          console.error(base.stack);
+          throw e;
+        }
+      }
     } finally {
       parentReactorStack.pop();
       base.reacting = false;
@@ -596,11 +614,6 @@ function derivable_createPrototype (D, opts) {
   return x;
 }
 
-var DEBUG_MODE = false;
-function derivation_setDebugMode(val) {
-  DEBUG_MODE = !!val;
-}
-
 function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
@@ -612,7 +625,7 @@ function derivation_createPrototype (D, opts) {
           i;
       var newParents = parents_capturingParents(function () {
         var newState;
-        if (!DEBUG_MODE) {
+        if (!util_DEBUG_MODE) {
           newState = that._deriver();
         } else {
           try {
@@ -706,7 +719,7 @@ function derivation_construct(obj, deriver) {
   obj._type = types_DERIVATION;
   obj._value = util_unique;
 
-  if (DEBUG_MODE) {
+  if (util_DEBUG_MODE) {
     obj._stack = Error().stack;
   }
 
@@ -943,7 +956,7 @@ function constructModule (config) {
   var D = {
     transact: atom_transact,
     defaultEquals: util_equals,
-    setDebugMode: derivation_setDebugMode,
+    setDebugMode: util_setDebugMode,
     transaction: atom_transaction,
     ticker: atom_ticker,
     Reactor: reactors_Reactor,
