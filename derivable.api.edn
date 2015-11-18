@@ -870,6 +870,16 @@
     "DerivableJS's inbuilt equality-checking function. Note that calling
     {{withEquality}} will not affect the value of this property.")
 
+  (setDebugMode [debugMode boolean] void
+    "Enable or disable debug mode.
+
+    This causes `Error`s to be created (but not thrown) alongside
+    derivations in order to capture the stack trace at their point of instantiation.
+    In case a derivation throws an error itself when being computed, its
+    instantiation stack trace is logged such that it becomes easy to determine
+    exactly which derivation is throwing. Creating errors is quite slow, so you
+    probably should not keep this enabled for production.")
+
   (:interface
     Ticker
     "Tickers provide a facility for running reactions globally at custom

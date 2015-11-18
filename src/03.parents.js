@@ -1,9 +1,14 @@
 var parentsStack = [];
 
 function parents_capturingParents(f) {
+  var i = parentsStack.length;
   parentsStack.push([]);
-  f();
-  return parentsStack.pop();
+  try {
+    f();
+    return parentsStack[i];
+  } finally {
+    parentsStack.pop();
+  }
 }
 
 function parents_maybeCaptureParent(p) {

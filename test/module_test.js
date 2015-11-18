@@ -445,3 +445,13 @@ describe("the destruct function", () => {
     [a, b, c] = _.destruct(s, aKey, 'b', cKey);
   });
 });
+
+describe("debug mode", () => {
+  it("causes derivations to store the stacktraces of their instantiation", () =>{
+    const d = _.derivation(() => 0);
+    assert(!d._stack);
+    _.setDebugMode(true);
+    const e = _.derivation(() => {throw Error()});
+    assert(e._stack);
+  })
+});

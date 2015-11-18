@@ -110,8 +110,6 @@ So really each time an atom is changed, its entire derivation graph is likely to
 
 *Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
 
-Another drawback, a side-effect of the laziness, is that stack traces can be rather opaque when your reactions throw errors. There should be ways to mitigate this for debugging purposes, but I haven't thought about it much yet.
-
 A final potential drawback is that DerivableJS requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming directly from an OO background.
 
 ## Usage
@@ -121,15 +119,20 @@ DerivableJS is still quite new, but has been used for serious stuff in productio
 ##### API
 [See Here](https://ds300.github.com/derivablejs)
 
-##### Examples (wip)
-If you want to get a really good feel for what DerivableJS can do, I recommend checking out the [Routing Walkthrough](https://github.com/ds300/derivablejs/tree/master/examples/routing/README.md), which is presented in TypeScript to aid readability.
+##### Debugging
 
-Others:
+Due to inversion of control, the stack traces you get when your derivations throw errors can be totally unhelpful. There is a nice way to solve this problem for dev time. See [setDebugMode](https://ds300.github.com/derivablejs/#derivable-setDebugMode) for more info.
 
-- [TodoMVC w/React](https://ds300.github.com/derivablejs/examples/todo) ([source](https://github.com/ds300/derivablejs/tree/master/examples/todo))
-- [Null/Error propagation](https://github.com/ds300/derivablejs/tree/master/examples/maybe/README.md)
-- [Mapping over collections with caching](https://github.com/ds300/derivablejs/tree/master/examples/caching/README.md)
-- [Example of how to do History](https://github.com/ds300/derivablejs/tree/master/examples/history)
+##### Examples (very wip)
+
+The best example of writing good code with Derivables right now is the [talk demo](https://github.com/ds300/derivables-talk-demo), which is presented as a 'diff tutorial' and should be read from the initial commit.
+
+The next best is the [routing walkthrough](https://github.com/ds300/derivablejs/tree/master/examples/routing/README.md)
+
+And there are a few others [here](https://github.com/ds300/derivablejs/tree/master/examples/) too.
+
+More coming!
+
 
 ##### npm
 Available as `derivable`.
