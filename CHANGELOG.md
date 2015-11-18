@@ -1,3 +1,13 @@
+## 0.10.0
+
+#### Debug Mode
+
+Due to inversion of control, the stack traces you get when your derivations or reactors throw errors can be totally unhelpful. This pull request solves that issue by enabling JS Errors to be created (but not thrown) when derivations are instantiated in order to capture the stack trace at the point of instantiation. Then if a derivation throws an error, its instantiation stack trace is logged so we can easily identify exactly which derivation threw the error, and which derivations the error propagated up through.
+
+Creating errors is quite expensive, and can cause noticeable slowdown if there are enough derivations being instantiated, so this mode can be toggled on/off for dev/prod respectively. It is off by default.
+
+See the top-level setDebugMode function.
+
 ## 0.9.3
 
 #### TypeScript .d.ts resolution/syntax fixed

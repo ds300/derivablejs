@@ -1,6 +1,6 @@
 {
   "name": "derivable",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "Functional Reactive State for JavaScript & TypeScript",
   "author": "David Sheldrick",
   "files": [
