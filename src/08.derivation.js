@@ -14,7 +14,7 @@ function derivation_createPrototype (D, opts) {
           i;
       var newParents = parents_capturingParents(function () {
         var newState;
-        if (DEBUG_MODE) {
+        if (!DEBUG_MODE) {
           newState = that._deriver();
         } else {
           try {
@@ -111,5 +111,6 @@ function derivation_construct(obj, deriver) {
   if (DEBUG_MODE) {
     obj._stack = Error().stack;
   }
+
   return obj;
 }
