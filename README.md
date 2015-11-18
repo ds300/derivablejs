@@ -15,7 +15,8 @@ DerivableJS is a JavaScript implementation of **Derivables**.
   - [Tradeoffs](#tradeoffs)
 - [Usage](#usage)
       - [API](#api)
-      - [Examples (wip)](#examples-wip)
+      - [Debugging](#debugging)
+      - [Examples (very wip)](#examples-very-wip)
       - [npm](#npm)
       - [Browser](#browser)
       - [Batteries Not Included](#batteries-not-included)
@@ -167,7 +168,7 @@ I plan to wait for the project to pick up a bit more steam so I can get serious 
 1. <s>Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.</s> now about 3.6k, but could probably get smaller still
 1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactors rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
 2. Investigate whether asynchronous transactions are possible, or indeed desirable.
-3. Investigate debugging support. One idea is to instantiate an error A for every derivation and wrap the derivation function in some function which catches other errors but throws A so you get a stack trace pointing to where the derivation was defined.
+3. <s>Investigate debugging support.</s> - implemented in 0.10.0
 4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness DerivableJS currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
 
 ## Contributing
