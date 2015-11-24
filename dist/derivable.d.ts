@@ -22,6 +22,9 @@ declare module derivable {
     react(r: Reactor<T>): Reactor<T>;
     react(f: (value: T) => void): Reactor<T>;
 
+    reactWhen(cond: Derivable<any>, f: (value: T) => void): Reactor<T>;
+    reactWhen(cond: Derivable<any>, r: Reactor<T>): Reactor<T>;
+
     get(): T;
 
     is(other: any): Derivable<boolean>;

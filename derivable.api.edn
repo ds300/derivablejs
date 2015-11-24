@@ -144,9 +144,18 @@
       ```
       let r = thing.reactor(f);
 
-      cond.react(c => c ? r.start().force() : r.stop());
+      // cond is cast to a boolean before being reacted to
+      cond.derive(c => !!c).react(c => {
+        if (c) {
+          r.start().force();
+        } else {
+          r.stop();
+        }
+      });
       ```
       ")
+
+    (reactWhen [cond (Derivable any), r (Reactor T)] (Reactor T))
 
     (get [] T
       "Returns the current value of this derivable.
