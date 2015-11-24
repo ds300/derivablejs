@@ -552,6 +552,18 @@ function derivable_createPrototype (D, opts) {
       return this.reactor(f).start().force();
     },
 
+    reactWhen: function (cond, f) {
+      var result = this.reactor(f);
+      cond.react(function (cond) {
+        if (cond) {
+          result.start().force();
+        } else {
+          result.stop();
+        }
+      });
+      return result;
+    },
+
     get: function () {
       parents_maybeCaptureParent(this);
       return this._get(); // abstract protected method, in Java parlance

@@ -509,3 +509,41 @@ describe("dependent reactors", () => {
     assert.throws(() => B.start().force());
   });
 });
+
+describe('the `reactWhen` method', () => {
+  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
+    const $Cond = atom(false);
+    const $N = atom(0);
+    const inc = x => x + 1;
+
+    let i = 0;
+    $N.reactWhen($Cond, n => i++);
+
+    assert.strictEqual(i, 0);
+
+    $N.swap(inc);
+
+    assert.strictEqual(i, 0);
+
+    $Cond.set(true);
+
+    assert.strictEqual(i, 1);
+
+    $N.swap(inc);
+
+    assert.strictEqual(i, 2);
+
+    $N.swap(inc);
+    $N.swap(inc);
+
+    assert.strictEqual(i, 4);
+
+    // it uses truthy/falsiness
+    $Cond.set(0);
+
+    $N.swap(inc);
+    $N.swap(inc);
+    
+    assert.strictEqual(i, 4);
+  })
+})
