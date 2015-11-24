@@ -136,6 +136,18 @@
       derivable.reactor(f).start().force();
       ```")
 
+    (reactWhen [cond (Derivable any), f (=> [value T] void)] (Reactor T)
+      "As {{react}} but the resulting reactor is automatically started and
+      stopped depending on the value of {{cond}}. i.e. it will be active while
+      {{cond}} is truthy, and inactive while {{cond}} is falsey. Equivalent to:
+
+      ```
+      let r = thing.reactor(f);
+
+      cond.react(c => c ? r.start().force() : r.stop());
+      ```
+      ")
+
     (get [] T
       "Returns the current value of this derivable.
 

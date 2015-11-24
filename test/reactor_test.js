@@ -543,7 +543,29 @@ describe('the `reactWhen` method', () => {
 
     $N.swap(inc);
     $N.swap(inc);
-    
+
     assert.strictEqual(i, 4);
-  })
-})
+  });
+
+  it('casts the condition to a boolean', () => {
+    const $Cond = atom("blub");
+    const $N = atom(0);
+    const inc = x => x + 1;
+
+    let i = 0;
+
+    $N.reactWhen($Cond, n => i++);
+
+    assert.strictEqual(i, 1);
+
+    $N.swap(inc);
+    assert.strictEqual(i, 2);
+    $N.swap(inc);
+    $N.swap(inc);
+    $N.swap(inc);
+    assert.strictEqual(i, 5);
+    $Cond.set("steve");
+    // sould cause .force() if not casting to boolean, which would inc i
+    assert.strictEqual(i, 5);
+  });
+});

@@ -64,7 +64,8 @@ function derivable_createPrototype (D, opts) {
 
     reactWhen: function (cond, f) {
       var result = this.reactor(f);
-      cond.react(function (cond) {
+      // cast cond to boolean
+      cond.derive(function (c) { return !!c; }).react(function (cond) {
         if (cond) {
           result.start().force();
         } else {
