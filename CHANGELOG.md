@@ -1,3 +1,29 @@
+## 0.11.0
+
+#### `Derivable#reactWhen` method
+
+A very common pattern I've needed in my use of DerivableJS has been
+starting and stopping some reactor based on the value of some piece
+of state. [Dependent Reactors](https://github.com/ds300/derivablejs/issues/16)
+were implemented for this very reason, and it seems to be an elegant way to
+express many kinds of effectful logic.
+
+This new method enables one to avoid giving the dependent reactor
+a lexical binding. e.g. before you would do this:
+
+    const r = $thing.reactor(doEffects);
+
+    $condition.react(cond => {
+      if (cond) r.start.force();
+      else r.stop();
+    };
+
+now you can just write:
+
+    $thing.reactWhen($condition, doEffects);
+
+lemon squeezy
+
 ## 0.10.0
 
 #### Debug Mode
