@@ -130,6 +130,8 @@ The best example of writing good code with Derivables right now is the [talk dem
 
 The next best is the [routing walkthrough](https://github.com/ds300/derivablejs/tree/master/examples/routing/README.md)
 
+I've also implemented a solution to @staltz's [flux challenge](https://github.com/staltz/flux-challenge/tree/master/submissions/ds300).
+
 And there are a few others [here](https://github.com/ds300/derivablejs/tree/master/examples/) too.
 
 More coming!
