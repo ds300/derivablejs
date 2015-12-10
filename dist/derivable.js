@@ -746,8 +746,16 @@ function mutable_createPrototype (D, _) {
       args[0] = this.get();
       return this.set(f.apply(null, args));
     },
-    lens: function (lensDescriptor) {
-      return D.lens(this, lensDescriptor);
+    lens: function (monoLensDescriptor) {
+      var that = this;
+      return D.lens({
+        get: function () {
+          return monoLensDescriptor.get(that.get());
+        },
+        set: function (val) {
+          that.set(monoLensDescriptor.set(that.get(), val));
+        }
+      });
     }
   }
 }
@@ -755,23 +763,18 @@ function mutable_createPrototype (D, _) {
 function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return D.lens(this._parent, {
-        get: this._getter,
-        set: this._setter
-      });
+      return D.lens(this._lensDescriptor);
     },
 
     set: function (value) {
-      this._parent.set(this._setter(this._parent._get(), value));
+      this._lensDescriptor.set(value);
       return this;
     }
   }
 }
 
-function lens_construct(derivation, parent, descriptor) {
-  derivation._getter = descriptor.get;
-  derivation._setter = descriptor.set;
-  derivation._parent = parent;
+function lens_construct(derivation, descriptor) {
+  derivation._lensDescriptor = descriptor;
   derivation._type = types_LENS;
 
   return derivation;
@@ -1061,15 +1064,16 @@ function constructModule (config) {
    */
   D.lens = function (parent, descriptor) {
     var lens = Object.create(Lens);
-    return lens_construct(
-      derivation_construct(
-        lens,
-        function () { return descriptor.get(parent.get()); }
-      ),
-      parent,
-      descriptor
-    );
-  };
+    if (arguments.length === 1) {
+      descriptor = parent;
+      return lens_construct(
+        derivation_construct(lens, descriptor.get),
+        descriptor
+      );
+    } else {
+      return parent.lens(descriptor);
+    }
+  }
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.

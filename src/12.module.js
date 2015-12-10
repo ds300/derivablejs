@@ -98,15 +98,16 @@ function constructModule (config) {
    */
   D.lens = function (parent, descriptor) {
     var lens = Object.create(Lens);
-    return lens_construct(
-      derivation_construct(
-        lens,
-        function () { return descriptor.get(parent.get()); }
-      ),
-      parent,
-      descriptor
-    );
-  };
+    if (arguments.length === 1) {
+      descriptor = parent;
+      return lens_construct(
+        derivation_construct(lens, descriptor.get),
+        descriptor
+      );
+    } else {
+      return parent.lens(descriptor);
+    }
+  }
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.
