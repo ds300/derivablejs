@@ -50,6 +50,29 @@ function constructModule (config) {
   };
 
   /**
+   * Returns a copy of f which runs atomically
+   */
+  D.atomic = function (f) {
+    return function () {
+      var result;
+      var that = this;
+      var args = arguments;
+      D.atomically(function () {
+        result = f.apply(that, arguments);
+      });
+      return result;
+    }
+  };
+
+  D.atomically = function (f) {
+    if (transactions_inTransaction()) {
+      f();
+    } else {
+      D.transact(f);
+    }
+  };
+
+  /**
    * Sets the e's state to be f applied to e's current state and args
    */
   D.swap = function (atom, f) {
