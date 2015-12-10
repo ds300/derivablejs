@@ -5,7 +5,9 @@ function lens_createPrototype(D, _) {
     },
 
     set: function (value) {
-      this._lensDescriptor.set(value);
+      D.atomically(function () {
+        this._lensDescriptor.set(value);
+      });
       return this;
     }
   }
