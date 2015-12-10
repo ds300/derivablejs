@@ -461,3 +461,36 @@ describe("debug mode", () => {
     _.setDebugMode(false);
   })
 });
+
+describe('the atomically function', () => {
+  it('creates a transaction if not already in a transaction', () => {
+    const $A = atom('a');
+    let numReactions = 0;
+    $A.reactor(() => numReactions++).start();
+    assert.strictEqual(numReactions, 0);
+
+    _.atomically(() => {
+      $A.set('b');
+      assert.strictEqual(numReactions, 0);
+    });
+    assert.strictEqual(numReactions, 1);
+  });
+
+  it("doesn't create new transactions if already in a transaction", () => {
+    const $A = atom('a');
+
+    _.transact(() => {
+      try {
+        _.atomically(() => {
+          $A.set('b');
+          assert.strictEqual($A.get(), 'b');
+          throw new Error();
+        });
+      } catch (ignored) {}
+      // no transaction created so change to $A persists
+      assert.strictEqual($A.get(), 'b');
+    });
+    assert.strictEqual($A.get(), 'b');
+
+  });
+});
