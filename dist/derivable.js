@@ -767,7 +767,9 @@ function lens_createPrototype(D, _) {
     },
 
     set: function (value) {
-      this._lensDescriptor.set(value);
+      D.atomically(function () {
+        this._lensDescriptor.set(value);
+      });
       return this;
     }
   }
@@ -1013,6 +1015,29 @@ function constructModule (config) {
    */
   D.atom = function (val) {
     return atom_construct(Object.create(Atom), val);
+  };
+
+  /**
+   * Returns a copy of f which runs atomically
+   */
+  D.atomic = function (f) {
+    return function () {
+      var result;
+      var that = this;
+      var args = arguments;
+      D.atomically(function () {
+        result = f.apply(that, arguments);
+      });
+      return result;
+    }
+  };
+
+  D.atomically = function (f) {
+    if (transactions_inTransaction()) {
+      f();
+    } else {
+      D.transact(f);
+    }
   };
 
   /**

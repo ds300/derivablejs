@@ -58,7 +58,7 @@ function constructModule (config) {
       var that = this;
       var args = arguments;
       D.atomically(function () {
-        result = f.apply(that, arguments);
+        result = f.apply(that, args);
       });
       return result;
     }
