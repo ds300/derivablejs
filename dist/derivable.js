@@ -767,8 +767,9 @@ function lens_createPrototype(D, _) {
     },
 
     set: function (value) {
+      var that = this;
       D.atomically(function () {
-        this._lensDescriptor.set(value);
+        that._lensDescriptor.set(value);
       });
       return this;
     }
@@ -789,6 +790,10 @@ function processReactorQueue (rq) {
 }
 
 var TXN_CTX = transactions_newContext();
+
+function atom_inTxn () {
+  return transactions_inTransaction(TXN_CTX)
+}
 
 var NOOP_ARRAY = {push: function () {}};
 
@@ -815,7 +820,7 @@ util_extend(TransactionState.prototype, {
   onCommit: function () {
     var i, atomValueTuple;
     var keys = util_keys(this.inTxnValues);
-    if (transactions_inTransaction(TXN_CTX)) {
+    if (atom_inTxn()) {
       // push in-txn vals up to current txn
       for (i = keys.length; i--;) {
         atomValueTuple = this.inTxnValues[keys[i]];
@@ -839,7 +844,7 @@ util_extend(TransactionState.prototype, {
   },
 
   onAbort: function () {
-    if (!transactions_inTransaction(TXN_CTX)) {
+    if (!atom_inTxn()) {
       var keys = util_keys(this.inTxnValues);
       for (var i = keys.length; i--;) {
         gc_abort_sweep(this.inTxnValues[keys[i]][0]);
@@ -890,7 +895,7 @@ function atom_createPrototype (D, opts) {
       if (!opts.equals(value, this._value)) {
         this._state = gc_CHANGED;
 
-        if (transactions_inTransaction(TXN_CTX)) {
+        if (atom_inTxn()) {
           setState(transactions_currentTransaction(TXN_CTX), this, value);
         } else {
           this._value = value;
@@ -905,7 +910,7 @@ function atom_createPrototype (D, opts) {
     },
 
     _get: function () {
-      if (transactions_inTransaction(TXN_CTX)) {
+      if (atom_inTxn()) {
         return getState(transactions_currentTransaction(TXN_CTX), this);
       }
       return this._value;
@@ -1026,14 +1031,14 @@ function constructModule (config) {
       var that = this;
       var args = arguments;
       D.atomically(function () {
-        result = f.apply(that, arguments);
+        result = f.apply(that, args);
       });
       return result;
     }
   };
 
   D.atomically = function (f) {
-    if (transactions_inTransaction()) {
+    if (atom_inTxn()) {
       f();
     } else {
       D.transact(f);

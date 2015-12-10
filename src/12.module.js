@@ -65,7 +65,7 @@ function constructModule (config) {
   };
 
   D.atomically = function (f) {
-    if (transactions_inTransaction()) {
+    if (atom_inTxn()) {
       f();
     } else {
       D.transact(f);
