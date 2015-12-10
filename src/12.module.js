@@ -64,7 +64,7 @@ function constructModule (config) {
     }
   };
 
-  D.atomically = function (f, blah) {
+  D.atomically = function (f) {
     if (atom_inTxn()) {
       f();
     } else {
