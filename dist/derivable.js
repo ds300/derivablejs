@@ -746,8 +746,16 @@ function mutable_createPrototype (D, _) {
       args[0] = this.get();
       return this.set(f.apply(null, args));
     },
-    lens: function (lensDescriptor) {
-      return D.lens(this, lensDescriptor);
+    lens: function (monoLensDescriptor) {
+      var that = this;
+      return D.lens({
+        get: function () {
+          return monoLensDescriptor.get(that.get());
+        },
+        set: function (val) {
+          that.set(monoLensDescriptor.set(that.get(), val));
+        }
+      });
     }
   }
 }
@@ -755,23 +763,21 @@ function mutable_createPrototype (D, _) {
 function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return D.lens(this._parent, {
-        get: this._getter,
-        set: this._setter
-      });
+      return D.lens(this._lensDescriptor);
     },
 
     set: function (value) {
-      this._parent.set(this._setter(this._parent._get(), value));
+      var that = this;
+      D.atomically(function () {
+        that._lensDescriptor.set(value);
+      });
       return this;
     }
   }
 }
 
-function lens_construct(derivation, parent, descriptor) {
-  derivation._getter = descriptor.get;
-  derivation._setter = descriptor.set;
-  derivation._parent = parent;
+function lens_construct(derivation, descriptor) {
+  derivation._lensDescriptor = descriptor;
   derivation._type = types_LENS;
 
   return derivation;
@@ -784,6 +790,10 @@ function processReactorQueue (rq) {
 }
 
 var TXN_CTX = transactions_newContext();
+
+function atom_inTxn () {
+  return transactions_inTransaction(TXN_CTX)
+}
 
 var NOOP_ARRAY = {push: function () {}};
 
@@ -810,7 +820,7 @@ util_extend(TransactionState.prototype, {
   onCommit: function () {
     var i, atomValueTuple;
     var keys = util_keys(this.inTxnValues);
-    if (transactions_inTransaction(TXN_CTX)) {
+    if (atom_inTxn()) {
       // push in-txn vals up to current txn
       for (i = keys.length; i--;) {
         atomValueTuple = this.inTxnValues[keys[i]];
@@ -834,7 +844,7 @@ util_extend(TransactionState.prototype, {
   },
 
   onAbort: function () {
-    if (!transactions_inTransaction(TXN_CTX)) {
+    if (!atom_inTxn()) {
       var keys = util_keys(this.inTxnValues);
       for (var i = keys.length; i--;) {
         gc_abort_sweep(this.inTxnValues[keys[i]][0]);
@@ -885,7 +895,7 @@ function atom_createPrototype (D, opts) {
       if (!opts.equals(value, this._value)) {
         this._state = gc_CHANGED;
 
-        if (transactions_inTransaction(TXN_CTX)) {
+        if (atom_inTxn()) {
           setState(transactions_currentTransaction(TXN_CTX), this, value);
         } else {
           this._value = value;
@@ -900,7 +910,7 @@ function atom_createPrototype (D, opts) {
     },
 
     _get: function () {
-      if (transactions_inTransaction(TXN_CTX)) {
+      if (atom_inTxn()) {
         return getState(transactions_currentTransaction(TXN_CTX), this);
       }
       return this._value;
@@ -1013,6 +1023,29 @@ function constructModule (config) {
   };
 
   /**
+   * Returns a copy of f which runs atomically
+   */
+  D.atomic = function (f) {
+    return function () {
+      var result;
+      var that = this;
+      var args = arguments;
+      D.atomically(function () {
+        result = f.apply(that, args);
+      });
+      return result;
+    }
+  };
+
+  D.atomically = function (f) {
+    if (atom_inTxn()) {
+      f();
+    } else {
+      D.transact(f);
+    }
+  };
+
+  /**
    * Sets the e's state to be f applied to e's current state and args
    */
   D.swap = function (atom, f) {
@@ -1061,15 +1094,16 @@ function constructModule (config) {
    */
   D.lens = function (parent, descriptor) {
     var lens = Object.create(Lens);
-    return lens_construct(
-      derivation_construct(
-        lens,
-        function () { return descriptor.get(parent.get()); }
-      ),
-      parent,
-      descriptor
-    );
-  };
+    if (arguments.length === 1) {
+      descriptor = parent;
+      return lens_construct(
+        derivation_construct(lens, descriptor.get),
+        descriptor
+      );
+    } else {
+      return parent.lens(descriptor);
+    }
+  }
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.

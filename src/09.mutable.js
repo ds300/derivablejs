@@ -5,8 +5,16 @@ function mutable_createPrototype (D, _) {
       args[0] = this.get();
       return this.set(f.apply(null, args));
     },
-    lens: function (lensDescriptor) {
-      return D.lens(this, lensDescriptor);
+    lens: function (monoLensDescriptor) {
+      var that = this;
+      return D.lens({
+        get: function () {
+          return monoLensDescriptor.get(that.get());
+        },
+        set: function (val) {
+          that.set(monoLensDescriptor.set(that.get(), val));
+        }
+      });
     }
   }
 }

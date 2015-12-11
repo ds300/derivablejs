@@ -50,6 +50,29 @@ function constructModule (config) {
   };
 
   /**
+   * Returns a copy of f which runs atomically
+   */
+  D.atomic = function (f) {
+    return function () {
+      var result;
+      var that = this;
+      var args = arguments;
+      D.atomically(function () {
+        result = f.apply(that, args);
+      });
+      return result;
+    }
+  };
+
+  D.atomically = function (f) {
+    if (atom_inTxn()) {
+      f();
+    } else {
+      D.transact(f);
+    }
+  };
+
+  /**
    * Sets the e's state to be f applied to e's current state and args
    */
   D.swap = function (atom, f) {
@@ -98,15 +121,16 @@ function constructModule (config) {
    */
   D.lens = function (parent, descriptor) {
     var lens = Object.create(Lens);
-    return lens_construct(
-      derivation_construct(
-        lens,
-        function () { return descriptor.get(parent.get()); }
-      ),
-      parent,
-      descriptor
-    );
-  };
+    if (arguments.length === 1) {
+      descriptor = parent;
+      return lens_construct(
+        derivation_construct(lens, descriptor.get),
+        descriptor
+      );
+    } else {
+      return parent.lens(descriptor);
+    }
+  }
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.

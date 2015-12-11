@@ -67,4 +67,48 @@ describe("lenses", () => {
 
     assert.strictEqual(3.9134, num.get());
   });
-})
+});
+
+describe('composite lenses', () => {
+  it('allow multiple atoms to be lensed over', () => {
+    const $FirstName = atom('John');
+    const $LastName = atom('Steinbeck');
+    const $Name = _.lens({
+      get () {
+        return `${$FirstName.get()} ${$LastName.get()}`;
+      },
+      set (val) {
+        const [first, last] = val.split(' ');
+        $FirstName.set(first);
+        $LastName.set(last);
+      }
+    });
+
+    assert.strictEqual($Name.get(), 'John Steinbeck');
+
+    $Name.set('James Joyce');
+    assert.strictEqual($Name.get(), 'James Joyce');
+    assert.strictEqual($FirstName.get(), 'James');
+    assert.strictEqual($LastName.get(), 'Joyce');
+  });
+
+  it('runs `set` opeartions atomically', () => {
+    const $A = atom('a');
+    const $B = atom('b');
+
+    let numReactions = 0;
+    $A.reactor(() => numReactions++).start();
+    $B.reactor(() => numReactions++).start();
+
+    _.lens({
+      get () {},
+      set () {
+        $A.set('A');
+        assert.strictEqual(numReactions, 0);
+        $B.set('B');
+        assert.strictEqual(numReactions, 0);
+      }
+    }).set();
+    assert.strictEqual(numReactions, 2);
+  });
+});
