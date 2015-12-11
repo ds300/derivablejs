@@ -62,6 +62,13 @@ declare module derivable {
     set(source: ParentType, value: ChildType): ParentType;
   }
 
+  export interface CompositeLens<T> {
+
+    get(): T;
+
+    set(value: T): void;
+  }
+
   export class Reactor<T> {
 
     constructor ();

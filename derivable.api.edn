@@ -433,6 +433,36 @@
 
       Called with `this` set to `null`."))
 
+  (:interface (CompositeLens T)
+    "Respresents a lens over one or more atoms, using lexical closures to
+    imperatively retrieve and set values from/to the atoms in question.
+
+    For use with the {{lens}} top level function.
+
+    ```javascript
+    const $FirstName = atom('John');
+    const $LastName = atom('Steinbeck');
+
+    const $Name = lens({
+      get: () => $FirstName.get() + ' ' + $LastName.get(),
+      set: (val) => {
+        const [first, last] = val.split(' ');
+        $FirstName.set(first);
+        $LastName.set(last);
+      }
+    });
+
+    $Name.get(); // => 'John Steinbeck'
+
+    $Name.set('James Joyce').
+
+    $LastName.get(); // => 'Joyce'
+    ```"
+    (get [] T
+      "Should dereference one or more derivables to return a value of type T")
+    (set [value T] void
+      "Should propagate {{value}} back up to any relevant atoms."))
+
   (:class (Reactor T)
     "A Reactor is a stateful object which can be attached to a particular
     derivable. Changes in this derivable will cause a Reactor to be executed."
