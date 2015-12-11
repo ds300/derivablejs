@@ -94,9 +94,40 @@ declare module derivable {
 
   function atom<T>(value: T): Atom<T>;
 
-  function swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
-
   function derivation<T>(f: () => T): Derivable<T>;
+
+  function lens<T>(lens: CompositeLens<T>): Atom<T>;
+  function lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
+
+  function transact(f: () => void): void;
+
+  function transaction(f: (...args: any[]) => any): (...args: any[]) => any;
+
+  function atomically(f: () => void): void;
+
+  function atomic(f: (...args: any[]) => any): (...args: any[]) => any;
+
+  function struct(obj: any): Derivable<any>;
+
+  function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
+
+  function lookup(obj: Derivable<any>, key: any): Derivable<any>;
+
+  function unpack(obj: any): any;
+
+  function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
+
+  function isAtom(obj: any): boolean;
+
+  function isDerivable(obj: any): boolean;
+
+  function isDerivation(obj: any): boolean;
+
+  function isLensed(obj: any): boolean;
+
+  function isReactor(obj: any): boolean;
+
+  function swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
 
   function derive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
   function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
@@ -108,18 +139,6 @@ declare module derivable {
   function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
   function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
   function mDerive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
-
-  function transact(f: () => void): void;
-
-  function transaction(f: (...args: any[]) => any): (...args: any[]) => any;
-
-  function unpack(obj: any): any;
-
-  function struct(obj: any): Derivable<any>;
-
-  function lookup(obj: Derivable<any>, key: any): Derivable<any>;
-
-  function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
 
   function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
@@ -140,21 +159,6 @@ declare module derivable {
   function get<T>(d: Derivable<T>): T;
 
   function set<A, B>(a: Atom<A>, v: B): Atom<B>;
-
-  function lens<T>(lens: CompositeLens<T>): Atom<T>;
-  function lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
-
-  function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
-
-  function isAtom(obj: any): boolean;
-
-  function isDerivable(obj: any): boolean;
-
-  function isDerivation(obj: any): boolean;
-
-  function isLensed(obj: any): boolean;
-
-  function isReactor(obj: any): boolean;
 
   function withEquality(equals: (a: any, b: any) => boolean): any;
 

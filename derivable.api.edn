@@ -509,9 +509,7 @@
     (onStop [] void
       (:note "*Abstract*")
       "Called when the reactor is stopped. Use for releasing resources."
-      (:see-also stop start))
-
-    )
+      (:see-also stop start)))
 
   ((atom T) [value T] (Atom T)
     "Returns a new {{Atom}} containing {{value}}.
@@ -522,12 +520,6 @@
     myAtom.get();
     // => `a string`
     ```")
-
-  ((swap A B) [atom (Atom A) f (=> [a A &args [any]] B) &args [any]] B
-    "Changes the contents of {{atom}} to be the result of {{f}} applied to
-    {{atom}}'s current value and {{&args}}. Returns the new value."
-
-    (:see-also Atom::swap))
 
   ((derivation T) [f (=> [] T)] (Derivable T)
     "Returns a new derivable encapsulating the result returned by `f` which
@@ -548,59 +540,22 @@
 
     ```")
 
-  ((derive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
+  ((lens T) [lens (CompositeLens T)] (Atom T)
+    "Creates a new lensed atom using the given composite lens descriptor."
+    (:see-also CompositeLens))
 
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  (derive [strings [string] &things [any]] (Derivable string)
-    "Tagged template string version of derive. Returns a derivable which
-    represents {{strings}} interploated with {{&things}}, which latter may
-    contain derivables.
+  ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
+    "A functional interface to the {{Atom::lens}} method.
 
     ```javascript
-    const myAtom = atom(`what`),
-          myConstant = 4;
+    lens(a, l);
+    ```
 
-    const myString =
-      derive`Atom: '${myAtom}', constant: ${myConstant}.`;
+    is equivalent to
 
-    myString.get();
-    // => `Atom: 'what', constant: 4.`
-
-    myAtom.set(`nothing`);
-
-    myString.get();
-    // => `Atom: 'nothing', constant: 4.`
-
+    ```javascript
+    a.lens(l);
     ```")
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
 
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
@@ -668,8 +623,15 @@
     ```"
     (:see-also transact))
 
-  (unpack [obj any] any
-    "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
+  (atomically [f (=> [] void)] void
+    "as {{transact}} but will not create a (nested) transaction if already in
+    a transaction.")
+
+  (atomic
+    [f (=> [&args [any]] any)]
+    (=> [&args [any]] any)
+    "as {{transaction}} but will not create a (nested) transaction if the
+    returned function is invoked within a transaction.")
 
   (struct [obj any] (Derivable any)
     "Given some plain JavaScript `Object` or `Array` (or some nested combination thereof)
@@ -697,24 +659,6 @@
     // $> A stands for Andrew
     // $> B stands for Bernice
     // $> C stands for Chris
-    ```")
-
-  (lookup [obj (Derivable any) key any] (Derivable any)
-    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
-    {{key}} may be derivable. e.g.
-
-    ```javascript
-    const obj = atom({k: `v`});
-    const k = atom(`y`);
-    const v = lookup(obj, k);
-
-    v.get();
-    // => undefined
-
-    k.set(`k`);
-
-    v.get();
-    // => `v`
     ```")
 
   (destruct [obj (Derivable any) &keys [any]] [(Derivable any)]
@@ -746,6 +690,126 @@
     c.get();
     // => undefined
     ```")
+
+  (lookup [obj (Derivable any) key any] (Derivable any)
+    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
+    {{key}} may be derivable. e.g.
+
+    ```javascript
+    const obj = atom({k: `v`});
+    const k = atom(`y`);
+    const v = lookup(obj, k);
+
+    v.get();
+    // => undefined
+
+    k.set(`k`);
+
+    v.get();
+    // => `v`
+    ```")
+
+  (unpack [obj any] any
+    "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
+
+  (lift [f (=> [&args [any]] any)] (=> [&args [(Derivable any)]] (Derivable any))
+    "Lifts a function that works on normal values to work on derivable values.
+
+    ```javascript
+    const add = (a, b) => a + b,
+          x = atom(5),
+          y = atom(10);
+
+    const addD = lift(add);
+
+    const xplusy = addD(x, y);
+
+    xplusy.get();
+    // => 15
+
+    x.set(20);
+
+    xplusy.get();
+    // => 30
+    ```")
+
+  (isAtom [obj any] boolean
+    "Returns true iff {{obj}} is an {{Atom}}.")
+
+  (isDerivable [obj any] boolean
+    "Returns true iff {{obj}} is a {{Derivable}}.")
+
+  (isDerivation [obj any] boolean
+    "Returns true iff {{obj}} is a derivation,
+    i.e. a derivable which is not an atom.")
+
+  (isLensed [obj any] boolean
+    "Returns true iff {{obj}} is a *lensed* atom."
+    (:see-also Lens Atom::lens))
+
+  (isReactor [obj any] boolean
+    "Returns true iff `obj` is a {{Reactor}}.")
+
+  ((swap A B) [atom (Atom A) f (=> [a A &args [any]] B) &args [any]] B
+    "Changes the contents of {{atom}} to be the result of {{f}} applied to
+    {{atom}}'s current value and {{&args}}. Returns the new value."
+
+    (:see-also Atom::swap))
+
+  ((derive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  ((derive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
+    "Functional interface to {{Derivable::derive}}."
+    (:see-also Derivable::derive))
+
+  (derive [strings [string] &things [any]] (Derivable string)
+    "Tagged template string version of derive. Returns a derivable which
+    represents {{strings}} interploated with {{&things}}, which latter may
+    contain derivables.
+
+    ```javascript
+    const myAtom = atom(`what`),
+          myConstant = 4;
+
+    const myString =
+      derive`Atom: '${myAtom}', constant: ${myConstant}.`;
+
+    myString.get();
+    // => `Atom: 'what', constant: 4.`
+
+    myAtom.set(`nothing`);
+
+    myString.get();
+    // => `Atom: 'nothing', constant: 4.`
+
+    ```")
+
+  ((mDerive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
+  ((mDerive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
+    "Functional interface to {{Derivable::mDerive}}."
+    (:see-also Derivable::mDerive))
+
 
   (ifThenElse [condition any thenD any elseD any] (Derivable any)
     "Returns a derivable which encapsulates the value `unpack(thenD)` when the
@@ -863,61 +927,6 @@
     ```javascript
     a.set(v);
     ```")
-
-  ((lens T) [lens (CompositeLens T)] (Atom T)
-    "Creates a new lensed atom using the given composite lens descriptor."
-    (:see-also CompositeLens))
-
-  ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
-    "A functional interface to the {{Atom::lens}} method.
-
-    ```javascript
-    lens(a, l);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    a.lens(l);
-    ```")
-
-  (lift [f (=> [&args [any]] any)] (=> [&args [(Derivable any)]] (Derivable any))
-    "Lifts a function that works on normal values to work on derivable values.
-
-    ```javascript
-    const add = (a, b) => a + b,
-          x = atom(5),
-          y = atom(10);
-
-    const addD = lift(add);
-
-    const xplusy = addD(x, y);
-
-    xplusy.get();
-    // => 15
-
-    x.set(20);
-
-    xplusy.get();
-    // => 30
-    ```")
-
-  (isAtom [obj any] boolean
-    "Returns true iff {{obj}} is an {{Atom}}.")
-
-  (isDerivable [obj any] boolean
-    "Returns true iff {{obj}} is a {{Derivable}}.")
-
-  (isDerivation [obj any] boolean
-    "Returns true iff {{obj}} is a derivation,
-    i.e. a derivable which is not an atom.")
-
-  (isLensed [obj any] boolean
-    "Returns true iff {{obj}} is a *lensed* atom."
-    (:see-also Lens Atom::lens))
-
-  (isReactor [obj any] boolean
-    "Returns true iff `obj` is a {{Reactor}}.")
 
   (withEquality [equals (=> [a any b any] boolean)] any
     "Returns a new instance of derivable with a new notion of equality. Does not
