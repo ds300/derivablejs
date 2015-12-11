@@ -461,7 +461,9 @@
     (get [] T
       "Should dereference one or more derivables to return a value of type T")
     (set [value T] void
-      "Should propagate {{value}} back up to any relevant atoms."))
+      "Should propagate {{value}} back up to any relevant atoms.")
+
+    (:see-also lens))
 
   (:class (Reactor T)
     "A Reactor is a stateful object which can be attached to a particular
@@ -861,6 +863,10 @@
     ```javascript
     a.set(v);
     ```")
+
+  ((lens T) [lens (CompositeLens T)] (Atom T)
+    "Creates a new lensed atom using the given composite lens descriptor."
+    (:see-also CompositeLens))
 
   ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
     "A functional interface to the {{Atom::lens}} method.

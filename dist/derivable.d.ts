@@ -141,6 +141,7 @@ declare module derivable {
 
   function set<A, B>(a: Atom<A>, v: B): Atom<B>;
 
+  function lens<T>(lens: CompositeLens<T>): Atom<T>;
   function lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
 
   function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
