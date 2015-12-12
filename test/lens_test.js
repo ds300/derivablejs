@@ -67,6 +67,47 @@ describe("lenses", () => {
 
     assert.strictEqual(3.9134, num.get());
   });
+
+  it('can be re-instantiated with custom equality-checking', () => {
+    const lens = {
+      get: a => ({a: a % 2}),
+      set: (a, v) => v.a
+    };
+    const a = atom(5);
+    const amod2map = a.lens(lens);
+
+    let numReactions = 0;
+    amod2map.reactor(() => numReactions++).start();
+
+    assert.strictEqual(numReactions, 0);
+    a.set(7);
+    assert.strictEqual(numReactions, 1);
+    a.set(9);
+    assert.strictEqual(numReactions, 2);
+    a.set(11);
+    assert.strictEqual(numReactions, 3);
+
+    amod2map.set({a: 1});
+    assert.strictEqual(numReactions, 4);
+
+    const amod2map2 = a
+      .lens(lens)
+      .withEquality(({a: a}, {a: b}) => a === b);
+
+    let numReactions2 = 0;
+    amod2map2.reactor(() => numReactions2++).start();
+
+    assert.strictEqual(numReactions2, 0);
+    a.set(7);
+    assert.strictEqual(numReactions2, 0);
+    a.set(9);
+    assert.strictEqual(numReactions2, 0);
+    a.set(11);
+    assert.strictEqual(numReactions2, 0);
+
+    amod2map2.set({a: 1});
+    assert.strictEqual(numReactions2, 0);
+  });
 });
 
 describe('composite lenses', () => {

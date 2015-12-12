@@ -316,6 +316,23 @@
 
       z.get();
       // => `other`
+      ```")
+    (withEquality [equals (=> [a any b any] boolean)] this
+      "Returns an copy of this derivable, except the equality checking
+      logic is provided by {{equals}}.
+
+      DerivableJS provides strict equality checking by default, delegating to a
+      .equals method if present. But if e.g. you need deep equality checking for
+      plain objects as provided by some `deepEquals` function:
+
+      ```javascript
+      const $SomeState = atom({blah: true})
+        .withEquality(deepEquals);
+
+      $SomeState.reactor(() => console.log('side effects!')).start();
+
+      $SomeState.set({blah: true});
+      // no side effects occurred!
       ```"))
 
   (:interface (Atom T)

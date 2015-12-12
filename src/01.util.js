@@ -64,3 +64,8 @@ var util_DEBUG_MODE = false;
 function util_setDebugMode(val) {
   util_DEBUG_MODE = !!val;
 }
+
+function util_setEquals(derivable, equals) {
+  derivable._equals = equals;
+  return derivable;
+}

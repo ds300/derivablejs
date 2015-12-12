@@ -1,7 +1,7 @@
 function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return D.derivation(this._deriver);
+      return util_setEquals(D.derivation(this._deriver), this._equals);
     },
 
     _forceGet: function () {
@@ -19,7 +19,8 @@ function derivation_createPrototype (D, opts) {
             throw e;
           }
         }
-        that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
+        var equals = that._equals || opts.equals;
+        that._state = equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
         that._value = newState;
       });
 
@@ -102,6 +103,7 @@ function derivation_construct(obj, deriver) {
   obj._state = gc_NEW;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
+  obj._equals = null;
 
   if (util_DEBUG_MODE) {
     obj._stack = Error().stack;

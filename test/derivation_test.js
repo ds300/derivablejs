@@ -178,6 +178,37 @@ describe("a derivation", () => {
 
     assert.strictEqual(thingAnd.get(), null);
   });
+
+  it('can be re-instantiated with custom equality-checking', () => {
+    const a = atom(5);
+    const amod2map = a.derive(a => ({a: a % 2}));
+
+    let numReactions = 0;
+    amod2map.reactor(() => numReactions++).start();
+
+    assert.strictEqual(numReactions, 0);
+    a.set(7);
+    assert.strictEqual(numReactions, 1);
+    a.set(9);
+    assert.strictEqual(numReactions, 2);
+    a.set(11);
+    assert.strictEqual(numReactions, 3);
+
+    const amod2map2 = a
+      .derive(a => ({a: a % 2}))
+      .withEquality(({a: a}, {a: b}) => a === b);
+
+    let numReactions2 = 0;
+    amod2map2.reactor(() => numReactions2++).start();
+
+    assert.strictEqual(numReactions2, 0);
+    a.set(7);
+    assert.strictEqual(numReactions2, 0);
+    a.set(9);
+    assert.strictEqual(numReactions2, 0);
+    a.set(11);
+    assert.strictEqual(numReactions2, 0);
+  });
 });
 
 describe("the disowning bug", () => {

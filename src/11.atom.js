@@ -72,7 +72,7 @@ util_extend(TransactionState.prototype, {
 function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return D.atom(this._value);
+      return util_setEquals(D.atom(this._value), this._equals);
     },
 
     withValidator: function (f) {
@@ -107,7 +107,8 @@ function atom_createPrototype (D, opts) {
     set: function (value) {
 
       this._validate(value);
-      if (!opts.equals(value, this._value)) {
+      var equals = this._equals || opts.equals;
+      if (!equals(value, this._value)) {
         this._state = gc_CHANGED;
 
         if (atom_inTxn()) {
@@ -139,6 +140,7 @@ function atom_construct (atom, value) {
   atom._state = gc_STABLE;
   atom._value = value;
   atom._type = types_ATOM;
+  atom._equals = null;
   return atom;
 }
 
