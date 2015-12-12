@@ -420,6 +420,30 @@ describe("the destruct function", () => {
     const aKey = atom('c');
     const cKey = atom('a');
     [a, b, c] = _.destruct(s, aKey, 'b', cKey);
+
+    assert.strictEqual(a.get(), "cee");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "aye");
+
+    aKey.set('a');
+    cKey.set('c');
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    const arr = atom(['naught','one','two']);
+    const [naught, one, two] = _.destruct(arr, 0, 1, atom(2));
+
+    assert.strictEqual(naught.get(), "naught");
+    assert.strictEqual(one.get(), "one");
+    assert.strictEqual(two.get(), "two");
+
+    arr.set(['love', 'fifteen', 'thirty']);
+
+    assert.strictEqual(naught.get(), "love");
+    assert.strictEqual(one.get(), "fifteen");
+    assert.strictEqual(two.get(), "thirty");
   });
 });
 

@@ -90,6 +90,8 @@ describe("a derivation", () => {
     assert.strictEqual(sOrE.not().not().get(), true);
     assert.strictEqual(sAndE.not().not().get(), false);
 
+    assert.strictEqual(name.pluck('length').get(), 6);
+    assert.strictEqual(name.pluck(0).get(), "s");
 
     let x = startsWithS.then(
       () => assert(true, "smithy starts with s"),

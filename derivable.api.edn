@@ -723,24 +723,6 @@
     // => undefined
     ```")
 
-  (lookup [obj (Derivable any) key any] (Derivable any)
-    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
-    {{key}} may be derivable. e.g.
-
-    ```javascript
-    const obj = atom({k: `v`});
-    const k = atom(`y`);
-    const v = lookup(obj, k);
-
-    v.get();
-    // => undefined
-
-    k.set(`k`);
-
-    v.get();
-    // => `v`
-    ```")
-
   (unpack [obj any] any
     "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
 

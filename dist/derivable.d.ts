@@ -115,8 +115,6 @@ declare module derivable {
 
   function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
 
-  function lookup(obj: Derivable<any>, key: any): Derivable<any>;
-
   function unpack(obj: any): any;
 
   function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
