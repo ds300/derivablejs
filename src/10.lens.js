@@ -1,7 +1,7 @@
 function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return D.lens(this._lensDescriptor);
+      return util_setEquals(D.lens(this._lensDescriptor), this._equals);
     },
 
     set: function (value) {

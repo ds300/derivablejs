@@ -78,6 +78,11 @@ function util_setDebugMode(val) {
   util_DEBUG_MODE = !!val;
 }
 
+function util_setEquals(derivable, equals) {
+  derivable._equals = equals;
+  return derivable;
+}
+
 // node modes
 var gc_NEW = 0,
     gc_CHANGED = 1,
@@ -609,7 +614,20 @@ function derivable_createPrototype (D, opts) {
     not: function () {
       return this.derive(function (x) { return !x; });
     },
+
+    withEquality: function (equals) {
+      if (equals) {
+        if (typeof equals !== 'function') {
+          throw new Error('equals must be function');
+        }
+      } else {
+        equals = null;
+      }
+
+      return util_setEquals(this._clone(), equals);
+    },
   };
+
   x.switch = function () {
     var args = arguments;
     return this.derive(function (x) {
@@ -624,13 +642,14 @@ function derivable_createPrototype (D, opts) {
       }
     });
   };
+
   return x;
 }
 
 function derivation_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return D.derivation(this._deriver);
+      return util_setEquals(D.derivation(this._deriver), this._equals);
     },
 
     _forceGet: function () {
@@ -648,7 +667,8 @@ function derivation_createPrototype (D, opts) {
             throw e;
           }
         }
-        that._state = opts.equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
+        var equals = that._equals || opts.equals;
+        that._state = equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
         that._value = newState;
       });
 
@@ -731,6 +751,7 @@ function derivation_construct(obj, deriver) {
   obj._state = gc_NEW;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
+  obj._equals = null;
 
   if (util_DEBUG_MODE) {
     obj._stack = Error().stack;
@@ -763,7 +784,7 @@ function mutable_createPrototype (D, _) {
 function lens_createPrototype(D, _) {
   return {
     _clone: function () {
-      return D.lens(this._lensDescriptor);
+      return util_setEquals(D.lens(this._lensDescriptor), this._equals);
     },
 
     set: function (value) {
@@ -857,7 +878,7 @@ util_extend(TransactionState.prototype, {
 function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
-      return D.atom(this._value);
+      return util_setEquals(D.atom(this._value), this._equals);
     },
 
     withValidator: function (f) {
@@ -892,7 +913,8 @@ function atom_createPrototype (D, opts) {
     set: function (value) {
 
       this._validate(value);
-      if (!opts.equals(value, this._value)) {
+      var equals = this._equals || opts.equals;
+      if (!equals(value, this._value)) {
         this._state = gc_CHANGED;
 
         if (atom_inTxn()) {
@@ -924,6 +946,7 @@ function atom_construct (atom, value) {
   atom._state = gc_STABLE;
   atom._value = value;
   atom._type = types_ATOM;
+  atom._equals = null;
   return atom;
 }
 

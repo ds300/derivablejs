@@ -119,7 +119,20 @@ function derivable_createPrototype (D, opts) {
     not: function () {
       return this.derive(function (x) { return !x; });
     },
+
+    withEquality: function (equals) {
+      if (equals) {
+        if (typeof equals !== 'function') {
+          throw new Error('equals must be function');
+        }
+      } else {
+        equals = null;
+      }
+
+      return util_setEquals(this._clone(), equals);
+    },
   };
+
   x.switch = function () {
     var args = arguments;
     return this.derive(function (x) {
@@ -134,5 +147,6 @@ function derivable_createPrototype (D, opts) {
       }
     });
   };
+
   return x;
 }

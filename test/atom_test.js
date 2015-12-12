@@ -74,4 +74,27 @@ describe("the humble atom", () => {
     });
 
   });
+
+  it(`can include an equality-checking function`, () => {
+    const a = atom(0);
+    const b = a.withEquality(() => false);
+    it('creates a brand new atom', () => {
+      assert(a !== b);
+    });
+
+    let numReactions = 0;
+    a.reactor(() => numReactions++).start();
+    b.reactor(() => numReactions++).start();
+
+    assert.strictEqual(numReactions, 0);
+    a.set(0);
+    assert.strictEqual(numReactions, 0);
+    a.set(0);
+    assert.strictEqual(numReactions, 0);
+
+    b.set(0);
+    assert.strictEqual(numReactions, 1);
+    b.set(0);
+    assert.strictEqual(numReactions, 2);
+  });
 });
