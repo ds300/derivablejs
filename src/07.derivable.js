@@ -10,9 +10,45 @@ function derivable_createPrototype (D, opts) {
       case 0:
         return that;
       case 1:
-        return D.derivation(function () {
-          return f(that.get());
-        });
+        switch (typeof f) {
+          case 'function':
+            return D.derivation(function () {
+              return f(that.get());
+            });
+          case 'string':
+          case 'number':
+            return D.derivation(function () {
+              return that.get()[D.unpack(f)];
+            });
+          default:
+            if (f instanceof Array) {
+              return f.map(function (x) {
+                return that.derive(x);
+              });
+            } else if (f instanceof RegExp) {
+              return D.derivation(function () {
+                return that.get().match(f);
+              });
+            } else if (D.isDerivable(f)) {
+              return D.derivation(function () {
+                const deriver = f.get();
+                const thing = that.get();
+                switch (typeof deriver) {
+                  case 'function':
+                    return deriver(thing);
+                  case 'string':
+                  case 'number':
+                    return thing[deriver];
+                  default:
+                    throw Error('type error');
+                }
+                return that.get()[D.unpack(f)];
+              });
+            } else {
+              throw Error('type error');
+            }
+        }
+        break;
       case 2:
         return D.derivation(function () {
           return f(that.get(), D.unpack(a));
@@ -130,12 +166,6 @@ function derivable_createPrototype (D, opts) {
       }
 
       return util_setEquals(this._clone(), equals);
-    },
-
-    pluck: function (prop) {
-      return this.derive(function (x) {
-        return x[D.unpack(prop)];
-      });
     },
   };
 

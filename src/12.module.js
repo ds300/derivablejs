@@ -155,15 +155,6 @@ function constructModule (config) {
     }
   };
 
-  D.destruct = function (arg) {
-    var args = arguments;
-    var result = [];
-    for (var i = 1; i < args.length; i++) {
-      result.push(arg.pluck(args[i]));
-    }
-    return result;
-  };
-
   function andOrFn (breakOn) {
     return function () {
       var args = arguments;

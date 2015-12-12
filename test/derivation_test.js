@@ -90,8 +90,8 @@ describe("a derivation", () => {
     assert.strictEqual(sOrE.not().not().get(), true);
     assert.strictEqual(sAndE.not().not().get(), false);
 
-    assert.strictEqual(name.pluck('length').get(), 6);
-    assert.strictEqual(name.pluck(0).get(), "s");
+    assert.strictEqual(name.derive('length').get(), 6);
+    assert.strictEqual(name.derive(0).get(), "s");
 
     let x = startsWithS.then(
       () => assert(true, "smithy starts with s"),
@@ -212,6 +212,48 @@ describe("a derivation", () => {
     assert.strictEqual(numReactions2, 0);
   });
 });
+
+describe("the derive function", () => {
+  it("also destructures derivables", () => {
+    const s = atom({a: "aye", b: "bee", c: "cee"});
+    let [a, b, c] = s.derive(['a', 'b', 'c']);
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    // swap a and c over
+
+    const aKey = atom('c');
+    const cKey = atom('a');
+    [a, b, c] = s.derive([aKey, 'b', cKey]);
+
+    assert.strictEqual(a.get(), "cee");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "aye");
+
+    aKey.set('a');
+    cKey.set('c');
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    const arr = atom(['naught','one','two']);
+    const [naught, one, two] = arr.derive([0, 1, atom(2)]);
+
+    assert.strictEqual(naught.get(), "naught");
+    assert.strictEqual(one.get(), "one");
+    assert.strictEqual(two.get(), "two");
+
+    arr.set(['love', 'fifteen', 'thirty']);
+
+    assert.strictEqual(naught.get(), "love");
+    assert.strictEqual(one.get(), "fifteen");
+    assert.strictEqual(two.get(), "thirty");
+  });
+});
+
 
 describe("the disowning bug", () => {
   // a node is disowned when its parents haven't changed
