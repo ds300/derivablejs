@@ -131,6 +131,12 @@ function derivable_createPrototype (D, opts) {
 
       return util_setEquals(this._clone(), equals);
     },
+
+    pluck: function (prop) {
+      return this.derive(function (x) {
+        return x[D.unpack(prop)];
+      });
+    },
   };
 
   x.switch = function () {

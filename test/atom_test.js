@@ -18,10 +18,8 @@ describe("the humble atom", () => {
     const double = x => x * 2;
     n.swap(double);
     assert.strictEqual(n.get(), 2);
-    _.swap(n, double);
-    assert.strictEqual(n.get(), 4);
     n.swap(double);
-    assert.strictEqual(n.get(), 8);
+    assert.strictEqual(n.get(), 4);
   });
 
   it(`can take on temporary values inside a transaction`, () => {

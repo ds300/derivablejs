@@ -626,6 +626,12 @@ function derivable_createPrototype (D, opts) {
 
       return util_setEquals(this._clone(), equals);
     },
+
+    pluck: function (prop) {
+      return this.derive(function (x) {
+        return x[D.unpack(prop)];
+      });
+    },
   };
 
   x.switch = function () {
@@ -1068,33 +1074,14 @@ function constructModule (config) {
     }
   };
 
-  /**
-   * Sets the e's state to be f applied to e's current state and args
-   */
-  D.swap = function (atom, f) {
-    var args = util_slice(arguments, 1);
-    args[0] = atom.get();
-    return atom.set(f.apply(null, args));
-  };
-
   D.derivation = function (f) {
     return derivation_construct(Object.create(Derivation), f);
   };
 
   /**
-   * Creates a new derivation. Can also be used as a template string tag.
+   * Template string tag for derivable strings
    */
-  D.derive = function (a) {
-    if (a instanceof Array) {
-      return deriveString.apply(null, arguments);
-    } else if (arguments.length > 0) {
-      return Derivable.derive.apply(a, util_slice(arguments, 1));
-    } else {
-      throw new Error("Wrong arity for derive. Expecting 1+ args");
-    }
-  };
-
-  function deriveString (parts) {
+  D.derive = function (parts) {
     var args = util_slice(arguments, 1);
     return D.derivation(function () {
       var s = "";
@@ -1106,27 +1093,17 @@ function constructModule (config) {
       }
       return s;
     });
-  }
-
-  D.mDerive = function (a) {
-    return Derivable.mDerive.apply(a, util_slice(arguments, 1));
   };
 
   /**
    * creates a new lens
    */
-  D.lens = function (parent, descriptor) {
-    var lens = Object.create(Lens);
-    if (arguments.length === 1) {
-      descriptor = parent;
-      return lens_construct(
-        derivation_construct(lens, descriptor.get),
-        descriptor
-      );
-    } else {
-      return parent.lens(descriptor);
-    }
-  }
+  D.lens = function (descriptor) {
+    return lens_construct(
+      derivation_construct(Object.create(Lens), descriptor.get),
+      descriptor
+    );
+  };
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.
@@ -1150,17 +1127,6 @@ function constructModule (config) {
         return f.apply(that, Array.prototype.map.call(args, D.unpack));
       });
     }
-  };
-
-  /**
-   * sets a to v, returning v
-   */
-  D.set = function (a, v) {
-    return a.set(v);
-  };
-
-  D.get = function (d) {
-    return d.get();
   };
 
   function deepUnpack (thing) {
@@ -1195,97 +1161,32 @@ function constructModule (config) {
     var args = arguments;
     var result = [];
     for (var i = 1; i < args.length; i++) {
-      result.push(D.lookup(arg, args[i]));
+      result.push(arg.pluck(args[i]));
     }
     return result;
   };
 
-  D.lookup = function (arg, prop) {
-    return D.derivation(function () {
-      return D.unpack(arg)[D.unpack(prop)];
-    })
-  };
-
-  D.ifThenElse = function (a, b, c) { return a.then(b, c) };
-
-  D.ifThenElse = function (testValue, thenClause, elseClause) {
-    return D.derivation(function () {
-      return D.unpack(
-        D.unpack(testValue) ? thenClause : elseClause
-      );
-    });
+  function andOrFn (breakOn) {
+    return function () {
+      var args = arguments;
+      return D.derivation(function () {
+        var val;
+        for (var i = 0; i < args.length; i++) {
+          val = D.unpack(args[i]);
+          if (breakOn(val)) {
+            break;
+          }
+        }
+        return val;
+      });
+    }
   }
-
-  D.mIfThenElse = function (testValue, thenClause, elseClause) {
-    return D.derivation(function () {
-      var x = D.unpack(testValue);
-      return D.unpack(
-        util_some(x) ? thenClause : elseClause
-      );
-    });
-  };
-
-  D.or = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (val) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.mOr = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (util_some(val)) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.and = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (!val) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.mAnd = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (!util_some(val)) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.not = function (x) { return x.derive(function (x) { return !x; }); };
-
-  D.switchCase = function (x) {
-    return Derivable.switch.apply(x, util_slice(arguments, 1));
-  };
+  function identity (x) { return x; }
+  function complement (f) { return function (x) { return !f(x); }}
+  D.or = andOrFn(identity);
+  D.mOr = andOrFn(util_some);
+  D.and = andOrFn(complement(identity));
+  D.mAnd = andOrFn(complement(util_some));
 
   return D;
 }

@@ -123,7 +123,7 @@ describe("boolean logic", () => {
         b = atom(true),
         aANDb = _.and(a, b),
         aORb = _.or(a, b),
-        NOTa = _.not(a);
+        NOTa = a.not();
 
     assert.strictEqual(aANDb.get(), true, "true & true = true");
     assert.strictEqual(aORb.get(), true, "true | true = true");
@@ -144,8 +144,8 @@ describe("boolean logic", () => {
   it("is mirrored for dealing with null/undefined", () => {
     let a = atom(false),
         b = atom(false),
-        aANDb = _.mIfThenElse(_.mAnd(a, b), true, false),
-        aORb = _.mIfThenElse(_.mOr(a, b), true, false);
+        aANDb = _.mAnd(a, b).mThen(true, false),
+        aORb = _.mOr(a, b).mThen(true, false);
 
     assert.strictEqual(aANDb.get(), true, "false m& false m= true");
     assert.strictEqual(aORb.get(), true, "false m| false m= true");
@@ -169,7 +169,7 @@ describe("control flow", () => {
     let number = atom(0);
     let even = number.derive(n => n % 2 === 0);
 
-    let message = _.ifThenElse(even, "even", "odd");
+    let message = even.then("even", "odd");
 
     assert.strictEqual(message.get(), "even");
 
@@ -185,7 +185,7 @@ describe("control flow", () => {
     let dideven = false;
     let didodd = false;
 
-    let chooseAPath = _.ifThenElse(even,
+    let chooseAPath = even.then(
       derivation(() => {
         dideven = true;
       }),
@@ -214,7 +214,7 @@ describe("control flow", () => {
   it("same goes for the switch statement", () => {
     let thing = atom("Tigran");
 
-    let result = _.switchCase(thing,
+    let result = thing.switch(
       "Banana", "YUMMY",
       532,      "FiveThreeTwo",
       "Tigran", "Hamasayan"
@@ -245,7 +245,7 @@ describe("control flow", () => {
         condb = atom("b"),
         condc = atom("c");
 
-    let chooseAPath = _.switchCase(switcheroo,
+    let chooseAPath = switcheroo.switch(
       conda, derivation(() => dida = true),
       condb, derivation(() => didb = true),
       condc, derivation(() => didc = true),
@@ -405,29 +405,6 @@ describe("defaultEquals", () => {
     assert(!_.defaultEquals(y, x));
   })
 });
-
-
-describe("the mIfThenElse function", () => {
-  it("branches on the existence of a value", () => {
-    assert(_.mIfThenElse(atom(null), false, true), "null doesn't exist");
-    assert(_.mIfThenElse(atom(void 0), false, true), "undefined doesn't exist");
-    assert(_.mIfThenElse(atom(false), true, false), "false exists");
-    assert(_.mIfThenElse(atom(""), true, false), "the empty string exists");
-  });
-
-  it("should also work with normal values", () => {
-    assert(_.mIfThenElse(null, false, true), "null doesn't exist");
-    assert(_.mIfThenElse(void 0, false, true), "undefined doesn't exist");
-    assert(_.mIfThenElse(false, true, false), "false exists");
-    assert(_.mIfThenElse("", true, false), "the empty string exists");
-  });
-});
-
-describe("the lookup function", () => {
-  it("looks up things in other things using javascript property access", () => {
-
-  })
-})
 
 describe("the destruct function", () => {
   it("destructures derivables", () => {

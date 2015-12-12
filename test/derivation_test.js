@@ -27,7 +27,7 @@ describe("a derivation", () => {
     const orderName = label(order.derive(order => {
       return (["bytes", "kilobytes", "megabytes", "gigabytes"])[order];
     }), "ON");
-    const size = label(derive(bytes, orderUp, order), "!size!");
+    const size = label(bytes.derive(orderUp, order), "!size!");
     const sizeString = derive`${size} ${orderName}`;
 
     assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
