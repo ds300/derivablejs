@@ -576,19 +576,6 @@
     "Creates a new lensed atom using the given composite lens descriptor."
     (:see-also CompositeLens))
 
-  ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
-    "A functional interface to the {{Atom::lens}} method.
-
-    ```javascript
-    lens(a, l);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    a.lens(l);
-    ```")
-
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
 

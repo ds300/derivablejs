@@ -101,7 +101,6 @@ declare module derivable {
   function derivation<T>(f: () => T): Derivable<T>;
 
   function lens<T>(lens: CompositeLens<T>): Atom<T>;
-  function lens<A, B>(atom: Atom<A>, lens: Lens<A, B>): Atom<B>;
 
   function transact(f: () => void): void;
 
