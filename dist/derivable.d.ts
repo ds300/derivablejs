@@ -27,6 +27,8 @@ declare module derivable {
 
     get(): T;
 
+    pluck(prop: any): Derivable<any>;
+
     is(other: any): Derivable<boolean>;
 
     and(other: any): Derivable<any>;
@@ -129,22 +131,7 @@ declare module derivable {
 
   function isReactor(obj: any): boolean;
 
-  function swap<A, B>(atom: Atom<A>, f: (a: A, ...args: any[]) => B, ...args: any[]): B;
-
-  function derive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
-  function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
-  function derive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
-  function derive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
   function derive(strings: string[], ...things: any[]): Derivable<string>;
-
-  function mDerive<I, O>(d: Derivable<I>, f: (v: I) => O): Derivable<O>;
-  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: A): Derivable<O>;
-  function mDerive<I, O, A>(d: Derivable<I>, f: (v: I, a: A) => O, a: Derivable<A>): Derivable<O>;
-  function mDerive<I, O>(d: Derivable<I>, f: (v: I, ...args: any[]) => O, ...args: any[]): Derivable<O>;
-
-  function ifThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
-
-  function mIfThenElse(condition: any, thenD: any, elseD: any): Derivable<any>;
 
   function or(...conditions: any[]): Derivable<any>;
 
@@ -153,14 +140,6 @@ declare module derivable {
   function and(...conditions: any[]): Derivable<any>;
 
   function mAnd(...conditions: any[]): Derivable<any>;
-
-  function not(d: Derivable<any>): Derivable<boolean>;
-
-  function switchCase(d: Derivable<any>, ...args: any[]): Derivable<any>;
-
-  function get<T>(d: Derivable<T>): T;
-
-  function set<A, B>(a: Atom<A>, v: B): Atom<B>;
 
   function withEquality(equals: (a: any, b: any) => boolean): any;
 

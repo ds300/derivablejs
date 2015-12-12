@@ -70,8 +70,7 @@
       xTimesTwo.get();
       // throws error because we try to multiply null by 2
 
-      ```"
-    (:see-also derivable::mDerive))
+      ```")
 
     ((mDerive A E) [f (=> [value T a A] E) a A] (Derivable E))
 
@@ -165,6 +164,23 @@
       x.get();
       // => 'a string'
       ```")
+
+    (pluck [prop any] (Derivable any)
+      "Returns a derivable which represents the lookup of {{prop}} in the
+      object represented by this derivable.
+
+      e.g.
+
+      ```javascript
+      $x.pluck('y');
+      ```
+
+      is equivalent to
+
+      ```javascript
+      $x.derive(x => x['y']);
+      ```
+      ")
 
     (is [other any] (Derivable boolean)
       "Returns a derivable which represents the equality of the values held in
@@ -349,8 +365,7 @@
 
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
-      ```"
-      (:see-also derivable::swap))
+      ```")
     ((lens E) [lens (Lens T E)] (Atom E)
       "Returns a new atom connected to this one via the logic encapsulated by
       {{lens}}."
@@ -767,28 +782,6 @@
   (isReactor [obj any] boolean
     "Returns true iff `obj` is a {{Reactor}}.")
 
-  ((swap A B) [atom (Atom A) f (=> [a A &args [any]] B) &args [any]] B
-    "Changes the contents of {{atom}} to be the result of {{f}} applied to
-    {{atom}}'s current value and {{&args}}. Returns the new value."
-
-    (:see-also Atom::swap))
-
-  ((derive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
   (derive [strings [string] &things [any]] (Derivable string)
     "Tagged template string version of derive. Returns a derivable which
     represents {{strings}} interploated with {{&things}}, which latter may
@@ -810,53 +803,6 @@
     // => `Atom: 'nothing', constant: 4.`
 
     ```")
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-
-  (ifThenElse [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
-    value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is
-    falsey.
-
-    ```javascript
-    const condition = atom(true);
-
-    const thenD = atom(`then`);
-    const elseD = `else`;
-
-    const result = ifThenElse(condition, thenD, elseD);
-
-    result.get();
-    // => `then`
-
-    condition.set(false);
-
-    result.get();
-    // => `else`
-    ```"
-
-    (:see-also unpack Derivable::then))
-
-  (mIfThenElse [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which represents {{thenD}} when the
-    value encapsulated by {{condition}} is not null or undefined. Otherwise
-    the returned derivable represents {{elseD}}."
-    (:see-also Derivable::mThen))
 
   (or [&conditions [any]] (Derivable any)
     "Returns a derivable which represents the first value in {{&conditions}}
@@ -900,53 +846,8 @@
     all values are not null or undefined. Otherwise it returns null or
     undefined.")
 
-  (not [d (Derivable any)] (Derivable boolean)
-    "Returns a derivable which represents the boolean complement of the
-    truthiness of the value encapsulated by {{d}}.
-
-    A functional interface to the {{Derivable::not}} method.")
-
-  (switchCase [d (Derivable any) &args [any]] (Derivable any)
-    "Functional interface to the {{Derivable::switch}} method.
-
-    ```javascript
-    switchCase(d, ...args);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    d.switch(...args);
-    ```")
-
-  ((get T) [d (Derivable T)] T
-    "Functional interface to the {{Derivable::get}} method.
-
-    ```javascript
-    get(d);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    d.get();
-    ```")
-
-  ((set A B) [a (Atom A) v B] (Atom B)
-    "Functional interface to the {{Atom::set}} method.
-
-    ```javascript
-    set(a, v);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    a.set(v);
-    ```")
-
   (withEquality [equals (=> [a any b any] boolean)] any
-    "Returns a new instance of derivable with a new notion of equality. Does not
+    "Returns a new instance of DerivableJS with a new notion of equality. Does not
     affect the current instance.")
 
   (defaultEquals [a any b any] boolean
