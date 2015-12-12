@@ -44,6 +44,8 @@ declare module derivable {
     not(): Derivable<boolean>;
 
     switch(...args: any[]): Derivable<any>;
+
+    withEquality(equals: (a: any, b: any) => boolean): this;
   }
 
   export interface Atom<T> extends Derivable<T> {
