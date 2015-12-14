@@ -11,7 +11,10 @@ declare module derivable {
     derive(propD: Derivable<string>): Derivable<any>;
     derive(index: number): Derivable<any>;
     derive(indexD: Derivable<number>): Derivable<any>;
+    derive(re: RegExp): Derivable<string[]>;
+    derive(re: Derivable<RegExp>): Derivable<string[]>;
     derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
+    derive(args: any[]): Derivable<any>[];
     derive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
     derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;

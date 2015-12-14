@@ -15,8 +15,140 @@
 
       xTimesTwo.get();
       // => 8
-      ```"
-    (:see-also derivable::derive))
+      ```")
+
+    (derive [prop string] (Derivable any)
+      "Creates a new derivation based on property lookup. e.g.
+
+      ```javascript
+      const obj = atom({foo: 'FOO!', bar: 'BAR!'});
+      const foo = obj.derive('foo');
+
+      foo.get();
+      // => 'FOO!'
+      ```")
+
+    (derive [propD (Derivable string)] (Derivable any)
+      "Creates a new derivation based on dynamic property lookup. e.g.
+
+      ```javascript
+      const obj = atom({foo: 'FOO!', bar: 'BAR!'});
+      const prop = atom('foo');
+      const item = obj.derive(prop);
+
+      item.get();
+      // => 'FOO!'
+
+      prop.set('bar');
+      item.get();
+      // => 'BAR!'
+      ```")
+
+    (derive [index number] (Derivable any)
+      "Creates a new derivation based on index lookup. e.g.
+
+      ```javascript
+      const arr = atom(['one', 'two', 'three']);
+      const middle = arr.derive(1);
+
+      middle.get();
+      // => 'two'
+      ```
+      ")
+
+    (derive [indexD (Derivable number)] (Derivable any)
+      "Creates a new derivation based on dynamic index lookup. e.g.
+
+      ```javascript
+      const arr = atom(['one', 'two', 'three']);
+      const idx = atom(0);
+      const item = arr.derive(idx);
+
+      item.get();
+      // => 'one'
+
+      idx.set(1);
+      item.get();
+      // => 'two'
+      ```
+      ")
+
+    (derive [re RegExp] (Derivable [string])
+      "Creates a new derivation based on regexp matching. e.g.
+
+      ```javascript
+      const str = atom('hello there');
+      const match = str.derive(/\\w+/g);
+
+      match.get()
+      // => ['hello', 'there']
+      ```
+      ")
+
+    (derive [re (Derivable RegExp)] (Derivable [string])
+      "Creates a new derivation based on dynamic regexp matching. e.g.
+
+      ```javascript
+      const str = atom('hello there');
+      const re = atom(/\\w+/);
+      const match = str.derive(re);
+
+      match.get()
+      // => [ 'hello', index: 0, input: 'hello there' ]
+
+      re.set(/e.*?\\b/g);
+      match.get()
+      // => ['ello', 'ere']
+      ```
+      ")
+
+    ((derive E) [f (Derivable (=> [value T] E))] (Derivable E)
+      "Creates a new derivation based on the application of {{f}} to the
+      current value of this derivable. e.g.
+
+      ```javascript
+      const x = atom(4);
+      const timesTwo = (n) => n * 2;
+      const timesFour = (n) => n * 4;
+      const f = atom(timesTwo);
+      const fx = x.derive(f);
+
+      fx.get();
+      // => 8
+
+      f.set(timesFour);
+      fx.get();
+      // => 16
+      ```")
+
+    (derive [args [any]] [(Derivable any)]
+      "Lets one combine all the above and destructure the result. e.g.
+
+      ```javascript
+      const x = atom('hello there');
+      const index = atom(0);
+
+      const [words, len, upper, char] = x.derive([
+        /\\w+/g, 'length', s => s.toUpperCase(), index
+      ]);
+
+      words.get();
+      // => ['hello', 'there']
+
+      len.get();
+      // => 11
+
+      upper.get();
+      // => 'HELLO THERE'
+
+      char.get();
+      // => 'h'
+
+      index.set(2);
+      char.get();
+      // => 'l'
+      ```")
+
 
     ((derive A E) [f (=> [value T a A] E) a A] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
@@ -30,8 +162,7 @@
       xTimesTwo.get();
       // => 8
       ```
-      "
-    (:see-also derivable::derive))
+      ")
 
     ((derive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
@@ -49,11 +180,11 @@
       // => 40
       ```
       "
-      (:see-also derivable::derive unpack))
+      (:see-also unpack))
 
     ((derive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E)
       "Any-arity version of above. Unpacks all args."
-      (:see-also derivable::derive unpack))
+      (:see-also unpack))
 
     ((mDerive E) [f (=> [value T] E)] (Derivable E)
       "nil-shortcutting version of {{derive}}. e.g.
