@@ -40,7 +40,11 @@ function derivable_createPrototype (D, opts) {
                   case 'number':
                     return thing[deriver];
                   default:
-                    throw Error('type error');
+                    if (deriver instanceof RegExp) {
+                      return thing.match(deriver);
+                    } else {
+                      throw Error('type error');
+                    }
                 }
                 return that.get()[D.unpack(f)];
               });

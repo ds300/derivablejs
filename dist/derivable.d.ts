@@ -7,6 +7,11 @@ declare module derivable {
   export interface Derivable<T> {
 
     derive<E>(f: (value: T) => E): Derivable<E>;
+    derive(prop: string): Derivable<any>;
+    derive(propD: Derivable<string>): Derivable<any>;
+    derive(index: number): Derivable<any>;
+    derive(indexD: Derivable<number>): Derivable<any>;
+    derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
     derive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
     derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
