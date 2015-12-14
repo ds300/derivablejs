@@ -213,7 +213,34 @@ describe("a derivation", () => {
   });
 });
 
-describe("the derive function", () => {
+describe("the derive method", () => {
+  it("'pluck's when given a string or derivable string", () => {
+    const obj = atom({nested: 'nested!', other: 'also nested!'});
+
+    const nested = obj.derive('nested');
+    assert.strictEqual(nested.get(), 'nested!');
+
+    const prop = atom('nested');
+    const item = obj.derive(prop);
+    assert.strictEqual(item.get(), 'nested!');
+    prop.set('other')
+    assert.strictEqual(item.get(), 'also nested!');
+  });
+  it("also 'pluck's when given a number or derivable number", () => {
+    const arr = atom([1,2,3]);
+
+    const middle = arr.derive(1);
+    assert.strictEqual(middle.get(), 2);
+
+    const cursor = atom(0);
+    const item = arr.derive(cursor);
+
+    assert.strictEqual(item.get(), 1);
+    cursor.set(1);
+    assert.strictEqual(item.get(), 2);
+    cursor.set(2);
+    assert.strictEqual(item.get(), 3);
+  });
   it("also destructures derivables", () => {
     const s = atom({a: "aye", b: "bee", c: "cee"});
     let [a, b, c] = s.derive(['a', 'b', 'c']);
