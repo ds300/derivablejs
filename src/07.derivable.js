@@ -98,13 +98,14 @@ function derivable_createPrototype (D, opts) {
       if (typeof f !== 'function') {
         throw Error('the first argument to .react must be a function');
       }
-      
+
       opts = Object.assign({
         force: true,
         once: false,
         from: true,
-        until: true,
-        when: true
+        until: false,
+        when: true,
+        skipFirst: false,
       }, opts);
 
       // coerce fn or bool to derivable<bool>
@@ -125,22 +126,28 @@ function derivable_createPrototype (D, opts) {
       // stopping after one reaction if desired.
       var reactor = this.reactor({
         react: function (val) {
-          f(val);
-          if (opts.once) {
-            this.stop();
-            controller.stop();
+          if (opts.skipFirst) {
+            opts.skipFirst = false;
+          } else {
+            f(val);
+            if (opts.once) {
+              this.stop();
+              controller.stop();
+            }
           }
         },
         onStart: opts.onStart,
         onStop: opts.onStop
       });
 
+      var $force = condDerivable(opts.force, 'force');
+
       // listen to when and until conditions, starting and stopping the
       // reactor as appropriate, and stopping this controller when until
       // condition becomes true
       var controller = D.struct({
         until: condDerivable(opts.until, 'until'),
-        when: condDerivable(opts.until, 'when')
+        when: condDerivable(opts.when, 'when')
       }).reactor(function (conds) {
         if (conds.until) {
           reactor.stop();
@@ -148,7 +155,7 @@ function derivable_createPrototype (D, opts) {
         } else if (conds.when) {
           if (!reactor.isActive()) {
             reactor.start();
-            opts.force && reactor.force();
+            $force.get() && reactor.force();
           }
         } else if (reactor.isActive()) {
           reactor.stop();
