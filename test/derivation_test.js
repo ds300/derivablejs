@@ -241,7 +241,21 @@ describe("the derive method", () => {
     cursor.set(2);
     assert.strictEqual(item.get(), 3);
   });
-  it("also destructures derivables", () => {
+
+  it("uses RegExp objects to do string matching", () => {
+    const string = atom("this is a lovely string");
+    const words = string.derive(/\w+/g);
+
+    assert.deepEqual(words.get(), ['this', 'is', 'a', 'lovely', 'string']);
+
+    const firstLetters = string.derive(/\b\w/g);
+    assert.deepEqual(firstLetters.get(), ['t', 'i', 'a', 'l', 's']);
+
+    string.set("you are so kind");
+    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+  });
+
+  it("destructures derivables", () => {
     const s = atom({a: "aye", b: "bee", c: "cee"});
     let [a, b, c] = s.derive(['a', 'b', 'c']);
 
@@ -279,8 +293,51 @@ describe("the derive method", () => {
     assert.strictEqual(one.get(), "fifteen");
     assert.strictEqual(two.get(), "thirty");
   });
+
+  it('can also do destructuring with regexps etc', () => {
+    const string = atom("you are so kind");
+
+    const [firstLetters, len, lastWord, firstChar] = string.derive([
+      /\b\w/g,
+      'length',
+      s => s.split(' ').pop(),
+      0
+    ]);
+
+    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+    assert.strictEqual(len.get(), 15);
+    assert.strictEqual(lastWord.get(), 'kind');
+    assert.strictEqual(firstChar.get(), 'y');
+
+    string.set('thank you');
+
+    assert.deepEqual(firstLetters.get(), ['t', 'y']);
+    assert.strictEqual(len.get(), 9);
+    assert.strictEqual(lastWord.get(), 'you');
+    assert.strictEqual(firstChar.get(), 't');
+  })
 });
 
+describe("mDerive", () => {
+  it('is like derive, but propagates nulls', () => {
+    const thing = atom({prop: 'val'});
+    const val = thing.mDerive('prop');
+
+    assert.strictEqual(val.get(), 'val');
+    thing.set(null);
+    assert.equal(val.get(), null);
+
+    const [foo, bar] = thing.mDerive(['foo', 'bar']);
+
+    assert.equal(foo.get(), null);
+    assert.equal(bar.get(), null);
+
+    thing.set({foo: 'FOO!', bar: 'BAR!'});
+
+    assert.strictEqual(foo.get(), 'FOO!');
+    assert.strictEqual(bar.get(), 'BAR!');
+  });
+});
 
 describe("the disowning bug", () => {
   // a node is disowned when its parents haven't changed
