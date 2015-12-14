@@ -94,21 +94,75 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
-    react: function (f) {
-      return this.reactor(f).start().force();
-    },
+    react: function (f, opts) {
+      if (typeof f !== 'function') {
+        throw Error('the first argument to .react must be a function');
+      }
+      
+      opts = Object.assign({
+        force: true,
+        once: false,
+        from: true,
+        until: true,
+        when: true
+      }, opts);
 
-    reactWhen: function (cond, f) {
-      var result = this.reactor(f);
-      // cast cond to boolean
-      cond.derive(function (c) { return !!c; }).react(function (cond) {
-        if (cond) {
-          result.start().force();
-        } else {
-          result.stop();
+      // coerce fn or bool to derivable<bool>
+      function condDerivable(fOrD, name) {
+        if (!D.isDerivable(fOrD)) {
+          if (typeof fOrD === 'function') {
+            fOrD = D.derivation(fOrD);
+          } else if (typeof fOrD === 'boolean') {
+            fOrD = D.atom(fOrD);
+          } else {
+            throw Error('react ' + name + ' condition must be derivable');
+          }
+        }
+        return fOrD.derive(function (x) { return !!x; });
+      }
+
+      // wrap reactor so f doesn't get a .this context, and to allow
+      // stopping after one reaction if desired.
+      var reactor = this.reactor({
+        react: function (val) {
+          f(val);
+          if (opts.once) {
+            this.stop();
+            controller.stop();
+          }
+        },
+        onStart: opts.onStart,
+        onStop: opts.onStop
+      });
+
+      // listen to when and until conditions, starting and stopping the
+      // reactor as appropriate, and stopping this controller when until
+      // condition becomes true
+      var controller = D.struct({
+        until: condDerivable(opts.until, 'until'),
+        when: condDerivable(opts.until, 'when')
+      }).reactor(function (conds) {
+        if (conds.until) {
+          reactor.stop();
+          this.stop();
+        } else if (conds.when) {
+          if (!reactor.isActive()) {
+            reactor.start();
+            opts.force && reactor.force();
+          }
+        } else if (reactor.isActive()) {
+          reactor.stop();
         }
       });
-      return result;
+
+      // listen to from condition, starting the reactor controller
+      // when appropriate
+      condDerivable(opts.from, 'from').reactor(function (from) {
+        if (from) {
+          controller.start().force();
+          this.stop();
+        }
+      }).start().force();
     },
 
     get: function () {
@@ -144,8 +198,13 @@ function derivable_createPrototype (D, opts) {
       return this.mThen(this, other);
     },
 
-    mDerive: function () {
-      return this.mThen(this.derive.apply(this, arguments));
+    mDerive: function (arg) {
+      if (arguments.length === 1 && arg instanceof Array) {
+        var that = this;
+        return arg.map(function (a) { return that.mDerive(a); });
+      } else {
+        return this.mThen(this.derive.apply(this, arguments));
+      }
     },
 
     mAnd: function (other) {
