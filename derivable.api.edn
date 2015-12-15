@@ -17,7 +17,7 @@
       // => 8
       ```")
 
-    (derive [prop string] (Derivable any)
+    (derive [prop (or string (Derivable string))] (Derivable any)
       "Creates a new derivation based on property lookup. e.g.
 
       ```javascript
@@ -26,10 +26,7 @@
 
       foo.get();
       // => 'FOO!'
-      ```")
-
-    (derive [propD (Derivable string)] (Derivable any)
-      "Creates a new derivation based on dynamic property lookup. e.g.
+      ```
 
       ```javascript
       const obj = atom({foo: 'FOO!', bar: 'BAR!'});
@@ -44,7 +41,7 @@
       // => 'BAR!'
       ```")
 
-    (derive [index number] (Derivable any)
+    (derive [index (or number (Derivable number))] (Derivable any)
       "Creates a new derivation based on index lookup. e.g.
 
       ```javascript
@@ -54,10 +51,6 @@
       middle.get();
       // => 'two'
       ```
-      ")
-
-    (derive [indexD (Derivable number)] (Derivable any)
-      "Creates a new derivation based on dynamic index lookup. e.g.
 
       ```javascript
       const arr = atom(['one', 'two', 'three']);
@@ -73,7 +66,7 @@
       ```
       ")
 
-    (derive [re RegExp] (Derivable [string])
+    (derive [re (or RegExp (Derivable RegExp))] (Derivable [string])
       "Creates a new derivation based on regexp matching. e.g.
 
       ```javascript
@@ -83,10 +76,6 @@
       match.get()
       // => ['hello', 'there']
       ```
-      ")
-
-    (derive [re (Derivable RegExp)] (Derivable [string])
-      "Creates a new derivation based on dynamic regexp matching. e.g.
 
       ```javascript
       const str = atom('hello there');
@@ -150,7 +139,7 @@
       ```")
 
 
-    ((derive A E) [f (=> [value T a A] E) a A] (Derivable E)
+    ((derive A E) [f (=> [value T a A] E) a (or A (Derivable A))] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
       current value of this derivable and {{a}}. e.g.
 
@@ -162,11 +151,6 @@
       xTimesTwo.get();
       // => 8
       ```
-      ")
-
-    ((derive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E)
-      "Creates a new derivation based on the application of {{f}} to the
-      current value of this derivable and the value represented by {{a}}. e.g.
 
       ```javascript
       const y = atom(5);
@@ -179,8 +163,9 @@
       xTimesY.get();
       // => 40
       ```
-      "
-      (:see-also unpack))
+      ")
+
+    ((derive A B E) [f (=> [value T a A b B] E) a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E))
 
     ((derive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E)
       "Any-arity version of above. Unpacks all args."
@@ -203,9 +188,9 @@
 
       ```")
 
-    ((mDerive A E) [f (=> [value T a A] E) a A] (Derivable E))
+    ((mDerive A E) [f (=> [value T a A] E) a (or A (Derivable A))] (Derivable E))
 
-    ((mDerive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E))
+    ((mDerive A B E) [f (=> [value T a A b B] E) a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E))
 
     ((mDerive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E))
 
@@ -252,7 +237,7 @@
       derivable.reactor(r).start().force();
       ```")
 
-    (react [f (=> [value T] void)] (Reactor T)
+    (react [f (=> [value T] void) options? ReactorLifecycleConfig] void
       "Creates a new {{Reactor}} based on {{f}} being applied to this derivable.
       Starts and forces the reactor before returning it. i.e.
 
@@ -266,26 +251,6 @@
       derivable.reactor(f).start().force();
       ```")
 
-    (reactWhen [cond (Derivable any), f (=> [value T] void)] (Reactor T)
-      "As {{react}} but the resulting reactor is automatically started and
-      stopped depending on the value of {{cond}}. i.e. it will be active while
-      {{cond}} is truthy, and inactive while {{cond}} is falsey. Equivalent to:
-
-      ```
-      let r = thing.reactor(f);
-
-      // cond is cast to a boolean before being reacted to
-      cond.derive(c => !!c).react(c => {
-        if (c) {
-          r.start().force();
-        } else {
-          r.stop();
-        }
-      });
-      ```
-      ")
-
-    (reactWhen [cond (Derivable any), r (Reactor T)] (Reactor T))
 
     (get [] T
       "Returns the current value of this derivable.
@@ -295,23 +260,6 @@
       x.get();
       // => 'a string'
       ```")
-
-    (pluck [prop any] (Derivable any)
-      "Returns a derivable which represents the lookup of {{prop}} in the
-      object represented by this derivable.
-
-      e.g.
-
-      ```javascript
-      $x.pluck('y');
-      ```
-
-      is equivalent to
-
-      ```javascript
-      $x.derive(x => x['y']);
-      ```
-      ")
 
     (is [other any] (Derivable boolean)
       "Returns a derivable which represents the equality of the values held in
@@ -627,6 +575,57 @@
       "Should propagate {{value}} back up to any relevant atoms.")
 
     (:see-also lens))
+
+  (:interface ReactorLifecycleConfig
+    "This lets one configure the lifecycle of reactors. There are three core
+    options:
+
+    - `from` - used to determine the start of a reactor's lifecycle
+    - `when` - used to toggle activity during a reactor's lifecycle
+    - `until` - used to determine the end of a reactor's lifecycle
+
+    Each of these options may be set as either a derivable boolean, or as a
+    function of no arguments which may be passed to {{derivation}} to create a
+    derivable boolean.
+
+    There are two additional convenience options to provide behaviour for common
+    use cases:
+
+    - `skipFirst` - causes the first invocation of the reactor to be ignored
+    - `once` - causes the reactor to be killed immediately following its first invocation
+
+    In addition, one may use this configuration object to override the `.onStart` and `.onStop` hooks."
+
+    (:property from? (or (or (=> [] boolean)) (Derivable boolean))
+      "Used to determine the start of the reactor's lifecycle. When it becomes
+      truthy, the reactor is initialized. After which point this property is not
+      used.")
+    (:property when? (or (or (=> [] boolean)) (Derivable boolean))
+      "Causes the reactor to be started and stopped based on the truthiness
+      of the given condition.")
+    (:property until? (or (or (=> [] boolean)) (Derivable boolean))
+      "Used to determine the end of a reactor's lifecycle. When it becomes truthy
+      the reactor is killed, after which point the reactor will never be used again
+      and is eligible for garbage collection.")
+
+    (:property skipFirst? boolean
+      "Causes the first invocation (and only the first invocation) of the reactor
+      to be ingored.")
+
+    (:property once? boolean
+      "Causes the reactor to be killed immediately following its first invocation
+      (not counting the skipped invocation, if `skipFirst` is set to true).")
+
+    (:property onStart? (=> [] void)
+      "Invoked immediately after a reactor is started (e.g. as a result of
+      `when` becoming truthy) but before its first
+      invocation"
+      (:see-also Reactor::onStart))
+
+    (:property onStop? (=> [] void)
+      "Invoked immediately after a reactor is stopped (e.g. as a result of
+      `when` becoming falsey)."
+      (:see-also Reactor::onStop)))
 
   (:class (Reactor T)
     "A Reactor is a stateful object which can be attached to a particular

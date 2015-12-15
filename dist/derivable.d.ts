@@ -7,35 +7,27 @@ declare module derivable {
   export interface Derivable<T> {
 
     derive<E>(f: (value: T) => E): Derivable<E>;
-    derive(prop: string): Derivable<any>;
-    derive(propD: Derivable<string>): Derivable<any>;
-    derive(index: number): Derivable<any>;
-    derive(indexD: Derivable<number>): Derivable<any>;
-    derive(re: RegExp): Derivable<string[]>;
-    derive(re: Derivable<RegExp>): Derivable<string[]>;
+    derive(prop: (string | Derivable<string>)): Derivable<any>;
+    derive(index: (number | Derivable<number>)): Derivable<any>;
+    derive(re: (RegExp | Derivable<RegExp>)): Derivable<string[]>;
     derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
     derive(args: any[]): Derivable<any>[];
-    derive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
-    derive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
+    derive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+    derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
     mDerive<E>(f: (value: T) => E): Derivable<E>;
-    mDerive<A, E>(f: (value: T, a: A) => E, a: A): Derivable<E>;
-    mDerive<A, E>(f: (value: T, a: A) => E, a: Derivable<A>): Derivable<E>;
+    mDerive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+    mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
     mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
     reactor(r: Reactor<T>): Reactor<T>;
     reactor(f: (value: T) => void): Reactor<T>;
 
     react(r: Reactor<T>): Reactor<T>;
-    react(f: (value: T) => void): Reactor<T>;
-
-    reactWhen(cond: Derivable<any>, f: (value: T) => void): Reactor<T>;
-    reactWhen(cond: Derivable<any>, r: Reactor<T>): Reactor<T>;
+    react(f: (value: T) => void, options?: ReactorLifecycleConfig): void;
 
     get(): T;
-
-    pluck(prop: any): Derivable<any>;
 
     is(other: any): Derivable<boolean>;
 
@@ -79,6 +71,23 @@ declare module derivable {
     get(): T;
 
     set(value: T): void;
+  }
+
+  export interface ReactorLifecycleConfig {
+
+    from?: ((() => boolean) | Derivable<boolean>);
+
+    when?: ((() => boolean) | Derivable<boolean>);
+
+    until?: ((() => boolean) | Derivable<boolean>);
+
+    skipFirst?: boolean;
+
+    once?: boolean;
+
+    onStart?: () => void;
+
+    onStop?: () => void;
   }
 
   export class Reactor<T> {
