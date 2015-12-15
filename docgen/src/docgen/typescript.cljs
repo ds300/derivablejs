@@ -30,6 +30,11 @@
   (toString [{:keys [base-type params]}]
     (str base-type (render-type-args params))))
 
+(extend-type ast/UnionType
+  Object
+  (toString [{:keys [types]}]
+    (str "(" (all->ts (interpose " | " types)) ")")))
+
 (extend-type ast/ArrayType
   Object
   (toString [{:keys [base-type]}]

@@ -299,6 +299,14 @@
   (gen [{:keys [base-type params]} path]
     (conj (gen base-type path) (gen-type-args params path))))
 
+(extend-type ast/UnionType
+  IDoc
+  (gen [{:keys [types]} path]
+    [:.union-type
+      [:.punct "("]
+      (interpose [:.punct " | "] (map #(gen % path) types))
+      [:.punct ")"]]))
+
 (extend-type ast/ArrayType
   IDoc
   (gen [this path]
