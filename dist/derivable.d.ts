@@ -128,11 +128,11 @@ declare module derivable {
 
   function struct(obj: any): Derivable<any>;
 
-  function destruct(obj: Derivable<any>, ...keys: any[]): Derivable<any>[];
-
   function unpack(obj: any): any;
 
   function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
+  function lift<A, B, E>(f: (a: A, b: B) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>)) => Derivable<E>;
+  function lift<A, B, C, E>(f: (a: A, b: B, c: C) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>)) => Derivable<E>;
 
   function isAtom(obj: any): boolean;
 

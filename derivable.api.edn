@@ -834,38 +834,9 @@
     // $> C stands for Chris
     ```")
 
-  (destruct [obj (Derivable any) &keys [any]] [(Derivable any)]
-    "Returns an array of derivables representing respective lookups of {{&keys}}
-    in {{obj}}. e.g.
-
-    ```javascript
-    const obj = atom({a: `A`, 'b-*&': `B`});
-    const [a, b, c] = destruct(obj, 'a', 'b-*&', 'c');
-
-    a.get();
-    // => `A`
-    b.get();
-    // => `B`
-    c.get();
-    // => undefined
-    ```
-
-    It uses ordinary property access so it also works for arrays.
-
-    ```javascript
-    const arr = atom([`zeroth`,`oneth`]);
-    const [a, b, c] = destruct(arr, 0, 1, 2);
-
-    a.get();
-    // => `zeroth`
-    b.get();
-    // => `oneth`
-    c.get();
-    // => undefined
-    ```")
-
   (unpack [obj any] any
     "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
+
 
   (lift [f (=> [&args [any]] any)] (=> [&args [(Derivable any)]] (Derivable any))
     "Lifts a function that works on normal values to work on derivable values.
@@ -887,6 +858,9 @@
     xplusy.get();
     // => 30
     ```")
+
+  ((lift A B E) [f (=> [a A b B] E)] (=> [a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E)))
+  ((lift A B C E) [f (=> [a A b B c C] E)] (=> [a (or A (Derivable A)) b (or B (Derivable B)) c (or C (Derivable C))] (Derivable E)))
 
   (isAtom [obj any] boolean
     "Returns true iff {{obj}} is an {{Atom}}.")
