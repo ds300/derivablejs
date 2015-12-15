@@ -249,11 +249,19 @@
   (link [_ path]
     [:a.method {:href (path-href path "constructor")} "constructor"]))
 
+(defn property-name [name]
+  (if (= (last (str name)) "?")
+    [:span
+     (symbol (apply str (butlast (str name))))
+     [:.punct "?"]]
+    name))
+
 (extend-type ast/Property
   IDoc
   (gen [{:keys [name docs type]} path]
     [:div.property
-      [:h4.code [:.property name]
+      (anchor path name)
+      [:h4.code [:.property (property-name name)]
                 [:.punct ": "]
                 (gen type path)]
       (gen-docs docs (conj path name))])
