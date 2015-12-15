@@ -96,9 +96,9 @@
 
 (def type-subheadings [[ast/Module     "Modules"]
                        [ast/Function   "Functions"]
-                       [ast/Class      "Classes"]
                        [ast/Interface  "Interfaces"]
-                       [ast/Property   "Properties"]])
+                       [ast/Property   "Properties"]
+                       [ast/Class      "Classes"]])
 
 (defn toc-grouped [members path]
   (let [groups (group-by type members)]
