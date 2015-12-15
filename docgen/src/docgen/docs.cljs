@@ -96,9 +96,9 @@
 
 (def type-subheadings [[ast/Module     "Modules"]
                        [ast/Function   "Functions"]
-                       [ast/Class      "Classes"]
                        [ast/Interface  "Interfaces"]
-                       [ast/Property   "Properties"]])
+                       [ast/Property   "Properties"]
+                       [ast/Class      "Classes"]])
 
 (defn toc-grouped [members path]
   (let [groups (group-by type members)]
@@ -249,11 +249,19 @@
   (link [_ path]
     [:a.method {:href (path-href path "constructor")} "constructor"]))
 
+(defn property-name [name]
+  (if (= (last (str name)) "?")
+    [:span
+     (symbol (apply str (butlast (str name))))
+     [:.punct "?"]]
+    name))
+
 (extend-type ast/Property
   IDoc
   (gen [{:keys [name docs type]} path]
     [:div.property
-      [:h4.code [:.property name]
+      (anchor path name)
+      [:h4.code [:.property (property-name name)]
                 [:.punct ": "]
                 (gen type path)]
       (gen-docs docs (conj path name))])
@@ -298,6 +306,14 @@
   IDoc
   (gen [{:keys [base-type params]} path]
     (conj (gen base-type path) (gen-type-args params path))))
+
+(extend-type ast/UnionType
+  IDoc
+  (gen [{:keys [types]} path]
+    [:.union-type
+      [:.punct "("]
+      (interpose [:.punct " | "] (map #(gen % path) types))
+      [:.punct ")"]]))
 
 (extend-type ast/ArrayType
   IDoc

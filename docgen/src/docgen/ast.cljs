@@ -5,6 +5,9 @@
 ; *** Data type definitions ***
 ; *****************************
 
+(defrecord UnionType [types])
+; e.g. Blah | string | any
+
 (defrecord ParameterizedType [base-type params])
 ; e.g. Blah<K, V>
 
@@ -83,14 +86,14 @@
   [[nm args & more :as form]]
   (cond
     (symbol? nm)
-      (if (vector? args)
-        (cons :function form)
-        (cons :property form))
-    (seq? nm)
+    (if (vector? args)
       (cons :function form)
+      (cons :property form))
+    (seq? nm)
+    (cons :function form)
     (#{:interface :module :class} nm)
-      (concat [nm args]
-              (map transform-functions+properties more))
+    (concat [nm args]
+            (map transform-functions+properties more))
     :else form))
 
 (defn transform-docs
@@ -121,14 +124,18 @@
 (defn parse-function-type [[params return-type]]
   (FunctionType. (parse-params params) (parse-type return-type)))
 
+(defn parse-union-type [types]
+  (UnionType. (mapv parse-type types)))
+
 (defn parse-type [type]
   (cond
     (symbol? type) type
     (vector? type) (ArrayType. (parse-type (type 0)))
     (seq? type)    (let [[hd & tl] type]
-                     (if (= hd '=>)
-                       (parse-function-type tl)
-                       (ParameterizedType. hd (mapv parse-type tl))))))
+                     (cond
+                       (= hd '=>) (parse-function-type tl)
+                       (= hd 'or)  (parse-union-type tl)
+                       :else (ParameterizedType. hd (mapv parse-type tl))))))
 
 (defn parse-name [nm]
   (if (seq? nm)
@@ -170,7 +177,7 @@
 
 (def function-constructors { Module #(Function. %1 %2)
                              Interface #(Method. %1 %2)
-                             Class #(Method. %1 %2) })
+                             Class #(Method. %1 %2)})
 
 (defmethod include :function [acc [_ name params return-type & things]]
   (let [[name type-args] (parse-name name)

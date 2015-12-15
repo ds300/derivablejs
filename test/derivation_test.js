@@ -27,7 +27,7 @@ describe("a derivation", () => {
     const orderName = label(order.derive(order => {
       return (["bytes", "kilobytes", "megabytes", "gigabytes"])[order];
     }), "ON");
-    const size = label(derive(bytes, orderUp, order), "!size!");
+    const size = label(bytes.derive(orderUp, order), "!size!");
     const sizeString = derive`${size} ${orderName}`;
 
     assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
@@ -90,6 +90,8 @@ describe("a derivation", () => {
     assert.strictEqual(sOrE.not().not().get(), true);
     assert.strictEqual(sAndE.not().not().get(), false);
 
+    assert.strictEqual(name.derive('length').get(), 6);
+    assert.strictEqual(name.derive(0).get(), "s");
 
     let x = startsWithS.then(
       () => assert(true, "smithy starts with s"),
@@ -208,6 +210,132 @@ describe("a derivation", () => {
     assert.strictEqual(numReactions2, 0);
     a.set(11);
     assert.strictEqual(numReactions2, 0);
+  });
+});
+
+describe("the derive method", () => {
+  it("'pluck's when given a string or derivable string", () => {
+    const obj = atom({nested: 'nested!', other: 'also nested!'});
+
+    const nested = obj.derive('nested');
+    assert.strictEqual(nested.get(), 'nested!');
+
+    const prop = atom('nested');
+    const item = obj.derive(prop);
+    assert.strictEqual(item.get(), 'nested!');
+    prop.set('other')
+    assert.strictEqual(item.get(), 'also nested!');
+  });
+  it("also 'pluck's when given a number or derivable number", () => {
+    const arr = atom([1,2,3]);
+
+    const middle = arr.derive(1);
+    assert.strictEqual(middle.get(), 2);
+
+    const cursor = atom(0);
+    const item = arr.derive(cursor);
+
+    assert.strictEqual(item.get(), 1);
+    cursor.set(1);
+    assert.strictEqual(item.get(), 2);
+    cursor.set(2);
+    assert.strictEqual(item.get(), 3);
+  });
+
+  it("uses RegExp objects to do string matching", () => {
+    const string = atom("this is a lovely string");
+    const words = string.derive(/\w+/g);
+
+    assert.deepEqual(words.get(), ['this', 'is', 'a', 'lovely', 'string']);
+
+    const firstLetters = string.derive(/\b\w/g);
+    assert.deepEqual(firstLetters.get(), ['t', 'i', 'a', 'l', 's']);
+
+    string.set("you are so kind");
+    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+  });
+
+  it("destructures derivables", () => {
+    const s = atom({a: "aye", b: "bee", c: "cee"});
+    let [a, b, c] = s.derive(['a', 'b', 'c']);
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    // swap a and c over
+
+    const aKey = atom('c');
+    const cKey = atom('a');
+    [a, b, c] = s.derive([aKey, 'b', cKey]);
+
+    assert.strictEqual(a.get(), "cee");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "aye");
+
+    aKey.set('a');
+    cKey.set('c');
+
+    assert.strictEqual(a.get(), "aye");
+    assert.strictEqual(b.get(), "bee");
+    assert.strictEqual(c.get(), "cee");
+
+    const arr = atom(['naught','one','two']);
+    const [naught, one, two] = arr.derive([0, 1, atom(2)]);
+
+    assert.strictEqual(naught.get(), "naught");
+    assert.strictEqual(one.get(), "one");
+    assert.strictEqual(two.get(), "two");
+
+    arr.set(['love', 'fifteen', 'thirty']);
+
+    assert.strictEqual(naught.get(), "love");
+    assert.strictEqual(one.get(), "fifteen");
+    assert.strictEqual(two.get(), "thirty");
+  });
+
+  it('can also do destructuring with regexps etc', () => {
+    const string = atom("you are so kind");
+
+    const [firstLetters, len, lastWord, firstChar] = string.derive([
+      /\b\w/g,
+      'length',
+      s => s.split(' ').pop(),
+      0
+    ]);
+
+    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+    assert.strictEqual(len.get(), 15);
+    assert.strictEqual(lastWord.get(), 'kind');
+    assert.strictEqual(firstChar.get(), 'y');
+
+    string.set('thank you');
+
+    assert.deepEqual(firstLetters.get(), ['t', 'y']);
+    assert.strictEqual(len.get(), 9);
+    assert.strictEqual(lastWord.get(), 'you');
+    assert.strictEqual(firstChar.get(), 't');
+  })
+});
+
+describe("mDerive", () => {
+  it('is like derive, but propagates nulls', () => {
+    const thing = atom({prop: 'val'});
+    const val = thing.mDerive('prop');
+
+    assert.strictEqual(val.get(), 'val');
+    thing.set(null);
+    assert.equal(val.get(), null);
+
+    const [foo, bar] = thing.mDerive(['foo', 'bar']);
+
+    assert.equal(foo.get(), null);
+    assert.equal(bar.get(), null);
+
+    thing.set({foo: 'FOO!', bar: 'BAR!'});
+
+    assert.strictEqual(foo.get(), 'FOO!');
+    assert.strictEqual(bar.get(), 'BAR!');
   });
 });
 

@@ -186,6 +186,10 @@ span.type-arg, a.type-arg {
   color: #008972;
 }
 
+span.property, a.property {
+  color: #540865;
+}
+
 span.punct, a.punct,
 span.builtin-type, a.builtin-type {
   color: #888;
@@ -271,6 +275,10 @@ div.interface, div.function, div.class {
 
 #toc li.method > a {
   color: #0A6592;
+}
+
+#toc li.property > a {
+  color: #540865;
 }
 
 .github {

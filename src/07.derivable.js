@@ -10,9 +10,49 @@ function derivable_createPrototype (D, opts) {
       case 0:
         return that;
       case 1:
-        return D.derivation(function () {
-          return f(that.get());
-        });
+        switch (typeof f) {
+          case 'function':
+            return D.derivation(function () {
+              return f(that.get());
+            });
+          case 'string':
+          case 'number':
+            return D.derivation(function () {
+              return that.get()[D.unpack(f)];
+            });
+          default:
+            if (f instanceof Array) {
+              return f.map(function (x) {
+                return that.derive(x);
+              });
+            } else if (f instanceof RegExp) {
+              return D.derivation(function () {
+                return that.get().match(f);
+              });
+            } else if (D.isDerivable(f)) {
+              return D.derivation(function () {
+                const deriver = f.get();
+                const thing = that.get();
+                switch (typeof deriver) {
+                  case 'function':
+                    return deriver(thing);
+                  case 'string':
+                  case 'number':
+                    return thing[deriver];
+                  default:
+                    if (deriver instanceof RegExp) {
+                      return thing.match(deriver);
+                    } else {
+                      throw Error('type error');
+                    }
+                }
+                return that.get()[D.unpack(f)];
+              });
+            } else {
+              throw Error('type error');
+            }
+        }
+        break;
       case 2:
         return D.derivation(function () {
           return f(that.get(), D.unpack(a));
@@ -58,21 +98,78 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
-    react: function (f) {
-      return this.reactor(f).start().force();
-    },
+    react: function (f, opts) {
+      if (typeof f !== 'function') {
+        throw Error('the first argument to .react must be a function');
+      }
 
-    reactWhen: function (cond, f) {
-      var result = this.reactor(f);
-      // cast cond to boolean
-      cond.derive(function (c) { return !!c; }).react(function (cond) {
-        if (cond) {
-          result.start().force();
-        } else {
-          result.stop();
+      opts = Object.assign({
+        once: false,
+        from: true,
+        until: false,
+        when: true,
+        skipFirst: false,
+      }, opts);
+
+      // coerce fn or bool to derivable<bool>
+      function condDerivable(fOrD, name) {
+        if (!D.isDerivable(fOrD)) {
+          if (typeof fOrD === 'function') {
+            fOrD = D.derivation(fOrD);
+          } else if (typeof fOrD === 'boolean') {
+            fOrD = D.atom(fOrD);
+          } else {
+            throw Error('react ' + name + ' condition must be derivable');
+          }
+        }
+        return fOrD.derive(function (x) { return !!x; });
+      }
+
+      // wrap reactor so f doesn't get a .this context, and to allow
+      // stopping after one reaction if desired.
+      var reactor = this.reactor({
+        react: function (val) {
+          if (opts.skipFirst) {
+            opts.skipFirst = false;
+          } else {
+            f(val);
+            if (opts.once) {
+              this.stop();
+              controller.stop();
+            }
+          }
+        },
+        onStart: opts.onStart,
+        onStop: opts.onStop
+      });
+
+      // listen to when and until conditions, starting and stopping the
+      // reactor as appropriate, and stopping this controller when until
+      // condition becomes true
+      var controller = D.struct({
+        until: condDerivable(opts.until, 'until'),
+        when: condDerivable(opts.when, 'when')
+      }).reactor(function (conds) {
+        if (conds.until) {
+          reactor.stop();
+          this.stop();
+        } else if (conds.when) {
+          if (!reactor.isActive()) {
+            reactor.start().force();
+          }
+        } else if (reactor.isActive()) {
+          reactor.stop();
         }
       });
-      return result;
+
+      // listen to from condition, starting the reactor controller
+      // when appropriate
+      condDerivable(opts.from, 'from').reactor(function (from) {
+        if (from) {
+          controller.start().force();
+          this.stop();
+        }
+      }).start().force();
     },
 
     get: function () {
@@ -108,8 +205,13 @@ function derivable_createPrototype (D, opts) {
       return this.mThen(this, other);
     },
 
-    mDerive: function () {
-      return this.mThen(this.derive.apply(this, arguments));
+    mDerive: function (arg) {
+      if (arguments.length === 1 && arg instanceof Array) {
+        var that = this;
+        return arg.map(function (a) { return that.mDerive(a); });
+      } else {
+        return this.mThen(this.derive.apply(this, arguments));
+      }
     },
 
     mAnd: function (other) {

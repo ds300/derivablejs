@@ -310,7 +310,6 @@ function reactorBase (parent, control) {
     _type: types_REACTION,
     uid: util_nextId(),
     reacting: false,       // whether or not reaction function being invoked
-    stopping: false,
     yielding: false,       // whether or not letting parentReactor react first
   };
   if (util_DEBUG_MODE) {
@@ -322,23 +321,11 @@ var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
 
 function stop (base) {
   if (base.active) {
-    if (base.stopping) {
-      throw Error(cycleMsg);
+    util_removeFromArray(base.parent._children, base);
+    if (base.parentReactor) {
+      orphan(base);
     }
-    try {
-      base.stopping = true;
-      while (base.dependentReactors.length) {
-        var dr = base.dependentReactors.pop();
-        stop(dr);
-      }
-    } finally {
-      util_removeFromArray(base.parent._children, base);
-      if (base.parentReactor) {
-        orphan(base);
-      }
-      base.active = false;
-      base.stopping = false;
-    }
+    base.active = false;
     base.control.onStop && base.control.onStop();
   }
 }
@@ -354,7 +341,6 @@ function start (base) {
     var len = parentReactorStack.length;
     if (len > 0) {
       base.parentReactor = parentReactorStack[len - 1];
-      util_addToArray(base.parentReactor.dependentReactors, base);
     }
 
     base.control.onStart && base.control.onStart();
@@ -363,19 +349,12 @@ function start (base) {
 
 function orphan (base) {
   if (base.parentReactor) {
-    util_removeFromArray(base.parentReactor.dependentReactors, base);
     base.parentReactor = null;
   }
 }
 
 function adopt (parentBase, childBase) {
-  orphan(childBase);
-  if (parentBase.active) {
-    childBase.parentReactor = parentBase;
-    util_addToArray(parentBase.dependentReactors, childBase);
-  } else {
-    stop(childBase);
-  }
+  childBase.parentReactor = parentBase;
 }
 
 function reactors_maybeReact (base) {
@@ -505,9 +484,49 @@ function derivable_createPrototype (D, opts) {
       case 0:
         return that;
       case 1:
-        return D.derivation(function () {
-          return f(that.get());
-        });
+        switch (typeof f) {
+          case 'function':
+            return D.derivation(function () {
+              return f(that.get());
+            });
+          case 'string':
+          case 'number':
+            return D.derivation(function () {
+              return that.get()[D.unpack(f)];
+            });
+          default:
+            if (f instanceof Array) {
+              return f.map(function (x) {
+                return that.derive(x);
+              });
+            } else if (f instanceof RegExp) {
+              return D.derivation(function () {
+                return that.get().match(f);
+              });
+            } else if (D.isDerivable(f)) {
+              return D.derivation(function () {
+                const deriver = f.get();
+                const thing = that.get();
+                switch (typeof deriver) {
+                  case 'function':
+                    return deriver(thing);
+                  case 'string':
+                  case 'number':
+                    return thing[deriver];
+                  default:
+                    if (deriver instanceof RegExp) {
+                      return thing.match(deriver);
+                    } else {
+                      throw Error('type error');
+                    }
+                }
+                return that.get()[D.unpack(f)];
+              });
+            } else {
+              throw Error('type error');
+            }
+        }
+        break;
       case 2:
         return D.derivation(function () {
           return f(that.get(), D.unpack(a));
@@ -553,21 +572,78 @@ function derivable_createPrototype (D, opts) {
       }
     },
 
-    react: function (f) {
-      return this.reactor(f).start().force();
-    },
+    react: function (f, opts) {
+      if (typeof f !== 'function') {
+        throw Error('the first argument to .react must be a function');
+      }
 
-    reactWhen: function (cond, f) {
-      var result = this.reactor(f);
-      // cast cond to boolean
-      cond.derive(function (c) { return !!c; }).react(function (cond) {
-        if (cond) {
-          result.start().force();
-        } else {
-          result.stop();
+      opts = Object.assign({
+        once: false,
+        from: true,
+        until: false,
+        when: true,
+        skipFirst: false,
+      }, opts);
+
+      // coerce fn or bool to derivable<bool>
+      function condDerivable(fOrD, name) {
+        if (!D.isDerivable(fOrD)) {
+          if (typeof fOrD === 'function') {
+            fOrD = D.derivation(fOrD);
+          } else if (typeof fOrD === 'boolean') {
+            fOrD = D.atom(fOrD);
+          } else {
+            throw Error('react ' + name + ' condition must be derivable');
+          }
+        }
+        return fOrD.derive(function (x) { return !!x; });
+      }
+
+      // wrap reactor so f doesn't get a .this context, and to allow
+      // stopping after one reaction if desired.
+      var reactor = this.reactor({
+        react: function (val) {
+          if (opts.skipFirst) {
+            opts.skipFirst = false;
+          } else {
+            f(val);
+            if (opts.once) {
+              this.stop();
+              controller.stop();
+            }
+          }
+        },
+        onStart: opts.onStart,
+        onStop: opts.onStop
+      });
+
+      // listen to when and until conditions, starting and stopping the
+      // reactor as appropriate, and stopping this controller when until
+      // condition becomes true
+      var controller = D.struct({
+        until: condDerivable(opts.until, 'until'),
+        when: condDerivable(opts.when, 'when')
+      }).reactor(function (conds) {
+        if (conds.until) {
+          reactor.stop();
+          this.stop();
+        } else if (conds.when) {
+          if (!reactor.isActive()) {
+            reactor.start().force();
+          }
+        } else if (reactor.isActive()) {
+          reactor.stop();
         }
       });
-      return result;
+
+      // listen to from condition, starting the reactor controller
+      // when appropriate
+      condDerivable(opts.from, 'from').reactor(function (from) {
+        if (from) {
+          controller.start().force();
+          this.stop();
+        }
+      }).start().force();
     },
 
     get: function () {
@@ -603,8 +679,13 @@ function derivable_createPrototype (D, opts) {
       return this.mThen(this, other);
     },
 
-    mDerive: function () {
-      return this.mThen(this.derive.apply(this, arguments));
+    mDerive: function (arg) {
+      if (arguments.length === 1 && arg instanceof Array) {
+        var that = this;
+        return arg.map(function (a) { return that.mDerive(a); });
+      } else {
+        return this.mThen(this.derive.apply(this, arguments));
+      }
     },
 
     mAnd: function (other) {
@@ -1068,33 +1149,14 @@ function constructModule (config) {
     }
   };
 
-  /**
-   * Sets the e's state to be f applied to e's current state and args
-   */
-  D.swap = function (atom, f) {
-    var args = util_slice(arguments, 1);
-    args[0] = atom.get();
-    return atom.set(f.apply(null, args));
-  };
-
   D.derivation = function (f) {
     return derivation_construct(Object.create(Derivation), f);
   };
 
   /**
-   * Creates a new derivation. Can also be used as a template string tag.
+   * Template string tag for derivable strings
    */
-  D.derive = function (a) {
-    if (a instanceof Array) {
-      return deriveString.apply(null, arguments);
-    } else if (arguments.length > 0) {
-      return Derivable.derive.apply(a, util_slice(arguments, 1));
-    } else {
-      throw new Error("Wrong arity for derive. Expecting 1+ args");
-    }
-  };
-
-  function deriveString (parts) {
+  D.derive = function (parts) {
     var args = util_slice(arguments, 1);
     return D.derivation(function () {
       var s = "";
@@ -1106,27 +1168,17 @@ function constructModule (config) {
       }
       return s;
     });
-  }
-
-  D.mDerive = function (a) {
-    return Derivable.mDerive.apply(a, util_slice(arguments, 1));
   };
 
   /**
    * creates a new lens
    */
-  D.lens = function (parent, descriptor) {
-    var lens = Object.create(Lens);
-    if (arguments.length === 1) {
-      descriptor = parent;
-      return lens_construct(
-        derivation_construct(lens, descriptor.get),
-        descriptor
-      );
-    } else {
-      return parent.lens(descriptor);
-    }
-  }
+  D.lens = function (descriptor) {
+    return lens_construct(
+      derivation_construct(Object.create(Lens), descriptor.get),
+      descriptor
+    );
+  };
 
   /**
    * dereferences a thing if it is dereferencable, otherwise just returns it.
@@ -1150,17 +1202,6 @@ function constructModule (config) {
         return f.apply(that, Array.prototype.map.call(args, D.unpack));
       });
     }
-  };
-
-  /**
-   * sets a to v, returning v
-   */
-  D.set = function (a, v) {
-    return a.set(v);
-  };
-
-  D.get = function (d) {
-    return d.get();
   };
 
   function deepUnpack (thing) {
@@ -1191,101 +1232,27 @@ function constructModule (config) {
     }
   };
 
-  D.destruct = function (arg) {
-    var args = arguments;
-    var result = [];
-    for (var i = 1; i < args.length; i++) {
-      result.push(D.lookup(arg, args[i]));
+  function andOrFn (breakOn) {
+    return function () {
+      var args = arguments;
+      return D.derivation(function () {
+        var val;
+        for (var i = 0; i < args.length; i++) {
+          val = D.unpack(args[i]);
+          if (breakOn(val)) {
+            break;
+          }
+        }
+        return val;
+      });
     }
-    return result;
-  };
-
-  D.lookup = function (arg, prop) {
-    return D.derivation(function () {
-      return D.unpack(arg)[D.unpack(prop)];
-    })
-  };
-
-  D.ifThenElse = function (a, b, c) { return a.then(b, c) };
-
-  D.ifThenElse = function (testValue, thenClause, elseClause) {
-    return D.derivation(function () {
-      return D.unpack(
-        D.unpack(testValue) ? thenClause : elseClause
-      );
-    });
   }
-
-  D.mIfThenElse = function (testValue, thenClause, elseClause) {
-    return D.derivation(function () {
-      var x = D.unpack(testValue);
-      return D.unpack(
-        util_some(x) ? thenClause : elseClause
-      );
-    });
-  };
-
-  D.or = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (val) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.mOr = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (util_some(val)) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.and = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (!val) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.mAnd = function () {
-    var args = arguments;
-    return D.derivation(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
-        if (!util_some(val)) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-
-  D.not = function (x) { return x.derive(function (x) { return !x; }); };
-
-  D.switchCase = function (x) {
-    return Derivable.switch.apply(x, util_slice(arguments, 1));
-  };
+  function identity (x) { return x; }
+  function complement (f) { return function (x) { return !f(x); }}
+  D.or = andOrFn(identity);
+  D.mOr = andOrFn(util_some);
+  D.and = andOrFn(complement(identity));
+  D.mAnd = andOrFn(complement(util_some));
 
   return D;
 }

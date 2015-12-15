@@ -9,7 +9,6 @@ function reactorBase (parent, control) {
     _type: types_REACTION,
     uid: util_nextId(),
     reacting: false,       // whether or not reaction function being invoked
-    stopping: false,
     yielding: false,       // whether or not letting parentReactor react first
   };
   if (util_DEBUG_MODE) {
@@ -21,23 +20,11 @@ var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
 
 function stop (base) {
   if (base.active) {
-    if (base.stopping) {
-      throw Error(cycleMsg);
+    util_removeFromArray(base.parent._children, base);
+    if (base.parentReactor) {
+      orphan(base);
     }
-    try {
-      base.stopping = true;
-      while (base.dependentReactors.length) {
-        var dr = base.dependentReactors.pop();
-        stop(dr);
-      }
-    } finally {
-      util_removeFromArray(base.parent._children, base);
-      if (base.parentReactor) {
-        orphan(base);
-      }
-      base.active = false;
-      base.stopping = false;
-    }
+    base.active = false;
     base.control.onStop && base.control.onStop();
   }
 }
@@ -53,7 +40,6 @@ function start (base) {
     var len = parentReactorStack.length;
     if (len > 0) {
       base.parentReactor = parentReactorStack[len - 1];
-      util_addToArray(base.parentReactor.dependentReactors, base);
     }
 
     base.control.onStart && base.control.onStart();
@@ -62,19 +48,12 @@ function start (base) {
 
 function orphan (base) {
   if (base.parentReactor) {
-    util_removeFromArray(base.parentReactor.dependentReactors, base);
     base.parentReactor = null;
   }
 }
 
 function adopt (parentBase, childBase) {
-  orphan(childBase);
-  if (parentBase.active) {
-    childBase.parentReactor = parentBase;
-    util_addToArray(parentBase.dependentReactors, childBase);
-  } else {
-    stop(childBase);
-  }
+  childBase.parentReactor = parentBase;
 }
 
 function reactors_maybeReact (base) {

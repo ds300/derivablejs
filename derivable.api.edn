@@ -15,10 +15,131 @@
 
       xTimesTwo.get();
       // => 8
-      ```"
-    (:see-also derivable::derive))
+      ```")
 
-    ((derive A E) [f (=> [value T a A] E) a A] (Derivable E)
+    (derive [prop (or string (Derivable string))] (Derivable any)
+      "Creates a new derivation based on property lookup. e.g.
+
+      ```javascript
+      const obj = atom({foo: 'FOO!', bar: 'BAR!'});
+      const foo = obj.derive('foo');
+
+      foo.get();
+      // => 'FOO!'
+      ```
+
+      ```javascript
+      const obj = atom({foo: 'FOO!', bar: 'BAR!'});
+      const prop = atom('foo');
+      const item = obj.derive(prop);
+
+      item.get();
+      // => 'FOO!'
+
+      prop.set('bar');
+      item.get();
+      // => 'BAR!'
+      ```")
+
+    (derive [index (or number (Derivable number))] (Derivable any)
+      "Creates a new derivation based on index lookup. e.g.
+
+      ```javascript
+      const arr = atom(['one', 'two', 'three']);
+      const middle = arr.derive(1);
+
+      middle.get();
+      // => 'two'
+      ```
+
+      ```javascript
+      const arr = atom(['one', 'two', 'three']);
+      const idx = atom(0);
+      const item = arr.derive(idx);
+
+      item.get();
+      // => 'one'
+
+      idx.set(1);
+      item.get();
+      // => 'two'
+      ```
+      ")
+
+    (derive [re (or RegExp (Derivable RegExp))] (Derivable [string])
+      "Creates a new derivation based on regexp matching. e.g.
+
+      ```javascript
+      const str = atom('hello there');
+      const match = str.derive(/\\w+/g);
+
+      match.get()
+      // => ['hello', 'there']
+      ```
+
+      ```javascript
+      const str = atom('hello there');
+      const re = atom(/\\w+/);
+      const match = str.derive(re);
+
+      match.get()
+      // => [ 'hello', index: 0, input: 'hello there' ]
+
+      re.set(/e.*?\\b/g);
+      match.get()
+      // => ['ello', 'ere']
+      ```
+      ")
+
+    ((derive E) [f (Derivable (=> [value T] E))] (Derivable E)
+      "Creates a new derivation based on the application of {{f}} to the
+      current value of this derivable. e.g.
+
+      ```javascript
+      const x = atom(4);
+      const timesTwo = (n) => n * 2;
+      const timesFour = (n) => n * 4;
+      const f = atom(timesTwo);
+      const fx = x.derive(f);
+
+      fx.get();
+      // => 8
+
+      f.set(timesFour);
+      fx.get();
+      // => 16
+      ```")
+
+    (derive [args [any]] [(Derivable any)]
+      "Lets one combine all the above and destructure the result. e.g.
+
+      ```javascript
+      const x = atom('hello there');
+      const index = atom(0);
+
+      const [words, len, upper, char] = x.derive([
+        /\\w+/g, 'length', s => s.toUpperCase(), index
+      ]);
+
+      words.get();
+      // => ['hello', 'there']
+
+      len.get();
+      // => 11
+
+      upper.get();
+      // => 'HELLO THERE'
+
+      char.get();
+      // => 'h'
+
+      index.set(2);
+      char.get();
+      // => 'l'
+      ```")
+
+
+    ((derive A E) [f (=> [value T a A] E) a (or A (Derivable A))] (Derivable E)
       "Creates a new derivation based on the application of {{f}} to the
       current value of this derivable and {{a}}. e.g.
 
@@ -30,12 +151,6 @@
       xTimesTwo.get();
       // => 8
       ```
-      "
-    (:see-also derivable::derive))
-
-    ((derive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E)
-      "Creates a new derivation based on the application of {{f}} to the
-      current value of this derivable and the value represented by {{a}}. e.g.
 
       ```javascript
       const y = atom(5);
@@ -48,12 +163,13 @@
       xTimesY.get();
       // => 40
       ```
-      "
-      (:see-also derivable::derive unpack))
+      ")
+
+    ((derive A B E) [f (=> [value T a A b B] E) a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E))
 
     ((derive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E)
       "Any-arity version of above. Unpacks all args."
-      (:see-also derivable::derive unpack))
+      (:see-also unpack))
 
     ((mDerive E) [f (=> [value T] E)] (Derivable E)
       "nil-shortcutting version of {{derive}}. e.g.
@@ -70,92 +186,61 @@
       xTimesTwo.get();
       // throws error because we try to multiply null by 2
 
-      ```"
-    (:see-also derivable::mDerive))
+      ```")
 
-    ((mDerive A E) [f (=> [value T a A] E) a A] (Derivable E))
+    ((mDerive A E) [f (=> [value T a A] E) a (or A (Derivable A))] (Derivable E))
 
-    ((mDerive A E) [f (=> [value T a A] E) a (Derivable A)] (Derivable E))
+    ((mDerive A B E) [f (=> [value T a A b B] E) a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E))
 
     ((mDerive E) [f (=> [value T &args [any]] E) &args [any]] (Derivable E))
 
-    (reactor [r (Reactor T)] (Reactor T)
-      "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
-      reactor. i.e. it should not have been linked to any other derivable
-      in the past. For examples see {{Reactor}}")
+    (react [f (=> [value T] void) options? Lifecycle] void
+      "Declares an anonymous reactor based on {{f}} being applied to this derivable.
 
-    (reactor [f (=> [value T] void)] (Reactor T)
-      "Creates a new {{Reactor}} based on {{f}} being applied to this derivable. e.g.
+      The default lifecycle options are:
 
       ```javascript
-      const x = atom(4);
-      const r = x.reactor(x => console.log(`x is`, x));
-
-      x.set(8);
-
-      // .reactor creats the reactor, but doesn't start it,
-      // so nothing gets printed yet
-
-      r.start();
-
-      // now that the reactor has started it will respond
-      // to changes in x
-
-      x.set(16);
-      // $> x is 16
-
-      x.set(32);
-      // $> x is 32
-      ```")
-
-    (react [r (Reactor T)] (Reactor T)
-      "Creates a link between {{r}} and this derivable. Starts
-      and forces the reactor before returning it. i.e.
-
-      ```javascript
-      derivable.react(r);
+      {
+        from: true,   // i.e. the reactor is initialized immediately
+        when: true,   // i.e. the reactor is always active
+        until: false, // i.e. the reactor is never killed
+        skipFirst: false,
+        once: false
+      }
       ```
 
-      is equivalent to
+      e.g.
 
       ```javascript
-      derivable.reactor(r).start().force();
-      ```")
+      const n = atom(0);
 
-    (react [f (=> [value T] void)] (Reactor T)
-      "Creates a new {{Reactor}} based on {{f}} being applied to this derivable.
-      Starts and forces the reactor before returning it. i.e.
-
-      ```javascript
-      derivable.react(f);
-      ```
-
-      is equivalent to
-
-      ```javascript
-      derivable.reactor(f).start().force();
-      ```")
-
-    (reactWhen [cond (Derivable any), f (=> [value T] void)] (Reactor T)
-      "As {{react}} but the resulting reactor is automatically started and
-      stopped depending on the value of {{cond}}. i.e. it will be active while
-      {{cond}} is truthy, and inactive while {{cond}} is falsey. Equivalent to:
-
-      ```
-      let r = thing.reactor(f);
-
-      // cond is cast to a boolean before being reacted to
-      cond.derive(c => !!c).react(c => {
-        if (c) {
-          r.start().force();
-        } else {
-          r.stop();
-        }
+      n.react(n => console.log(`n is ${n}`), {
+        from: () => n.get() > 0,      // start when n > 0
+        when: () => n.get() %2 === 0, // only react when n is even
+        until: () => n.get() => 5     // stop when n >= 5
       });
+      // ... no output
+
+      n.set(1);
+      // ... no output (n is odd)
+
+      n.set(2);
+      // $> n is 2
+
+      n.set(3);
+      // ... no output (n is odd)
+
+      n.set(4);
+      // $> n is 4
+
+      n.set(5);
+      // ... no output (reactor was killed)
+
+      n.set(4);
+      // ... no output (reactors don't come back from the dead)
       ```
       ")
 
-    (reactWhen [cond (Derivable any), r (Reactor T)] (Reactor T))
 
     (get [] T
       "Returns the current value of this derivable.
@@ -333,6 +418,40 @@
 
       $SomeState.set({blah: true});
       // no side effects occurred!
+      ```")
+
+    (reactor [r (Reactor T)] (Reactor T)
+      "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
+      reactor. i.e. it should not have been linked to any other derivable
+      in the past. For examples see {{Reactor}}.
+
+      Only use this if {{Lifecycle}} doesn't fit your needs.
+      ")
+
+    (reactor [f (=> [value T] void)] (Reactor T)
+      "Creates and returns a new {{Reactor}} based on {{f}} being applied to this derivable. e.g.
+
+      Only use this if {{Lifecycle}} doesn't fit your needs.
+
+      ```javascript
+      const x = atom(4);
+      const r = x.reactor(x => console.log(`x is`, x));
+
+      x.set(8);
+
+      // .reactor creats the reactor, but doesn't start it,
+      // so nothing gets printed yet
+
+      r.start();
+
+      // now that the reactor has started it will respond
+      // to changes in x
+
+      x.set(16);
+      // $> x is 16
+
+      x.set(32);
+      // $> x is 32
       ```"))
 
   (:interface (Atom T)
@@ -349,8 +468,7 @@
 
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
-      ```"
-      (:see-also derivable::swap))
+      ```")
     ((lens E) [lens (Lens T E)] (Atom E)
       "Returns a new atom connected to this one via the logic encapsulated by
       {{lens}}."
@@ -482,6 +600,57 @@
 
     (:see-also lens))
 
+  (:interface Lifecycle
+    "This lets one configure the lifecycle of reactors. There are three core
+    options:
+
+    - `from` - used to determine the start of a reactor's lifecycle
+    - `when` - used to toggle activity during a reactor's lifecycle
+    - `until` - used to determine the end of a reactor's lifecycle
+
+    Each of these options may be set as either a derivable boolean, or as a
+    function of no arguments which may be passed to {{derivation}} to create a
+    derivable boolean.
+
+    There are two additional convenience options to provide behaviour for common
+    use cases:
+
+    - `skipFirst` - causes the first invocation of the reactor to be ignored
+    - `once` - causes the reactor to be killed immediately following its first invocation
+
+    In addition, one may use this configuration object to override the `.onStart` and `.onStop` hooks."
+
+    (:property from? (or (or (=> [] boolean)) (Derivable boolean))
+      "Used to determine the start of the reactor's lifecycle. When it becomes
+      truthy, the reactor is initialized. After which point this property is not
+      used.")
+    (:property when? (or (or (=> [] boolean)) (Derivable boolean))
+      "Causes the reactor to be started and stopped based on the truthiness
+      of the given condition.")
+    (:property until? (or (or (=> [] boolean)) (Derivable boolean))
+      "Used to determine the end of a reactor's lifecycle. When it becomes truthy
+      the reactor is killed, after which point the reactor will never be used again
+      and is eligible for garbage collection.")
+
+    (:property skipFirst? boolean
+      "Causes the first invocation (and only the first invocation) of the reactor
+      to be ingored.")
+
+    (:property once? boolean
+      "Causes the reactor to be killed immediately following its first invocation
+      (not counting the skipped invocation, if `skipFirst` is set to true).")
+
+    (:property onStart? (=> [] void)
+      "Invoked immediately after a reactor is started (e.g. as a result of
+      `when` becoming truthy) but before its first
+      invocation"
+      (:see-also Reactor::onStart))
+
+    (:property onStop? (=> [] void)
+      "Invoked immediately after a reactor is stopped (e.g. as a result of
+      `when` becoming falsey)."
+      (:see-also Reactor::onStop)))
+
   (:class (Reactor T)
     "A Reactor is a stateful object which can be attached to a particular
     derivable. Changes in this derivable will cause a Reactor to be executed."
@@ -560,19 +729,6 @@
   ((lens T) [lens (CompositeLens T)] (Atom T)
     "Creates a new lensed atom using the given composite lens descriptor."
     (:see-also CompositeLens))
-
-  ((lens A B) [atom (Atom A) lens (Lens A B)] (Atom B)
-    "A functional interface to the {{Atom::lens}} method.
-
-    ```javascript
-    lens(a, l);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    a.lens(l);
-    ```")
 
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
@@ -678,56 +834,9 @@
     // $> C stands for Chris
     ```")
 
-  (destruct [obj (Derivable any) &keys [any]] [(Derivable any)]
-    "Returns an array of derivables representing respective lookups of {{&keys}}
-    in {{obj}}. e.g.
-
-    ```javascript
-    const obj = atom({a: `A`, 'b-*&': `B`});
-    const [a, b, c] = destruct(obj, 'a', 'b-*&', 'c');
-
-    a.get();
-    // => `A`
-    b.get();
-    // => `B`
-    c.get();
-    // => undefined
-    ```
-
-    It uses ordinary property access so it also works for arrays.
-
-    ```javascript
-    const arr = atom([`zeroth`,`oneth`]);
-    const [a, b, c] = destruct(arr, 0, 1, 2);
-
-    a.get();
-    // => `zeroth`
-    b.get();
-    // => `oneth`
-    c.get();
-    // => undefined
-    ```")
-
-  (lookup [obj (Derivable any) key any] (Derivable any)
-    "Returns a new derivable which represents the lookup of up {{key}} in {{obj}}.
-    {{key}} may be derivable. e.g.
-
-    ```javascript
-    const obj = atom({k: `v`});
-    const k = atom(`y`);
-    const v = lookup(obj, k);
-
-    v.get();
-    // => undefined
-
-    k.set(`k`);
-
-    v.get();
-    // => `v`
-    ```")
-
   (unpack [obj any] any
     "If {{obj}} is derivable, returns `obj.get()`, otherwise returns {{obj}}.")
+
 
   (lift [f (=> [&args [any]] any)] (=> [&args [(Derivable any)]] (Derivable any))
     "Lifts a function that works on normal values to work on derivable values.
@@ -750,6 +859,9 @@
     // => 30
     ```")
 
+  ((lift A B E) [f (=> [a A b B] E)] (=> [a (or A (Derivable A)) b (or B (Derivable B))] (Derivable E)))
+  ((lift A B C E) [f (=> [a A b B c C] E)] (=> [a (or A (Derivable A)) b (or B (Derivable B)) c (or C (Derivable C))] (Derivable E)))
+
   (isAtom [obj any] boolean
     "Returns true iff {{obj}} is an {{Atom}}.")
 
@@ -766,28 +878,6 @@
 
   (isReactor [obj any] boolean
     "Returns true iff `obj` is a {{Reactor}}.")
-
-  ((swap A B) [atom (Atom A) f (=> [a A &args [any]] B) &args [any]] B
-    "Changes the contents of {{atom}} to be the result of {{f}} applied to
-    {{atom}}'s current value and {{&args}}. Returns the new value."
-
-    (:see-also Atom::swap))
-
-  ((derive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
-
-  ((derive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::derive}}."
-    (:see-also Derivable::derive))
 
   (derive [strings [string] &things [any]] (Derivable string)
     "Tagged template string version of derive. Returns a derivable which
@@ -810,53 +900,6 @@
     // => `Atom: 'nothing', constant: 4.`
 
     ```")
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I] O)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a A] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O A) [d (Derivable I) f (=> [v I a A] O) a (Derivable A)] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-  ((mDerive I O) [d (Derivable I) f (=> [v I &args [any]] O) &args [any]] (Derivable O)
-    "Functional interface to {{Derivable::mDerive}}."
-    (:see-also Derivable::mDerive))
-
-
-  (ifThenElse [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which encapsulates the value `unpack(thenD)` when the
-    value encapsulated by {{condition}} is truthy, and `unpack(elseD)` when it is
-    falsey.
-
-    ```javascript
-    const condition = atom(true);
-
-    const thenD = atom(`then`);
-    const elseD = `else`;
-
-    const result = ifThenElse(condition, thenD, elseD);
-
-    result.get();
-    // => `then`
-
-    condition.set(false);
-
-    result.get();
-    // => `else`
-    ```"
-
-    (:see-also unpack Derivable::then))
-
-  (mIfThenElse [condition any thenD any elseD any] (Derivable any)
-    "Returns a derivable which represents {{thenD}} when the
-    value encapsulated by {{condition}} is not null or undefined. Otherwise
-    the returned derivable represents {{elseD}}."
-    (:see-also Derivable::mThen))
 
   (or [&conditions [any]] (Derivable any)
     "Returns a derivable which represents the first value in {{&conditions}}
@@ -900,53 +943,8 @@
     all values are not null or undefined. Otherwise it returns null or
     undefined.")
 
-  (not [d (Derivable any)] (Derivable boolean)
-    "Returns a derivable which represents the boolean complement of the
-    truthiness of the value encapsulated by {{d}}.
-
-    A functional interface to the {{Derivable::not}} method.")
-
-  (switchCase [d (Derivable any) &args [any]] (Derivable any)
-    "Functional interface to the {{Derivable::switch}} method.
-
-    ```javascript
-    switchCase(d, ...args);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    d.switch(...args);
-    ```")
-
-  ((get T) [d (Derivable T)] T
-    "Functional interface to the {{Derivable::get}} method.
-
-    ```javascript
-    get(d);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    d.get();
-    ```")
-
-  ((set A B) [a (Atom A) v B] (Atom B)
-    "Functional interface to the {{Atom::set}} method.
-
-    ```javascript
-    set(a, v);
-    ```
-
-    is equivalent to
-
-    ```javascript
-    a.set(v);
-    ```")
-
   (withEquality [equals (=> [a any b any] boolean)] any
-    "Returns a new instance of derivable with a new notion of equality. Does not
+    "Returns a new instance of DerivableJS with a new notion of equality. Does not
     affect the current instance.")
 
   (defaultEquals [a any b any] boolean
