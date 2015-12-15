@@ -578,7 +578,6 @@ function derivable_createPrototype (D, opts) {
       }
 
       opts = Object.assign({
-        force: true,
         once: false,
         from: true,
         until: false,
@@ -618,8 +617,6 @@ function derivable_createPrototype (D, opts) {
         onStop: opts.onStop
       });
 
-      var $force = condDerivable(opts.force, 'force');
-
       // listen to when and until conditions, starting and stopping the
       // reactor as appropriate, and stopping this controller when until
       // condition becomes true
@@ -632,8 +629,7 @@ function derivable_createPrototype (D, opts) {
           this.stop();
         } else if (conds.when) {
           if (!reactor.isActive()) {
-            reactor.start();
-            $force.get() && reactor.force();
+            reactor.start().force();
           }
         } else if (reactor.isActive()) {
           reactor.stop();

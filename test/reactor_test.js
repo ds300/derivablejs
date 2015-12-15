@@ -219,55 +219,6 @@ describe("anonymous reactors", () => {
       assert.strictEqual(val, null);
     }
   });
-  it('can specify whether the reaction should be forced upon start', () => {
-    {
-      const when = atom(true);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {force: false, when});
-
-      assert.strictEqual(val, null);
-      a.set('b');
-      assert.strictEqual(val, 'b');
-
-      when.set(false);
-      a.set('c');
-      assert.strictEqual(val, 'b');
-      when.set(true);
-      a.set('c');
-      assert.strictEqual(val, 'b');
-      a.set('d');
-      assert.strictEqual(val, 'd');
-    }
-    {
-      // with derivable force
-      const when = atom(true);
-      const force = atom(false);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {force, when});
-
-      assert.strictEqual(val, null);
-      a.set('b');
-      assert.strictEqual(val, 'b');
-
-      when.set(false);
-      a.set('c');
-      assert.strictEqual(val, 'b');
-      when.set(true);
-      a.set('c');
-      assert.strictEqual(val, 'b');
-      a.set('d');
-      assert.strictEqual(val, 'd');
-
-      when.set(false);
-      a.set('e');
-      assert.strictEqual(val, 'd');
-      force.set(true);
-      when.set(true);
-      assert.strictEqual(val, 'e');
-    }
-  });
 
   it('can specify that the first reaction should be skipped', () => {
     const when = atom(false);
@@ -341,7 +292,6 @@ describe("anonymous reactors", () => {
       from,
       when,
       until,
-      force: false,
       onStart: () => starts++,
       onStop: () => stops++
     });
