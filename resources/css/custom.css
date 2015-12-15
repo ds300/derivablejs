@@ -187,7 +187,7 @@ span.type-arg, a.type-arg {
 }
 
 span.property, a.property {
-  color: #415D0E;
+  color: #540865;
 }
 
 span.punct, a.punct,
@@ -278,7 +278,7 @@ div.interface, div.function, div.class {
 }
 
 #toc li.property > a {
-  color: #415D0E;
+  color: #540865;
 }
 
 .github {

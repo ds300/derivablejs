@@ -21,11 +21,7 @@ declare module derivable {
     mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
     mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
-    reactor(r: Reactor<T>): Reactor<T>;
-    reactor(f: (value: T) => void): Reactor<T>;
-
-    react(r: Reactor<T>): Reactor<T>;
-    react(f: (value: T) => void, options?: ReactorLifecycleConfig): void;
+    react(f: (value: T) => void, options?: Lifecycle): void;
 
     get(): T;
 
@@ -48,6 +44,9 @@ declare module derivable {
     switch(...args: any[]): Derivable<any>;
 
     withEquality(equals: (a: any, b: any) => boolean): this;
+
+    reactor(r: Reactor<T>): Reactor<T>;
+    reactor(f: (value: T) => void): Reactor<T>;
   }
 
   export interface Atom<T> extends Derivable<T> {
@@ -73,7 +72,7 @@ declare module derivable {
     set(value: T): void;
   }
 
-  export interface ReactorLifecycleConfig {
+  export interface Lifecycle {
 
     from?: ((() => boolean) | Derivable<boolean>);
 
