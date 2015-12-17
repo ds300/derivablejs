@@ -1,3 +1,7 @@
+## 0.12.1
+
+- Removed stray const declarations (thanks, @liron00)
+
 ## 0.12.0
 
 ### Highlights
