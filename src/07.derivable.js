@@ -31,8 +31,8 @@ function derivable_createPrototype (D, opts) {
               });
             } else if (D.isDerivable(f)) {
               return D.derivation(function () {
-                const deriver = f.get();
-                const thing = that.get();
+                var deriver = f.get();
+                var thing = that.get();
                 switch (typeof deriver) {
                   case 'function':
                     return deriver(thing);
