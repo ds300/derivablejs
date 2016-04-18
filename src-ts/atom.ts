@@ -6,6 +6,7 @@ let globalEpoch = 0;
 export interface Derivable<T> {
   get(): T;
   derive<E>(f: (t:T) => E): Derivable<E>;
+  reactor(f: (t: T) => void): Reactor<T>;
   epoch: number;
 }
 
@@ -18,6 +19,9 @@ export class Atom<T> implements Derivable<T> {
     this.epoch = 0;
     this.reactors = [];
   }
+  reactor(f) {
+    return new Reactor(this, f);
+  }
   get() {
     captureEpoch(captureParent(this), this.epoch);
     return this.value;
@@ -27,6 +31,14 @@ export class Atom<T> implements Derivable<T> {
   }
   derive(f) {
     return new Derivation(() => f(this.get()));
+  }
+  set(value: T) {
+    if (value !== this.value) {
+      globalEpoch++;
+      this.epoch++;
+      this.value = value;
+      this.reactors.forEach(r => r.maybeReact());
+    }
   }
 }
 
@@ -44,6 +56,9 @@ class Derivation<T> implements Derivable<T> {
     this.lastGlobalEpoch = globalEpoch - 1;
     this.epoch = 0;
   }
+  reactor(f) {
+    return new Reactor(this, f);
+  }
   derive(f) {
     return new Derivation(() => f(this.get()));
   }
@@ -52,6 +67,10 @@ class Derivation<T> implements Derivable<T> {
     const parents = capturingParentsEpochs(() => {
       newVal = this.deriver();
     });
+
+    console.log("mm new val", newVal);
+
+    this.lastParentsEpochs = parents;
 
     if (newVal !== this.cache) {
       this.epoch++;
@@ -114,8 +133,9 @@ class Reactor<T> {
   }
   maybeReact() {
     const nextValue = this.derivable.get();
+    console.log('next', nextValue, this.lastValue);
     if (nextValue !== this.lastValue) {
-      (<any>this.react).call(null);
+      (<any>this.react).call(null, nextValue);
     }
     this.lastValue = nextValue;
   }

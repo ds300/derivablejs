@@ -5,3 +5,6 @@ console.log("a is 5:", a.get());
 var twoa = a.derive(function (a) { return a * 2; });
 console.log("twoa is 10:", twoa.get());
 console.log("a is still 5:", a.get());
+var r = twoa.reactor(function (a2) { return console.log("twoa is now: ", a2); });
+r.start();
+a.set(10);
