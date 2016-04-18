@@ -1,14 +1,15 @@
 import {captureParent, captureEpoch, capturingParentsEpochs} from './parents'
+import {addToArray, removeFromArray} from './util';
 
 let globalEpoch = 0;
 
-interface Derivable<T> {
+export interface Derivable<T> {
   get(): T;
   derive<E>(f: (t:T) => E): Derivable<E>;
   epoch: number;
 }
 
-class Atom<T> {
+export class Atom<T> implements Derivable<T> {
   value: T;
   epoch: number;
   reactors: any[];
@@ -24,11 +25,14 @@ class Atom<T> {
   _update() {
 
   }
+  derive(f) {
+    return new Derivation(() => f(this.get()));
+  }
 }
 
 const EMPTY = Object.freeze({});
 
-class Derivation<T> {
+class Derivation<T> implements Derivable<T> {
   cache: T;
   epoch: number;
   lastGlobalEpoch: number;
@@ -39,6 +43,9 @@ class Derivation<T> {
     this.cache = <T>EMPTY;
     this.lastGlobalEpoch = globalEpoch - 1;
     this.epoch = 0;
+  }
+  derive(f) {
+    return new Derivation(() => f(this.get()));
   }
   _forceEval() {
     let newVal = null;
@@ -76,5 +83,44 @@ class Derivation<T> {
     this._update();
     captureEpoch(idx, this.epoch);
     return this.cache;
+  }
+}
+
+function descend(derivable, reactor) {
+  if (derivable instanceof Atom) {
+    addToArray(derivable.reactors, reactor);
+    addToArray(reactor.atoms, derivable);
+  } else {
+    for (var i = 0, len = derivable.lastParentsEpochs.length; i < len; i+=2) {
+      descend(derivable.lastParentsEpochs[i], reactor);
+    }
+  }
+}
+
+class Reactor<T> {
+  derivable: Derivable<T>
+  lastValue: null;
+  react: (t: T) => void;
+  atoms: Atom<any>[];
+  constructor(derivable: Derivable<T>, react: (t: T) => void) {
+    this.derivable = derivable;
+    this.react = react;
+    this.atoms = [];
+  }
+  start() {
+    this.lastValue = this.derivable.get();
+    this.atoms = [];
+    descend(this.derivable, this);
+  }
+  maybeReact() {
+    const nextValue = this.derivable.get();
+    if (nextValue !== this.lastValue) {
+      (<any>this.react).call(null);
+    }
+    this.lastValue = nextValue;
+  }
+  stop() {
+    this.atoms.forEach(atom => removeFromArray(atom.reactors, this));
+    this.atoms = [];
   }
 }
