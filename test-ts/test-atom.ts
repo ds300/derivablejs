@@ -1,4 +1,4 @@
-import {Atom, Derivation} from '../src-ts/atom'
+import {Atom, Derivation, transact} from '../src-ts/atom'
 
 const a = new Atom(5);
 
@@ -19,11 +19,11 @@ r.start();
 
 a.set(10);
 
-setInterval(() => {
-  if (Math.random() < 0.5) {
-    a.set(Math.round(Math.random() * 500));
-  }
-}, 1000);
+// setInterval(() => {
+//   if (Math.random() < 0.5) {
+//     a.set(Math.round(Math.random() * 500));
+//   }
+// }, 1000);
 
 // two atoms a and b
 // derivation c depends on a and b
@@ -37,12 +37,30 @@ setInterval(() => {
 {
   const a = new Atom(null), b = new Atom(4);
   const c = new Derivation(() => a.get() + b.get());
-  const x = c.reactor(c => console.log(c));
+  const x = c.reactor(c => console.log("mh hm c is", c));
   const y = a.reactor(a => {
     if (a !== null) {
       x.start();
+      x.force();
     } else {
       x.stop();
     }
+  });
+
+  y.start();
+  y.force();
+
+  a.set(5);
+
+  a.set(null);
+
+  transact(() => {
+    a.set(10);
+    b.set(10);
+  });
+
+  transact(() => {
+    a.set(null);
+    b.set(9);
   });
 }
