@@ -1,4 +1,4 @@
-import {Atom} from '../src-ts/atom'
+import {Atom, Derivation} from '../src-ts/atom'
 
 const a = new Atom(5);
 
@@ -24,3 +24,25 @@ setInterval(() => {
     a.set(Math.round(Math.random() * 500));
   }
 }, 1000);
+
+// two atoms a and b
+// derivation c depends on a and b
+// reactor x depends on c
+// reactor y depends on a
+// a can be null, and if so, x should be stopped
+// without dependent reactors, i.e. relying only on start order:
+//   if reactor y starts before reactor x
+//      if atoms b and a are changed in a transaction but b's reactors
+//      are processed first, nullpointerexception
+{
+  const a = new Atom(null), b = new Atom(4);
+  const c = new Derivation(() => a.get() + b.get());
+  const x = c.reactor(c => console.log(c));
+  const y = a.reactor(a => {
+    if (a !== null) {
+      x.start();
+    } else {
+      x.stop();
+    }
+  });
+}

@@ -44,7 +44,7 @@ export class Atom<T> implements Derivable<T> {
 
 const EMPTY = Object.freeze({});
 
-class Derivation<T> implements Derivable<T> {
+export class Derivation<T> implements Derivable<T> {
   cache: T;
   epoch: number;
   lastGlobalEpoch: number;
@@ -143,6 +143,14 @@ class Reactor<T> {
     }
     this.$running.set(true);
   }
+  _force(nextValue) {
+    reactorParentStack.push(this);
+    (<any>this.react).call(null, nextValue);
+    reactorParentStack.pop();
+  }
+  force() {
+    this._force(this.derivable.get());
+  }
   maybeReact() {
     if (this.$running.get()) {
       if (this.yielding) {
@@ -156,9 +164,7 @@ class Reactor<T> {
       const nextValue = this.derivable.get();
       if (this.derivable.epoch !== this.lastEpoch
           && nextValue !== this.lastValue) {
-        reactorParentStack.push(this);
-        (<any>this.react).call(null, nextValue);
-        reactorParentStack.pop();
+        this._force(nextValue);
       }
       this.lastEpoch = this.derivable.epoch;
       this.lastValue = nextValue;
