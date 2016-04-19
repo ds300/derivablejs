@@ -68,8 +68,6 @@ class Derivation<T> implements Derivable<T> {
       newVal = this.deriver();
     });
 
-    console.log("mm new val", newVal);
-
     this.lastParentsEpochs = parents;
 
     if (newVal !== this.cache) {
@@ -116,31 +114,60 @@ function descend(derivable, reactor) {
   }
 }
 
+const reactorParentStack = [];
+
 class Reactor<T> {
   derivable: Derivable<T>
-  lastValue: null;
+  lastValue: T;
+  lastEpoch: number;
   react: (t: T) => void;
   atoms: Atom<any>[];
+  parent: Reactor<any>;
+  yielding: boolean;
+  $running: Atom<boolean>;
   constructor(derivable: Derivable<T>, react: (t: T) => void) {
     this.derivable = derivable;
     this.react = react;
     this.atoms = [];
+    this.parent = null;
+    this.$running = new Atom(false);
   }
   start() {
     this.lastValue = this.derivable.get();
+    this.lastEpoch = this.derivable.epoch;
     this.atoms = [];
     descend(this.derivable, this);
+    const len = reactorParentStack.length;
+    if (len > 0) {
+      this.parent = reactorParentStack[len - 1];
+    }
+    this.$running.set(true);
   }
   maybeReact() {
-    const nextValue = this.derivable.get();
-    console.log('next', nextValue, this.lastValue);
-    if (nextValue !== this.lastValue) {
-      (<any>this.react).call(null, nextValue);
+    if (this.$running.get()) {
+      if (this.yielding) {
+        throw Error('reactory dependency cycle detected');
+      }
+      if (this.parent !== null) {
+        this.yielding = true;
+        this.parent.maybeReact();
+        this.yielding = false;
+      }
+      const nextValue = this.derivable.get();
+      if (this.derivable.epoch !== this.lastEpoch
+          && nextValue !== this.lastValue) {
+        reactorParentStack.push(this);
+        (<any>this.react).call(null, nextValue);
+        reactorParentStack.pop();
+      }
+      this.lastEpoch = this.derivable.epoch;
+      this.lastValue = nextValue;
     }
-    this.lastValue = nextValue;
   }
   stop() {
     this.atoms.forEach(atom => removeFromArray(atom.reactors, this));
     this.atoms = [];
+    this.parent = null;
+    this.$running.set(false);
   }
 }
