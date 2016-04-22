@@ -65,14 +65,20 @@ export class Atom<T> implements Derivable<T> {
   }
   get() {
     let inTxnThis;
-    if (txnContext !== null
-        && (inTxnThis = txnContext.inTxnDerivables[this.id]) !== void 0) {
-      captureEpoch(captureParent(inTxnThis), inTxnThis.epoch);
-      return inTxnThis.value;
-    } else {
-      captureEpoch(captureParent(this), this.epoch);
-      return this.value;
+    let txnCtx = txnContext;
+    while (txnCtx !== null) {
+      inTxnThis = txnCtx.inTxnDerivables[this.id];
+      if (inTxnThis !== void 0) {
+        captureEpoch(captureParent(inTxnThis), inTxnThis.epoch);
+        return inTxnThis.value;
+      } else {
+        txnCtx = txnCtx.parent;
+      }
     }
+
+    // no in-txn value for this atom
+    captureEpoch(captureParent(this), this.epoch);
+    return this.value;
   }
   _update() {}
   derive(f) {
@@ -164,28 +170,31 @@ export class Derivation<T> implements Derivable<T> {
         parent._update();
         if (parent.epoch !== lastParentEpoch) {
           this._forceEval();
-          break;
+          return;
         }
       }
+      this.lastGlobalEpoch = globalEpoch;
     }
   }
   get() {
-    if (txnContext !== null) {
-      let inTxnThis;
-      if ((inTxnThis = txnContext.inTxnDerivables[this.id]) === void 0) {
-        inTxnThis = this._clone();
-        txnContext.inTxnDerivables[this.id] = inTxnThis;
+    let inTxnThis;
+    let txnCtx = txnContext;
+    while (txnCtx !== null) {
+      inTxnThis = txnCtx.inTxnDerivables[this.id];
+      if (inTxnThis !== void 0) {
+        const idx = captureParent(inTxnThis);
+        inTxnThis._update();
+        captureEpoch(idx, inTxnThis.epoch);
+        return inTxnThis.cache;
+      } else {
+        txnCtx = txnCtx.parent;
       }
-      const idx = captureParent(inTxnThis);
-      inTxnThis._update();
-      captureEpoch(idx, inTxnThis.epoch);
-      return inTxnThis.cache;
-    } else {
-      const idx = captureParent(this);
-      this._update();
-      captureEpoch(idx, this.epoch);
-      return this.cache;
     }
+    // no in-txn value found for this derivation
+    const idx = captureParent(this);
+    this._update();
+    captureEpoch(idx, this.epoch);
+    return this.cache;
   }
 }
 
@@ -242,7 +251,7 @@ class Reactor<T> {
   maybeReact() {
     if (this.$running.get()) {
       if (this.yielding) {
-        throw Error('reactory dependency cycle detected');
+        throw Error('reactor dependency cycle detected');
       }
       if (this.parent !== null) {
         this.yielding = true;
