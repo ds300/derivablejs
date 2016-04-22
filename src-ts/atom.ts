@@ -156,6 +156,20 @@ export class Derivation<T> implements Derivable<T> {
     this.cache = newVal;
   }
   _update() {
+    let inTxnThis;
+    let txnCtx = txnContext;
+    while (txnCtx !== null) {
+      inTxnThis = txnCtx.inTxnDerivables[this.id];
+      if (inTxnThis !== void 0) {
+        inTxnThis.__update();
+        return;
+      } else {
+        txnCtx = txnCtx.parent;
+      }
+    }
+    this.__update();
+  }
+  __update() {
     if (this.lastGlobalEpoch === globalEpoch) {
       // do nothing
     } else if (this.cache === EMPTY) {
@@ -182,8 +196,8 @@ export class Derivation<T> implements Derivable<T> {
     while (txnCtx !== null) {
       inTxnThis = txnCtx.inTxnDerivables[this.id];
       if (inTxnThis !== void 0) {
-        const idx = captureParent(inTxnThis);
-        inTxnThis._update();
+        const idx = captureParent(this);
+        inTxnThis.__update();
         captureEpoch(idx, inTxnThis.epoch);
         return inTxnThis.cache;
       } else {
@@ -192,7 +206,7 @@ export class Derivation<T> implements Derivable<T> {
     }
     // no in-txn value found for this derivation
     const idx = captureParent(this);
-    this._update();
+    this.__update();
     captureEpoch(idx, this.epoch);
     return this.cache;
   }
