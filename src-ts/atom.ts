@@ -14,32 +14,52 @@ let txnContext: TransactionContext = null;
 
 class TransactionContext {
   parent: TransactionContext;
-  inTxnDerivables: any;
+  id2txnAtom: any;
   modifiedAtoms: Atom<any>[];
   globalEpoch: number;
   constructor(parent: TransactionContext) {
     this.parent = parent;
-    this.inTxnDerivables = {};
+    this.id2txnAtom = {};
     this.globalEpoch = globalEpoch;
     this.modifiedAtoms = [];
   }
 }
 
+const ABORTION = {};
+const abort = () => { throw ABORTION; };
+
 export function transact(f: () => void) {
   const ctx = new TransactionContext(txnContext);
   txnContext = ctx;
-  f.call(null);
-  txnContext = ctx.parent;
-  const reactorss = [];
-  ctx.modifiedAtoms.forEach(a => {
-    if (txnContext !== null) {
-      a.set(ctx.inTxnDerivables[a.id].value);
+  try {
+    f.call(null, abort);
+  } catch (e) {
+    txnContext = ctx.parent;
+    if (txnContext === null) {
+      globalEpoch = ctx.globalEpoch+1;
     } else {
-      a._set(ctx.inTxnDerivables[a.id].value);
-      reactorss.push(a.reactors);
+      txnContext.globalEpoch = ctx.globalEpoch+1;
     }
-  });
-  reactorss.forEach(reactors => reactors.forEach(r => r.maybeReact()));
+    if (e !== ABORTION) {
+      throw e;
+    }
+    return;
+  }
+  txnContext = ctx.parent;
+
+  // only do this reaction stuff if no error thrown;
+  if (txnContext === null) {
+    const reactorss = [];
+    ctx.modifiedAtoms.forEach(a => {
+      if (txnContext !== null) {
+        a.set(ctx.id2txnAtom[a.id].value);
+      } else {
+        a._set(ctx.id2txnAtom[a.id].value);
+        reactorss.push(a.reactors);
+      }
+    });
+    reactorss.forEach(reactors => reactors.forEach(r => r.maybeReact()));
+  }
 }
 
 let nextId = 0;
@@ -67,7 +87,7 @@ export class Atom<T> implements Derivable<T> {
     let inTxnThis;
     let txnCtx = txnContext;
     while (txnCtx !== null) {
-      inTxnThis = txnCtx.inTxnDerivables[this.id];
+      inTxnThis = txnCtx.id2txnAtom[this.id];
       if (inTxnThis !== void 0) {
         captureEpoch(captureParent(inTxnThis), inTxnThis.epoch);
         return inTxnThis.value;
@@ -92,7 +112,7 @@ export class Atom<T> implements Derivable<T> {
   set(value: T) {
     if (txnContext !== null) {
       let inTxnThis;
-      if ((inTxnThis = txnContext.inTxnDerivables[this.id]) !== void 0
+      if ((inTxnThis = txnContext.id2txnAtom[this.id]) !== void 0
           && value !== inTxnThis.value) {
         txnContext.globalEpoch++;
         inTxnThis.epoch++;
@@ -101,7 +121,7 @@ export class Atom<T> implements Derivable<T> {
         txnContext.globalEpoch++;
         inTxnThis = this._clone(value);
         inTxnThis.epoch = this.epoch + 1;
-        txnContext.inTxnDerivables[this.id] = inTxnThis;
+        txnContext.id2txnAtom[this.id] = inTxnThis;
         addToArray(txnContext.modifiedAtoms, this);
       }
     } else if (value !== this.value) {
@@ -156,20 +176,6 @@ export class Derivation<T> implements Derivable<T> {
     this.cache = newVal;
   }
   _update() {
-    let inTxnThis;
-    let txnCtx = txnContext;
-    while (txnCtx !== null) {
-      inTxnThis = txnCtx.inTxnDerivables[this.id];
-      if (inTxnThis !== void 0) {
-        inTxnThis.__update();
-        return;
-      } else {
-        txnCtx = txnCtx.parent;
-      }
-    }
-    this.__update();
-  }
-  __update() {
     if (this.lastGlobalEpoch === globalEpoch) {
       // do nothing
     } else if (this.cache === EMPTY) {
@@ -191,22 +197,8 @@ export class Derivation<T> implements Derivable<T> {
     }
   }
   get() {
-    let inTxnThis;
-    let txnCtx = txnContext;
-    while (txnCtx !== null) {
-      inTxnThis = txnCtx.inTxnDerivables[this.id];
-      if (inTxnThis !== void 0) {
-        const idx = captureParent(this);
-        inTxnThis.__update();
-        captureEpoch(idx, inTxnThis.epoch);
-        return inTxnThis.cache;
-      } else {
-        txnCtx = txnCtx.parent;
-      }
-    }
-    // no in-txn value found for this derivation
     const idx = captureParent(this);
-    this.__update();
+    this._update();
     captureEpoch(idx, this.epoch);
     return this.cache;
   }
