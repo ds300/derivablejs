@@ -48,18 +48,16 @@ export function transact(f: () => void) {
   txnContext = ctx.parent;
 
   // only do this reaction stuff if no error thrown;
-  if (txnContext === null) {
-    const reactorss = [];
-    ctx.modifiedAtoms.forEach(a => {
-      if (txnContext !== null) {
-        a.set(ctx.id2txnAtom[a.id].value);
-      } else {
-        a._set(ctx.id2txnAtom[a.id].value);
-        reactorss.push(a.reactors);
-      }
-    });
-    reactorss.forEach(reactors => reactors.forEach(r => r.maybeReact()));
-  }
+  const reactorss = [];
+  ctx.modifiedAtoms.forEach(a => {
+    if (txnContext !== null) {
+      a.set(ctx.id2txnAtom[a.id].value);
+    } else {
+      a._set(ctx.id2txnAtom[a.id].value);
+      reactorss.push(a.reactors);
+    }
+  });
+  reactorss.forEach(reactors => reactors.forEach(r => r.maybeReact()));
 }
 
 let nextId = 0;
