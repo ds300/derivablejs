@@ -1,81 +1,94 @@
-var RUNNING = 0,
-    COMPLETED = 1,
-    ABORTED = 3;
-
 var TransactionAbortion = {};
 
-function abortTransaction() {
+function initiateAbortion() {
   throw TransactionAbortion;
 }
 
-function transactions_newContext () {
-  return {currentTxn: null};
+function TransactionContext(parent) {
+  this.parent = parent;
+  this.id2txnAtom = {};
+  this.globalEpoch = globalEpoch;
+  this.modifiedAtoms = [];
 }
 
-function transactions_inTransaction (ctx) {
-  return ctx.currentTxn !== null;
+var currentTxnCtx = null;
+
+function transactions_inTransaction () {
+  return currentTxnCtx !== null;
 }
 
-function transactions_currentTransaction (ctx) {
-  return ctx.currentTxn;
-}
-
-function begin (ctx, txn) {
-  txn._parent = ctx.currentTxn;
-  txn._state = RUNNING;
-  ctx.currentTxn = txn;
-}
-
-function popTransaction (ctx, cb) {
-  var txn = ctx.currentTxn;
-  ctx.currentTxn = txn._parent;
-  if (txn._state !== RUNNING) {
-    throw new Error("unexpected state: " + txn._state);
-  }
-  cb(txn);
-}
-
-function commit (ctx) {
-  popTransaction(ctx, function (txn) {
-    txn._state = COMPLETED;
-    txn.onCommit && txn.onCommit();
-  });
-}
-
-function abort (ctx) {
-  popTransaction(ctx, function (txn) {
-    txn._state = ABORTED;
-    txn.onAbort && txn.onAbort();
-  });
-}
-
-function transactions_transact (ctx, txn, f) {
-  begin(ctx, txn);
+function transactions_transact () {
+  beginTransaction();
   try {
-    f(abortTransaction);
-  } catch (e) {
-    abort(ctx);
-    if (e !== TransactionAbortion) {
-      throw e;
-    } else {
-      return;
-    }
+    f.call(null, initiateAbortion);
   }
-  commit(ctx);
+  catch (e) {
+
+    if (e !== ABORTION) {
+      throw e;
+    }
+    return;
+  }
+  commitTransaction();
 }
 
-function transactions_ticker (ctx, txnConstructor) {
-  begin(ctx, txnConstructor());
+function beginTransaction() {
+  currentTxnCtx = new TransactionContext(currentTxnCtx);
+}
+
+function commitTransaction() {
+  var ctx = currentTxnCtx;
+  currentTxnCtx = ctx.parent;
+  var reactorss = [];
+  ctx.modifiedAtoms.forEach(function (a) {
+    if (currentTxnCtx !== null) {
+      a.set(ctx.id2txnAtom[a.id].value);
+    }
+    else {
+      a._set(ctx.id2txnAtom[a.id].value);
+      reactorss.push(a.reactors);
+    }
+  });
+  if (currentTxnCtx === null) {
+    epoch_globalEpoch = ctx.globalEpoch;
+  } else {
+    currentTxnCtx.globalEpoch = ctx.globalEpoch;
+  }
+  reactorss.forEach(function (reactors) {
+    reactors.forEach(function (r) {
+      r.maybeReact();
+    });
+  });
+}
+
+function abortTransaction() {
+  currentTxnCtx = ctx.parent;
+  if (currentTxnCtx === null) {
+    globalEpoch = ctx.globalEpoch + 1;
+  }
+  else {
+    currentTxnCtx.globalEpoch = ctx.globalEpoch + 1;
+  }
+}
+
+function transactions_ticker () {
+  beginTransaction();
   var disposed = false;
   return {
     tick: function () {
       if (disposed) throw new Error("can't tick disposed ticker");
-      commit(ctx);
-      begin(ctx, txnConstructor());
+      commitTransaction();
+      beginTransaction();
     },
     stop: function () {
       if (disposed) throw new Error("ticker already disposed");
-      commit(ctx);
+      disposed = true;
+      commitTransaction();
+    },
+    resetState: function () {
+      if (disposed) throw new Error("ticker already disposed");
+      abortTransaction();
+      beginTransaction();
     }
   }
 }
