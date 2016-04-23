@@ -88,11 +88,12 @@ function derivable_createPrototype (D, opts) {
 
     reactor: function (f) {
       if (typeof f === 'function') {
-        return reactors_createBase(new reactors_StandardReactor(f), this);
+        return new reactors_Reactor(f, this);
       } else if (f instanceof reactors_Reactor) {
-        return reactors_createBase(f, this);
+        f._derivable = this;
+        return f;
       } else if (f && f.react) {
-        return reactors_createBase(reactors_anonymousReactor(f), this);
+        return Object.assign(new reactors_Reactor(null, this), f);
       } else {
         throw new Error("Unrecognized type for reactor " + f);
       }

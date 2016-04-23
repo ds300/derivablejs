@@ -1,8 +1,8 @@
 var reactorParentStack = [];
 
-function Reactor(derivable, react) {
+function reactors_Reactor(react, derivable) {
     this._derivable = derivable;
-    this._react = react;
+    this.react = react;
     this._atoms = [];
     this._parent = null;
     this._active = false;
@@ -26,7 +26,7 @@ function bindAtomsToReactors(derivable, reactor) {
   }
 }
 
-Object.assign(Reactor.prototype, {
+Object.assign(reactors_Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
@@ -44,7 +44,7 @@ Object.assign(Reactor.prototype, {
     try {
       reactorParentStack.push(this);
       this._reacting = true;
-      this._react(nextValue);
+      this.react(nextValue);
     } catch (e) {
       if (util_DEBUG_MODE) {
         console.error(this.stack);
