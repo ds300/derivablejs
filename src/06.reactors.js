@@ -18,12 +18,12 @@ var reactors_Reactor = Reactor;
 
 function bindAtomsToReactors(derivable, reactor) {
   if (derivable._type === types_ATOM) {
-    util_addToArray(derivable.reactors, reactor);
-    util_addToArray(reactor.atoms, derivable);
+    util_addToArray(derivable._reactors, reactor);
+    util_addToArray(reactor._atoms, derivable);
   }
   else {
-    for (var i = 0, len = derivable.lastParentsEpochs.length; i < len; i += 2) {
-      bindAtomsToReactors(derivable.lastParentsEpochs[i], reactor);
+    for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
+      bindAtomsToReactors(derivable._lastParentsEpochs[i], reactor);
     }
   }
 }

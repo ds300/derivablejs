@@ -159,11 +159,11 @@ function commitTransaction() {
   var reactorss = [];
   ctx.modifiedAtoms.forEach(function (a) {
     if (transactions_currentCtx !== null) {
-      a.set(ctx.id2txnAtom[a.id].value);
+      a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
-      a._set(ctx.id2txnAtom[a.id].value);
-      reactorss.push(a.reactors);
+      a._set(ctx.id2txnAtom[a._id]._value);
+      reactorss.push(a._reactors);
     }
   });
   if (transactions_currentCtx === null) {
@@ -173,7 +173,7 @@ function commitTransaction() {
   }
   reactorss.forEach(function (reactors) {
     reactors.forEach(function (r) {
-      r.maybeReact();
+      r._maybeReact();
     });
   });
 }
@@ -231,12 +231,12 @@ var reactors_Reactor = Reactor;
 
 function bindAtomsToReactors(derivable, reactor) {
   if (derivable._type === types_ATOM) {
-    util_addToArray(derivable.reactors, reactor);
-    util_addToArray(reactor.atoms, derivable);
+    util_addToArray(derivable._reactors, reactor);
+    util_addToArray(reactor._atoms, derivable);
   }
   else {
-    for (var i = 0, len = derivable.lastParentsEpochs.length; i < len; i += 2) {
-      bindAtomsToReactors(derivable.lastParentsEpochs[i], reactor);
+    for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
+      bindAtomsToReactors(derivable._lastParentsEpochs[i], reactor);
     }
   }
 }
@@ -700,7 +700,7 @@ function atom_createPrototype (D, opts) {
 
       if (transactions_currentCtx !== null) {
         var inTxnThis = void 0;
-        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0 &&
+        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this._id]) !== void 0 &&
             value !== inTxnThis._value) {
           transactions_currentCtx.globalEpoch++;
           inTxnThis._epoch++;
@@ -715,7 +715,7 @@ function atom_createPrototype (D, opts) {
       } else {
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          this.reactors.forEach(function (r) { return r.maybeReact(); });
+          this._reactors.forEach(function (r) { return r._maybeReact(); });
         }
       }
     },
@@ -732,6 +732,7 @@ function atom_createPrototype (D, opts) {
       var inTxnThis;
       var txnCtx = transactions_currentCtx;
       while (txnCtx !== null) {
+          console.log("txn context is not null");
           inTxnThis = txnCtx.id2txnAtom[this._id];
           if (inTxnThis !== void 0) {
               parents_captureEpoch(parents_captureParent(inTxnThis), inTxnThis._epoch);
@@ -741,8 +742,9 @@ function atom_createPrototype (D, opts) {
               txnCtx = txnCtx.parent;
           }
       }
+      console.log("done");
       parents_captureEpoch(parents_captureParent(this), this._epoch);
-      return this.value;
+      return this._value;
     },
   };
 }

@@ -42,11 +42,11 @@ function commitTransaction() {
   var reactorss = [];
   ctx.modifiedAtoms.forEach(function (a) {
     if (transactions_currentCtx !== null) {
-      a.set(ctx.id2txnAtom[a.id].value);
+      a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
-      a._set(ctx.id2txnAtom[a.id].value);
-      reactorss.push(a.reactors);
+      a._set(ctx.id2txnAtom[a._id]._value);
+      reactorss.push(a._reactors);
     }
   });
   if (transactions_currentCtx === null) {
@@ -56,7 +56,7 @@ function commitTransaction() {
   }
   reactorss.forEach(function (reactors) {
     reactors.forEach(function (r) {
-      r.maybeReact();
+      r._maybeReact();
     });
   });
 }

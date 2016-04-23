@@ -8,7 +8,7 @@ function atom_createPrototype (D, opts) {
 
       if (transactions_currentCtx !== null) {
         var inTxnThis = void 0;
-        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0 &&
+        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this._id]) !== void 0 &&
             value !== inTxnThis._value) {
           transactions_currentCtx.globalEpoch++;
           inTxnThis._epoch++;
@@ -23,7 +23,7 @@ function atom_createPrototype (D, opts) {
       } else {
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          this.reactors.forEach(function (r) { return r.maybeReact(); });
+          this._reactors.forEach(function (r) { return r._maybeReact(); });
         }
       }
     },
@@ -50,7 +50,7 @@ function atom_createPrototype (D, opts) {
           }
       }
       parents_captureEpoch(parents_captureParent(this), this._epoch);
-      return this.value;
+      return this._value;
     },
   };
 }

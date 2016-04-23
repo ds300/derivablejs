@@ -26,7 +26,7 @@ describe("the humble atom", () => {
     const a = atom("a");
     transact(abort => {
       a.set("b");
-      assert.strictEqual(a.get(), "b");
+      assert.strictEqual(a.get(), "b", "blah and junk");
       transact(abort => {
         a.set("c");
         assert.strictEqual(a.get(), "c");
@@ -48,29 +48,6 @@ describe("the humble atom", () => {
       assert.strictEqual(a.get(), "c");
     });
     assert.strictEqual(a.get(), "c");
-  });
-
-  it(`can include a validation function`, () => {
-    const a = atom("x").withValidator(thing => thing.length < 5);
-    assert.throws(() => {
-      a.set("abcde");
-    });
-    a.set("blah");
-    a.validate();
-    assert.strictEqual(a.get(), "blah");
-
-    const b = a.withValidator(thing => thing instanceof Array);
-    assert.throws(() => {
-      b.validate();
-    });
-    assert.throws(() => {
-      b.set("a");
-    });
-    b.set(['b', 'l', 'a', 'h']);
-    assert.throws(() => {
-      b.set([0,1,2,3,4]);
-    });
-
   });
 
   it(`can include an equality-checking function`, () => {
