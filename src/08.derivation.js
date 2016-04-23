@@ -4,109 +4,71 @@ function derivation_createPrototype (D, opts) {
       return util_setEquals(D.derivation(this._deriver), this._equals);
     },
 
-    _forceGet: function () {
-      var that = this,
-          i;
-      var newParents = parents_capturingParents(function () {
-        var newState;
+    _forceEval: function () {
+      var that = this;
+      var newVal = null;
+      var parents = parents_capturingParentsEpochs(function () {
         if (!util_DEBUG_MODE) {
-          newState = that._deriver();
+          newVal = that._deriver();
         } else {
           try {
-            newState = that._deriver();
+            newVal = that._deriver();
           } catch (e) {
-            console.error(that._stack);
+            console.error(that.stack);
             throw e;
           }
         }
-        var equals = that._equals || opts.equals;
-        that._state = equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
-        that._value = newState;
       });
+      var equals = that._equals || opts.equals;
 
-      // organise parents
-      for (i = this._parents.length; i--;) {
-        var possiblyFormerParent = this._parents[i];
-        if (!util_arrayContains(newParents, possiblyFormerParent)) {
-          util_removeFromArray(possiblyFormerParent._children, this);
-        }
+      if (!equals(newVal, that._value)) {
+        this._epoch++;
       }
 
-      this._parents = newParents;
+      this._lastParentsEpochs = parents;
+      this._value = newVal;
+    },
 
-      // add this as child to new parents
-      for (i = newParents.length; i--;) {
-        util_addToArray(newParents[i]._children, this);
+    _update: function () {
+      if (this._lastGlobalEpoch === epoch_globalEpoch) {
+        // up to date, so noop
+      } else if (this._cache === util_unique) {
+        // brand spanking new, so force eval
+        this._forceEval();
+      } else {
+        for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+          var parent_1 = this._lastParentsEpochs[i];
+          var lastParentEpoch = this._lastParentsEpochs[i + 1];
+          parent_1._update();
+          if (parent_1.epoch !== lastParentEpoch) {
+            this._forceEval();
+            return;
+          }
+        }
+        this._lastGlobalEpoch = util_globalEpoch;
       }
     },
 
-    _get: function () {
-      var i, parent;
-      outer: switch (this._state) {
-      case gc_NEW:
-      case gc_ORPHANED:
-        this._forceGet();
-        break;
-      case gc_UNSTABLE:
-        for (i = 0; i < this._parents.length; i++) {
-          parent = this._parents[i];
-          var parentState = parent._state;
-          if (parentState === gc_UNSTABLE ||
-              parentState === gc_ORPHANED ||
-              parentState === gc_DISOWNED) {
-            parent._get();
-          }
-          parentState = parent._state;
-          if (parentState === gc_CHANGED) {
-            this._forceGet();
-            break outer;
-          } else if (!(parentState === gc_STABLE ||
-                       parentState === gc_UNCHANGED)) {
-            throw new Error("invalid parent mode: " + parentState);
-          }
-        }
-        this._state = gc_UNCHANGED;
-        break;
-      case gc_DISOWNED:
-        var parents = [];
-        for (i = 0; i < this._parents.length; i++) {
-          var parentStateTuple = this._parents[i],
-              state = parentStateTuple[1];
-          parent = parentStateTuple[0];
-          if (!opts.equals(parent._get(), state)) {
-            this._parents = [];
-            this._forceGet();
-            break outer;
-          } else {
-            parents.push(parent);
-          }
-        }
-        for (i = parents.length; i--;) {
-          util_addToArray(parents[i]._children, this);
-        }
-        this._parents = parents;
-        this._state = gc_UNCHANGED;
-        break;
-      default:
-        // noop
-      }
-
+    get: function () {
+      var idx = parents_captureParent(this);
+      this._update();
+      parents_captureEpoch(idx, this.epoch);
       return this._value;
-    }
+    },
   }
 }
 
 function derivation_construct(obj, deriver) {
-  obj._children = [];
-  obj._parents = [];
   obj._deriver = deriver;
-  obj._state = gc_NEW;
+  obj._lastParentsEpochs = [];
+  obj._lastGlobalEpoch = epoch_globalEpoch - 1;
+  obj._epoch = 0;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
   obj._equals = null;
 
   if (util_DEBUG_MODE) {
-    obj._stack = Error().stack;
+    obj.stack = Error().stack;
   }
 
   return obj;

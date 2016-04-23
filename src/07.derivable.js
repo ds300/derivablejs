@@ -173,11 +173,6 @@ function derivable_createPrototype (D, opts) {
       }).start().force();
     },
 
-    get: function () {
-      parents_maybeCaptureParent(this);
-      return this._get(); // abstract protected method, in Java parlance
-    },
-
     is: function (other) {
       return D.lift(opts.equals)(this, other);
     },
