@@ -7,7 +7,7 @@ function initiateAbortion() {
 function TransactionContext(parent) {
   this.parent = parent;
   this.id2txnAtom = {};
-  this.globalEpoch = globalEpoch;
+  this.globalEpoch = epoch_globalEpoch;
   this.modifiedAtoms = [];
 }
 
@@ -17,14 +17,14 @@ function transactions_inTransaction () {
   return transactions_currentCtx !== null;
 }
 
-function transactions_transact () {
+function transactions_transact (f) {
   beginTransaction();
   try {
     f.call(null, initiateAbortion);
   }
   catch (e) {
-
-    if (e !== ABORTION) {
+    abortTransaction();
+    if (e !== TransactionAbortion) {
       throw e;
     }
     return;
@@ -62,9 +62,10 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
+  var ctx = transactions_currentCtx;
   transactions_currentCtx = ctx.parent;
   if (transactions_currentCtx === null) {
-    globalEpoch = ctx.globalEpoch + 1;
+    epoch_globalEpoch = ctx.globalEpoch + 1;
   }
   else {
     transactions_currentCtx.globalEpoch = ctx.globalEpoch + 1;

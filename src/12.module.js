@@ -4,7 +4,7 @@ function constructModule (config) {
   config = util_extend({}, defaultConfig, config || {});
 
   var D = {
-    transact: atom_transact,
+    transact: transactions_transact,
     defaultEquals: util_equals,
     setDebugMode: util_setDebugMode,
     transaction: atom_transaction,
@@ -65,7 +65,7 @@ function constructModule (config) {
   };
 
   D.atomically = function (f) {
-    if (atom_inTxn()) {
+    if (transactions_inTransaction()) {
       f();
     } else {
       D.transact(f);

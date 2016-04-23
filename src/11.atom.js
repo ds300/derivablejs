@@ -8,8 +8,8 @@ function atom_createPrototype (D, opts) {
 
       if (transactions_currentCtx !== null) {
         var inTxnThis = void 0;
-        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0
-            && value !== inTxnThis._value) {
+        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0 &&
+            value !== inTxnThis._value) {
           transactions_currentCtx.globalEpoch++;
           inTxnThis._epoch++;
           inTxnThis._value = value;
@@ -24,7 +24,7 @@ function atom_createPrototype (D, opts) {
         if (!this.__equals(value, this._value)) {
           this._set(value);
           this.reactors.forEach(function (r) { return r.maybeReact(); });
-        };
+        }
       }
     },
 
@@ -36,7 +36,7 @@ function atom_createPrototype (D, opts) {
       this._value = value;
     },
 
-    _get: function () {
+    get: function () {
       var inTxnThis;
       var txnCtx = transactions_currentCtx;
       while (txnCtx !== null) {

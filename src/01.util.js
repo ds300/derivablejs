@@ -41,10 +41,6 @@ function util_removeFromArray (a, b) {
   }
 }
 
-function util_arrayContains (a, b) {
-  return a.indexOf(b) >= 0;
-}
-
 var nextId = 0;
 function util_nextId () {
   return nextId++;

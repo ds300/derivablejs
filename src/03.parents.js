@@ -1,6 +1,6 @@
 var parentsStack = [];
 
-function capturingParentsEpochs(f) {
+function parents_capturingParentsEpochs(f) {
   var i = parentsStack.length;
   parentsStack.push([]);
   try {
@@ -11,7 +11,7 @@ function capturingParentsEpochs(f) {
   }
 }
 
-function captureParent(p) {
+function parents_captureParent(p) {
   if (parentsStack.length > 0) {
     var top = parentsStack[parentsStack.length - 1];
     top.push(p, 0);
@@ -21,7 +21,7 @@ function captureParent(p) {
   }
 }
 
-function captureEpoch(idx, epoch) {
+function parents_captureEpoch(idx, epoch) {
   if (parentsStack.length > 0) {
     parentsStack[parentsStack.length - 1][idx] = epoch;
   }

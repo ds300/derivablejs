@@ -54,10 +54,6 @@ function util_removeFromArray (a, b) {
   }
 }
 
-function util_arrayContains (a, b) {
-  return a.indexOf(b) >= 0;
-}
-
 var nextId = 0;
 function util_nextId () {
   return nextId++;
@@ -83,119 +79,11 @@ function util_setEquals(derivable, equals) {
   return derivable;
 }
 
-// node modes
-var gc_NEW = 0,
-    gc_CHANGED = 1,
-    gc_UNCHANGED = 2,
-    gc_ORPHANED = 3,
-    gc_UNSTABLE = 4,
-    gc_STABLE = 5,
-    gc_DISOWNED = 6;
-
-function gc_mark(node, reactors) {
-  // make everything unstable
-  if (node._type === types_REACTION) {
-    if (node.reacting) {
-      throw new Error("Cycle detected! Don't do this!");
-    }
-    reactors.push(node);
-  } else {
-    for (var i = node._children.length; i--;) {
-      var child = node._children[i];
-      if (child._state !== gc_UNSTABLE) {
-        child._state = gc_UNSTABLE;
-        gc_mark(child, reactors);
-      }
-    }
-  }
-}
-
-function gc_sweep(node) {
-  var i;
-  switch (node._state) {
-  case gc_CHANGED:
-  case gc_UNCHANGED:
-    // changed or unchanged means the node was visited
-    // during the react phase, which means we keep it in
-    // the graph for the next go round
-    for (i = node._children.length; i--;) {
-      var child = node._children[i];
-      gc_sweep(child);
-      if (child._state !== gc_STABLE) {
-        node._children.splice(i, 1);
-      }
-    }
-    node._state = gc_STABLE;
-    break;
-  case gc_UNSTABLE:
-    if (node._type === types_REACTION) {
-      // only happens when reaction created in transaction. see issue #14
-      node._state = gc_STABLE;
-    } else {
-      // unstable means the node was not visited during
-      // the react phase, which means we kick it out of the
-      // graph.
-
-      // but first we check if all of its parents were unchanged
-      // if so, we can avoid recalculating it in future by
-      // caching its parents' current values.
-      var stashedParentStates = [];
-      for (i = node._parents.length; i--;) {
-        var parent = node._parents[i];
-        if (parent._state !== gc_UNCHANGED) {
-          // nope, its parents either have changed or weren't visited,
-          // so we have to orphan this node
-          node._state = gc_ORPHANED;
-          break;
-        }
-        stashedParentStates.push([parent, parent._value]);
-      }
-      if (node._state !== gc_ORPHANED) {
-        node._state = gc_DISOWNED;
-        node._parents = stashedParentStates;
-      }
-    }
-    break;
-  case gc_STABLE:
-  case gc_ORPHANED:
-  case gc_DISOWNED:
-    break;
-  default:
-    throw new Error("can't sweep state " + node._state);
-  }
-}
-
-function gc_abort_sweep(node) {
-  // set everything to unstable, kill all derivation caches and disconnect
-  // the graph
-  var doChildren = false;
-  switch (node._type) {
-  case types_ATOM:
-    node._state = gc_STABLE;
-    doChildren = true;
-    break;
-  case types_DERIVATION:
-  case types_LENS:
-    node._state = gc_NEW;
-    node._value = util_unique;
-    doChildren = true;
-    break;
-  case types_REACTION:
-    node._state = gc_STABLE;
-    doChildren = false;
-    break;
-  }
-  if (doChildren) {
-    for (var i = node._children.length; i--;) {
-      gc_abort_sweep(node._children[i]);
-    }
-    node._children = [];
-  }
-}
+var epoch_globalEpoch = 0;
 
 var parentsStack = [];
 
-function parents_capturingParents(f) {
+function parents_capturingParentsEpochs(f) {
   var i = parentsStack.length;
   parentsStack.push([]);
   try {
@@ -206,9 +94,19 @@ function parents_capturingParents(f) {
   }
 }
 
-function parents_maybeCaptureParent(p) {
+function parents_captureParent(p) {
   if (parentsStack.length > 0) {
-    util_addToArray(parentsStack[parentsStack.length - 1], p);
+    var top = parentsStack[parentsStack.length - 1];
+    top.push(p, 0);
+    return top.length-1;
+  } else {
+    return -1;
+  }
+}
+
+function parents_captureEpoch(idx, epoch) {
+  if (parentsStack.length > 0) {
+    parentsStack[parentsStack.length - 1][idx] = epoch;
   }
 }
 
@@ -217,260 +115,206 @@ var types_ATOM = "ATOM",
     types_LENS = "LENS",
     types_REACTION = "REACTION";
 
-var RUNNING = 0,
-    COMPLETED = 1,
-    ABORTED = 3;
-
 var TransactionAbortion = {};
 
-function abortTransaction() {
+function initiateAbortion() {
   throw TransactionAbortion;
 }
 
-function transactions_newContext () {
-  return {currentTxn: null};
+function TransactionContext(parent) {
+  this.parent = parent;
+  this.id2txnAtom = {};
+  this.globalEpoch = epoch_globalEpoch;
+  this.modifiedAtoms = [];
 }
 
-function transactions_inTransaction (ctx) {
-  return ctx.currentTxn !== null;
+var transactions_currentCtx = null;
+
+function transactions_inTransaction () {
+  return transactions_currentCtx !== null;
 }
 
-function transactions_currentTransaction (ctx) {
-  return ctx.currentTxn;
-}
-
-function begin (ctx, txn) {
-  txn._parent = ctx.currentTxn;
-  txn._state = RUNNING;
-  ctx.currentTxn = txn;
-}
-
-function popTransaction (ctx, cb) {
-  var txn = ctx.currentTxn;
-  ctx.currentTxn = txn._parent;
-  if (txn._state !== RUNNING) {
-    throw new Error("unexpected state: " + txn._state);
-  }
-  cb(txn);
-}
-
-function commit (ctx) {
-  popTransaction(ctx, function (txn) {
-    txn._state = COMPLETED;
-    txn.onCommit && txn.onCommit();
-  });
-}
-
-function abort (ctx) {
-  popTransaction(ctx, function (txn) {
-    txn._state = ABORTED;
-    txn.onAbort && txn.onAbort();
-  });
-}
-
-function transactions_transact (ctx, txn, f) {
-  begin(ctx, txn);
+function transactions_transact (f) {
+  beginTransaction();
   try {
-    f(abortTransaction);
-  } catch (e) {
-    abort(ctx);
+    f.call(null, initiateAbortion);
+  }
+  catch (e) {
+    abortTransaction();
     if (e !== TransactionAbortion) {
       throw e;
-    } else {
-      return;
     }
+    return;
   }
-  commit(ctx);
+  commitTransaction();
 }
 
-function transactions_ticker (ctx, txnConstructor) {
-  begin(ctx, txnConstructor());
+function beginTransaction() {
+  transactions_currentCtx = new TransactionContext(transactions_currentCtx);
+}
+
+function commitTransaction() {
+  var ctx = transactions_currentCtx;
+  transactions_currentCtx = ctx.parent;
+  var reactorss = [];
+  ctx.modifiedAtoms.forEach(function (a) {
+    if (transactions_currentCtx !== null) {
+      a.set(ctx.id2txnAtom[a.id].value);
+    }
+    else {
+      a._set(ctx.id2txnAtom[a.id].value);
+      reactorss.push(a.reactors);
+    }
+  });
+  if (transactions_currentCtx === null) {
+    epoch_globalEpoch = ctx.globalEpoch;
+  } else {
+    transactions_currentCtx.globalEpoch = ctx.globalEpoch;
+  }
+  reactorss.forEach(function (reactors) {
+    reactors.forEach(function (r) {
+      r.maybeReact();
+    });
+  });
+}
+
+function abortTransaction() {
+  var ctx = transactions_currentCtx;
+  transactions_currentCtx = ctx.parent;
+  if (transactions_currentCtx === null) {
+    epoch_globalEpoch = ctx.globalEpoch + 1;
+  }
+  else {
+    transactions_currentCtx.globalEpoch = ctx.globalEpoch + 1;
+  }
+}
+
+function transactions_ticker () {
+  beginTransaction();
   var disposed = false;
   return {
     tick: function () {
       if (disposed) throw new Error("can't tick disposed ticker");
-      commit(ctx);
-      begin(ctx, txnConstructor());
+      commitTransaction();
+      beginTransaction();
     },
     stop: function () {
       if (disposed) throw new Error("ticker already disposed");
-      commit(ctx);
+      disposed = true;
+      commitTransaction();
+    },
+    resetState: function () {
+      if (disposed) throw new Error("ticker already disposed");
+      abortTransaction();
+      beginTransaction();
     }
   }
 }
 
-function reactorBase (parent, control) {
-  var base = {
-    control: control,      // the actual object the user gets
-    parent: parent,        // the parent derivable
-    parentReactor: null,
-    dependentReactors: [],
-    _state: gc_STABLE,
-    active: false,         // whether or not listening for changes in parent
-    _type: types_REACTION,
-    uid: util_nextId(),
-    reacting: false,       // whether or not reaction function being invoked
-    yielding: false,       // whether or not letting parentReactor react first
-  };
-  if (util_DEBUG_MODE) {
-    base.stack = Error().stack;
-  }
-  return base;
-}
-var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
+var reactorParentStack = [];
 
-function stop (base) {
-  if (base.active) {
-    util_removeFromArray(base.parent._children, base);
-    if (base.parentReactor) {
-      orphan(base);
-    }
-    base.active = false;
-    base.control.onStop && base.control.onStop();
-  }
-}
-
-var parentReactorStack = [];
-
-function start (base) {
-  if (!base.active) {
-    util_addToArray(base.parent._children, base);
-    base.active = true;
-    base.parent._get();
-    // capture reactor dependency relationships
-    var len = parentReactorStack.length;
-    if (len > 0) {
-      base.parentReactor = parentReactorStack[len - 1];
-    }
-
-    base.control.onStart && base.control.onStart();
-  }
-}
-
-function orphan (base) {
-  if (base.parentReactor) {
-    base.parentReactor = null;
-  }
-}
-
-function adopt (parentBase, childBase) {
-  childBase.parentReactor = parentBase;
-}
-
-function reactors_maybeReact (base) {
-  if (base.yielding) {
-    throw Error(cycleMsg);
-  }
-  if (base.active && base._state === gc_UNSTABLE) {
-    if (base.parentReactor !== null) {
-      try {
-        base.yielding = true;
-        reactors_maybeReact(base.parentReactor);
-      } finally {
-        base.yielding = false;
-      }
-    }
-    // parent might have deactivated this one
-    if (base.active) {
-      var parent = base.parent, parentState = parent._state;
-      if (parentState === gc_UNSTABLE ||
-          parentState === gc_ORPHANED ||
-          parentState === gc_DISOWNED ||
-          parentState === gc_NEW) {
-        parent._get();
-      }
-      parentState = parent._state;
-
-      if (parentState === gc_UNCHANGED) {
-        base._state = gc_STABLE;
-      } else if (parentState === gc_CHANGED) {
-        force(base);
-      } else {
-          throw new Error("invalid parent state: " + parentState);
-      }
-    }
-  }
-}
-
-function force (base) {
-  // base.reacting check now in gc_mark; total solution there as opposed to here
-  if (base.control.react) {
-    base._state = gc_STABLE;
-    try {
-      base.reacting = true;
-      parentReactorStack.push(base);
-      if (!util_DEBUG_MODE) {
-        base.control.react(base.parent._get());
-      } else {
-        try {
-          base.control.react(base.parent._get());
-        } catch (e) {
-          console.error(base.stack);
-          throw e;
-        }
-      }
-    } finally {
-      parentReactorStack.pop();
-      base.reacting = false;
-    }
-  } else {
-      throw new Error("No reactor function available.");
-  }
-}
-
-function reactors_Reactor () {
-  /*jshint validthis:true */
+function Reactor(react, derivable) {
+  this._derivable = derivable;
+  this.react = react;
+  this._atoms = [];
+  this._parent = null;
+  this._active = false;
+  this._yielding = false;
+  this._reacting = false;
   this._type = types_REACTION;
-}
-
-function reactors_createBase (control, parent) {
-  if (control._base) {
-    throw new Error("This reactor has already been initialized");
+  if (util_DEBUG_MODE) {
+    this.stack = Error().stack;
   }
-  control._base = reactorBase(parent, control);
-  return control;
 }
 
-util_extend(reactors_Reactor.prototype, {
+var reactors_Reactor = Reactor;
+
+function bindAtomsToReactors(derivable, reactor) {
+  if (derivable._type === types_ATOM) {
+    util_addToArray(derivable.reactors, reactor);
+    util_addToArray(reactor.atoms, derivable);
+  }
+  else {
+    for (var i = 0, len = derivable.lastParentsEpochs.length; i < len; i += 2) {
+      bindAtomsToReactors(derivable.lastParentsEpochs[i], reactor);
+    }
+  }
+}
+
+Object.assign(reactors_Reactor.prototype, {
   start: function () {
-    start(this._base);
+    this._lastValue = this._derivable.get();
+    this._lastEpoch = this._derivable._epoch;
+    this._atoms = [];
+    bindAtomsToReactors(this._derivable, this);
+    var len = reactorParentStack.length;
+    if (len > 0) {
+      this._parent = reactorParentStack[len - 1];
+    }
+    this._active = true;
+    this.onStart && this.onStart();
     return this;
   },
-  stop: function () {
-    stop(this._base);
-    return this;
+  _force: function (nextValue) {
+    try {
+      reactorParentStack.push(this);
+      this._reacting = true;
+      this.react(nextValue);
+    } catch (e) {
+      if (util_DEBUG_MODE) {
+        console.error(this.stack);
+      }
+      throw e;
+    } finally {
+      this._reacting = false;
+      reactorParentStack.pop();
+    }
   },
   force: function () {
-    force(this._base);
-    return this;
+    this._force(this._derivable.get());
   },
-  isActive: function () {
-    return this._base.active;
+  _maybeReact: function () {
+    if (this._reacting) {
+      throw Error('cyclical update detected!!');
+    } else if (this._active) {
+      if (this._yielding) {
+        throw Error('reactor dependency cycle detected');
+      }
+      if (this._parent !== null) {
+        this._yielding = true;
+        this._parent._maybeReact();
+        this._yielding = false;
+      }
+      var nextValue = this._derivable.get();
+      if (this._derivable._epoch !== this._lastEpoch &&
+          !this._derivable.__equals(nextValue, this._lastValue)) {
+        this._force(nextValue);
+      }
+      this._lastEpoch = this._derivable._epoch;
+      this._lastValue = nextValue;
+    }
+  },
+  stop: function () {
+    var _this = this;
+    this._atoms.forEach(function (atom) {
+      return util_removeFromArray(atom._reactors, _this);
+    });
+    this._atoms = [];
+    this._parent = null;
+    this._active = false;
+    this.onStop && this.onStop();
+    return this;
   },
   orphan: function () {
-    orphan(this._base);
-    return this;
+    this._parent = null;
   },
   adopt: function (child) {
-    if (child._type !== types_REACTION) {
-      throw Error("reactors can only adopt reactors");
-    }
-    adopt(this._base, child._base);
-    return this;
-  }
+    child._parent = this;
+  },
+  isActive: function () {
+    return this._active;
+  },
 });
-
-function reactors_StandardReactor (f) {
-  /*jshint validthis:true */
-  this._type = types_REACTION;
-  this.react = f;
-}
-
-util_extend(reactors_StandardReactor.prototype, reactors_Reactor.prototype);
-
-function reactors_anonymousReactor (descriptor) {
-  return util_extend(new reactors_Reactor(), descriptor);
-}
 
 function derivable_createPrototype (D, opts) {
   var x = {
@@ -562,11 +406,12 @@ function derivable_createPrototype (D, opts) {
 
     reactor: function (f) {
       if (typeof f === 'function') {
-        return reactors_createBase(new reactors_StandardReactor(f), this);
+        return new reactors_Reactor(f, this);
       } else if (f instanceof reactors_Reactor) {
-        return reactors_createBase(f, this);
+        f._derivable = this;
+        return f;
       } else if (f && f.react) {
-        return reactors_createBase(reactors_anonymousReactor(f), this);
+        return Object.assign(new reactors_Reactor(null, this), f);
       } else {
         throw new Error("Unrecognized type for reactor " + f);
       }
@@ -646,13 +491,8 @@ function derivable_createPrototype (D, opts) {
       }).start().force();
     },
 
-    get: function () {
-      parents_maybeCaptureParent(this);
-      return this._get(); // abstract protected method, in Java parlance
-    },
-
     is: function (other) {
-      return D.lift(opts.equals)(this, other);
+      return D.lift(this._equals || opts.equals)(this, other);
     },
 
     and: function (other) {
@@ -707,6 +547,10 @@ function derivable_createPrototype (D, opts) {
 
       return util_setEquals(this._clone(), equals);
     },
+
+    __equals: function (a, b) {
+      return (this._equals || opts.equals)(a, b);
+    },
   };
 
   x.switch = function () {
@@ -733,109 +577,70 @@ function derivation_createPrototype (D, opts) {
       return util_setEquals(D.derivation(this._deriver), this._equals);
     },
 
-    _forceGet: function () {
-      var that = this,
-          i;
-      var newParents = parents_capturingParents(function () {
-        var newState;
+    _forceEval: function () {
+      var that = this;
+      var newVal = null;
+      var parents = parents_capturingParentsEpochs(function () {
         if (!util_DEBUG_MODE) {
-          newState = that._deriver();
+          newVal = that._deriver();
         } else {
           try {
-            newState = that._deriver();
+            newVal = that._deriver();
           } catch (e) {
-            console.error(that._stack);
+            console.error(that.stack);
             throw e;
           }
         }
-        var equals = that._equals || opts.equals;
-        that._state = equals(newState, that._value) ? gc_UNCHANGED : gc_CHANGED;
-        that._value = newState;
       });
 
-      // organise parents
-      for (i = this._parents.length; i--;) {
-        var possiblyFormerParent = this._parents[i];
-        if (!util_arrayContains(newParents, possiblyFormerParent)) {
-          util_removeFromArray(possiblyFormerParent._children, this);
-        }
+      if (!this.__equals(newVal, this._value)) {
+        this._epoch++;
       }
 
-      this._parents = newParents;
+      this._lastParentsEpochs = parents;
+      this._value = newVal;
+    },
 
-      // add this as child to new parents
-      for (i = newParents.length; i--;) {
-        util_addToArray(newParents[i]._children, this);
+    _update: function () {
+      if (this._lastGlobalEpoch !== epoch_globalEpoch) {
+        if (this._cache === util_unique) {
+          // brand spanking new, so force eval
+          this._forceEval();
+        } else {
+          for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+            var parent_1 = this._lastParentsEpochs[i];
+            var lastParentEpoch = this._lastParentsEpochs[i + 1];
+            parent_1._update();
+            if (parent_1.epoch !== lastParentEpoch) {
+              this._forceEval();
+              return;
+            }
+          }
+          this._lastGlobalEpoch = epoch_globalEpoch;
+        }
       }
     },
 
-    _get: function () {
-      var i, parent;
-      outer: switch (this._state) {
-      case gc_NEW:
-      case gc_ORPHANED:
-        this._forceGet();
-        break;
-      case gc_UNSTABLE:
-        for (i = 0; i < this._parents.length; i++) {
-          parent = this._parents[i];
-          var parentState = parent._state;
-          if (parentState === gc_UNSTABLE ||
-              parentState === gc_ORPHANED ||
-              parentState === gc_DISOWNED) {
-            parent._get();
-          }
-          parentState = parent._state;
-          if (parentState === gc_CHANGED) {
-            this._forceGet();
-            break outer;
-          } else if (!(parentState === gc_STABLE ||
-                       parentState === gc_UNCHANGED)) {
-            throw new Error("invalid parent mode: " + parentState);
-          }
-        }
-        this._state = gc_UNCHANGED;
-        break;
-      case gc_DISOWNED:
-        var parents = [];
-        for (i = 0; i < this._parents.length; i++) {
-          var parentStateTuple = this._parents[i],
-              state = parentStateTuple[1];
-          parent = parentStateTuple[0];
-          if (!opts.equals(parent._get(), state)) {
-            this._parents = [];
-            this._forceGet();
-            break outer;
-          } else {
-            parents.push(parent);
-          }
-        }
-        for (i = parents.length; i--;) {
-          util_addToArray(parents[i]._children, this);
-        }
-        this._parents = parents;
-        this._state = gc_UNCHANGED;
-        break;
-      default:
-        // noop
-      }
-
+    get: function () {
+      var idx = parents_captureParent(this);
+      this._update();
+      parents_captureEpoch(idx, this.epoch);
       return this._value;
-    }
-  }
+    },
+  };
 }
 
 function derivation_construct(obj, deriver) {
-  obj._children = [];
-  obj._parents = [];
   obj._deriver = deriver;
-  obj._state = gc_NEW;
+  obj._lastParentsEpochs = [];
+  obj._lastGlobalEpoch = epoch_globalEpoch - 1;
+  obj._epoch = 0;
   obj._type = types_DERIVATION;
   obj._value = util_unique;
   obj._equals = null;
 
   if (util_DEBUG_MODE) {
-    obj._stack = Error().stack;
+    obj.stack = Error().stack;
   }
 
   return obj;
@@ -858,8 +663,8 @@ function mutable_createPrototype (D, _) {
           that.set(monoLensDescriptor.set(that.get(), val));
         }
       });
-    }
-  }
+    },
+  };
 }
 
 function lens_createPrototype(D, _) {
@@ -874,8 +679,8 @@ function lens_createPrototype(D, _) {
         that._lensDescriptor.set(value);
       });
       return this;
-    }
-  }
+    },
+  };
 }
 
 function lens_construct(derivation, descriptor) {
@@ -885,154 +690,71 @@ function lens_construct(derivation, descriptor) {
   return derivation;
 }
 
-function processReactorQueue (rq) {
-  for (var i = rq.length; i--;) {
-    reactors_maybeReact(rq[i]);
-  }
-}
-
-var TXN_CTX = transactions_newContext();
-
-function atom_inTxn () {
-  return transactions_inTransaction(TXN_CTX)
-}
-
-var NOOP_ARRAY = {push: function () {}};
-
-function TransactionState () {
-  this.inTxnValues = {};
-  this.reactorQueue = [];
-}
-
-function getState (txnState, atom) {
-  var inTxnValue = txnState.inTxnValues[atom._uid];
-  if (inTxnValue) {
-    return inTxnValue[1];
-  } else {
-    return atom._value;
-  }
-}
-
-function setState (txnState, atom, state) {
-  txnState.inTxnValues[atom._uid] = [atom, state];
-  gc_mark(atom, txnState.reactorQueue);
-}
-
-util_extend(TransactionState.prototype, {
-  onCommit: function () {
-    var i, atomValueTuple;
-    var keys = util_keys(this.inTxnValues);
-    if (atom_inTxn()) {
-      // push in-txn vals up to current txn
-      for (i = keys.length; i--;) {
-        atomValueTuple = this.inTxnValues[keys[i]];
-        atomValueTuple[0].set(atomValueTuple[1]);
-      }
-    } else {
-      // change root state and run reactors.
-      for (i = keys.length; i--;) {
-        atomValueTuple = this.inTxnValues[keys[i]];
-        atomValueTuple[0]._value = atomValueTuple[1];
-        gc_mark(atomValueTuple[0], NOOP_ARRAY);
-      }
-
-      processReactorQueue(this.reactorQueue);
-
-      // then sweep for a clean finish
-      for (i = keys.length; i--;) {
-        gc_sweep(this.inTxnValues[keys[i]][0]);
-      }
-    }
-  },
-
-  onAbort: function () {
-    if (!atom_inTxn()) {
-      var keys = util_keys(this.inTxnValues);
-      for (var i = keys.length; i--;) {
-        gc_abort_sweep(this.inTxnValues[keys[i]][0]);
-      }
-    }
-  }
-})
-
-
 function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
       return util_setEquals(D.atom(this._value), this._equals);
     },
 
-    withValidator: function (f) {
-      if (f === null) {
-        return this._clone();
-      } if (typeof f === 'function') {
-        var result = this._clone();
-        var existing = this._validator;
-        if (existing) {
-          result._validator = function (x) { return f(x) && existing(x); }
-        } else {
-          result._validator = f;
-        }
-        return result;
-      } else {
-        throw new Error(".withValidator expects function or null");
-      }
-    },
-
-    validate: function () {
-      this._validate(this.get());
-    },
-
-    _validate: function (value) {
-      var validationResult = this._validator && this._validator(value);
-      if (this._validator && validationResult !== true) {
-        throw new Error("Failed validation with value: '" + value + "'." +
-                        " Validator returned '" + validationResult + "' ");
-      }
-    },
-
     set: function (value) {
 
-      this._validate(value);
-      var equals = this._equals || opts.equals;
-      if (!equals(value, this._value)) {
-        this._state = gc_CHANGED;
-
-        if (atom_inTxn()) {
-          setState(transactions_currentTransaction(TXN_CTX), this, value);
-        } else {
-          this._value = value;
-
-          var reactorQueue = [];
-          gc_mark(this, reactorQueue);
-          processReactorQueue(reactorQueue);
-          gc_sweep(this);
+      if (transactions_currentCtx !== null) {
+        var inTxnThis = void 0;
+        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0 &&
+            value !== inTxnThis._value) {
+          transactions_currentCtx.globalEpoch++;
+          inTxnThis._epoch++;
+          inTxnThis._value = value;
+        } else if (value !== this._value) {
+          transactions_currentCtx.globalEpoch++;
+          inTxnThis = this._clone(value);
+          inTxnThis._epoch = this._epoch + 1;
+          transactions_currentCtx.id2txnAtom[this._id] = inTxnThis;
+          util_addToArray(transactions_currentCtx.modifiedAtoms, this);
+        }
+      } else {
+        if (!this.__equals(value, this._value)) {
+          this._set(value);
+          this.reactors.forEach(function (r) { return r.maybeReact(); });
         }
       }
-      return this;
     },
 
-    _get: function () {
-      if (atom_inTxn()) {
-        return getState(transactions_currentTransaction(TXN_CTX), this);
+    _update: function () {},
+
+    _set: function (value) {
+      epoch_globalEpoch++;
+      this._epoch++;
+      this._value = value;
+    },
+
+    get: function () {
+      var inTxnThis;
+      var txnCtx = transactions_currentCtx;
+      while (txnCtx !== null) {
+          inTxnThis = txnCtx.id2txnAtom[this._id];
+          if (inTxnThis !== void 0) {
+              parents_captureEpoch(parents_captureParent(inTxnThis), inTxnThis._epoch);
+              return inTxnThis._value;
+          }
+          else {
+              txnCtx = txnCtx.parent;
+          }
       }
-      return this._value;
-    }
+      parents_captureEpoch(parents_captureParent(this), this._epoch);
+      return this.value;
+    },
   };
 }
 
 function atom_construct (atom, value) {
-  atom._uid = util_nextId();
-  atom._children = [];
-  atom._state = gc_STABLE;
+  atom._id = util_nextId();
+  atom._reactors = [];
+  atom._epoch = 0;
   atom._value = value;
   atom._type = types_ATOM;
   atom._equals = null;
   return atom;
-}
-
-function atom_transact (f) {
-  transactions_transact(TXN_CTX, new TransactionState(), f);
 }
 
 function atom_transaction (f) {
@@ -1040,7 +762,7 @@ function atom_transaction (f) {
     var args = util_slice(arguments, 0);
     var that = this;
     var result;
-    atom_transact(function () {
+    transactions_transact(function () {
       result = f.apply(that, args);
     });
     return result;
@@ -1053,9 +775,7 @@ function atom_ticker () {
   if (ticker) {
     ticker.refCount++;
   } else {
-    ticker = transactions_ticker(TXN_CTX, function () {
-      return new TransactionState();
-    });
+    ticker = transactions_ticker();
     ticker.refCount = 1;
   }
   var done = false;
@@ -1071,7 +791,7 @@ function atom_ticker () {
         ticker = null;
       }
       done = true;
-    }
+    },
   };
 }
 
@@ -1081,7 +801,7 @@ function constructModule (config) {
   config = util_extend({}, defaultConfig, config || {});
 
   var D = {
-    transact: atom_transact,
+    transact: transactions_transact,
     defaultEquals: util_equals,
     setDebugMode: util_setDebugMode,
     transaction: atom_transaction,
@@ -1142,7 +862,7 @@ function constructModule (config) {
   };
 
   D.atomically = function (f) {
-    if (atom_inTxn()) {
+    if (transactions_inTransaction()) {
       f();
     } else {
       D.transact(f);

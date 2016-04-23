@@ -29,22 +29,22 @@ function derivation_createPrototype (D, opts) {
     },
 
     _update: function () {
-      if (this._lastGlobalEpoch === epoch_globalEpoch) {
-        // up to date, so noop
-      } else if (this._cache === util_unique) {
-        // brand spanking new, so force eval
-        this._forceEval();
-      } else {
-        for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-          var parent_1 = this._lastParentsEpochs[i];
-          var lastParentEpoch = this._lastParentsEpochs[i + 1];
-          parent_1._update();
-          if (parent_1.epoch !== lastParentEpoch) {
-            this._forceEval();
-            return;
+      if (this._lastGlobalEpoch !== epoch_globalEpoch) {
+        if (this._cache === util_unique) {
+          // brand spanking new, so force eval
+          this._forceEval();
+        } else {
+          for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+            var parent_1 = this._lastParentsEpochs[i];
+            var lastParentEpoch = this._lastParentsEpochs[i + 1];
+            parent_1._update();
+            if (parent_1.epoch !== lastParentEpoch) {
+              this._forceEval();
+              return;
+            }
           }
+          this._lastGlobalEpoch = epoch_globalEpoch;
         }
-        this._lastGlobalEpoch = util_globalEpoch;
       }
     },
 

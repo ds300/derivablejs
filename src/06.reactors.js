@@ -1,21 +1,23 @@
 var reactorParentStack = [];
 
-function reactors_Reactor(react, derivable) {
-    this._derivable = derivable;
-    this.react = react;
-    this._atoms = [];
-    this._parent = null;
-    this._active = false;
-    this._yielding = false;
-    this._reacting = false;
-    this._type = types_REACTION;
-    if (util_DEBUG_MODE) {
-      this.stack = Error().stack;
-    }
+function Reactor(react, derivable) {
+  this._derivable = derivable;
+  this.react = react;
+  this._atoms = [];
+  this._parent = null;
+  this._active = false;
+  this._yielding = false;
+  this._reacting = false;
+  this._type = types_REACTION;
+  if (util_DEBUG_MODE) {
+    this.stack = Error().stack;
+  }
 }
 
+var reactors_Reactor = Reactor;
+
 function bindAtomsToReactors(derivable, reactor) {
-  if (derivable instanceof Atom) {
+  if (derivable._type === types_ATOM) {
     util_addToArray(derivable.reactors, reactor);
     util_addToArray(reactor.atoms, derivable);
   }
@@ -71,8 +73,8 @@ Object.assign(reactors_Reactor.prototype, {
         this._yielding = false;
       }
       var nextValue = this._derivable.get();
-      if (this._derivable._epoch !== this._lastEpoch
-         && !this._derivable.__equals(nextValue, this._lastValue)) {
+      if (this._derivable._epoch !== this._lastEpoch &&
+          !this._derivable.__equals(nextValue, this._lastValue)) {
         this._force(nextValue);
       }
       this._lastEpoch = this._derivable._epoch;
