@@ -11,10 +11,10 @@ function TransactionContext(parent) {
   this.modifiedAtoms = [];
 }
 
-var currentTxnCtx = null;
+var transactions_currentCtx = null;
 
 function transactions_inTransaction () {
-  return currentTxnCtx !== null;
+  return transactions_currentCtx !== null;
 }
 
 function transactions_transact () {
@@ -33,15 +33,15 @@ function transactions_transact () {
 }
 
 function beginTransaction() {
-  currentTxnCtx = new TransactionContext(currentTxnCtx);
+  transactions_currentCtx = new TransactionContext(transactions_currentCtx);
 }
 
 function commitTransaction() {
-  var ctx = currentTxnCtx;
-  currentTxnCtx = ctx.parent;
+  var ctx = transactions_currentCtx;
+  transactions_currentCtx = ctx.parent;
   var reactorss = [];
   ctx.modifiedAtoms.forEach(function (a) {
-    if (currentTxnCtx !== null) {
+    if (transactions_currentCtx !== null) {
       a.set(ctx.id2txnAtom[a.id].value);
     }
     else {
@@ -49,10 +49,10 @@ function commitTransaction() {
       reactorss.push(a.reactors);
     }
   });
-  if (currentTxnCtx === null) {
+  if (transactions_currentCtx === null) {
     epoch_globalEpoch = ctx.globalEpoch;
   } else {
-    currentTxnCtx.globalEpoch = ctx.globalEpoch;
+    transactions_currentCtx.globalEpoch = ctx.globalEpoch;
   }
   reactorss.forEach(function (reactors) {
     reactors.forEach(function (r) {
@@ -62,12 +62,12 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
-  currentTxnCtx = ctx.parent;
-  if (currentTxnCtx === null) {
+  transactions_currentCtx = ctx.parent;
+  if (transactions_currentCtx === null) {
     globalEpoch = ctx.globalEpoch + 1;
   }
   else {
-    currentTxnCtx.globalEpoch = ctx.globalEpoch + 1;
+    transactions_currentCtx.globalEpoch = ctx.globalEpoch + 1;
   }
 }
 
