@@ -1,151 +1,68 @@
-function processReactorQueue (rq) {
-  for (var i = rq.length; i--;) {
-    reactors_maybeReact(rq[i]);
-  }
-}
-
-var TXN_CTX = transactions_newContext();
-
-function atom_inTxn () {
-  return transactions_inTransaction(TXN_CTX)
-}
-
-var NOOP_ARRAY = {push: function () {}};
-
-function TransactionState () {
-  this.inTxnValues = {};
-  this.reactorQueue = [];
-}
-
-function getState (txnState, atom) {
-  var inTxnValue = txnState.inTxnValues[atom._uid];
-  if (inTxnValue) {
-    return inTxnValue[1];
-  } else {
-    return atom._value;
-  }
-}
-
-function setState (txnState, atom, state) {
-  txnState.inTxnValues[atom._uid] = [atom, state];
-  gc_mark(atom, txnState.reactorQueue);
-}
-
-util_extend(TransactionState.prototype, {
-  onCommit: function () {
-    var i, atomValueTuple;
-    var keys = util_keys(this.inTxnValues);
-    if (atom_inTxn()) {
-      // push in-txn vals up to current txn
-      for (i = keys.length; i--;) {
-        atomValueTuple = this.inTxnValues[keys[i]];
-        atomValueTuple[0].set(atomValueTuple[1]);
-      }
-    } else {
-      // change root state and run reactors.
-      for (i = keys.length; i--;) {
-        atomValueTuple = this.inTxnValues[keys[i]];
-        atomValueTuple[0]._value = atomValueTuple[1];
-        gc_mark(atomValueTuple[0], NOOP_ARRAY);
-      }
-
-      processReactorQueue(this.reactorQueue);
-
-      // then sweep for a clean finish
-      for (i = keys.length; i--;) {
-        gc_sweep(this.inTxnValues[keys[i]][0]);
-      }
-    }
-  },
-
-  onAbort: function () {
-    if (!atom_inTxn()) {
-      var keys = util_keys(this.inTxnValues);
-      for (var i = keys.length; i--;) {
-        gc_abort_sweep(this.inTxnValues[keys[i]][0]);
-      }
-    }
-  }
-})
-
-
 function atom_createPrototype (D, opts) {
   return {
     _clone: function () {
       return util_setEquals(D.atom(this._value), this._equals);
     },
 
-    withValidator: function (f) {
-      if (f === null) {
-        return this._clone();
-      } if (typeof f === 'function') {
-        var result = this._clone();
-        var existing = this._validator;
-        if (existing) {
-          result._validator = function (x) { return f(x) && existing(x); }
-        } else {
-          result._validator = f;
-        }
-        return result;
-      } else {
-        throw new Error(".withValidator expects function or null");
-      }
-    },
-
-    validate: function () {
-      this._validate(this.get());
-    },
-
-    _validate: function (value) {
-      var validationResult = this._validator && this._validator(value);
-      if (this._validator && validationResult !== true) {
-        throw new Error("Failed validation with value: '" + value + "'." +
-                        " Validator returned '" + validationResult + "' ");
-      }
-    },
-
     set: function (value) {
 
-      this._validate(value);
-      var equals = this._equals || opts.equals;
-      if (!equals(value, this._value)) {
-        this._state = gc_CHANGED;
-
-        if (atom_inTxn()) {
-          setState(transactions_currentTransaction(TXN_CTX), this, value);
-        } else {
-          this._value = value;
-
-          var reactorQueue = [];
-          gc_mark(this, reactorQueue);
-          processReactorQueue(reactorQueue);
-          gc_sweep(this);
+      if (transactions_currentCtx !== null) {
+        var inTxnThis = void 0;
+        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this.id]) !== void 0
+            && value !== inTxnThis._value) {
+          transactions_currentCtx.globalEpoch++;
+          inTxnThis._epoch++;
+          inTxnThis._value = value;
+        } else if (value !== this._value) {
+          transactions_currentCtx.globalEpoch++;
+          inTxnThis = this._clone(value);
+          inTxnThis._epoch = this._epoch + 1;
+          transactions_currentCtx.id2txnAtom[this._id] = inTxnThis;
+          util_addToArray(transactions_currentCtx.modifiedAtoms, this);
         }
+      } else {
+        if (!this.__equals(value, this._value)) {
+          this._set(value);
+          this.reactors.forEach(function (r) { return r.maybeReact(); });
+        };
       }
-      return this;
+    },
+
+    _update: function () {},
+
+    _set: function (value) {
+      epoch_globalEpoch++;
+      this._epoch++;
+      this._value = value;
     },
 
     _get: function () {
-      if (atom_inTxn()) {
-        return getState(transactions_currentTransaction(TXN_CTX), this);
+      var inTxnThis;
+      var txnCtx = transactions_currentCtx;
+      while (txnCtx !== null) {
+          inTxnThis = txnCtx.id2txnAtom[this._id];
+          if (inTxnThis !== void 0) {
+              parents_captureEpoch(parents_captureParent(inTxnThis), inTxnThis._epoch);
+              return inTxnThis._value;
+          }
+          else {
+              txnCtx = txnCtx.parent;
+          }
       }
-      return this._value;
-    }
+      parents_captureEpoch(parents_captureParent(this), this._epoch);
+      return this.value;
+    },
   };
 }
 
 function atom_construct (atom, value) {
-  atom._uid = util_nextId();
-  atom._children = [];
-  atom._state = gc_STABLE;
+  atom._id = util_nextId();
+  atom._reactors = [];
+  atom._epoch = 0;
   atom._value = value;
   atom._type = types_ATOM;
   atom._equals = null;
   return atom;
-}
-
-function atom_transact (f) {
-  transactions_transact(TXN_CTX, new TransactionState(), f);
 }
 
 function atom_transaction (f) {
@@ -153,7 +70,7 @@ function atom_transaction (f) {
     var args = util_slice(arguments, 0);
     var that = this;
     var result;
-    atom_transact(function () {
+    transactions_transact(function () {
       result = f.apply(that, args);
     });
     return result;
@@ -166,9 +83,7 @@ function atom_ticker () {
   if (ticker) {
     ticker.refCount++;
   } else {
-    ticker = transactions_ticker(TXN_CTX, function () {
-      return new TransactionState();
-    });
+    ticker = transactions_ticker();
     ticker.refCount = 1;
   }
   var done = false;
@@ -184,6 +99,6 @@ function atom_ticker () {
         ticker = null;
       }
       done = true;
-    }
+    },
   };
 }

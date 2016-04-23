@@ -19,9 +19,8 @@ function derivation_createPrototype (D, opts) {
           }
         }
       });
-      var equals = that._equals || opts.equals;
 
-      if (!equals(newVal, that._value)) {
+      if (!this.__equals(newVal, this._value)) {
         this._epoch++;
       }
 
@@ -55,7 +54,7 @@ function derivation_createPrototype (D, opts) {
       parents_captureEpoch(idx, this.epoch);
       return this._value;
     },
-  }
+  };
 }
 
 function derivation_construct(obj, deriver) {

@@ -72,7 +72,7 @@ Object.assign(reactors_Reactor.prototype, {
       }
       var nextValue = this._derivable.get();
       if (this._derivable._epoch !== this._lastEpoch
-         && nextValue !== this._lastValue) {
+         && !this._derivable.__equals(nextValue, this._lastValue)) {
         this._force(nextValue);
       }
       this._lastEpoch = this._derivable._epoch;

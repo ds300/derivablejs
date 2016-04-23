@@ -10,8 +10,8 @@ function lens_createPrototype(D, _) {
         that._lensDescriptor.set(value);
       });
       return this;
-    }
-  }
+    },
+  };
 }
 
 function lens_construct(derivation, descriptor) {

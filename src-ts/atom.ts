@@ -78,6 +78,7 @@ export class Atom<T> implements Derivable<T> {
     atom.id = this.id;
     return atom;
   }
+  
   reactor(f) {
     return new Reactor(this, f);
   }

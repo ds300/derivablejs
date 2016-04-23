@@ -15,6 +15,6 @@ function mutable_createPrototype (D, _) {
           that.set(monoLensDescriptor.set(that.get(), val));
         }
       });
-    }
-  }
+    },
+  };
 }

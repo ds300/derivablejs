@@ -174,7 +174,7 @@ function derivable_createPrototype (D, opts) {
     },
 
     is: function (other) {
-      return D.lift(opts.equals)(this, other);
+      return D.lift(this._equals || opts.equals)(this, other);
     },
 
     and: function (other) {
@@ -228,6 +228,10 @@ function derivable_createPrototype (D, opts) {
       }
 
       return util_setEquals(this._clone(), equals);
+    },
+
+    __equals: function (a, b) {
+      return (this._equals || opts.equals)(a, b);
     },
   };
 
