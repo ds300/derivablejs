@@ -1,172 +1,102 @@
-function reactorBase (parent, control) {
-  var base = {
-    control: control,      // the actual object the user gets
-    parent: parent,        // the parent derivable
-    parentReactor: null,
-    dependentReactors: [],
-    _state: gc_STABLE,
-    active: false,         // whether or not listening for changes in parent
-    _type: types_REACTION,
-    uid: util_nextId(),
-    reacting: false,       // whether or not reaction function being invoked
-    yielding: false,       // whether or not letting parentReactor react first
-  };
-  if (util_DEBUG_MODE) {
-    base.stack = Error().stack;
-  }
-  return base;
-}
-var cycleMsg = "Cyclical Reactor Dependency! Not allowed!";
+var reactorParentStack = [];
 
-function stop (base) {
-  if (base.active) {
-    util_removeFromArray(base.parent._children, base);
-    if (base.parentReactor) {
-      orphan(base);
+function Reactor(derivable, react) {
+    this._derivable = derivable;
+    this._react = react;
+    this._atoms = [];
+    this._parent = null;
+    this._active = false;
+    this._yielding = false;
+    this._reacting = false;
+    this._type = types_REACTION;
+    if (util_DEBUG_MODE) {
+      this.stack = Error().stack;
     }
-    base.active = false;
-    base.control.onStop && base.control.onStop();
-  }
 }
 
-var parentReactorStack = [];
-
-function start (base) {
-  if (!base.active) {
-    util_addToArray(base.parent._children, base);
-    base.active = true;
-    base.parent._get();
-    // capture reactor dependency relationships
-    var len = parentReactorStack.length;
-    if (len > 0) {
-      base.parentReactor = parentReactorStack[len - 1];
-    }
-
-    base.control.onStart && base.control.onStart();
+function bindAtomsToReactors(derivable, reactor) {
+  if (derivable instanceof Atom) {
+    util_addToArray(derivable.reactors, reactor);
+    util_addToArray(reactor.atoms, derivable);
   }
-}
-
-function orphan (base) {
-  if (base.parentReactor) {
-    base.parentReactor = null;
-  }
-}
-
-function adopt (parentBase, childBase) {
-  childBase.parentReactor = parentBase;
-}
-
-function reactors_maybeReact (base) {
-  if (base.yielding) {
-    throw Error(cycleMsg);
-  }
-  if (base.active && base._state === gc_UNSTABLE) {
-    if (base.parentReactor !== null) {
-      try {
-        base.yielding = true;
-        reactors_maybeReact(base.parentReactor);
-      } finally {
-        base.yielding = false;
-      }
-    }
-    // parent might have deactivated this one
-    if (base.active) {
-      var parent = base.parent, parentState = parent._state;
-      if (parentState === gc_UNSTABLE ||
-          parentState === gc_ORPHANED ||
-          parentState === gc_DISOWNED ||
-          parentState === gc_NEW) {
-        parent._get();
-      }
-      parentState = parent._state;
-
-      if (parentState === gc_UNCHANGED) {
-        base._state = gc_STABLE;
-      } else if (parentState === gc_CHANGED) {
-        force(base);
-      } else {
-          throw new Error("invalid parent state: " + parentState);
-      }
+  else {
+    for (var i = 0, len = derivable.lastParentsEpochs.length; i < len; i += 2) {
+      bindAtomsToReactors(derivable.lastParentsEpochs[i], reactor);
     }
   }
 }
 
-function force (base) {
-  // base.reacting check now in gc_mark; total solution there as opposed to here
-  if (base.control.react) {
-    base._state = gc_STABLE;
-    try {
-      base.reacting = true;
-      parentReactorStack.push(base);
-      if (!util_DEBUG_MODE) {
-        base.control.react(base.parent._get());
-      } else {
-        try {
-          base.control.react(base.parent._get());
-        } catch (e) {
-          console.error(base.stack);
-          throw e;
-        }
-      }
-    } finally {
-      parentReactorStack.pop();
-      base.reacting = false;
-    }
-  } else {
-      throw new Error("No reactor function available.");
-  }
-}
-
-function reactors_Reactor () {
-  /*jshint validthis:true */
-  this._type = types_REACTION;
-}
-
-function reactors_createBase (control, parent) {
-  if (control._base) {
-    throw new Error("This reactor has already been initialized");
-  }
-  control._base = reactorBase(parent, control);
-  return control;
-}
-
-util_extend(reactors_Reactor.prototype, {
+Object.assign(Reactor.prototype, {
   start: function () {
-    start(this._base);
+    this._lastValue = this._derivable.get();
+    this._lastEpoch = this._derivable._epoch;
+    this._atoms = [];
+    bindAtomsToReactors(this._derivable, this);
+    var len = reactorParentStack.length;
+    if (len > 0) {
+      this._parent = reactorParentStack[len - 1];
+    }
+    this._active = true;
+    this.onStart && this.onStart();
     return this;
   },
-  stop: function () {
-    stop(this._base);
-    return this;
+  _force: function (nextValue) {
+    try {
+      reactorParentStack.push(this);
+      this._reacting = true;
+      this._react(nextValue);
+    } catch (e) {
+      if (util_DEBUG_MODE) {
+        console.error(this.stack);
+      }
+      throw e;
+    } finally {
+      this._reacting = false;
+      reactorParentStack.pop();
+    }
   },
   force: function () {
-    force(this._base);
-    return this;
+    this._force(this._derivable.get());
   },
-  isActive: function () {
-    return this._base.active;
+  _maybeReact: function () {
+    if (this._reacting) {
+      throw Error('cyclical update detected!!');
+    } else if (this._active) {
+      if (this._yielding) {
+        throw Error('reactor dependency cycle detected');
+      }
+      if (this._parent !== null) {
+        this._yielding = true;
+        this._parent._maybeReact();
+        this._yielding = false;
+      }
+      var nextValue = this._derivable.get();
+      if (this._derivable._epoch !== this._lastEpoch
+         && nextValue !== this._lastValue) {
+        this._force(nextValue);
+      }
+      this._lastEpoch = this._derivable._epoch;
+      this._lastValue = nextValue;
+    }
+  },
+  stop: function () {
+    var _this = this;
+    this._atoms.forEach(function (atom) {
+      return util_removeFromArray(atom._reactors, _this);
+    });
+    this._atoms = [];
+    this._parent = null;
+    this._active = false;
+    this.onStop && this.onStop();
+    return this;
   },
   orphan: function () {
-    orphan(this._base);
-    return this;
+    this._parent = null;
   },
   adopt: function (child) {
-    if (child._type !== types_REACTION) {
-      throw Error("reactors can only adopt reactors");
-    }
-    adopt(this._base, child._base);
-    return this;
-  }
+    child._parent = this;
+  },
+  isActive: function () {
+    return this._active;
+  },
 });
-
-function reactors_StandardReactor (f) {
-  /*jshint validthis:true */
-  this._type = types_REACTION;
-  this.react = f;
-}
-
-util_extend(reactors_StandardReactor.prototype, reactors_Reactor.prototype);
-
-function reactors_anonymousReactor (descriptor) {
-  return util_extend(new reactors_Reactor(), descriptor);
-}
