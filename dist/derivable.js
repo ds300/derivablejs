@@ -607,15 +607,11 @@ function derivation_createPrototype (D, opts) {
                          epoch_globalEpoch :
                          transactions_currentCtx.globalEpoch;
       if (this._lastGlobalEpoch !== globalEpoch) {
-        console.log('trace a');
         if (this._value === util_unique) {
-          console.log('trace b');
           // brand spanking new, so force eval
           this._forceEval();
         } else {
-          console.log('trace c');
           for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-            console.log('trace d');
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
             var currentParentEpoch;
@@ -626,7 +622,6 @@ function derivation_createPrototype (D, opts) {
               currentParentEpoch = parent_1._epoch;
             }
             if (currentParentEpoch !== lastParentEpoch) {
-              console.log('trace e');
               this._forceEval();
               return;
             }

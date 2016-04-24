@@ -411,13 +411,13 @@ describe("debug mode", () => {
   it("causes derivations and reactors to store the stacktraces of their"
      + " instantiation points", () =>{
     const d = _.derivation(() => 0);
-    assert(!d._stack);
-    const b = d.reactor(() => {})._base;
+    assert(!d.stack);
+    const b = d.reactor(() => {});
     assert(!b.stack);
     _.setDebugMode(true);
     const e = _.derivation(() => {throw Error()});
-    assert(e._stack);
-    const a = d.reactor(() => {})._base;
+    assert(e.stack);
+    const a = d.reactor(() => {});
     assert(a.stack);
     _.setDebugMode(false);
   })
