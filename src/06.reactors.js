@@ -2,7 +2,9 @@ var reactorParentStack = [];
 
 function Reactor(react, derivable) {
   this._derivable = derivable;
-  this.react = react;
+  if (react) {
+    this.react = react;
+  }
   this._atoms = [];
   this._parent = null;
   this._active = false;

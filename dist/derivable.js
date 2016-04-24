@@ -215,7 +215,9 @@ var reactorParentStack = [];
 
 function Reactor(react, derivable) {
   this._derivable = derivable;
-  this.react = react;
+  if (react) {
+    this.react = react;
+  }
   this._atoms = [];
   this._parent = null;
   this._active = false;
@@ -272,6 +274,7 @@ Object.assign(reactors_Reactor.prototype, {
   },
   force: function () {
     this._force(this._derivable.get());
+    return this;
   },
   _maybeReact: function () {
     if (this._reacting) {
@@ -307,9 +310,11 @@ Object.assign(reactors_Reactor.prototype, {
   },
   orphan: function () {
     this._parent = null;
+    return this;
   },
   adopt: function (child) {
     child._parent = this;
+    return this;
   },
   isActive: function () {
     return this._active;
@@ -408,6 +413,9 @@ function derivable_createPrototype (D, opts) {
       if (typeof f === 'function') {
         return new reactors_Reactor(f, this);
       } else if (f instanceof reactors_Reactor) {
+        if (!(typeof f.react === 'function')) {
+          throw new Error('reactor missing .react method');
+        }
         f._derivable = this;
         return f;
       } else if (f && f.react) {
