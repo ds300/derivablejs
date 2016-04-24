@@ -5,7 +5,6 @@ function atom_createPrototype (D, opts) {
     },
 
     set: function (value) {
-
       if (transactions_currentCtx !== null) {
         var inTxnThis = void 0;
         if ((inTxnThis = transactions_currentCtx.id2txnAtom[this._id]) !== void 0 &&
@@ -13,9 +12,11 @@ function atom_createPrototype (D, opts) {
           transactions_currentCtx.globalEpoch++;
           inTxnThis._epoch++;
           inTxnThis._value = value;
-        } else if (value !== this._value) {
+        } else if (!this.__equals(value, this._value)) {
           transactions_currentCtx.globalEpoch++;
-          inTxnThis = this._clone(value);
+          inTxnThis = this._clone();
+          inTxnThis._value = value;
+          inTxnThis._id = this._id;
           inTxnThis._epoch = this._epoch + 1;
           transactions_currentCtx.id2txnAtom[this._id] = inTxnThis;
           util_addToArray(transactions_currentCtx.modifiedAtoms, this);
@@ -40,14 +41,14 @@ function atom_createPrototype (D, opts) {
       var inTxnThis;
       var txnCtx = transactions_currentCtx;
       while (txnCtx !== null) {
-          inTxnThis = txnCtx.id2txnAtom[this._id];
-          if (inTxnThis !== void 0) {
-              parents_captureEpoch(parents_captureParent(inTxnThis), inTxnThis._epoch);
-              return inTxnThis._value;
-          }
-          else {
-              txnCtx = txnCtx.parent;
-          }
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        if (inTxnThis !== void 0) {
+          parents_captureEpoch(parents_captureParent(this), inTxnThis._epoch);
+          return inTxnThis._value;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
       }
       parents_captureEpoch(parents_captureParent(this), this._epoch);
       return this._value;

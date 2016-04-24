@@ -697,22 +697,28 @@ function atom_createPrototype (D, opts) {
     },
 
     set: function (value) {
-
+      console.log("setting !??");
       if (transactions_currentCtx !== null) {
+        console.log("trace b");
         var inTxnThis = void 0;
         if ((inTxnThis = transactions_currentCtx.id2txnAtom[this._id]) !== void 0 &&
             value !== inTxnThis._value) {
+          console.log("trace a");
           transactions_currentCtx.globalEpoch++;
           inTxnThis._epoch++;
           inTxnThis._value = value;
-        } else if (value !== this._value) {
+        } else if (!this.__equals(value, this._value)) {
+          console.log("trace c");
           transactions_currentCtx.globalEpoch++;
-          inTxnThis = this._clone(value);
+          inTxnThis = this._clone();
+          inTxnThis._value = value;
+          inTxnThis._id = this._id;
           inTxnThis._epoch = this._epoch + 1;
           transactions_currentCtx.id2txnAtom[this._id] = inTxnThis;
           util_addToArray(transactions_currentCtx.modifiedAtoms, this);
         }
       } else {
+        console.log("trace c");
         if (!this.__equals(value, this._value)) {
           this._set(value);
           this._reactors.forEach(function (r) { return r._maybeReact(); });
@@ -729,20 +735,20 @@ function atom_createPrototype (D, opts) {
     },
 
     get: function () {
+      console.log("mmmh getting");
       var inTxnThis;
       var txnCtx = transactions_currentCtx;
       while (txnCtx !== null) {
-          console.log("txn context is not null");
-          inTxnThis = txnCtx.id2txnAtom[this._id];
-          if (inTxnThis !== void 0) {
-              parents_captureEpoch(parents_captureParent(inTxnThis), inTxnThis._epoch);
-              return inTxnThis._value;
-          }
-          else {
-              txnCtx = txnCtx.parent;
-          }
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        console.log("shitzhu", inTxnThis == null);
+        if (inTxnThis !== void 0) {
+          parents_captureEpoch(parents_captureParent(this), inTxnThis._epoch);
+          return inTxnThis._value;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
       }
-      console.log("done");
       parents_captureEpoch(parents_captureParent(this), this._epoch);
       return this._value;
     },
