@@ -231,14 +231,13 @@ function Reactor(react, derivable) {
 
 var reactors_Reactor = Reactor;
 
-function bindAtomsToReactors(derivable, reactor) {
+function captureAtoms(derivable, atoms) {
   if (derivable._type === types_ATOM) {
-    util_addToArray(derivable._reactors, reactor);
-    util_addToArray(reactor._atoms, derivable);
+    util_addToArray(atoms, derivable);
   }
   else {
     for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
-      bindAtomsToReactors(derivable._lastParentsEpochs[i], reactor);
+      captureAtoms(derivable._lastParentsEpochs[i], atoms);
     }
   }
 }
@@ -248,7 +247,12 @@ Object.assign(reactors_Reactor.prototype, {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
     this._atoms = [];
-    bindAtomsToReactors(this._derivable, this);
+    captureAtoms(this._derivable, this._atoms);
+    var that = this;
+    this._atoms.forEach(function (atom) {
+      util_addToArray(atom._reactors, that);
+    });
+
     var len = reactorParentStack.length;
     if (len > 0) {
       this._parent = reactorParentStack[len - 1];
@@ -262,6 +266,28 @@ Object.assign(reactors_Reactor.prototype, {
       reactorParentStack.push(this);
       this._reacting = true;
       this.react(nextValue);
+      var oldAtoms = this._atoms;
+      var newAtoms = [];
+      this._atoms = newAtoms;
+      captureAtoms(this._derivable, newAtoms);
+
+      var that = this;
+
+      newAtoms.forEach(function (atom) {
+        var idx = oldAtoms.indexOf(atom);
+        if (idx === -1) {
+          util_addToArray(atom._reactors, that);
+        } else {
+          oldAtoms[idx] = null;
+        }
+      });
+
+      oldAtoms.forEach(function (atom) {
+        if (atom !== null) {
+          util_removeFromArray(atom._reactors, that);
+        }
+      });
+
     } catch (e) {
       if (util_DEBUG_MODE) {
         console.error(this.stack);
@@ -274,6 +300,7 @@ Object.assign(reactors_Reactor.prototype, {
   },
   force: function () {
     this._force(this._derivable.get());
+
     return this;
   },
   _maybeReact: function () {

@@ -402,4 +402,32 @@ describe("nested derivables", () => {
     $$A.set($C);
     assert.strictEqual(reaction_b, 9);
   });
+
+  it("should work in the appropriate fashion (2)", () => {
+    const $$A = atom(null);
+    const $a = $$A.mDerive($a => $a.get());
+
+    const $B = atom('junk');
+
+    const $isJunk = $B.is('junk');
+
+    let isJunk = null;
+
+    $a.react(a => {
+      isJunk = a;
+    });
+
+    console.log("FANTODS", isJunk);
+    assert(isJunk == null);
+
+    $$A.set($isJunk);
+
+    console.log("BANNANA FANTODS", isJunk);
+    assert.strictEqual(isJunk, true);
+
+    $B.set('not junk');
+    console.log("HAMFISTED BANNANA FANTODS", isJunk, $isJunk.get());
+    assert.strictEqual(isJunk, false);
+
+  });
 });
