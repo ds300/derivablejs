@@ -458,19 +458,6 @@ describe("a tangible reactor", () => {
     assert.strictEqual(reactor.running, false, "reactor should have stopped");
   });
 
-  it(`can't be initialized twice`, () => {
-
-    let a = atom(0);
-    let reactor = a.reactor(n => console.log(n));
-    assert.throws(() => {
-      atom(0).reactor(reactor);
-    });
-    reactor = a.reactor(n => console.log(n));
-    assert.throws(() => {
-      a.reactor(reactor);
-    });
-  });
-
   it(`can bre created by anonymous classes`, () => {
     let a = atom(5);
     let b = null;
