@@ -369,3 +369,37 @@ describe("derivations inside a transaction", () => {
     assert.strictEqual(plusOne.get(), 1);
   });
 });
+
+describe("nested derivables", () => {
+  it("should work in the appropriate fashion", () => {
+    const $$A = atom(null);
+    const $a = $$A.mDerive($a => $a.get());
+
+    assert($a.get() == null);
+
+    const $B = atom(5);
+
+    $$A.set($B);
+
+    assert.strictEqual($a.get(), 5);
+
+    var reaction_b = null;
+    $a.react(b => {
+      reaction_b = b;
+    },
+    {skipFirst: true}
+    );
+
+    assert.strictEqual(reaction_b, null);
+
+    $B.set(10);
+    assert.strictEqual(reaction_b, 10);
+
+    $B.set(4);
+    assert.strictEqual(reaction_b, 4);
+
+    const $C = atom(9);
+    $$A.set($C);
+    assert.strictEqual(reaction_b, 9);
+  });
+});
