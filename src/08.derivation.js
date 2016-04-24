@@ -30,7 +30,10 @@ function derivation_createPrototype (D, opts) {
     },
 
     _update: function () {
-      if (this._lastGlobalEpoch !== epoch_globalEpoch) {
+      var globalEpoch = transactions_currentCtx === null ?
+                         epoch_globalEpoch :
+                         transactions_currentCtx.globalEpoch;
+      if (this._lastGlobalEpoch !== globalEpoch) {
         if (this._value === util_unique) {
           // brand spanking new, so force eval
           this._forceEval();
@@ -38,21 +41,27 @@ function derivation_createPrototype (D, opts) {
           for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
-            parent_1._update();
-            if (parent_1._epoch !== lastParentEpoch) {
+            var currentParentEpoch;
+            if (parent_1._type === types_ATOM) {
+              currentParentEpoch = parent_1._getEpoch();
+            } else {
+              parent_1._update();
+              currentParentEpoch = parent_1._epoch;
+            }
+            if (currentParentEpoch !== lastParentEpoch) {
               this._forceEval();
               return;
             }
           }
         }
-        this._lastGlobalEpoch = epoch_globalEpoch;
+        this._lastGlobalEpoch = globalEpoch;
       }
     },
 
     get: function () {
       var idx = parents_captureParent(this);
       this._update();
-      parents_captureEpoch(idx, this.epoch);
+      parents_captureEpoch(idx, this._epoch);
       return this._value;
     },
   };

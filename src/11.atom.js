@@ -29,8 +29,6 @@ function atom_createPrototype (D, opts) {
       }
     },
 
-    _update: function () {},
-
     _set: function (value) {
       epoch_globalEpoch++;
       this._epoch++;
@@ -52,6 +50,21 @@ function atom_createPrototype (D, opts) {
       }
       parents_captureEpoch(parents_captureParent(this), this._epoch);
       return this._value;
+    },
+
+    _getEpoch: function () {
+      var inTxnThis;
+      var txnCtx = transactions_currentCtx;
+      while (txnCtx !== null) {
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        if (inTxnThis !== void 0) {
+          return inTxnThis._epoch;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
+      }
+      return this._epoch;
     },
   };
 }

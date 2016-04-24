@@ -603,29 +603,43 @@ function derivation_createPrototype (D, opts) {
     },
 
     _update: function () {
-      if (this._lastGlobalEpoch !== epoch_globalEpoch) {
+      var globalEpoch = transactions_currentCtx === null ?
+                         epoch_globalEpoch :
+                         transactions_currentCtx.globalEpoch;
+      if (this._lastGlobalEpoch !== globalEpoch) {
+        console.log('trace a');
         if (this._value === util_unique) {
+          console.log('trace b');
           // brand spanking new, so force eval
           this._forceEval();
         } else {
+          console.log('trace c');
           for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+            console.log('trace d');
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
-            parent_1._update();
-            if (parent_1._epoch !== lastParentEpoch) {
+            var currentParentEpoch;
+            if (parent_1._type === types_ATOM) {
+              currentParentEpoch = parent_1._getEpoch();
+            } else {
+              parent_1._update();
+              currentParentEpoch = parent_1._epoch;
+            }
+            if (currentParentEpoch !== lastParentEpoch) {
+              console.log('trace e');
               this._forceEval();
               return;
             }
           }
         }
-        this._lastGlobalEpoch = epoch_globalEpoch;
+        this._lastGlobalEpoch = globalEpoch;
       }
     },
 
     get: function () {
       var idx = parents_captureParent(this);
       this._update();
-      parents_captureEpoch(idx, this.epoch);
+      parents_captureEpoch(idx, this._epoch);
       return this._value;
     },
   };
@@ -722,8 +736,6 @@ function atom_createPrototype (D, opts) {
       }
     },
 
-    _update: function () {},
-
     _set: function (value) {
       epoch_globalEpoch++;
       this._epoch++;
@@ -745,6 +757,21 @@ function atom_createPrototype (D, opts) {
       }
       parents_captureEpoch(parents_captureParent(this), this._epoch);
       return this._value;
+    },
+
+    _getEpoch: function () {
+      var inTxnThis;
+      var txnCtx = transactions_currentCtx;
+      while (txnCtx !== null) {
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        if (inTxnThis !== void 0) {
+          return inTxnThis._epoch;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
+      }
+      return this._epoch;
     },
   };
 }
