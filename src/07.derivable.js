@@ -90,7 +90,7 @@ function derivable_createPrototype (D, opts) {
       if (typeof f === 'function') {
         return new reactors_Reactor(f, this);
       } else if (f instanceof reactors_Reactor) {
-        if (!(typeof f.react === 'function')) {
+        if (typeof f.react !== 'function') {
           throw new Error('reactor missing .react method');
         }
         f._derivable = this;
