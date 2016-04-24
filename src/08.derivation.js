@@ -39,13 +39,13 @@ function derivation_createPrototype (D, opts) {
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
             parent_1._update();
-            if (parent_1.epoch !== lastParentEpoch) {
+            if (parent_1._epoch !== lastParentEpoch) {
               this._forceEval();
               return;
             }
           }
-          this._lastGlobalEpoch = epoch_globalEpoch;
         }
+        this._lastGlobalEpoch = epoch_globalEpoch;
       }
     },
 

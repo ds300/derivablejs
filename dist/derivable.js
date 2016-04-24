@@ -597,14 +597,12 @@ function derivation_createPrototype (D, opts) {
         this._epoch++;
       }
 
-      console.log("newVal", newVal);
 
       this._lastParentsEpochs = parents;
       this._value = newVal;
     },
 
     _update: function () {
-      console.log("updating");
       if (this._lastGlobalEpoch !== epoch_globalEpoch) {
         if (this._value === util_unique) {
           // brand spanking new, so force eval
@@ -614,13 +612,13 @@ function derivation_createPrototype (D, opts) {
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
             parent_1._update();
-            if (parent_1.epoch !== lastParentEpoch) {
+            if (parent_1._epoch !== lastParentEpoch) {
               this._forceEval();
               return;
             }
           }
-          this._lastGlobalEpoch = epoch_globalEpoch;
         }
+        this._lastGlobalEpoch = epoch_globalEpoch;
       }
     },
 
