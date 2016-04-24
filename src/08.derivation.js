@@ -24,13 +24,16 @@ function derivation_createPrototype (D, opts) {
         this._epoch++;
       }
 
+      console.log("newVal", newVal);
+
       this._lastParentsEpochs = parents;
       this._value = newVal;
     },
 
     _update: function () {
+      console.log("updating");
       if (this._lastGlobalEpoch !== epoch_globalEpoch) {
-        if (this._cache === util_unique) {
+        if (this._value === util_unique) {
           // brand spanking new, so force eval
           this._forceEval();
         } else {
