@@ -59,6 +59,7 @@ Object.assign(reactors_Reactor.prototype, {
   },
   force: function () {
     this._force(this._derivable.get());
+    return this;
   },
   _maybeReact: function () {
     if (this._reacting) {
@@ -94,9 +95,11 @@ Object.assign(reactors_Reactor.prototype, {
   },
   orphan: function () {
     this._parent = null;
+    return this;
   },
   adopt: function (child) {
     child._parent = this;
+    return this;
   },
   isActive: function () {
     return this._active;
