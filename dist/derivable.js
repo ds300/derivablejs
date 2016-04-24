@@ -266,27 +266,6 @@ Object.assign(reactors_Reactor.prototype, {
       reactorParentStack.push(this);
       this._reacting = true;
       this.react(nextValue);
-      var oldAtoms = this._atoms;
-      var newAtoms = [];
-      this._atoms = newAtoms;
-      captureAtoms(this._derivable, newAtoms);
-
-      var that = this;
-
-      newAtoms.forEach(function (atom) {
-        var idx = oldAtoms.indexOf(atom);
-        if (idx === -1) {
-          util_addToArray(atom._reactors, that);
-        } else {
-          oldAtoms[idx] = null;
-        }
-      });
-
-      oldAtoms.forEach(function (atom) {
-        if (atom !== null) {
-          util_removeFromArray(atom._reactors, that);
-        }
-      });
 
     } catch (e) {
       if (util_DEBUG_MODE) {
@@ -319,11 +298,35 @@ Object.assign(reactors_Reactor.prototype, {
       if (this._active) {
         var nextValue = this._derivable.get();
         if (this._derivable._epoch !== this._lastEpoch &&
-          !this._derivable.__equals(nextValue, this._lastValue)) {
-            this._force(nextValue);
+            !this._derivable.__equals(nextValue, this._lastValue)) {
+          this._force(nextValue);
+        }
+
+        // need to check atoms regardless of whether reactions happens
+        // TODO: incorporate atom capturing into .get somehow
+        this._lastEpoch = this._derivable._epoch;
+        this._lastValue = nextValue;
+        var oldAtoms = this._atoms;
+        var newAtoms = [];
+        this._atoms = newAtoms;
+        captureAtoms(this._derivable, newAtoms);
+
+        var that = this;
+
+        newAtoms.forEach(function (atom) {
+          var idx = oldAtoms.indexOf(atom);
+          if (idx === -1) {
+            util_addToArray(atom._reactors, that);
+          } else {
+            oldAtoms[idx] = null;
           }
-          this._lastEpoch = this._derivable._epoch;
-          this._lastValue = nextValue;
+        });
+
+        oldAtoms.forEach(function (atom) {
+          if (atom !== null) {
+            util_removeFromArray(atom._reactors, that);
+          }
+        });
       }
     }
   },

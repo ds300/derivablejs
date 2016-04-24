@@ -439,7 +439,6 @@ describe("nested derivables", () => {
 
     $a.react(a => {
       isJunk = a;
-      console.log("reacting", a);
     }, {when: $a});
 
     assert(isJunk == null);
@@ -448,9 +447,31 @@ describe("nested derivables", () => {
 
     assert.strictEqual(isJunk, true);
 
-    console.log("setting false");
     $B.set('not junk');
     // still junk
     assert.strictEqual(isJunk, true);
+  });
+
+  it("should not interfere with boolean casting?!", () => {
+    const $$Running = atom(null);
+    const $running = $$Running.mDerive($a => $a.get());
+
+    let running = null;
+    $running.derive(x => !!x).react(r => {
+      running = r;
+    });
+
+
+    assert(!running);
+
+    const $Running = atom(false);
+
+    $$Running.set($Running);
+
+    assert(!running);
+
+    $Running.set(true);
+
+    assert(running);
   });
 });
