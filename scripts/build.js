@@ -2,6 +2,7 @@ var Promise = require('promise');
 var rollup = require('rollup');
 var fs = require('fs');
 var path = require('path');
+var umdIfy = require('./umd-ify');
 
 module.exports = function (entry, destDir) {
   return rollup.rollup({
@@ -13,9 +14,16 @@ module.exports = function (entry, destDir) {
     // Alternatively, let Rollup do it for you
     // (this returns a promise). This is much
     // easier if you're generating a sourcemap
-    return bundle.write({
+    return bundle.generate({
       format: 'cjs',
-      dest: path.join(destDir, 'derivable.js'),
+      sourceMap: 'true',
+      sourceMapFile: path.resolve(path.join(destDir, 'derivable.js'))
     });
+  }).then(umdIfy).then(function (bundle) {
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir);
+    }
+    fs.writeFileSync(path.join(destDir, 'derivable.js'), bundle.code);
+    fs.writeFileSync(path.join(destDir, 'derivable.js.map'), bundle.map.toString());
   });
 };
