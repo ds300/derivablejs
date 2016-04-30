@@ -97,26 +97,26 @@ export function transaction (f) {
   };
 };
 
-var ticker = null;
+var _ticker = null;
 
 export function ticker () {
-  if (ticker) {
-    ticker.refCount++;
+  if (_ticker) {
+    _ticker.refCount++;
   } else {
-    ticker = transactions.ticker();
-    ticker.refCount = 1;
+    _ticker = transactions.ticker();
+    _ticker.refCount = 1;
   }
   var done = false;
   return {
     tick: function () {
       if (done) throw new Error('tyring to use ticker after release');
-      ticker.tick();
+      _ticker.tick();
     },
     release: function () {
       if (done) throw new Error('ticker already released');
-      if (--ticker.refCount === 0) {
-        ticker.stop();
-        ticker = null;
+      if (--_ticker.refCount === 0) {
+        _ticker.stop();
+        _ticker = null;
       }
       done = true;
     },

@@ -13,7 +13,7 @@ export function createPrototype (D, opts) {
     _forceEval: function () {
       var that = this;
       var newVal = null;
-      var parents = parents.capturingParentsEpochs(function () {
+      var capturedParentsEpochs = parents.capturingParentsEpochs(function () {
         if (!util.DEBUG_MODE) {
           newVal = that._deriver();
         } else {
@@ -31,7 +31,7 @@ export function createPrototype (D, opts) {
       }
 
 
-      this._lastParentsEpochs = parents;
+      this._lastParentsEpochs = capturedParentsEpochs;
       this._value = newVal;
     },
 

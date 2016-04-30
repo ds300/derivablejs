@@ -1,3 +1,5 @@
+import epoch from './epoch';
+
 var TransactionAbortion = {};
 
 function initiateAbortion() {
@@ -7,17 +9,17 @@ function initiateAbortion() {
 function TransactionContext(parent) {
   this.parent = parent;
   this.id2txnAtom = {};
-  this.globalEpoch = epoch_globalEpoch;
+  this.globalEpoch = epoch.globalEpoch;
   this.modifiedAtoms = [];
 }
 
-var transactions_currentCtx = null;
+export var currentCtx = null;
 
-function transactions_inTransaction () {
-  return transactions_currentCtx !== null;
-}
+export function inTransaction () {
+  return currentCtx !== null;
+};
 
-function transactions_transact (f) {
+export function transact (f) {
   beginTransaction();
   try {
     f.call(null, initiateAbortion);
@@ -30,18 +32,18 @@ function transactions_transact (f) {
     return;
   }
   commitTransaction();
-}
+};
 
 function beginTransaction() {
-  transactions_currentCtx = new TransactionContext(transactions_currentCtx);
+  currentCtx = new TransactionContext(currentCtx);
 }
 
 function commitTransaction() {
-  var ctx = transactions_currentCtx;
-  transactions_currentCtx = ctx.parent;
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
   var reactorss = [];
   ctx.modifiedAtoms.forEach(function (a) {
-    if (transactions_currentCtx !== null) {
+    if (currentCtx !== null) {
       a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
@@ -49,10 +51,10 @@ function commitTransaction() {
       reactorss.push(a._reactors);
     }
   });
-  if (transactions_currentCtx === null) {
-    epoch_globalEpoch = ctx.globalEpoch;
+  if (currentCtx === null) {
+    epoch.globalEpoch = ctx.globalEpoch;
   } else {
-    transactions_currentCtx.globalEpoch = ctx.globalEpoch;
+    currentCtx.globalEpoch = ctx.globalEpoch;
   }
   reactorss.forEach(function (reactors) {
     reactors.forEach(function (r) {
@@ -62,17 +64,17 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
-  var ctx = transactions_currentCtx;
-  transactions_currentCtx = ctx.parent;
-  if (transactions_currentCtx === null) {
-    epoch_globalEpoch = ctx.globalEpoch + 1;
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
+  if (currentCtx === null) {
+    epoch.globalEpoch = ctx.globalEpoch + 1;
   }
   else {
-    transactions_currentCtx.globalEpoch = ctx.globalEpoch + 1;
+    currentCtx.globalEpoch = ctx.globalEpoch + 1;
   }
 }
 
-function transactions_ticker () {
+export function ticker () {
   beginTransaction();
   var disposed = false;
   return {
@@ -91,5 +93,5 @@ function transactions_ticker () {
       abortTransaction();
       beginTransaction();
     }
-  }
-}
+  };
+};

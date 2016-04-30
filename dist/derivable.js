@@ -9,21 +9,21 @@
     factory(global.Derivable = {});
   }
 })(this, function (exports) {
-"use strict";
 
-var util_keys = Object.keys;
+'use strict';
 
-function util_extend(obj) {
+const keys = Object.keys;
+
+const assign = Object.assign || function (obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
-    var keys = util_keys(other);
+    var keys = keys(other);
     for (var j = keys.length; j--;) {
       var prop = keys[j];
       obj[prop] = other[prop];
     }
   }
-  return obj;
-}
+};
 
 function _is(a, b) {
   // SameValue algorithm
@@ -36,84 +36,50 @@ function _is(a, b) {
   }
 }
 
-function util_equals (a, b) {
+function equals (a, b) {
   return _is(a, b) || (a && typeof a.equals === 'function' && a.equals(b));
-}
+};
 
-function util_addToArray (a, b) {
+function addToArray (a, b) {
   var i = a.indexOf(b);
   if (i < 0) {
     a.push(b);
   }
-}
+};
 
-function util_removeFromArray (a, b) {
+function removeFromArray (a, b) {
   var i = a.indexOf(b);
   if (i >= 0) {
     a.splice(i, 1);
   }
-}
+};
 
-var nextId = 0;
-function util_nextId () {
-  return nextId++;
-}
+var _nextId = 0;
+function nextId () {
+  return _nextId++;
+};
 
-function util_slice (a, i) {
+function slice (a, i) {
   return Array.prototype.slice.call(a, i);
-}
+};
 
-var util_unique = Object.freeze({equals: function () { return false; }});
+const unique = Object.freeze({equals: function () { return false; }});
 
-function util_some (x) {
+function some (x) {
   return (x !== null) && (x !== void 0);
-}
+};
 
-var util_DEBUG_MODE = false;
-function util_setDebugMode(val) {
-  util_DEBUG_MODE = !!val;
-}
+var DEBUG_MODE = false;
+function setDebugMode (val) {
+  DEBUG_MODE = !!val;
+};
 
-function util_setEquals(derivable, equals) {
+function setEquals (derivable, equals) {
   derivable._equals = equals;
   return derivable;
-}
+};
 
-var epoch_globalEpoch = 0;
-
-var parentsStack = [];
-
-function parents_capturingParentsEpochs(f) {
-  var i = parentsStack.length;
-  parentsStack.push([]);
-  try {
-    f();
-    return parentsStack[i];
-  } finally {
-    parentsStack.pop();
-  }
-}
-
-function parents_captureParent(p) {
-  if (parentsStack.length > 0) {
-    var top = parentsStack[parentsStack.length - 1];
-    top.push(p, 0);
-    return top.length-1;
-  } else {
-    return -1;
-  }
-}
-
-function parents_captureEpoch(idx, epoch) {
-  if (parentsStack.length > 0) {
-    parentsStack[parentsStack.length - 1][idx] = epoch;
-  }
-}
-
-var types_ATOM = "ATOM",
-    types_DERIVATION = "DERIVATION",
-    types_LENS = "LENS",
-    types_REACTION = "REACTION";
+var epoch = {globalEpoch: 0};
 
 var TransactionAbortion = {};
 
@@ -124,17 +90,17 @@ function initiateAbortion() {
 function TransactionContext(parent) {
   this.parent = parent;
   this.id2txnAtom = {};
-  this.globalEpoch = epoch_globalEpoch;
+  this.globalEpoch = epoch.globalEpoch;
   this.modifiedAtoms = [];
 }
 
-var transactions_currentCtx = null;
+var currentCtx = null;
 
-function transactions_inTransaction () {
-  return transactions_currentCtx !== null;
-}
+function inTransaction () {
+  return currentCtx !== null;
+};
 
-function transactions_transact (f) {
+function transact (f) {
   beginTransaction();
   try {
     f.call(null, initiateAbortion);
@@ -147,18 +113,18 @@ function transactions_transact (f) {
     return;
   }
   commitTransaction();
-}
+};
 
 function beginTransaction() {
-  transactions_currentCtx = new TransactionContext(transactions_currentCtx);
+  currentCtx = new TransactionContext(currentCtx);
 }
 
 function commitTransaction() {
-  var ctx = transactions_currentCtx;
-  transactions_currentCtx = ctx.parent;
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
   var reactorss = [];
   ctx.modifiedAtoms.forEach(function (a) {
-    if (transactions_currentCtx !== null) {
+    if (currentCtx !== null) {
       a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
@@ -166,10 +132,10 @@ function commitTransaction() {
       reactorss.push(a._reactors);
     }
   });
-  if (transactions_currentCtx === null) {
-    epoch_globalEpoch = ctx.globalEpoch;
+  if (currentCtx === null) {
+    epoch.globalEpoch = ctx.globalEpoch;
   } else {
-    transactions_currentCtx.globalEpoch = ctx.globalEpoch;
+    currentCtx.globalEpoch = ctx.globalEpoch;
   }
   reactorss.forEach(function (reactors) {
     reactors.forEach(function (r) {
@@ -179,17 +145,17 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
-  var ctx = transactions_currentCtx;
-  transactions_currentCtx = ctx.parent;
-  if (transactions_currentCtx === null) {
-    epoch_globalEpoch = ctx.globalEpoch + 1;
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
+  if (currentCtx === null) {
+    epoch.globalEpoch = ctx.globalEpoch + 1;
   }
   else {
-    transactions_currentCtx.globalEpoch = ctx.globalEpoch + 1;
+    currentCtx.globalEpoch = ctx.globalEpoch + 1;
   }
 }
 
-function transactions_ticker () {
+function ticker () {
   beginTransaction();
   var disposed = false;
   return {
@@ -208,8 +174,161 @@ function transactions_ticker () {
       abortTransaction();
       beginTransaction();
     }
+  };
+};
+
+var parentsStack = [];
+
+function capturingParentsEpochs (f) {
+  var i = parentsStack.length;
+  parentsStack.push([]);
+  try {
+    f();
+    return parentsStack[i];
+  } finally {
+    parentsStack.pop();
   }
-}
+};
+
+function captureParent (p) {
+  if (parentsStack.length > 0) {
+    var top = parentsStack[parentsStack.length - 1];
+    top.push(p, 0);
+    return top.length-1;
+  } else {
+    return -1;
+  }
+};
+
+function captureEpoch (idx, epoch) {
+  if (parentsStack.length > 0) {
+    parentsStack[parentsStack.length - 1][idx] = epoch;
+  }
+};
+
+const ATOM = "ATOM";
+const DERIVATION = "DERIVATION";
+const LENS = "LENS";
+const REACTION = "REACTION";
+
+function createPrototype (D, opts) {
+  return {
+    _clone: function () {
+      return setEquals(D.atom(this._value), this._equals);
+    },
+
+    set: function (value) {
+      if (currentCtx !== null) {
+        var inTxnThis = void 0;
+        if ((inTxnThis = currentCtx.id2txnAtom[this._id]) !== void 0 &&
+            value !== inTxnThis._value) {
+          currentCtx.globalEpoch++;
+          inTxnThis._epoch++;
+          inTxnThis._value = value;
+        } else if (!this.__equals(value, this._value)) {
+          currentCtx.globalEpoch++;
+          inTxnThis = this._clone();
+          inTxnThis._value = value;
+          inTxnThis._id = this._id;
+          inTxnThis._epoch = this._epoch + 1;
+          currentCtx.id2txnAtom[this._id] = inTxnThis;
+          addToArray(currentCtx.modifiedAtoms, this);
+        }
+      } else {
+        if (!this.__equals(value, this._value)) {
+          this._set(value);
+          this._reactors.forEach(function (r) { return r._maybeReact(); });
+        }
+      }
+    },
+
+    _set: function (value) {
+      epoch.globalEpoch++;
+      this._epoch++;
+      this._value = value;
+    },
+
+    get: function () {
+      var inTxnThis;
+      var txnCtx = currentCtx;
+      while (txnCtx !== null) {
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        if (inTxnThis !== void 0) {
+          captureEpoch(captureParent(this), inTxnThis._epoch);
+          return inTxnThis._value;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
+      }
+      captureEpoch(captureParent(this), this._epoch);
+      return this._value;
+    },
+
+    _getEpoch: function () {
+      var inTxnThis;
+      var txnCtx = currentCtx;
+      while (txnCtx !== null) {
+        inTxnThis = txnCtx.id2txnAtom[this._id];
+        if (inTxnThis !== void 0) {
+          return inTxnThis._epoch;
+        }
+        else {
+          txnCtx = txnCtx.parent;
+        }
+      }
+      return this._epoch;
+    },
+  };
+};
+
+function construct (atom, value) {
+  atom._id = nextId();
+  atom._reactors = [];
+  atom._epoch = 0;
+  atom._value = value;
+  atom._type = ATOM;
+  atom._equals = null;
+  return atom;
+};
+
+function transaction (f) {
+  return function () {
+    var args = slice(arguments, 0);
+    var that = this;
+    var result;
+    transact(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  };
+};
+
+var _ticker = null;
+
+function ticker$1 () {
+  if (_ticker) {
+    _ticker.refCount++;
+  } else {
+    _ticker = ticker();
+    _ticker.refCount = 1;
+  }
+  var done = false;
+  return {
+    tick: function () {
+      if (done) throw new Error('tyring to use ticker after release');
+      _ticker.tick();
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      if (--_ticker.refCount === 0) {
+        _ticker.stop();
+        _ticker = null;
+      }
+      done = true;
+    },
+  };
+};
 
 var reactorParentStack = [];
 
@@ -223,17 +342,15 @@ function Reactor(react, derivable) {
   this._active = false;
   this._yielding = false;
   this._reacting = false;
-  this._type = types_REACTION;
-  if (util_DEBUG_MODE) {
+  this._type = REACTION;
+  if (DEBUG_MODE) {
     this.stack = Error().stack;
   }
 }
 
-var reactors_Reactor = Reactor;
-
 function captureAtoms(derivable, atoms) {
-  if (derivable._type === types_ATOM) {
-    util_addToArray(atoms, derivable);
+  if (derivable._type === ATOM) {
+    addToArray(atoms, derivable);
   }
   else {
     for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
@@ -242,7 +359,7 @@ function captureAtoms(derivable, atoms) {
   }
 }
 
-Object.assign(reactors_Reactor.prototype, {
+Object.assign(Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
@@ -250,7 +367,7 @@ Object.assign(reactors_Reactor.prototype, {
     captureAtoms(this._derivable, this._atoms);
     var that = this;
     this._atoms.forEach(function (atom) {
-      util_addToArray(atom._reactors, that);
+      addToArray(atom._reactors, that);
     });
 
     var len = reactorParentStack.length;
@@ -268,7 +385,7 @@ Object.assign(reactors_Reactor.prototype, {
       this.react(nextValue);
 
     } catch (e) {
-      if (util_DEBUG_MODE) {
+      if (DEBUG_MODE) {
         console.error(this.stack);
       }
       throw e;
@@ -316,7 +433,7 @@ Object.assign(reactors_Reactor.prototype, {
         newAtoms.forEach(function (atom) {
           var idx = oldAtoms.indexOf(atom);
           if (idx === -1) {
-            util_addToArray(atom._reactors, that);
+            addToArray(atom._reactors, that);
           } else {
             oldAtoms[idx] = null;
           }
@@ -324,7 +441,7 @@ Object.assign(reactors_Reactor.prototype, {
 
         oldAtoms.forEach(function (atom) {
           if (atom !== null) {
-            util_removeFromArray(atom._reactors, that);
+            removeFromArray(atom._reactors, that);
           }
         });
       }
@@ -333,7 +450,7 @@ Object.assign(reactors_Reactor.prototype, {
   stop: function () {
     var _this = this;
     this._atoms.forEach(function (atom) {
-      return util_removeFromArray(atom._reactors, _this);
+      return removeFromArray(atom._reactors, _this);
     });
     this._atoms = [];
     this._parent = null;
@@ -354,7 +471,7 @@ Object.assign(reactors_Reactor.prototype, {
   },
 });
 
-function derivable_createPrototype (D, opts) {
+function createPrototype$1 (D, opts) {
   var x = {
     /**
      * Creates a derived value whose state will always be f applied to this
@@ -433,7 +550,7 @@ function derivable_createPrototype (D, opts) {
                    D.unpack(d));
         });
       default:
-        var args = ([that]).concat(util_slice(arguments, 1));
+        var args = ([that]).concat(slice(arguments, 1));
         return D.derivation(function () {
           return f.apply(null, args.map(D.unpack));
         });
@@ -444,15 +561,15 @@ function derivable_createPrototype (D, opts) {
 
     reactor: function (f) {
       if (typeof f === 'function') {
-        return new reactors_Reactor(f, this);
-      } else if (f instanceof reactors_Reactor) {
+        return new Reactor(f, this);
+      } else if (f instanceof Reactor) {
         if (typeof f.react !== 'function') {
           throw new Error('reactor missing .react method');
         }
         f._derivable = this;
         return f;
       } else if (f && f.react) {
-        return Object.assign(new reactors_Reactor(null, this), f);
+        return Object.assign(new Reactor(null, this), f);
       } else {
         throw new Error("Unrecognized type for reactor " + f);
       }
@@ -552,7 +669,7 @@ function derivable_createPrototype (D, opts) {
 
     mThen: function (thenClause, elseClause) {
       return this.derive(function (x) {
-        return D.unpack(util_some(x) ? thenClause : elseClause);
+        return D.unpack(some(x) ? thenClause : elseClause);
       });
     },
 
@@ -586,7 +703,7 @@ function derivable_createPrototype (D, opts) {
         equals = null;
       }
 
-      return util_setEquals(this._clone(), equals);
+      return setEquals(this._clone(), equals);
     },
 
     __equals: function (a, b) {
@@ -610,19 +727,19 @@ function derivable_createPrototype (D, opts) {
   };
 
   return x;
-}
+};
 
-function derivation_createPrototype (D, opts) {
+function createPrototype$2 (D, opts) {
   return {
     _clone: function () {
-      return util_setEquals(D.derivation(this._deriver), this._equals);
+      return setEquals(D.derivation(this._deriver), this._equals);
     },
 
     _forceEval: function () {
       var that = this;
       var newVal = null;
-      var parents = parents_capturingParentsEpochs(function () {
-        if (!util_DEBUG_MODE) {
+      var capturedParentsEpochs = capturingParentsEpochs(function () {
+        if (!DEBUG_MODE) {
           newVal = that._deriver();
         } else {
           try {
@@ -639,16 +756,16 @@ function derivation_createPrototype (D, opts) {
       }
 
 
-      this._lastParentsEpochs = parents;
+      this._lastParentsEpochs = capturedParentsEpochs;
       this._value = newVal;
     },
 
     _update: function () {
-      var globalEpoch = transactions_currentCtx === null ?
-                         epoch_globalEpoch :
-                         transactions_currentCtx.globalEpoch;
+      var globalEpoch = currentCtx === null ?
+                         epoch.globalEpoch :
+                         currentCtx.globalEpoch;
       if (this._lastGlobalEpoch !== globalEpoch) {
-        if (this._value === util_unique) {
+        if (this._value === unique) {
           // brand spanking new, so force eval
           this._forceEval();
         } else {
@@ -656,7 +773,7 @@ function derivation_createPrototype (D, opts) {
             var parent_1 = this._lastParentsEpochs[i];
             var lastParentEpoch = this._lastParentsEpochs[i + 1];
             var currentParentEpoch;
-            if (parent_1._type === types_ATOM) {
+            if (parent_1._type === ATOM) {
               currentParentEpoch = parent_1._getEpoch();
             } else {
               parent_1._update();
@@ -673,34 +790,34 @@ function derivation_createPrototype (D, opts) {
     },
 
     get: function () {
-      var idx = parents_captureParent(this);
+      var idx = captureParent(this);
       this._update();
-      parents_captureEpoch(idx, this._epoch);
+      captureEpoch(idx, this._epoch);
       return this._value;
     },
   };
-}
+};
 
-function derivation_construct(obj, deriver) {
+function construct$1 (obj, deriver) {
   obj._deriver = deriver;
   obj._lastParentsEpochs = [];
-  obj._lastGlobalEpoch = epoch_globalEpoch - 1;
+  obj._lastGlobalEpoch = epoch.globalEpoch - 1;
   obj._epoch = 0;
-  obj._type = types_DERIVATION;
-  obj._value = util_unique;
+  obj._type = DERIVATION;
+  obj._value = unique;
   obj._equals = null;
 
-  if (util_DEBUG_MODE) {
+  if (DEBUG_MODE) {
     obj.stack = Error().stack;
   }
 
   return obj;
-}
+};
 
-function mutable_createPrototype (D, _) {
+function createPrototype$3 (D, _) {
   return {
     swap: function (f) {
-      var args = util_slice(arguments, 0);
+      var args = slice(arguments, 0);
       args[0] = this.get();
       return this.set(f.apply(null, args));
     },
@@ -716,12 +833,12 @@ function mutable_createPrototype (D, _) {
       });
     },
   };
-}
+};
 
-function lens_createPrototype(D, _) {
+function createPrototype$4 (D, _) {
   return {
     _clone: function () {
-      return util_setEquals(D.lens(this._lensDescriptor), this._equals);
+      return setEquals(D.lens(this._lensDescriptor), this._equals);
     },
 
     set: function (value) {
@@ -732,183 +849,64 @@ function lens_createPrototype(D, _) {
       return this;
     },
   };
-}
+};
 
-function lens_construct(derivation, descriptor) {
+function construct$2 (derivation, descriptor) {
   derivation._lensDescriptor = descriptor;
-  derivation._type = types_LENS;
+  derivation._type = LENS;
 
   return derivation;
-}
+};
 
-function atom_createPrototype (D, opts) {
-  return {
-    _clone: function () {
-      return util_setEquals(D.atom(this._value), this._equals);
-    },
-
-    set: function (value) {
-      if (transactions_currentCtx !== null) {
-        var inTxnThis = void 0;
-        if ((inTxnThis = transactions_currentCtx.id2txnAtom[this._id]) !== void 0 &&
-            value !== inTxnThis._value) {
-          transactions_currentCtx.globalEpoch++;
-          inTxnThis._epoch++;
-          inTxnThis._value = value;
-        } else if (!this.__equals(value, this._value)) {
-          transactions_currentCtx.globalEpoch++;
-          inTxnThis = this._clone();
-          inTxnThis._value = value;
-          inTxnThis._id = this._id;
-          inTxnThis._epoch = this._epoch + 1;
-          transactions_currentCtx.id2txnAtom[this._id] = inTxnThis;
-          util_addToArray(transactions_currentCtx.modifiedAtoms, this);
-        }
-      } else {
-        if (!this.__equals(value, this._value)) {
-          this._set(value);
-          this._reactors.forEach(function (r) { return r._maybeReact(); });
-        }
-      }
-    },
-
-    _set: function (value) {
-      epoch_globalEpoch++;
-      this._epoch++;
-      this._value = value;
-    },
-
-    get: function () {
-      var inTxnThis;
-      var txnCtx = transactions_currentCtx;
-      while (txnCtx !== null) {
-        inTxnThis = txnCtx.id2txnAtom[this._id];
-        if (inTxnThis !== void 0) {
-          parents_captureEpoch(parents_captureParent(this), inTxnThis._epoch);
-          return inTxnThis._value;
-        }
-        else {
-          txnCtx = txnCtx.parent;
-        }
-      }
-      parents_captureEpoch(parents_captureParent(this), this._epoch);
-      return this._value;
-    },
-
-    _getEpoch: function () {
-      var inTxnThis;
-      var txnCtx = transactions_currentCtx;
-      while (txnCtx !== null) {
-        inTxnThis = txnCtx.id2txnAtom[this._id];
-        if (inTxnThis !== void 0) {
-          return inTxnThis._epoch;
-        }
-        else {
-          txnCtx = txnCtx.parent;
-        }
-      }
-      return this._epoch;
-    },
-  };
-}
-
-function atom_construct (atom, value) {
-  atom._id = util_nextId();
-  atom._reactors = [];
-  atom._epoch = 0;
-  atom._value = value;
-  atom._type = types_ATOM;
-  atom._equals = null;
-  return atom;
-}
-
-function atom_transaction (f) {
-  return function () {
-    var args = util_slice(arguments, 0);
-    var that = this;
-    var result;
-    transactions_transact(function () {
-      result = f.apply(that, args);
-    });
-    return result;
-  }
-}
-
-var ticker = null;
-
-function atom_ticker () {
-  if (ticker) {
-    ticker.refCount++;
-  } else {
-    ticker = transactions_ticker();
-    ticker.refCount = 1;
-  }
-  var done = false;
-  return {
-    tick: function () {
-      if (done) throw new Error('tyring to use ticker after release');
-      ticker.tick();
-    },
-    release: function () {
-      if (done) throw new Error('ticker already released');
-      if (--ticker.refCount === 0) {
-        ticker.stop();
-        ticker = null;
-      }
-      done = true;
-    },
-  };
-}
-
-var defaultConfig = { equals: util_equals };
+var defaultConfig = { equals: equals };
 
 function constructModule (config) {
-  config = util_extend({}, defaultConfig, config || {});
+  config = assign({}, defaultConfig, config || {});
 
   var D = {
-    transact: transactions_transact,
-    defaultEquals: util_equals,
-    setDebugMode: util_setDebugMode,
-    transaction: atom_transaction,
-    ticker: atom_ticker,
-    Reactor: reactors_Reactor,
+    transact: transact,
+    defaultEquals: equals,
+    setDebugMode: setDebugMode,
+    transaction: transaction,
+    ticker: ticker$1,
+    Reactor: Reactor,
     isAtom: function (x) {
-      return x && (x._type === types_ATOM || x._type === types_LENS);
+      return x && (x._type === ATOM || x._type === LENS);
     },
     isDerivable: function (x) {
-      return x && (x._type === types_ATOM ||
-                   x._type === types_LENS ||
-                   x._type === types_DERIVATION);
+      return x && (x._type === ATOM ||
+                   x._type === LENS ||
+                   x._type === DERIVATION);
     },
     isDerivation: function (x) {
-      return x && (x._type === types_DERIVATION || x._type === types_LENS)
+      return x && (x._type === DERIVATION || x._type === LENS);
     },
     isLensed: function (x) {
-      return x && x._type === types_LENS;
+      return x && x._type === LENS;
     },
     isReactor: function (x) {
-      return x && x._type === types_REACTION;
+      return x && x._type === REACTION;
     },
   };
 
-  var Derivable  = derivable_createPrototype(D, config);
-  var Mutable    = mutable_createPrototype(D, config);
+  var Derivable  = createPrototype$1(D, config);
+  var Mutable    = createPrototype$3(D, config);
 
-  var Atom       = util_extend({}, Mutable, Derivable,
-                               atom_createPrototype(D, config));
+  var Atom       = assign({}, Mutable, Derivable,
+                               createPrototype(D, config));
 
-  var Derivation = util_extend({}, Derivable,
-                               derivation_createPrototype(D, config));
+  var Derivation = assign({}, Derivable,
+                               createPrototype$2(D, config));
 
-  var Lens       = util_extend({}, Mutable, Derivation,
-                              lens_createPrototype(D, config));
+  var Lens       = assign({}, Mutable, Derivation,
+                              createPrototype$4(D, config));
 
 
   /**
    * Constructs a new atom whose state is the given value
    */
   D.atom = function (val) {
-    return atom_construct(Object.create(Atom), val);
+    return construct(Object.create(Atom), val);
   };
 
   /**
@@ -923,11 +921,11 @@ function constructModule (config) {
         result = f.apply(that, args);
       });
       return result;
-    }
+    };
   };
 
   D.atomically = function (f) {
-    if (transactions_inTransaction()) {
+    if (inTransaction()) {
       f();
     } else {
       D.transact(f);
@@ -935,17 +933,17 @@ function constructModule (config) {
   };
 
   D.derivation = function (f) {
-    return derivation_construct(Object.create(Derivation), f);
+    return construct$1(Object.create(Derivation), f);
   };
 
   /**
    * Template string tag for derivable strings
    */
   D.derive = function (parts) {
-    var args = util_slice(arguments, 1);
+    var args = slice(arguments, 1);
     return D.derivation(function () {
       var s = "";
-      for (var i=0; i<parts.length; i++) {
+      for (var i=0; i < parts.length; i++) {
         s += parts[i];
         if (i < args.length) {
           s += D.unpack(args[i]);
@@ -959,8 +957,8 @@ function constructModule (config) {
    * creates a new lens
    */
   D.lens = function (descriptor) {
-    return lens_construct(
-      derivation_construct(Object.create(Lens), descriptor.get),
+    return construct$2(
+      construct$1(Object.create(Lens), descriptor.get),
       descriptor
     );
   };
@@ -986,7 +984,7 @@ function constructModule (config) {
       return D.derivation(function () {
         return f.apply(that, Array.prototype.map.call(args, D.unpack));
       });
-    }
+    };
   };
 
   function deepUnpack (thing) {
@@ -996,9 +994,9 @@ function constructModule (config) {
       return thing.map(deepUnpack);
     } else if (thing.constructor === Object) {
       var result = {};
-      var keys = util_keys(thing);
-      for (var i = keys.length; i--;) {
-        var prop = keys[i];
+      var keys$$ = keys(thing);
+      for (var i = keys$$.length; i--;) {
+        var prop = keys$$[i];
         result[prop] = deepUnpack(thing[prop]);
       }
       return result;
@@ -1030,24 +1028,23 @@ function constructModule (config) {
         }
         return val;
       });
-    }
+    };
   }
   function identity (x) { return x; }
-  function complement (f) { return function (x) { return !f(x); }}
+  function complement (f) { return function (x) { return !f(x); }; }
   D.or = andOrFn(identity);
-  D.mOr = andOrFn(util_some);
+  D.mOr = andOrFn(some);
   D.and = andOrFn(complement(identity));
-  D.mAnd = andOrFn(complement(util_some));
+  D.mAnd = andOrFn(complement(some));
 
   return D;
 }
 
-util_extend(exports, constructModule());
+assign(exports, constructModule());
 exports.withEquality = function (equals) {
   return constructModule({equals: equals});
 };
 exports['default'] = exports;
-
 });
 
 //# sourceMappingURL=derivable.js.map
