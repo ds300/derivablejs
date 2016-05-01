@@ -3,9 +3,9 @@ export const keys = Object.keys;
 export const assign = Object.assign || function (obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
-    var keys = keys(other);
-    for (var j = keys.length; j--;) {
-      var prop = keys[j];
+    var ks = keys(other);
+    for (var j = ks.length; j--;) {
+      var prop = ks[j];
       obj[prop] = other[prop];
     }
   }
