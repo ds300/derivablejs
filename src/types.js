@@ -1,4 +1,4 @@
-export const ATOM = "ATOM";
-export const DERIVATION = "DERIVATION";
-export const LENS = "LENS";
-export const REACTION = "REACTION";
+export var ATOM = "ATOM";
+export var DERIVATION = "DERIVATION";
+export var LENS = "LENS";
+export var REACTION = "REACTION";

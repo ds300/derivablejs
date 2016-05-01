@@ -1,4 +1,4 @@
-export const keys = Object.keys;
+export var keys = Object.keys;
 
 export function assignPolyfill (obj) {
   for (var i = 1; i < arguments.length; i++) {
@@ -12,7 +12,7 @@ export function assignPolyfill (obj) {
   return obj;
 }
 
-export const assign = Object.assign || assignPolyfill;
+export var assign = Object.assign || assignPolyfill;
 
 function _is(a, b) {
   // SameValue algorithm
@@ -52,7 +52,7 @@ export function slice (a, i) {
   return Array.prototype.slice.call(a, i);
 };
 
-export const unique = Object.freeze({equals: function () { return false; }});
+export var unique = Object.freeze({equals: function () { return false; }});
 
 export function some (x) {
   return (x !== null) && (x !== void 0);

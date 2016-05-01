@@ -1,5 +1,10 @@
-import {assignPolyfill} from '../../src/util';
-import {expect} from 'chai';
+// import {assignPolyfill} from '../../src/util';
+// import {expect} from 'chai';
+
+"use strict";
+
+var expect = require('chai').expect;
+var assignPolyfill = require('../../src/util').assignPolyfill;
 
 describe('the assign function polyfill', () => {
   it('merges objects together', () => {

@@ -11,7 +11,7 @@
 })(this, function (exports) {
 'use strict';
 
-const keys = Object.keys;
+var keys = Object.keys;
 
 function assignPolyfill (obj) {
   for (var i = 1; i < arguments.length; i++) {
@@ -25,7 +25,7 @@ function assignPolyfill (obj) {
   return obj;
 }
 
-const assign = Object.assign || assignPolyfill;
+var assign = Object.assign || assignPolyfill;
 
 function _is(a, b) {
   // SameValue algorithm
@@ -65,7 +65,7 @@ function slice (a, i) {
   return Array.prototype.slice.call(a, i);
 };
 
-const unique = Object.freeze({equals: function () { return false; }});
+var unique = Object.freeze({equals: function () { return false; }});
 
 function some (x) {
   return (x !== null) && (x !== void 0);
@@ -208,10 +208,10 @@ function captureEpoch (idx, epoch) {
   }
 };
 
-const ATOM = "ATOM";
-const DERIVATION = "DERIVATION";
-const LENS = "LENS";
-const REACTION = "REACTION";
+var ATOM = "ATOM";
+var DERIVATION = "DERIVATION";
+var LENS = "LENS";
+var REACTION = "REACTION";
 
 function createPrototype (D, opts) {
   return {

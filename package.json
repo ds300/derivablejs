@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "mocha --compilers js:babel-register --require source-map-support/register --recursive",
+    "test": "./node_modules/.bin/mocha --compilers js:babel-register --require source-map-support/register --recursive",
+    "cover": "./node_modules/.bin/nyc npm test && nyc ./node_modules/.bin/nyc report --reporter=text-lcov | ./node_modules/.bin/coveralls",
     "stats": "node scripts/stats.js",
     "docs": "node scripts/make-docs.js",
     "clean": "rm -rf dist",
@@ -37,8 +38,10 @@
     "bluebird": "^2.9.34",
     "chai": "^3.5.0",
     "colors": "^1.1.2",
+    "coveralls": "^2.11.9",
     "immutable": "^3.7.4",
     "mocha": "^2.2.5",
+    "nyc": "^6.4.0",
     "rollup": "^0.26.1",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.24"
