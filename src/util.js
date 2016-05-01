@@ -1,15 +1,18 @@
 export const keys = Object.keys;
 
-export const assign = Object.assign || function (obj) {
+export function assignPolyfill (obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
-    var ks = keys(other);
+    var ks = keys(other || {});
     for (var j = ks.length; j--;) {
       var prop = ks[j];
       obj[prop] = other[prop];
     }
   }
-};
+  return obj;
+}
+
+export const assign = Object.assign || assignPolyfill;
 
 function _is(a, b) {
   // SameValue algorithm
