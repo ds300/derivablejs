@@ -30,7 +30,7 @@ function captureAtoms(derivable, atoms) {
   }
 }
 
-Object.assign(Reactor.prototype, {
+util.assign(Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;

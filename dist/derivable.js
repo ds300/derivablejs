@@ -358,7 +358,7 @@ function captureAtoms(derivable, atoms) {
   }
 }
 
-Object.assign(Reactor.prototype, {
+assign(Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
@@ -568,7 +568,7 @@ function createPrototype$1 (D, opts) {
         f._derivable = this;
         return f;
       } else if (f && f.react) {
-        return Object.assign(new Reactor(null, this), f);
+        return assign(new Reactor(null, this), f);
       } else {
         throw new Error("Unrecognized type for reactor " + f);
       }
@@ -579,7 +579,7 @@ function createPrototype$1 (D, opts) {
         throw Error('the first argument to .react must be a function');
       }
 
-      opts = Object.assign({
+      opts = assign({
         once: false,
         from: true,
         until: false,

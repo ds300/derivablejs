@@ -99,7 +99,7 @@ export function createPrototype (D, opts) {
         f._derivable = this;
         return f;
       } else if (f && f.react) {
-        return Object.assign(new reactors.Reactor(null, this), f);
+        return util.assign(new reactors.Reactor(null, this), f);
       } else {
         throw new Error("Unrecognized type for reactor " + f);
       }
@@ -110,7 +110,7 @@ export function createPrototype (D, opts) {
         throw Error('the first argument to .react must be a function');
       }
 
-      opts = Object.assign({
+      opts = util.assign({
         once: false,
         from: true,
         until: false,
