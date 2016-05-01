@@ -31,18 +31,16 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 ## Derivables
 
-Derivables make it trivial to maintain consistent (i.e. sense-making) state at all times without requiring that it be kept all in one place. This is a huge win for those of us who develop complex systems with lots of moving parts because it eradicates an entire class of subtle-but-devastating bugs along with all the incidental complexity they fed upon, allowing us to spend more quality time getting intimate with our problem domain.
+This library satisfies the notion that **changes in state should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
-This library satisfies the notion that **changes in state should not cause state changes**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
-
-Derivables clean that mess up by enabling you to make elegant declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent 100% of the time.
+Derivables clean that mess up by enabling you to make pure declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to make sure that all the relevant updates happen at the same time, keeping everything—*every goshdarn thing*—consistent. Always. And here's another bombshell: that's done *lazily* on a fine-grained basis, so you never need to worry about wasting precious CPU cycles.
 
 There are two types of Derivable:
 
-- **Atoms** are simple references to immutable values. They are the roots; the ground truth from which all else is derived.
+- **Atoms** are simple references to immutable values. They are the 'root' state mentioned before: the ground truth from which all else is derived.
 - **Derivations** represent pure (as in function) transformation of values held in atoms.
 
-Changes in atoms or derivations can be monitored by **Reactors**, which do not encapsulate values and exist solely for executing side-effects in reaction to state changes. Reactors can also be stopped and restarted when appropriate, and offer lifecycle hooks for the sake of resource management.
+State management is as much about managing state as it is about managing side effects. And so changes in atoms or derivations can be monitored by things called **Reactors**, which do not themselves have any kind of 'current value', but are more like independent agents which exist solely for executing side effects. They are, essentially, smart callbacks.
 
 Let's have a look at a tiny example app which greets the user:
 
