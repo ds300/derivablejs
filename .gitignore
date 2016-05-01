@@ -2,5 +2,6 @@
 !.gitignore
 !.travis.yml
 !.eslintrc.json
+!.babelrc*
 npm-debug.log
 node_modules/
