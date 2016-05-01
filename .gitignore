@@ -1,4 +1,6 @@
 .*
 !.gitignore
+!.travis.yml
+!.eslintrc.json
 npm-debug.log
 node_modules/
