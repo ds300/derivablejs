@@ -67,6 +67,10 @@ module.exports = function (entry, destDir) {
 
       fs.writeFileSync(outMinJS, minifyResult.code);
       fs.writeFileSync(outMinMap, minifyResult.map.toString());
+    })
+    .catch(function (error) {
+      console.error(error.stack);
+      throw error;
     });
 };
 

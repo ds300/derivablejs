@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "mocha --compilers js:babel-register",
+    "test": "mocha --compilers js:babel-register --require source-map-support/register",
     "stats": "node scripts/stats.js",
     "docs": "node scripts/make-docs.js",
     "clean": "rm -rf dist",

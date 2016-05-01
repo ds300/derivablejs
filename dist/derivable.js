@@ -9,7 +9,6 @@
     factory(global.Derivable = {});
   }
 })(this, function (exports) {
-
 'use strict';
 
 const keys = Object.keys;
@@ -491,6 +490,7 @@ function createPrototype$1 (D, opts) {
           case 'string':
           case 'number':
             return D.derivation(function () {
+            throw new Error('blah and fuck');
               return that.get()[D.unpack(f)];
             });
           default:
@@ -1044,7 +1044,4 @@ assign(exports, constructModule());
 exports.withEquality = function (equals) {
   return constructModule({equals: equals});
 };
-exports['default'] = exports;
-});
-
-//# sourceMappingURL=derivable.js.map
+exports['default'] = exports;});
