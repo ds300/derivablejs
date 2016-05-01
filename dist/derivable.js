@@ -490,7 +490,6 @@ function createPrototype$1 (D, opts) {
           case 'string':
           case 'number':
             return D.derivation(function () {
-            throw new Error('blah and fuck');
               return that.get()[D.unpack(f)];
             });
           default:
