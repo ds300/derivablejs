@@ -486,7 +486,7 @@ function createPrototype$1 (D, opts) {
       var that = this;
       switch (arguments.length) {
       case 0:
-        return that;
+        throw new Error('.derive takes at least one argument');
       case 1:
         switch (typeof f) {
           case 'function':
@@ -524,7 +524,6 @@ function createPrototype$1 (D, opts) {
                       throw Error('type error');
                     }
                 }
-                return that.get()[D.unpack(f)];
               });
             } else {
               throw Error('type error');

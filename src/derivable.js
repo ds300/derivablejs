@@ -11,7 +11,7 @@ export function createPrototype (D, opts) {
       var that = this;
       switch (arguments.length) {
       case 0:
-        return that;
+        throw new Error('.derive takes at least one argument');
       case 1:
         switch (typeof f) {
           case 'function':
@@ -49,7 +49,6 @@ export function createPrototype (D, opts) {
                       throw Error('type error');
                     }
                 }
-                return that.get()[D.unpack(f)];
               });
             } else {
               throw Error('type error');

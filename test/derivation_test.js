@@ -255,6 +255,12 @@ describe("the derive method", () => {
     assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
   });
 
+  it("throws when given no aguments", () => {
+    assert.throws(() => {
+      atom(null).derive();
+    });
+  });
+
   it("destructures derivables", () => {
     const s = atom({a: "aye", b: "bee", c: "cee"});
     let [a, b, c] = s.derive(['a', 'b', 'c']);
@@ -315,7 +321,75 @@ describe("the derive method", () => {
     assert.strictEqual(len.get(), 9);
     assert.strictEqual(lastWord.get(), 'you');
     assert.strictEqual(firstChar.get(), 't');
-  })
+  });
+
+  it('can derive with derivable functions', () => {
+    const $Deriver = atom(n => n * 2);
+
+    const $A = atom(4);
+
+    const $b = $A.derive($Deriver);
+
+    assert.strictEqual($b.get(), 8);
+
+    $Deriver.set(n => n / 2);
+
+    assert.strictEqual($b.get(), 2);
+  });
+
+  it('can derive with derivable regexps', () => {
+    const $Deriver = atom(/[a-z]+/);
+
+    const $A = atom("29892funtimes232");
+
+    const $b = $A.derive($Deriver);
+
+    assert.strictEqual($b.get()[0], "funtimes");
+
+    $Deriver.set(/\d+/);
+
+    assert.strictEqual($b.get()[0], "29892");
+  });
+
+  it(`can't derive with some kinds of things`, () => {
+    assert.throws(() => atom("blah").derive(new Date()));
+  });
+
+  it(`can't derive with some kinds of derivable things`, () => {
+    const $Deriver = atom(new Date());
+
+    const $A = atom("29892funtimes232");
+
+    const $b = $A.derive($Deriver);
+
+    assert.throws(() => $b.get());
+  });
+
+  function add () {
+    return Array.prototype.reduce.call(arguments, (a, b) => a + b, 0);
+  }
+  it(`can work with three args`, () => {
+    assert.strictEqual(atom(1).derive(add, 2, 3).get(), 6);
+    assert.strictEqual(atom(1).derive(add, atom(2), atom(3)).get(), 6);
+  });
+
+  it(`can work with four args`, () => {
+    assert.strictEqual(atom(1).derive(add, 2, 3, 4).get(), 10);
+    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4).get(), 10);
+  });
+
+  it(`can work with five args`, () => {
+    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5).get(), 15);
+    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5).get(), 15);
+  });
+  it(`can work with six args`, () => {
+    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5, 6).get(), 21);
+    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5, atom(6)).get(), 21);
+  });
+  it(`can work with seven args`, () => {
+    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5, 6, 7).get(), 28);
+    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5, atom(6), atom(7)).get(), 28);
+  });
 });
 
 describe("mDerive", () => {
