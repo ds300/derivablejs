@@ -483,6 +483,62 @@ describe('the atomically function', () => {
       assert.strictEqual($A.get(), 'b');
     });
     assert.strictEqual($A.get(), 'b');
+  });
+});
 
+describe('the atomic function', () => {
+  it('creates a transaction if not already in a transaction', () => {
+    const $A = atom('a');
+    let numReactions = 0;
+    $A.reactor(() => numReactions++).start();
+    assert.strictEqual(numReactions, 0);
+
+    const res = _.atomic(() => {
+      $A.set('b');
+      assert.strictEqual(numReactions, 0);
+      return 3;
+    })();
+
+    assert.strictEqual(numReactions, 1);
+
+    assert.strictEqual(res, 3);
+  });
+
+  it("doesn't create new transactions if already in a transaction", () => {
+    const $A = atom('a');
+
+    _.transact(() => {
+      try {
+        _.atomic(() => {
+          $A.set('b');
+          assert.strictEqual($A.get(), 'b');
+          throw new Error();
+        })();
+      } catch (ignored) {}
+      // no transaction created so change to $A persists
+      assert.strictEqual($A.get(), 'b');
+    });
+    assert.strictEqual($A.get(), 'b');
+  });
+});
+
+describe('the .withEquality function', () => {
+  it("creates a new instance of derivablejs with the given equality semantics", () => {
+    const djs = _.withEquality((a, b) => false);
+
+    const a = djs.atom(0);
+    let numReactions = 0;
+
+    a.reactor(() => numReactions++).start();
+
+    assert.strictEqual(numReactions, 0);
+    a.set(0);
+    assert.strictEqual(numReactions, 1);
+    a.set(0);
+    assert.strictEqual(numReactions, 2);
+    a.set(0);
+    assert.strictEqual(numReactions, 3);
+    a.set(0);
+    assert.strictEqual(numReactions, 4);
   });
 });

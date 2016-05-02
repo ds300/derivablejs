@@ -72,4 +72,18 @@ describe("the humble atom", () => {
     b.set(0);
     assert.strictEqual(numReactions, 2);
   });
+
+
+  it('only likes functions or falsey things for equality functions', () => {
+    atom(4).withEquality('');
+    assert.throws(() => {
+      atom(4).withEquality('yo');
+    });
+    atom(4).withEquality(0);
+    assert.throws(() => {
+      atom(4).withEquality(7);
+    });
+    atom(4).withEquality(null);
+    atom(4).withEquality(void 0);
+  });
 });
