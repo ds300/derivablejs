@@ -403,7 +403,7 @@ describe("defaultEquals", () => {
     var y = {equals: () => false};
     assert(_.defaultEquals(x, y));
     assert(!_.defaultEquals(y, x));
-  })
+  });
 });
 
 
@@ -415,12 +415,43 @@ describe("debug mode", () => {
     const b = d.reactor(() => {});
     assert(!b.stack);
     _.setDebugMode(true);
-    const e = _.derivation(() => {throw Error()});
+    const e = _.derivation(() => { throw Error(); });
     assert(e.stack);
     const a = d.reactor(() => {});
     assert(a.stack);
     _.setDebugMode(false);
-  })
+  });
+
+  it("causes stack traces to be printed when things derivations and reactors throw errors", () => {
+    const d = _.derivation(() => 0);
+    assert(!d.stack);
+    const b = d.reactor(() => {});
+    assert(!b.stack);
+    _.setDebugMode(true);
+    const e = _.derivation(() => { throw "cheese"; });
+    try {
+      const err = console.error;
+      let stack;
+      console.error = (_stack) => { stack = _stack; };
+      e.get();
+      assert.strictEqual(stack, e.stack);
+      console.error = err;
+    } catch (e) {
+      assert.strictEqual(e, 'cheese');
+    };
+    const a = d.reactor(() => { throw 'funions'; });
+    try {
+      const err = console.error;
+      let stack;
+      console.error = (_stack) => { stack = _stack; };
+      a.start().force();
+      assert.strictEqual(stack, a.stack);
+      console.error = err;
+    } catch (e) {
+      assert.strictEqual(e, 'funions');
+    };
+    _.setDebugMode(false);
+  });
 });
 
 describe('the atomically function', () => {
