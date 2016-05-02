@@ -84,6 +84,59 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'c');
   });
 
+  it('can have `from`, `when`, and `until` specified as functions', () => {
+    {
+      const cond = atom(false);
+      const a = atom('a');
+      let val = null;
+      a.react(a => { val = a; }, {when: () => cond.get()});
+
+      assert.strictEqual(val, null);
+
+      cond.set('truthy value');
+
+      assert.strictEqual(val, 'a');
+    }
+    {
+      const cond = atom(false);
+      const a = atom('a');
+      let val = null;
+      a.react(a => { val = a; }, {from: () => cond.get()});
+
+      assert.strictEqual(val, null);
+
+      cond.set('truthy value');
+
+      assert.strictEqual(val, 'a');
+    }
+    {
+      const a = atom('a');
+      let val = null;
+      a.react(a => { val = a; }, {until: () => a.is('b').get()});
+
+      assert.strictEqual(val, 'a');
+
+      a.set('c');
+
+      assert.strictEqual(val, 'c');
+
+      a.set('b');
+
+      assert.strictEqual(val, 'c');
+
+      a.set('a');
+
+      assert.strictEqual(val, 'c');
+    }
+  });
+
+  it('doesnt like it when `from`, `when`, and `until` are other things', () => {
+    const a = atom('a');
+    assert.throws(() => a.react(() => null, {from: 'a string'}));
+    assert.throws(() => a.react(() => null, {when: 3}));
+    assert.throws(() => a.react(() => null, {until: new Date()}));
+  });
+
   it('can have `from`, `when`, and `until` conditions all at once', () => {
     {
       // normal usage
@@ -320,9 +373,18 @@ describe("anonymous reactors", () => {
   });
 });
 
+describe("the .react method", () => {
+  it("must have a function as the first argument", () => {
+    assert.throws(() => atom(5).react());
+    assert.throws(() => atom(5).react(4));
+    assert.throws(() => atom(5).react(''));
+    assert.throws(() => atom(5).react({}));
+  });
+});
+
 describe("a tangible reactor", () => {
   let counter = atom(0);
-  let inc = n => n+1
+  let inc = n => n+1;
   let history = imut.List();
   let action = null;
   let reactor = counter.reactor(function (n) {
@@ -409,7 +471,7 @@ describe("a tangible reactor", () => {
         this.running = false;
       }
       react (v) {
-        this.f(v)
+        this.f(v);
         this.n--;
         if (this.n === 0) {
           this.stop();
@@ -489,6 +551,21 @@ describe("a tangible reactor", () => {
     a.set("jesuit");
 
     assert.strictEqual("blub", b, "b is still blub");
+  });
+
+
+
+  it(`can't be created with whack arguments`, () => {
+    assert.throws(() => {
+      atom(0).reactor({});
+    });
+
+    class Cheese extends Reactor {
+      // no .react override
+    }
+    assert.throws(() => {
+      atom(0).reactor(new Cheese());
+    });
   });
 });
 
@@ -776,7 +853,7 @@ describe('the `oprhan` and `adopt` methods', () => {
     assert.throws(() => state.set('b'));
 
     A.orphan();
-    
+
     state.set('c');
   });
 });
