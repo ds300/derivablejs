@@ -55,14 +55,7 @@ export function createPrototype (D, opts) {
         // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          for (var i = 0; i < this._reactors.length;) {
-            var r = this._reactors[i];
-            r._maybeReact();
-            // maybe this reactor or another one to the left was sliced away
-            if (r === this._reactors[i]) {
-              i++;
-            }
-          }
+          transactions.processReactors(this._reactors, true);
         }
       }
     },

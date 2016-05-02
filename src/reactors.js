@@ -71,9 +71,7 @@ util.assign(Reactor.prototype, {
     return this;
   },
   _maybeReact: function () {
-    if (this._reacting) {
-      throw Error('cyclical update detected!!');
-    } else if (this._active) {
+    if (!this._reacting && this._active) {
       if (this._yielding) {
         throw Error('reactor dependency cycle detected');
       }

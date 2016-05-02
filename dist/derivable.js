@@ -144,11 +144,7 @@ function commitTransaction() {
   } else {
     currentCtx.globalEpoch = ctx.globalEpoch;
   }
-  reactorss.forEach(function (reactors) {
-    reactors.forEach(function (r) {
-      r._maybeReact();
-    });
-  });
+  reactorss.forEach(processReactors);
 }
 
 function abortTransaction() {
@@ -191,6 +187,21 @@ function ticker () {
     },
   };
 };
+
+function processReactors(reactors, throwing) {
+  for (var i = 0; i < reactors.length;) {
+    var r = reactors[i];
+    if (r._reacting && throwing === true) {
+      throw new Error('cyclical update detected!');
+    } else {
+      r._maybeReact();
+    }
+    // maybe this reactor or another one to the left was sliced away
+    if (r === reactors[i]) {
+      i++;
+    }
+  }
+}
 
 var parentsStack = [];
 
@@ -277,14 +288,7 @@ function createPrototype (D, opts) {
         // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          for (var i = 0; i < this._reactors.length;) {
-            var r = this._reactors[i];
-            r._maybeReact();
-            // maybe this reactor or another one to the left was sliced away
-            if (r === this._reactors[i]) {
-              i++;
-            }
-          }
+          processReactors(this._reactors, true);
         }
       }
     },
@@ -409,9 +413,7 @@ assign(Reactor.prototype, {
     return this;
   },
   _maybeReact: function () {
-    if (this._reacting) {
-      throw Error('cyclical update detected!!');
-    } else if (this._active) {
+    if (!this._reacting && this._active) {
       if (this._yielding) {
         throw Error('reactor dependency cycle detected');
       }
