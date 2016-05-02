@@ -1,4 +1,5 @@
 import epoch from './epoch';
+import * as util from './util';
 
 var TransactionAbortion = {};
 
@@ -32,6 +33,18 @@ export function transact (f) {
     return;
   }
   commitTransaction();
+};
+
+export function transaction (f) {
+  return function () {
+    var args = util.slice(arguments, 0);
+    var that = this;
+    var result;
+    transact(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  };
 };
 
 function beginTransaction() {
@@ -74,24 +87,32 @@ function abortTransaction() {
   }
 }
 
+var _tickerRefCount = 0;
+
 export function ticker () {
-  beginTransaction();
-  var disposed = false;
+  if (_tickerRefCount === 0) {
+    beginTransaction();
+  }
+  _tickerRefCount++;
+  var done = false;
   return {
     tick: function () {
-      if (disposed) throw new Error("can't tick disposed ticker");
+      if (done) throw new Error('tyring to use ticker after release');
       commitTransaction();
       beginTransaction();
     },
-    stop: function () {
-      if (disposed) throw new Error("ticker already disposed");
-      disposed = true;
-      commitTransaction();
-    },
-    resetState: function () {
-      if (disposed) throw new Error("ticker already disposed");
+    reset: function () {
+      if (done) throw new Error('tyring to use ticker after release');
       abortTransaction();
       beginTransaction();
-    }
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      _tickerRefCount--;
+      done = true;
+      if (_tickerRefCount === 0) {
+        commitTransaction();
+      }
+    },
   };
 };

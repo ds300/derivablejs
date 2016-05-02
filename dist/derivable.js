@@ -25,7 +25,11 @@ function assignPolyfill (obj) {
   return obj;
 }
 
-var assign = Object.assign || assignPolyfill;
+var assign = Object.assign;
+
+if (!assign) {
+  assign = assignPolyfill;
+}
 
 function _is(a, b) {
   // SameValue algorithm
@@ -117,6 +121,18 @@ function transact (f) {
   commitTransaction();
 };
 
+function transaction (f) {
+  return function () {
+    var args = slice(arguments, 0);
+    var that = this;
+    var result;
+    transact(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  };
+};
+
 function beginTransaction() {
   currentCtx = new TransactionContext(currentCtx);
 }
@@ -157,25 +173,33 @@ function abortTransaction() {
   }
 }
 
+var _tickerRefCount = 0;
+
 function ticker () {
-  beginTransaction();
-  var disposed = false;
+  if (_tickerRefCount === 0) {
+    beginTransaction();
+  }
+  _tickerRefCount++;
+  var done = false;
   return {
     tick: function () {
-      if (disposed) throw new Error("can't tick disposed ticker");
+      if (done) throw new Error('tyring to use ticker after release');
       commitTransaction();
       beginTransaction();
     },
-    stop: function () {
-      if (disposed) throw new Error("ticker already disposed");
-      disposed = true;
-      commitTransaction();
-    },
-    resetState: function () {
-      if (disposed) throw new Error("ticker already disposed");
+    reset: function () {
+      if (done) throw new Error('tyring to use ticker after release');
       abortTransaction();
       beginTransaction();
-    }
+    },
+    release: function () {
+      if (done) throw new Error('ticker already released');
+      _tickerRefCount--;
+      done = true;
+      if (_tickerRefCount === 0) {
+        commitTransaction();
+      }
+    },
   };
 };
 
@@ -292,44 +316,6 @@ function construct (atom, value) {
   atom._type = ATOM;
   atom._equals = null;
   return atom;
-};
-
-function transaction (f) {
-  return function () {
-    var args = slice(arguments, 0);
-    var that = this;
-    var result;
-    transact(function () {
-      result = f.apply(that, args);
-    });
-    return result;
-  };
-};
-
-var _ticker = null;
-
-function ticker$1 () {
-  if (_ticker) {
-    _ticker.refCount++;
-  } else {
-    _ticker = ticker();
-    _ticker.refCount = 1;
-  }
-  var done = false;
-  return {
-    tick: function () {
-      if (done) throw new Error('tyring to use ticker after release');
-      _ticker.tick();
-    },
-    release: function () {
-      if (done) throw new Error('ticker already released');
-      if (--_ticker.refCount === 0) {
-        _ticker.stop();
-        _ticker = null;
-      }
-      done = true;
-    },
-  };
 };
 
 var reactorParentStack = [];
@@ -870,7 +856,7 @@ function constructModule (config) {
     defaultEquals: equals,
     setDebugMode: setDebugMode,
     transaction: transaction,
-    ticker: ticker$1,
+    ticker: ticker,
     Reactor: Reactor,
     isAtom: function (x) {
       return x && (x._type === ATOM || x._type === LENS);

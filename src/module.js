@@ -17,8 +17,8 @@ function constructModule (config) {
     transact: transactions.transact,
     defaultEquals: util.equals,
     setDebugMode: util.setDebugMode,
-    transaction: atom.transaction,
-    ticker: atom.ticker,
+    transaction: transactions.transaction,
+    ticker: transactions.ticker,
     Reactor: reactors.Reactor,
     isAtom: function (x) {
       return x && (x._type === types.ATOM || x._type === types.LENS);

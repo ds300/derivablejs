@@ -631,6 +631,27 @@ describe("tickers", () => {
 
   });
 
+  it('can reset the global state to the last tick', () => {
+    const a = atom('a');
+    const b = atom('b');
+
+    const t = _.ticker();
+
+    a.set('b');
+    b.set('a');
+
+    assert.strictEqual(a.get(), 'b');
+    assert.strictEqual(b.get(), 'a');
+
+    t.reset();
+
+    assert.strictEqual(a.get(), 'a');
+    assert.strictEqual(b.get(), 'b');
+
+    t.release();
+    assert.throws(() => t.reset());
+  });
+
   it("cannot be used after being released", () => {
     let t1 = _.ticker();
     let t2 = _.ticker();
