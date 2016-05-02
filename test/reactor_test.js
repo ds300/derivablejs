@@ -718,7 +718,7 @@ describe("dependent reactors", () => {
     const state = atom('a');
     const A = state.reactor({
       react: () => null,
-      onStop: () => stops.push('A')
+      onStop: () => null
     });
     const B = state.reactor(() => A.start()).start().force();
 
@@ -742,6 +742,21 @@ describe("dependent reactors", () => {
     });
 
     assert.throws(() => B.start().force());
+  });
+
+  it("can't invole cyclical dependencies", () => {
+    const state = atom('a');
+
+    const A = state.reactor(() => null);
+    const B = state.reactor(() => null);
+
+    A.adopt(B);
+    B.adopt(A);
+
+    A.start();
+    B.start();
+
+    assert.throws(() => state.set('b'));
   });
 });
 
