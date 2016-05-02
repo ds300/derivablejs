@@ -15,7 +15,7 @@
     "stats": "node scripts/stats.js",
     "docs": "node scripts/make-docs.js",
     "clean": "rm -rf dist",
-    "all": "npm run clean && npm run build && npm run coverage && npm run docs"
+    "all": "npm run clean && npm run build && npm run coverage && npm run docs && npm run stats"
   },
   "main": "dist/derivable.js",
   "typings": "dist/derivable.d.ts",

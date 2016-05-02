@@ -19,7 +19,6 @@ module.exports = function () {
     var minOld = results[3];
     var zipNew = results[4];
     var zipOld = results[5];
-    console.log("RESULTS", JSON.stringify(results));
 
     function space(n, s) {
       return Array(Math.max(0, 10 + n - (s||'').length)).join(' ') + (s||'');
