@@ -368,6 +368,83 @@ describe("derivations inside a transaction", () => {
     assert.strictEqual(thrown, "death");
     assert.strictEqual(plusOne.get(), 1);
   });
+  it('can take on temporary values even in nested transactions', () => {
+    const a = atom(0);
+    const plusOne = a.derive(a => a + 1);
+
+    assert.strictEqual(plusOne.get(), 1);
+
+    transact(abort => {
+      a.set(1);
+      assert.strictEqual(plusOne.get(), 2);
+      transact(abort => {
+        a.set(2);
+        assert.strictEqual(plusOne.get(), 3);
+        transact(abort => {
+          a.set(3);
+          assert.strictEqual(plusOne.get(), 4);
+          abort();
+        });
+        assert.strictEqual(plusOne.get(), 3);
+        abort();
+      });
+      assert.strictEqual(plusOne.get(), 2);
+      abort();
+    });
+    assert.strictEqual(plusOne.get(), 1);
+  });
+
+  it('can be dereferenced in nested transactions', () => {
+    const a = atom(0);
+    const plusOne = a.derive(a => a + 1);
+
+    assert.strictEqual(plusOne.get(), 1);
+
+    transact(() => {
+      assert.strictEqual(plusOne.get(), 1);
+      transact(() => {
+        assert.strictEqual(plusOne.get(), 1);
+        transact(() => {
+          assert.strictEqual(plusOne.get(), 1);
+        });
+      });
+    });
+  });
+
+  it('can be mutated indirectly in nested transactions', () => {
+    const a = atom(0);
+    const plusOne = a.derive(a => a + 1);
+
+    assert.strictEqual(plusOne.get(), 1);
+
+    transact(() => {
+      transact(() => {
+        transact(() => {
+          a.set(1);
+        });
+      });
+    });
+
+    assert.strictEqual(plusOne.get(), 2);
+
+    transact(() => {
+      transact(() => {
+        transact(() => {
+          a.set(2);
+        });
+      });
+      assert.strictEqual(plusOne.get(), 3);
+    });
+
+    transact(() => {
+      transact(() => {
+        transact(() => {
+          a.set(3);
+        });
+        assert.strictEqual(plusOne.get(), 4);
+      });
+    });
+  });
 });
 
 describe("nested derivables", () => {

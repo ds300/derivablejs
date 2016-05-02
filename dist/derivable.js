@@ -245,13 +245,37 @@ function createPrototype (D, opts) {
 
     set: function (value) {
       if (currentCtx !== null) {
-        var inTxnThis = void 0;
-        if ((inTxnThis = currentCtx.id2txnAtom[this._id]) !== void 0 &&
-            value !== inTxnThis._value) {
-          currentCtx.globalEpoch++;
-          inTxnThis._epoch++;
+        // we are in a transaction!
+        var inTxnThis = currentCtx.id2txnAtom[this._id];
+        if (inTxnThis != null) {
+          // we already have an in-txn verison of this atom, so update that
+          if (!this.__equals(value, inTxnThis._value)) {
+            inTxnThis._epoch++;
+            currentCtx.globalEpoch++;
+          }
           inTxnThis._value = value;
-        } else if (!this.__equals(value, this._value)) {
+        } else {
+          // look for other versions of this atom in higher txn layers
+          var txnCtx = currentCtx.parent;
+          while (txnCtx !== null) {
+            inTxnThis = txnCtx.id2txnAtom[this._id];
+            if (inTxnThis !== void 0) {
+              // create new in-txn atom for this layer if need be
+              if (!this.__equals(inTxnThis._value, value)) {
+                var newInTxnThis = inTxnThis._clone();
+                newInTxnThis._id = this._id;
+                newInTxnThis._value = value;
+                newInTxnThis._epoch = inTxnThis._epoch + 1;
+                currentCtx.globalEpoch++;
+                currentCtx.id2txnAtom[this._id] = newInTxnThis;
+                addToArray(currentCtx.modifiedAtoms, this);
+              }
+              return;
+            } else {
+              txnCtx = txnCtx.parent;
+            }
+          }
+          // no in-txn versions of this atom yet;
           currentCtx.globalEpoch++;
           inTxnThis = this._clone();
           inTxnThis._value = value;
@@ -261,6 +285,7 @@ function createPrototype (D, opts) {
           addToArray(currentCtx.modifiedAtoms, this);
         }
       } else {
+        // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
           this._reactors.forEach(function (r) { return r._maybeReact(); });
