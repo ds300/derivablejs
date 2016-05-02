@@ -179,6 +179,7 @@ I heartily welcome questions, feature requests, bug reports, and general suggest
 
 Special thanks to:
 
+- The [Futurice open source sponsorship program](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=progressbar) for funding recent development.
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin for their invaluable mentorship.
