@@ -410,8 +410,11 @@ assign(Reactor.prototype, {
       }
       if (this._parent !== null) {
         this._yielding = true;
-        this._parent._maybeReact();
-        this._yielding = false;
+        try {
+          this._parent._maybeReact();
+        } finally {
+          this._yielding = false;
+        }
       }
       // maybe the reactor was stopped by the parent
       if (this._active) {

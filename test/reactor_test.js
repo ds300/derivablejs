@@ -760,6 +760,27 @@ describe("dependent reactors", () => {
   });
 });
 
+describe('the `oprhan` and `adopt` methods', () => {
+  it('allow one to change the parent-child relationships manually', () => {
+    const state = atom('a');
+
+    const A = state.reactor(() => null);
+    const B = state.reactor(() => null);
+
+    A.adopt(B);
+    B.adopt(A);
+
+    A.start();
+    B.start();
+
+    assert.throws(() => state.set('b'));
+
+    A.orphan();
+    
+    state.set('c');
+  });
+});
+
 describe('the `when` optons to the `react` method', () => {
   it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
     const $Cond = atom(false);
