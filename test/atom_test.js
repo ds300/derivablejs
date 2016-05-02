@@ -87,3 +87,32 @@ describe("the humble atom", () => {
     atom(4).withEquality(void 0);
   });
 });
+
+describe('the concurrent modification of _reactors bug', () => {
+  it('doesnt happen any more', () => {
+    const $A = atom(false);
+    const $B = atom(false);
+
+    let success = false;
+
+    $A.react(A => {
+    }, {
+      from: $A,
+    });
+
+    const $C = $A.and($B);
+
+    $C.react(ready => {
+      success = true;
+    }, {
+      from: $C
+    });
+
+    assert.strictEqual($B._reactors.length, 0);
+    // used to be taht this would cause the from controller on C to be igored
+    // during the ._maybeReact interation in .set
+    $A.set(true);
+    assert($B._reactors.length > 0);
+
+  });
+});

@@ -122,9 +122,9 @@ util.assign(Reactor.prototype, {
     }
   },
   stop: function () {
-    var _this = this;
+    var that = this;
     this._atoms.forEach(function (atom) {
-      return util.removeFromArray(atom._reactors, _this);
+      return util.removeFromArray(atom._reactors, that);
     });
     this._atoms = [];
     this._parent = null;

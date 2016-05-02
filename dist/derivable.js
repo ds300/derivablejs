@@ -277,7 +277,14 @@ function createPrototype (D, opts) {
         // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          this._reactors.forEach(function (r) { return r._maybeReact(); });
+          for (var i = 0; i < this._reactors.length;) {
+            var r = this._reactors[i];
+            r._maybeReact();
+            // maybe this reactor or another one to the left was sliced away
+            if (r === this._reactors[i]) {
+              i++;
+            }
+          }
         }
       }
     },
@@ -453,9 +460,9 @@ assign(Reactor.prototype, {
     }
   },
   stop: function () {
-    var _this = this;
+    var that = this;
     this._atoms.forEach(function (atom) {
-      return removeFromArray(atom._reactors, _this);
+      return removeFromArray(atom._reactors, that);
     });
     this._atoms = [];
     this._parent = null;
@@ -602,7 +609,7 @@ function createPrototype$1 (D, opts) {
             throw Error('react ' + name + ' condition must be derivable');
           }
         }
-        return fOrD.derive(function (x) { return !!x; });
+        return fOrD;
       }
 
       // wrap reactor so f doesn't get a .this context, and to allow

@@ -127,7 +127,7 @@ export function createPrototype (D, opts) {
             throw Error('react ' + name + ' condition must be derivable');
           }
         }
-        return fOrD.derive(function (x) { return !!x; });
+        return fOrD;
       }
 
       // wrap reactor so f doesn't get a .this context, and to allow
