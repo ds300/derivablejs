@@ -97,12 +97,12 @@ export function ticker () {
   var done = false;
   return {
     tick: function () {
-      if (done) throw new Error('tyring to use ticker after release');
+      if (done) throw new Error('trying to use ticker after release');
       commitTransaction();
       beginTransaction();
     },
     reset: function () {
-      if (done) throw new Error('tyring to use ticker after release');
+      if (done) throw new Error('trying to use ticker after release');
       abortTransaction();
       beginTransaction();
     },
