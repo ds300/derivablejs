@@ -409,6 +409,15 @@ describe("derivations inside a transaction", () => {
         });
       });
     });
+
+    a.set(1);
+    transact(() => {
+      transact(() => {
+        transact(() => {
+          assert.strictEqual(plusOne.get(), 2);
+        });
+      });
+    });
   });
 
   it('can be mutated indirectly in nested transactions', () => {
