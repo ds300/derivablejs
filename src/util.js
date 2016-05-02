@@ -12,7 +12,11 @@ export function assignPolyfill (obj) {
   return obj;
 }
 
-export var assign = Object.assign || assignPolyfill;
+export var assign = Object.assign;
+
+if (!assign) {
+  assign = assignPolyfill;
+}
 
 function _is(a, b) {
   // SameValue algorithm
