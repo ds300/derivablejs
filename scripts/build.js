@@ -5,14 +5,49 @@ var path = require('path');
 var umdIfy = require('./umd-ify');
 var uglify = require('uglify-js');
 
+function _writeBundle(bundle, filename) {
+  fs.writeFileSync(filename, bundle.code);
+  fs.writeFileSync(filename + '.map', bundle.map.toString());
+}
+
+function writeBundle(bundle, filename, minFilename) {
+  _writeBundle(bundle, filename);
+  if (minFilename) {
+    try {
+      var minifyResult = uglify.minify(bundle.code, {
+        inSourceMap: filename + '.map',
+        outSourceMap: minFilename + '.map',
+        fromString: true,
+        mangle: {
+          toplevel: true
+        },
+        compress: {
+          comparisons: true,
+          pure_getters: true,
+          conditionals: true,
+          join_vars: true,
+        },
+        output: {
+          max_line_len: 2048,
+        },
+        reserved: ['module', 'define', 'Derivable']
+      });
+      _writeBundle(minifyResult, minFilename);
+    } catch (e) {
+      console.error(JSON.stringify(e));
+      throw e;
+    }
+  }
+}
+
 module.exports = function (entry, destDir) {
   if (!fs.existsSync(entry)) {
     throw new Error('file does not exist:', entry);
   }
   var outJS = path.join(destDir, 'derivable.js');
-  var outMap = outJS + '.map';
+  var outUMDJS = path.join(destDir, 'derivable.umd.js');
   var outMinJS = path.join(destDir, 'derivable.min.js');
-  var outMinMap = outMinJS + '.map';
+  var outMinUMDJS = path.join(destDir, 'derivable.umd.min.js');
 
   return rollup
     .rollup({
@@ -31,42 +66,20 @@ module.exports = function (entry, destDir) {
         sourceMapFile: path.resolve(outJS)
       });
     })
-    .then(umdIfy)
     .then(function (bundle) {
+      // write out files
       if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir);
       }
-      fs.writeFileSync(outJS, bundle.code);
-      fs.writeFileSync(outMap, bundle.map.toString());
+      writeBundle(bundle, outJS, outMinJS);
       return bundle;
     })
     .then(function (bundle) {
-      try {
-        var minifyResult = uglify.minify(bundle.code, {
-          inSourceMap: outMap,
-          outSourceMap: 'derivable.min.js.map',
-          fromString: true,
-          mangle: {
-            toplevel: true
-          },
-          compress: {
-            comparisons: true,
-            pure_getters: true,
-            conditionals: true,
-            join_vars: true,
-          },
-          output: {
-            max_line_len: 2048,
-          },
-          reserved: ['module', 'define', 'Derivable']
-        });
-      } catch (e) {
-        console.error(JSON.stringify(e));
-        throw e;
+      if (require('process').argv.indexOf('--umd') > -1) {
+        var umdBundle = umdIfy(bundle);
+        writeBundle(umdBundle, outUMDJS, outMinUMDJS);
       }
-
-      fs.writeFileSync(outMinJS, minifyResult.code);
-      fs.writeFileSync(outMinMap, minifyResult.map.toString());
+      return bundle;
     })
     .catch(function (error) {
       console.error(error.stack);
