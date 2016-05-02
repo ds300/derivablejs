@@ -529,7 +529,6 @@ function createPrototype$1 (D, opts) {
               throw Error('type error');
             }
         }
-        break;
       case 2:
         return D.derivation(function () {
           return f(that.get(), D.unpack(a));
