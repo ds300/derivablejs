@@ -30,8 +30,21 @@ export function createPrototype (D, opts) {
         this._epoch++;
       }
 
-
       this._lastParentsEpochs = capturedParentsEpochs;
+      this._atoms.length = (this._lastParentsEpochs.length / 2) | 0;
+      for (var i = 0, len = this._atoms.length; i < len; i += 1) {
+        var parentAtoms = this._lastParentsEpochs[i*2]._atoms;
+        switch (parentAtoms.length) {
+        case 0:
+          this._atoms[i] = null;
+          break;
+        case 1:
+          this._atoms[i] = parentAtoms[0];
+          break;
+        default:
+          this._atoms[i] = parentAtoms;
+        }
+      }
       this._value = newVal;
     },
 
@@ -81,6 +94,7 @@ export function construct (obj, deriver) {
   obj._type = types.DERIVATION;
   obj._value = util.unique;
   obj._equals = null;
+  obj._atoms = [];
 
   if (util.DEBUG_MODE) {
     obj.stack = Error().stack;

@@ -8,24 +8,27 @@ export function Reactor(react, derivable) {
   if (react) {
     this.react = react;
   }
-  this._atoms = [];
   this._parent = null;
   this._active = false;
   this._yielding = false;
   this._reacting = false;
   this._type = types.REACTION;
+  this._atoms = [];
+  this._oldAtoms = [];
+
   if (util.DEBUG_MODE) {
     this.stack = Error().stack;
   }
 }
 
-function captureAtoms(derivable, atoms) {
-  if (derivable._type === types.ATOM) {
-    util.addToArray(atoms, derivable);
-  }
-  else {
-    for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
-      captureAtoms(derivable._lastParentsEpochs[i], atoms);
+function forEachAtom(atoms, fn) {
+  if (atoms != null) {
+    if (atoms._type === types.ATOM) {
+      fn(atoms);
+    } else {
+      for (var i = 0, len = atoms.length; i < len; i++) {
+        forEachAtom(atoms[i], fn);
+      }
     }
   }
 }
@@ -34,11 +37,11 @@ util.assign(Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
-    this._atoms = [];
-    captureAtoms(this._derivable, this._atoms);
+
     var that = this;
-    this._atoms.forEach(function (atom) {
+    forEachAtom(this._derivable._atoms, function (atom) {
       util.addToArray(atom._reactors, that);
+      util.addToArray(that._atoms, atom);
     });
 
     var len = reactorParentStack.length;
@@ -95,36 +98,30 @@ util.assign(Reactor.prototype, {
         // TODO: incorporate atom capturing into .get somehow
         this._lastEpoch = this._derivable._epoch;
         this._lastValue = nextValue;
-        var oldAtoms = this._atoms;
-        var newAtoms = [];
-        this._atoms = newAtoms;
-        captureAtoms(this._derivable, newAtoms);
 
+        var i = 0;
         var that = this;
-
-        newAtoms.forEach(function (atom) {
-          var idx = oldAtoms.indexOf(atom);
-          if (idx === -1) {
+        forEachAtom(this._derivable._atoms, function (atom) {
+          var thisAtom = that._atoms[i];
+          if (thisAtom !== atom) {
+            if (thisAtom != null) {
+              util.removeFromArray(thisAtom._reactors, that);
+            }
+            that._atoms[i] = atom;
             util.addToArray(atom._reactors, that);
-          } else {
-            oldAtoms[idx] = null;
           }
+          i++;
         });
-
-        oldAtoms.forEach(function (atom) {
-          if (atom !== null) {
-            util.removeFromArray(atom._reactors, that);
-          }
-        });
+        this._atoms.length = i;
       }
     }
   },
   stop: function () {
     var that = this;
     this._atoms.forEach(function (atom) {
-      return util.removeFromArray(atom._reactors, that);
+      util.removeFromArray(atom._reactors, that);
     });
-    this._atoms = [];
+    this._atoms.length = 0;
     this._parent = null;
     this._active = false;
     this.onStop && this.onStop();

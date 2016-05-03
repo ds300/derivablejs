@@ -1,10 +1,10 @@
 <h1 align="center">DerivableJS</h1>
-<h3 align="center">Observable State done Right</h3>
+<h3 align="center">State Made Simple</h3>
 
 [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs) [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo)
 ---
 
-DerivableJS is a JavaScript implementation of **Derivables**.
+DerivableJS is a fast JavaScript implementation of **Derivable state**.
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -31,9 +31,9 @@ DerivableJS is a JavaScript implementation of **Derivables**.
 
 ## Derivables
 
-This library satisfies the notion that **changes in state should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+Derivables are an observable-like state container which satisfy the notion that **changes in state should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
-Derivables clean that mess up by enabling you to make pure declarative statements about how your bits of state are related. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to make sure that all the relevant updates happen at the same time, keeping everything—*every goshdarn thing*—consistent. Always. And here's another bombshell: that's done *lazily* on a fine-grained basis, so you never need to worry about wasting precious CPU cycles.
+This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. What's more: that's done *lazily* on a fine-grained basis, so things you don't need right now are not kept up to date (until you need them again, of course).
 
 There are two types of Derivable:
 
@@ -45,11 +45,11 @@ State management is as much about managing state as it is about managing side ef
 Let's have a look at a tiny example app which greets the user:
 
 ```javascript
-import {atom, derive, transact} from 'derivable'
+import {atom, derivation, transact} from 'derivable'
 
 // global application state
-const name = atom("World");     // the name of the user  
-const countryCode = atom("en"); // for i18n
+const $Name = atom("World");     // the name of the user  
+const $CountryCode = atom("en"); // for i18n
 
 // static constants don't need to be wrapped
 const greetings = {
@@ -61,24 +61,32 @@ const greetings = {
 };
 
 // derive a greeting message based on the user's name and country.
-const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
+const $greeting = $CountryCode.derive(cc => greetings[cc]);
+const $message = derivation(() =>
+  `${$greeting.get()}, ${$name.get()}!`
+);
 
 // set up a Reactor to print the message every time it changes
-message.react(msg => console.log(msg));
+$message.react(msg => console.log(msg), {when: $greeting});
 // $> Hello, World!
 
-countryCode.set("de");
+$CountryCode.set("de");
 // $> Hallo, World!
-name.set("Dagmar");
+$Name.set("Dagmar");
 // $> Hallo, Dagmar!
 
 // we can avoid unwanted intermediate reactions by using transactions
 transact(() => {
-  countryCode.set("fr");
-  name.set("Étienne");
+  $CountryCode.set("fr");
+  $Name.set("Étienne");
 });
 // $> Bonjour, Étienne!
+
+// if we set the country code to a country whose greeting we don't know,
+// $greeting becomes undefined, so the $message reactor won't run
+// In fact, the value of $message won't even be recomputed.
+$CountryCode.set('dk');
+// ... crickets chirping
 ```
 
 The structure of this example can be depicted as the following DAG:
@@ -89,7 +97,7 @@ The DAG edges are automatically inferred by DerivableJS. It is important to unde
 
 To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
 
-This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra stuff involving topological sorting, and even then only in a single threaded environment).
+This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra impractical stuff involving topological sorting).
 
 The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just-in-time, i.e. on demand. This is another huge win because:
 

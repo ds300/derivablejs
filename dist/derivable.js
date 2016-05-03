@@ -340,6 +340,7 @@ function construct (atom, value) {
   atom._value = value;
   atom._type = ATOM;
   atom._equals = null;
+  atom._atoms = [atom];
   return atom;
 };
 
@@ -350,24 +351,27 @@ function Reactor(react, derivable) {
   if (react) {
     this.react = react;
   }
-  this._atoms = [];
   this._parent = null;
   this._active = false;
   this._yielding = false;
   this._reacting = false;
   this._type = REACTION;
+  this._atoms = [];
+  this._oldAtoms = [];
+
   if (DEBUG_MODE) {
     this.stack = Error().stack;
   }
 }
 
-function captureAtoms(derivable, atoms) {
-  if (derivable._type === ATOM) {
-    addToArray(atoms, derivable);
-  }
-  else {
-    for (var i = 0, len = derivable._lastParentsEpochs.length; i < len; i += 2) {
-      captureAtoms(derivable._lastParentsEpochs[i], atoms);
+function forEachAtom(atoms, fn) {
+  if (atoms != null) {
+    if (atoms._type === ATOM) {
+      fn(atoms);
+    } else {
+      for (var i = 0, len = atoms.length; i < len; i++) {
+        forEachAtom(atoms[i], fn);
+      }
     }
   }
 }
@@ -376,11 +380,11 @@ assign(Reactor.prototype, {
   start: function () {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
-    this._atoms = [];
-    captureAtoms(this._derivable, this._atoms);
+
     var that = this;
-    this._atoms.forEach(function (atom) {
+    forEachAtom(this._derivable._atoms, function (atom) {
       addToArray(atom._reactors, that);
+      addToArray(that._atoms, atom);
     });
 
     var len = reactorParentStack.length;
@@ -437,36 +441,30 @@ assign(Reactor.prototype, {
         // TODO: incorporate atom capturing into .get somehow
         this._lastEpoch = this._derivable._epoch;
         this._lastValue = nextValue;
-        var oldAtoms = this._atoms;
-        var newAtoms = [];
-        this._atoms = newAtoms;
-        captureAtoms(this._derivable, newAtoms);
 
+        var i = 0;
         var that = this;
-
-        newAtoms.forEach(function (atom) {
-          var idx = oldAtoms.indexOf(atom);
-          if (idx === -1) {
+        forEachAtom(this._derivable._atoms, function (atom) {
+          var thisAtom = that._atoms[i];
+          if (thisAtom !== atom) {
+            if (thisAtom != null) {
+              removeFromArray(thisAtom._reactors, that);
+            }
+            that._atoms[i] = atom;
             addToArray(atom._reactors, that);
-          } else {
-            oldAtoms[idx] = null;
           }
+          i++;
         });
-
-        oldAtoms.forEach(function (atom) {
-          if (atom !== null) {
-            removeFromArray(atom._reactors, that);
-          }
-        });
+        this._atoms.length = i;
       }
     }
   },
   stop: function () {
     var that = this;
     this._atoms.forEach(function (atom) {
-      return removeFromArray(atom._reactors, that);
+      removeFromArray(atom._reactors, that);
     });
-    this._atoms = [];
+    this._atoms.length = 0;
     this._parent = null;
     this._active = false;
     this.onStop && this.onStop();
@@ -767,8 +765,21 @@ function createPrototype$2 (D, opts) {
         this._epoch++;
       }
 
-
       this._lastParentsEpochs = capturedParentsEpochs;
+      this._atoms.length = (this._lastParentsEpochs.length / 2) | 0;
+      for (var i = 0, len = this._atoms.length; i < len; i += 1) {
+        var parentAtoms = this._lastParentsEpochs[i*2]._atoms;
+        switch (parentAtoms.length) {
+        case 0:
+          this._atoms[i] = null;
+          break;
+        case 1:
+          this._atoms[i] = parentAtoms[0];
+          break;
+        default:
+          this._atoms[i] = parentAtoms;
+        }
+      }
       this._value = newVal;
     },
 
@@ -818,6 +829,7 @@ function construct$1 (obj, deriver) {
   obj._type = DERIVATION;
   obj._value = unique;
   obj._equals = null;
+  obj._atoms = [];
 
   if (DEBUG_MODE) {
     obj.stack = Error().stack;
@@ -1057,3 +1069,4 @@ exports.withEquality = function (equals) {
   return constructModule({equals: equals});
 };
 exports['default'] = exports;
+//# sourceMappingURL=derivable.js.map

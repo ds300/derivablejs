@@ -6,7 +6,7 @@ var umdIfy = require('./umd-ify');
 var uglify = require('uglify-js');
 
 function _writeBundle(bundle, filename) {
-  fs.writeFileSync(filename, bundle.code);
+  fs.writeFileSync(filename, bundle.code + '\n//# sourceMappingURL=' + filename.split('/').pop() + '.map');
   fs.writeFileSync(filename + '.map', bundle.map.toString());
 }
 

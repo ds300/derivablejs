@@ -107,5 +107,6 @@ export function construct (atom, value) {
   atom._value = value;
   atom._type = types.ATOM;
   atom._equals = null;
+  atom._atoms = [atom];
   return atom;
 };
