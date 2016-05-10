@@ -35,7 +35,7 @@ function constructModule (config) {
       return x && x._type === types.LENS;
     },
     isReactor: function (x) {
-      return x && x._type === types.REACTION;
+      return x && x._type === types.REACTOR;
     },
   };
 

@@ -30,21 +30,32 @@ export function createPrototype (D, opts) {
         this._epoch++;
       }
 
-      this._lastParentsEpochs = capturedParentsEpochs;
-      this._atoms.length = (this._lastParentsEpochs.length / 2) | 0;
-      for (var i = 0, len = this._atoms.length; i < len; i += 1) {
-        var parentAtoms = this._lastParentsEpochs[i*2]._atoms;
-        switch (parentAtoms.length) {
-        case 0:
-          this._atoms[i] = null;
-          break;
-        case 1:
-          this._atoms[i] = parentAtoms[0];
-          break;
-        default:
-          this._atoms[i] = parentAtoms;
+      if (this._refCount > 0) {
+        var i = 0, j = 0;
+        var oldLen = this._lastParentsEpochs.length;
+        var newLen = capturedParentsEpochs.length;
+
+        while (i < oldLen && j < newLen) {
+          if (this._lastParentsEpochs[i] !== capturedParentsEpochs[j]) {
+            break;
+          } else {
+            i += 2;
+            j += 2;
+          }
+        }
+
+        while (i < oldLen) {
+          util.removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
+          i += 2;
+        }
+
+        while (j < newLen) {
+          util.addToArray(capturedParentsEpochs[j]._activeChildren, this);
+          j += 2;
         }
       }
+
+      this._lastParentsEpochs = capturedParentsEpochs;
       this._value = newVal;
     },
 
@@ -83,6 +94,30 @@ export function createPrototype (D, opts) {
       parents.captureEpoch(idx, this._epoch);
       return this._value;
     },
+
+    _listen: function () {
+      this._refCount++;
+      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+        var parent = this._lastParentsEpochs[i];
+        if (this._refCount === 1) {
+          // any compiler worth its salt will hoist this check of the loop
+          util.addToArray(parent._activeChildren, this);
+        }
+        parent._listen();
+      }
+    },
+
+    _unlisten: function () {
+      this._refCount--;
+      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+        var parent = this._lastParentsEpochs[i];
+        if (this._refCount === 0) {
+          // any compiler worth its salt will hoist this check of the loop
+          util.removeFromArray(parent._activeChildren, this);
+        }
+        parent._unlisten();
+      }
+    },
   };
 };
 
@@ -94,7 +129,8 @@ export function construct (obj, deriver) {
   obj._type = types.DERIVATION;
   obj._value = util.unique;
   obj._equals = null;
-  obj._atoms = [];
+  obj._activeChildren = [];
+  obj._refCount = 0;
 
   if (util.DEBUG_MODE) {
     obj.stack = Error().stack;

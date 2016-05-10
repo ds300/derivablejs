@@ -22,5 +22,8 @@
     "files": [
         "./router.ts"
     ],
-    "exclude": []
+    "exclude": [],
+    "atom": {
+        "rewriteTsconfig": true
+    }
 }

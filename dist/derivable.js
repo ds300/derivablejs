@@ -76,6 +76,11 @@ function setEquals (derivable, equals) {
 
 var epoch = {globalEpoch: 0};
 
+var ATOM = "ATOM";
+var DERIVATION = "DERIVATION";
+var LENS = "LENS";
+var REACTOR = "REACTOR";
+
 var TransactionAbortion = {};
 
 function initiateAbortion() {
@@ -129,14 +134,15 @@ function beginTransaction() {
 function commitTransaction() {
   var ctx = currentCtx;
   currentCtx = ctx.parent;
-  var reactorss = [];
+  var reactors = [];
+  var numReactors = 0;
   ctx.modifiedAtoms.forEach(function (a) {
     if (currentCtx !== null) {
       a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
       a._set(ctx.id2txnAtom[a._id]._value);
-      reactorss.push(a._reactors);
+      numReactors = findReactors(a._activeChildren, reactors, numReactors);
     }
   });
   if (currentCtx === null) {
@@ -144,7 +150,9 @@ function commitTransaction() {
   } else {
     currentCtx.globalEpoch = ctx.globalEpoch;
   }
-  reactorss.forEach(processReactors);
+  reactors.forEach(function (r) {
+    r._maybeReact();
+  });
 }
 
 function abortTransaction() {
@@ -156,6 +164,17 @@ function abortTransaction() {
   else {
     currentCtx.globalEpoch = ctx.globalEpoch + 1;
   }
+}
+
+function findReactors(children, reactors, i) {
+  children.forEach(function (child) {
+    if (child._type === REACTOR) {
+      reactors[i++] = child;
+    } else {
+      i = findReactors(child._activeChildren, reactors, i);
+    }
+  });
+  return i;
 }
 
 var _tickerRefCount = 0;
@@ -188,21 +207,6 @@ function ticker () {
   };
 };
 
-function processReactors(reactors, throwing) {
-  for (var i = 0; i < reactors.length;) {
-    var r = reactors[i];
-    if (r._reacting && throwing === true) {
-      throw new Error('cyclical update detected!');
-    } else {
-      r._maybeReact();
-    }
-    // maybe this reactor or another one to the left was sliced away
-    if (r === reactors[i]) {
-      i++;
-    }
-  }
-}
-
 var parentsStack = [];
 
 function capturingParentsEpochs (f) {
@@ -231,11 +235,6 @@ function captureEpoch (idx, epoch) {
     parentsStack[parentsStack.length - 1][idx] = epoch;
   }
 };
-
-var ATOM = "ATOM";
-var DERIVATION = "DERIVATION";
-var LENS = "LENS";
-var REACTION = "REACTION";
 
 function createPrototype (D, opts) {
   return {
@@ -288,7 +287,22 @@ function createPrototype (D, opts) {
         // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          processReactors(this._reactors, true);
+          this._reactorBuffer.length = findReactors(
+            this._activeChildren, this._reactorBuffer, 0
+          );
+
+          for (var i = 0, len = this._reactorBuffer.length; i < len; i++) {
+            var r = this._reactorBuffer[i];
+            if (r._reacting) {
+              // avoid more try...finally overhead
+              this._reactorBuffer.length = 0;
+              throw new Error('cyclical update detected');
+            } else {
+              r._maybeReact();
+            }
+          }
+
+          this._reactorBuffer.length = 0;
         }
       }
     },
@@ -330,12 +344,16 @@ function createPrototype (D, opts) {
       }
       return this._epoch;
     },
+
+    _unlisten: function () {},
+    _listen: function () {},
   };
 };
 
 function construct (atom, value) {
   atom._id = nextId();
-  atom._reactors = [];
+  atom._activeChildren = [];
+  atom._reactorBuffer = [];
   atom._epoch = 0;
   atom._value = value;
   atom._type = ATOM;
@@ -355,24 +373,10 @@ function Reactor(react, derivable) {
   this._active = false;
   this._yielding = false;
   this._reacting = false;
-  this._type = REACTION;
-  this._atoms = [];
-  this._oldAtoms = [];
+  this._type = REACTOR;
 
   if (DEBUG_MODE) {
     this.stack = Error().stack;
-  }
-}
-
-function forEachAtom(atoms, fn) {
-  if (atoms != null) {
-    if (atoms._type === ATOM) {
-      fn(atoms);
-    } else {
-      for (var i = 0, len = atoms.length; i < len; i++) {
-        forEachAtom(atoms[i], fn);
-      }
-    }
   }
 }
 
@@ -381,11 +385,8 @@ assign(Reactor.prototype, {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
 
-    var that = this;
-    forEachAtom(this._derivable._atoms, function (atom) {
-      addToArray(atom._reactors, that);
-      addToArray(that._atoms, atom);
-    });
+    addToArray(this._derivable._activeChildren, this);
+    this._derivable._listen();
 
     var len = reactorParentStack.length;
     if (len > 0) {
@@ -437,34 +438,15 @@ assign(Reactor.prototype, {
           this._force(nextValue);
         }
 
-        // need to check atoms regardless of whether reactions happens
-        // TODO: incorporate atom capturing into .get somehow
         this._lastEpoch = this._derivable._epoch;
         this._lastValue = nextValue;
-
-        var i = 0;
-        var that = this;
-        forEachAtom(this._derivable._atoms, function (atom) {
-          var thisAtom = that._atoms[i];
-          if (thisAtom !== atom) {
-            if (thisAtom != null) {
-              removeFromArray(thisAtom._reactors, that);
-            }
-            that._atoms[i] = atom;
-            addToArray(atom._reactors, that);
-          }
-          i++;
-        });
-        this._atoms.length = i;
       }
     }
   },
   stop: function () {
-    var that = this;
-    this._atoms.forEach(function (atom) {
-      removeFromArray(atom._reactors, that);
-    });
-    this._atoms.length = 0;
+    removeFromArray(this._derivable._activeChildren, this);
+    this._derivable._unlisten();
+
     this._parent = null;
     this._active = false;
     this.onStop && this.onStop();
@@ -765,21 +747,32 @@ function createPrototype$2 (D, opts) {
         this._epoch++;
       }
 
-      this._lastParentsEpochs = capturedParentsEpochs;
-      this._atoms.length = (this._lastParentsEpochs.length / 2) | 0;
-      for (var i = 0, len = this._atoms.length; i < len; i += 1) {
-        var parentAtoms = this._lastParentsEpochs[i*2]._atoms;
-        switch (parentAtoms.length) {
-        case 0:
-          this._atoms[i] = null;
-          break;
-        case 1:
-          this._atoms[i] = parentAtoms[0];
-          break;
-        default:
-          this._atoms[i] = parentAtoms;
+      if (this._refCount > 0) {
+        var i = 0, j = 0;
+        var oldLen = this._lastParentsEpochs.length;
+        var newLen = capturedParentsEpochs.length;
+
+        while (i < oldLen && j < newLen) {
+          if (this._lastParentsEpochs[i] !== capturedParentsEpochs[j]) {
+            break;
+          } else {
+            i += 2;
+            j += 2;
+          }
+        }
+
+        while (i < oldLen) {
+          removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
+          i += 2;
+        }
+
+        while (j < newLen) {
+          addToArray(capturedParentsEpochs[j]._activeChildren, this);
+          j += 2;
         }
       }
+
+      this._lastParentsEpochs = capturedParentsEpochs;
       this._value = newVal;
     },
 
@@ -818,6 +811,30 @@ function createPrototype$2 (D, opts) {
       captureEpoch(idx, this._epoch);
       return this._value;
     },
+
+    _listen: function () {
+      this._refCount++;
+      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+        var parent = this._lastParentsEpochs[i];
+        if (this._refCount === 1) {
+          // any compiler worth its salt will hoist this check of the loop
+          addToArray(parent._activeChildren, this);
+        }
+        parent._listen();
+      }
+    },
+
+    _unlisten: function () {
+      this._refCount--;
+      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
+        var parent = this._lastParentsEpochs[i];
+        if (this._refCount === 0) {
+          // any compiler worth its salt will hoist this check of the loop
+          removeFromArray(parent._activeChildren, this);
+        }
+        parent._unlisten();
+      }
+    },
   };
 };
 
@@ -829,7 +846,8 @@ function construct$1 (obj, deriver) {
   obj._type = DERIVATION;
   obj._value = unique;
   obj._equals = null;
-  obj._atoms = [];
+  obj._activeChildren = [];
+  obj._refCount = 0;
 
   if (DEBUG_MODE) {
     obj.stack = Error().stack;
@@ -909,7 +927,7 @@ function constructModule (config) {
       return x && x._type === LENS;
     },
     isReactor: function (x) {
-      return x && x._type === REACTION;
+      return x && x._type === REACTOR;
     },
   };
 

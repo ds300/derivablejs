@@ -12,24 +12,10 @@ export function Reactor(react, derivable) {
   this._active = false;
   this._yielding = false;
   this._reacting = false;
-  this._type = types.REACTION;
-  this._atoms = [];
-  this._oldAtoms = [];
+  this._type = types.REACTOR;
 
   if (util.DEBUG_MODE) {
     this.stack = Error().stack;
-  }
-}
-
-function forEachAtom(atoms, fn) {
-  if (atoms != null) {
-    if (atoms._type === types.ATOM) {
-      fn(atoms);
-    } else {
-      for (var i = 0, len = atoms.length; i < len; i++) {
-        forEachAtom(atoms[i], fn);
-      }
-    }
   }
 }
 
@@ -38,11 +24,8 @@ util.assign(Reactor.prototype, {
     this._lastValue = this._derivable.get();
     this._lastEpoch = this._derivable._epoch;
 
-    var that = this;
-    forEachAtom(this._derivable._atoms, function (atom) {
-      util.addToArray(atom._reactors, that);
-      util.addToArray(that._atoms, atom);
-    });
+    util.addToArray(this._derivable._activeChildren, this);
+    this._derivable._listen();
 
     var len = reactorParentStack.length;
     if (len > 0) {
@@ -94,34 +77,15 @@ util.assign(Reactor.prototype, {
           this._force(nextValue);
         }
 
-        // need to check atoms regardless of whether reactions happens
-        // TODO: incorporate atom capturing into .get somehow
         this._lastEpoch = this._derivable._epoch;
         this._lastValue = nextValue;
-
-        var i = 0;
-        var that = this;
-        forEachAtom(this._derivable._atoms, function (atom) {
-          var thisAtom = that._atoms[i];
-          if (thisAtom !== atom) {
-            if (thisAtom != null) {
-              util.removeFromArray(thisAtom._reactors, that);
-            }
-            that._atoms[i] = atom;
-            util.addToArray(atom._reactors, that);
-          }
-          i++;
-        });
-        this._atoms.length = i;
       }
     }
   },
   stop: function () {
-    var that = this;
-    this._atoms.forEach(function (atom) {
-      util.removeFromArray(atom._reactors, that);
-    });
-    this._atoms.length = 0;
+    util.removeFromArray(this._derivable._activeChildren, this);
+    this._derivable._unlisten();
+
     this._parent = null;
     this._active = false;
     this.onStop && this.onStop();

@@ -55,7 +55,22 @@ export function createPrototype (D, opts) {
         // not in a transaction
         if (!this.__equals(value, this._value)) {
           this._set(value);
-          transactions.processReactors(this._reactors, true);
+          this._reactorBuffer.length = transactions.findReactors(
+            this._activeChildren, this._reactorBuffer, 0
+          );
+
+          for (var i = 0, len = this._reactorBuffer.length; i < len; i++) {
+            var r = this._reactorBuffer[i];
+            if (r._reacting) {
+              // avoid more try...finally overhead
+              this._reactorBuffer.length = 0;
+              throw new Error('cyclical update detected');
+            } else {
+              r._maybeReact();
+            }
+          }
+
+          this._reactorBuffer.length = 0;
         }
       }
     },
@@ -97,12 +112,16 @@ export function createPrototype (D, opts) {
       }
       return this._epoch;
     },
+
+    _unlisten: function () {},
+    _listen: function () {},
   };
 };
 
 export function construct (atom, value) {
   atom._id = util.nextId();
-  atom._reactors = [];
+  atom._activeChildren = [];
+  atom._reactorBuffer = [];
   atom._epoch = 0;
   atom._value = value;
   atom._type = types.ATOM;

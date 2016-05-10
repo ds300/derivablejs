@@ -1,5 +1,6 @@
 import epoch from './epoch';
 import * as util from './util';
+import * as types from './types';
 
 var TransactionAbortion = {};
 
@@ -54,14 +55,15 @@ function beginTransaction() {
 function commitTransaction() {
   var ctx = currentCtx;
   currentCtx = ctx.parent;
-  var reactorss = [];
+  var reactors = [];
+  var numReactors = 0;
   ctx.modifiedAtoms.forEach(function (a) {
     if (currentCtx !== null) {
       a.set(ctx.id2txnAtom[a._id]._value);
     }
     else {
       a._set(ctx.id2txnAtom[a._id]._value);
-      reactorss.push(a._reactors);
+      numReactors = findReactors(a._activeChildren, reactors, numReactors);
     }
   });
   if (currentCtx === null) {
@@ -69,7 +71,9 @@ function commitTransaction() {
   } else {
     currentCtx.globalEpoch = ctx.globalEpoch;
   }
-  reactorss.forEach(processReactors);
+  reactors.forEach(function (r) {
+    r._maybeReact();
+  });
 }
 
 function abortTransaction() {
@@ -81,6 +85,17 @@ function abortTransaction() {
   else {
     currentCtx.globalEpoch = ctx.globalEpoch + 1;
   }
+}
+
+export function findReactors(children, reactors, i) {
+  children.forEach(function (child) {
+    if (child._type === types.REACTOR) {
+      reactors[i++] = child;
+    } else {
+      i = findReactors(child._activeChildren, reactors, i);
+    }
+  });
+  return i;
 }
 
 var _tickerRefCount = 0;
@@ -112,18 +127,3 @@ export function ticker () {
     },
   };
 };
-
-export function processReactors(reactors, throwing) {
-  for (var i = 0; i < reactors.length;) {
-    var r = reactors[i];
-    if (r._reacting && throwing === true) {
-      throw new Error('cyclical update detected!');
-    } else {
-      r._maybeReact();
-    }
-    // maybe this reactor or another one to the left was sliced away
-    if (r === reactors[i]) {
-      i++;
-    }
-  }
-}

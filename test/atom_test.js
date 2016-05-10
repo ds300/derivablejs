@@ -108,11 +108,13 @@ describe('the concurrent modification of _reactors bug', () => {
       from: $C
     });
 
-    assert.strictEqual($B._reactors.length, 0);
+    assert.strictEqual(success, false);
     // used to be taht this would cause the from controller on C to be igored
     // during the ._maybeReact interation in .set
     $A.set(true);
-    assert($B._reactors.length > 0);
+    assert.strictEqual(success, false);
+    $B.set(true);
 
+    assert.strictEqual(success, true);
   });
 });
