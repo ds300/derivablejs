@@ -763,11 +763,13 @@ function createPrototype$2 (D, opts) {
 
         while (i < oldLen) {
           removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
+          this._lastParentsEpochs[i]._unlisten();
           i += 2;
         }
 
         while (j < newLen) {
           addToArray(capturedParentsEpochs[j]._activeChildren, this);
+          capturedParentsEpochs[j]._listen();
           j += 2;
         }
       }

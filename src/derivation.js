@@ -46,11 +46,13 @@ export function createPrototype (D, opts) {
 
         while (i < oldLen) {
           util.removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
+          this._lastParentsEpochs[i]._unlisten();
           i += 2;
         }
 
         while (j < newLen) {
           util.addToArray(capturedParentsEpochs[j]._activeChildren, this);
+          capturedParentsEpochs[j]._listen();
           j += 2;
         }
       }

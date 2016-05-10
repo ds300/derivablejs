@@ -581,10 +581,10 @@ describe("nested derivables", () => {
 
     $$A.set($isJunk);
 
-    assert.strictEqual(isJunk, true);
+    assert.strictEqual(isJunk, true, "bad one");
 
     $B.set('not junk');
-    assert.strictEqual(isJunk, false);
+    assert.strictEqual(isJunk, false, "bad other");
   });
 
   it("should not interfere with lifecycle control", () => {
