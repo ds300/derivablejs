@@ -167,13 +167,14 @@ function abortTransaction() {
 }
 
 function findReactors(children, reactors, i) {
-  children.forEach(function (child) {
+  for (var j = 0, len = children.length; j < len; j++) {
+    var child = children[j];
     if (child._type === REACTOR) {
       reactors[i++] = child;
     } else {
       i = findReactors(child._activeChildren, reactors, i);
     }
-  });
+  }
   return i;
 }
 
