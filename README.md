@@ -31,19 +31,21 @@ DerivableJS is a fast JavaScript implementation of **Derivable state**.
 
 ## Derivables
 
-Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*, i.e. there should be no accessible point in time where A has been updated but B has not. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
-This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state*, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. Observables based on event streams (e.g. in Rx, bacon, kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
+This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. Observables based on event streams (e.g. in Rx, bacon, kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
 
-Because Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other magic tricks which Observables can't:
+Since Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other magic tricks which Observables can't:
 
 - **Laziness**:
 
-  Derivables have fine-grained laziness, which means that things you don't need right now are not kept up to date (until you need them again, of course). This sounds like a neat trick, but is profoundly liberating in practice. It lets you do all kinds of cool things. More on that later.
+  Derivables have fine-grained laziness, which means that things you don't need right now are not kept up to date (until you need them again, of course). This sounds like just a neat trick, but it is profoundly liberating in practice. It lets you do all kinds of useful things. More on that later.
 
 - **Automatic Memory Management**
 
   Observables are implemented on top of callbacks, which means that they need to maintain references to their dependents (how can you invoke a callback if you don't have a reference to it?). Derivables, on the other hand, have an entirely separate mechanism for reactivity, which means they can utilize a clever push-pull system and avoid the need for parents to store references to their children. LINKY
+
+  Again, this sounds like a minor thing at first, but turns out to be of immense practical benefit.
 
 There are two types of Derivable:
 
