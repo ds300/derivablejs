@@ -1,17 +1,16 @@
 <h1 align="center">DerivableJS</h1>
-<h3 align="center">State Made Simple ⇒ Effects Made Easy</h3>
+<h3 align="center">State Made Simple → Effects Made Easy</h3>
 
 [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs) [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo)
 ---
 
-DerivableJS is a fast JavaScript implementation of **Derivable state**.
-
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+Derivables are an observable-like state container with superpowers. This library is similar to [MobX](https://github.com/mobxjs/mobx), but distilled to a potent essence, and faster. LINKY
 
-
+- [Derivation vs Observation](#derivation-vs-observation)
 - [Derivables](#derivables)
+- [Reactors](#reactors)
   - [Tradeoffs](#tradeoffs)
 - [Usage](#usage)
       - [API](#api)
@@ -29,23 +28,45 @@ DerivableJS is a fast JavaScript implementation of **Derivable state**.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Types of State
+
+We tend not to think about this stuff explicitly, but there are a few different kinds of application state:
+
+- **Constant state**
+
+  Defined at compile/init time and never changes for the lifetime of an application. Super boring.
+
+- **Stack state**
+
+  Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have really high-quality support for managing stack state, and nobody ever complains about it being hard (one exception I can think of off the top of my head would be Forth).
+
+- **Atomic state**
+
+  This is state which persists across call stacks; where an individual call stack is associated with something like an external event being triggered or a task being scheduled by an event loop. i.e. an incursion of control into the system.
+
+  The value of a piece of atomic state is dependent only on things which have happened in the past to cause incursions of control into the system. Things like clicking a button or receiving a network request. Input events. Examples of atomic state would be things like normalized in-memory databases, redux stores, local caches of data stored elsewhere, etc.
+
+- **Derivative state**
+
+  This is state whose value depends only on the *current* value of other bits of state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, etc. We tend to turn derivative state into stack state (i.e. we recompute it every time it is needed) as much as possible because otherwise it can be extremely hard to keep up-to-date.
+
 ## Derivables
 
-Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*, i.e. there should be no accessible point in time where A has been updated but B has not. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, e.g. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*, i.e. there should be no accessible point in time where A has been updated but B has not. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
-This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. Observables based on event streams (e.g. in Rx, bacon, kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
+This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything in synch. Observables based on event streams (e.g. in Rx, Bacon, Kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
 
-Since Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other magic tricks which Observables can't:
+Since Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other things which Observables can't:
 
 - **Laziness**:
 
-  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up to date. This sounds like just a neat trick, but it is profoundly liberating in practice. It lets you do all kinds of useful things. More on that later.
+  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up to date. This sounds like just a neat trick, but it allows one to do all kinds of immensely practical things. More on that later.
 
 - **Automatic Memory Management**
 
-  Observables are implemented on top of callbacks, which means that you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
+  Observables are implemented on top of callbacks, which means you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
 
-  Again, this sounds like a minor thing at first, but turns out to be of immense practical benefit.
+  Again, this sounds like a minor thing at first, but turns out to be profoundly liberating.
 
 There are two types of Derivable:
 
@@ -65,9 +86,7 @@ There are two types of Derivable:
   $Name.get(); // => 'William'
   ```
 
-  So far so boring!
-
-  <sub>N.B. The dollar-sign prefix is just a convention I personally use to create a syntactic distinction between ordinary values and derivable values.</sub>
+  <em>N.B. The dollar-sign prefix is just a convention I personally use to create a syntactic distinction between ordinary values and derivable values.</em>
 
 - **Derivations**
 
@@ -85,7 +104,7 @@ There are two types of Derivable:
   $cyberName.get(); // 'S A R A H'
   ```
 
-  Derivations can have multiple dependencies. Here's another way to create them:
+  Derivations cannot be modified directly with `.set`, but change in accordance with their dependencies, of which there may be many. Here is an example with two dependencies which uses the fundamental `derivation` constructor function:
 
   ```javascript
   import {derivation} from 'derivable';
@@ -103,10 +122,14 @@ There are two types of Derivable:
   $Transformer.set(reverse);
 
   $transformedName.get(); // => 'haraS'
+
+  $Name.set('Fabian');
+
+  $transformedName.get(); // => 'naibaF'
   ```
 
-  The `derivation` function takes another function of zero arguments which should
-  dereference one or more Derivables. DerivableJS then sneakily monitors who
+  `derivation` takes another function of zero arguments which should
+  dereference one or more Derivables to compute the new derived value. DerivableJS then sneakily monitors who
   is dereferencing who to infer the parent-child relationships.
 
 ## Reactors
@@ -139,7 +162,10 @@ const $message = derivation(() =>
 
 // set up a Reactor to print the message every time it changes, as long as
 // we know how to greet people in the current country.
-$message.react(msg => console.log(msg), {when: $greeting});
+$message.react(
+  msg => console.log(msg),
+  {when: $greeting}
+);
 // $> Hello, World!
 
 $CountryCode.set("de");
