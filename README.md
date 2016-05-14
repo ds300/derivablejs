@@ -1,5 +1,5 @@
 <h1 align="center">DerivableJS</h1>
-<h3 align="center">State Made Simple</h3>
+<h3 align="center">State Made Simple ⇒ Effects Made Easy</h3>
 
 [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs) [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo)
 ---
@@ -31,16 +31,85 @@ DerivableJS is a fast JavaScript implementation of **Derivable state**.
 
 ## Derivables
 
-Derivables are an observable-like state container which satisfy the notion that **changes in state should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, i.e. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
-This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. What's more: that's done *lazily* on a fine-grained basis, so things you don't need right now are not kept up to date (until you need them again, of course).
+This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state*, clever computer-sciency stuff happens in order to keep everything—*every goshdarn thing*—consistent. Observables based on event streams (e.g. in Rx, bacon, kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
+
+Because Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other magic tricks which Observables can't:
+
+- **Laziness**:
+
+  Derivables have fine-grained laziness, which means that things you don't need right now are not kept up to date (until you need them again, of course). This sounds like a neat trick, but is profoundly liberating in practice. It lets you do all kinds of cool things. More on that later.
+
+- **Automatic Memory Management**
+
+  Observables are implemented on top of callbacks, which means that they need to maintain references to their dependents (how can you invoke a callback if you don't have a reference to it?). Derivables, on the other hand, have an entirely separate mechanism for reactivity, which means they can utilize a clever push-pull system and avoid the need for parents to store references to their children. LINKY
 
 There are two types of Derivable:
 
-- **Atoms** are simple references to immutable values. They are the 'root' state mentioned before: the ground truth from which all else is derived.
-- **Derivations** represent pure (as in function) transformation of values held in atoms.
+- **Atoms**
 
-State management is as much about managing state as it is about managing side effects. And so changes in atoms or derivations can be monitored by things called **Reactors**, which do not themselves have any kind of 'current value', but are more like independent agents which exist solely for executing side effects. They are, essentially, smart callbacks.
+  Atoms are simple references to immutable values. They are the 'root' state mentioned before: the ground truth from which all else is derived.
+
+  ```javascript
+  import {atom} from 'derivable';
+
+  const $Name = atom('Richard');
+
+  $Name.get(); // => 'Richard'
+
+  $Name.set('William');
+
+  $Name.get(); // => 'William'
+  ```
+
+  So far so boring!
+
+  <sub>N.B. The dollar-sign prefix is just a convention I personally use to create a syntactic distinction between ordinary values and derivable values.</sub>
+
+- **Derivations**
+
+  Derivations represent pure (as in 'pure function') transformation of values held in atoms. You can create them with the `.derive` method, which is a bit like the `.map` method of Observables.
+
+  ```javascript
+  const cyber = word => word.toUpperCase().split('').join(' ');
+
+  const $cyberName = $Name.derive(cyber);
+
+  $cyberName.get(); // 'W I L L I A M'
+
+  $Name.set('Sarah');
+
+  $cyberName.get(); // 'S A R A H'
+  ```
+
+  Derivations can have multiple dependencies. Here's another way to create them:
+
+  ```javascript
+  import {derivation} from 'derivable';
+
+  const $Transformer = atom(cyber);
+
+  const $transformedName = derivation(() =>
+    $Transformer.get()($Name.get())
+  );
+
+  $transformedName.get(); // => 'S A R A H'
+
+  const reverse = string => string.split('').reverse().join('');
+
+  $Transformer.set(reverse);
+
+  $transformedName.get(); // => 'haraS'
+  ```
+
+  The `derivation` function takes another function of zero arguments which should
+  dereference one or more Derivables. DerivableJS then sneakily monitors who
+  is dereferencing who to infer the parent-child relationships.
+
+## Reactors
+
+Declarative state management is nice in and of itself, but the real benefits come from how it enables us to more effectively manage side effects. DerivableJS has a really nice story on this front: changes in atoms or derivations can be monitored by things called **Reactors**, which do not themselves have any kind of 'current value', but are more like independent agents which exist solely for executing side effects.
 
 Let's have a look at a tiny example app which greets the user:
 
@@ -66,7 +135,8 @@ const $message = derivation(() =>
   `${$greeting.get()}, ${$name.get()}!`
 );
 
-// set up a Reactor to print the message every time it changes
+// set up a Reactor to print the message every time it changes, as long as
+// we know how to greet people in the current country.
 $message.react(msg => console.log(msg), {when: $greeting});
 // $> Hello, World!
 
