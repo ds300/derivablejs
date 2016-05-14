@@ -8,6 +8,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 Derivables are an observable-like state container with superpowers. This library is similar to [MobX](https://github.com/mobxjs/mobx), but distilled to a potent essence, faster, and with a strong focus on making side effects easy to manage. LINKY
 
+`npm install derivable`
+
 - [Derivation vs Observation](#derivation-vs-observation)
 - [Derivables](#derivables)
 - [Reactors](#reactors)
@@ -45,15 +47,15 @@ Some applications get by just fine with only these two kinds of state. Such appl
 
 - **Atomic state**
 
-  The value of a piece of atomic state is dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your store is atomic state. Other examples of atomic state in a web app: mouse position, window size, page scroll offset, etc. On the backend: session data, DB cache, etc.
+  Dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your store is atomic state. Other examples of atomic state in a web app: mouse position, window size, page scroll offset, etc. On the backend: session data, DB cache, etc.
 
 - **Derivative state**
 
-  This is state whose value depends only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, etc. We tend to turn derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
+  Dependent only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, the width in pixels of a div whose width is specified in percent, etc. We tend to coerce derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
 
 ### Observables
 
-Observables came along one day and made it possible to define derivative state *explicitly* in terms of other pieces of state, without needing to know when or how those pieces of state get updated. What's more: the derivative state is kept up-to-date automatically.
+Observables are a decent tool for managing derivative state. They allow one to define it explicitly in terms of other bits of state and have it kept up-to-date automatically.
 
 Here's an example of that using RxJS to derive the number of users in an IRC channel:
 
@@ -82,42 +84,44 @@ allInvisible$.subscribe(allInvisible => {
 });
 ```
 
-OK, now suppose that there are 15 users and all but one are invisible so the message is hidden. If an invisible user leaves, this is what happens:
+OK, now suppose that there are three users and two of them are invisible so the message is hidden. If an invisible user leaves, this is what happens:
 
-1. `numUsers$` gets set to `14`
-2. `allInvisible$` gets set to `true`
+1. `numUsers$` gets set to `2`
+2. `allInvisible$` gets set to `true` (because `numInvisibleUsers$` hasn't been updated yet)
 3. the 'all invisible' notification is shown
-4. `numInvisibleUsers$` gets set to `13`
+4. `numInvisibleUsers$` gets set to `1`
 5. `allInvisible$` gets set to `false`
 6. the 'all invisible' notification is hidden
 
 You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
 
-So what went wrong? Here's the low-down: Observables are built on top of event streams, which are built on top of callbacks. Callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event happens, you just *have* to notify people who are listening for that event, otherwise nothing happens. This results in a depth-first traversal of the observable graph which can cause glitchy behavior as illustrated above.
+So what went wrong? Here's the low-down: Observables are built on top of callbacks, callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event is triggered, you simply *must* notify listeners, otherwise nothing happens! But if the listeners have listeners, they have to be notified too! This results in a depth-first traversal of the Observable graph which can cause glitchy behavior as illustrated above.
 
-### Derivables
+Derivables get around this problem by using a push-pull system: if atomic state is changed, control is pushed directly to the leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in the correct order to avoid glitches.
 
-Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, e.g. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*, i.e. there should be no accessible point in time where A has been updated but B has not. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
+Since Derivables only have to model atomic and derivative state, they can do a few things waaay better than Observables:
 
-This library cleans that mess up by enabling you to make pure declarative statements about how your bits of state depend on each other. Then, when you update any bits of 'root' state, clever computer-sciency stuff happens in order to keep everything in synch. Observables based on event streams (e.g. in Rx, Bacon, Kefir, xstream, ...) can't guarantee this because they conflate two very different concerns: event handling and state updates. This is also one of the reasons they have such notoriously labyrinthine APIs.
+- **Grokkability/Wieldiness**
 
-Since Derivables focus only on state updates, they are remarkably reasonaboutable and have a clean and concise API. They can also do a couple of other things which Observables can't:
+  Observables have notoriously labyrinthine APIs and semantics. Some might argue that it's because they're so powerful, but I would argue that it's because they try to do too much. You don't need that mess. Derivables only do a subset of what Observables try to do, but they do it cleanly and safely. You wouldn't use a chainsaw to dice an onion, would you?
 
 - **Laziness**:
 
-  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up to date. This sounds like just a neat trick, but it allows one to do all kinds of immensely practical things. More on that later.
+  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up-to-date. This sounds like just a neat trick, but it allows one to do all kinds of insanely practical things. More on that later.
 
 - **Automatic Memory Management**
 
-  Observables are implemented on top of callbacks, which means you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
+  Since Observables are implemented on top of callbacks, you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
 
-  Again, this sounds like a minor thing at first, but turns out to be profoundly liberating.
+  Again, this sounds like a minor thing at first, but it turns out to be profoundly liberating.
+
+### Derivables
 
 There are two types of Derivable:
 
 - **Atoms**
 
-  Atoms are simple references to immutable values. They are the 'root' state mentioned before: the ground truth from which all else is derived.
+  Atoms are simple references to immutable values. They are the ground truth from which all else is derived.
 
   ```javascript
   import {atom} from 'derivable';
@@ -236,32 +240,6 @@ The structure of this example can be depicted as the following DAG:
 
 <img src="https://ds300.github.com/derivablejs/img/example.svg" align="center" width="89%"/>
 
-The DAG edges are automatically inferred by DerivableJS. It is important to understand that they (the edges) do not represent data flow in any temporal sense. They are not streams or channels or even some kind of callback chain. When you change the value of an atom, its whole propagation graph updates in atomic accord. There is no accessible point in time between the fact of changing an atom and the fact of its dependents becoming aware of the change.
-
-To put it another way: the (atoms + derivations) part of the graph is conceptually a single gestalt reference to a value. In this case the value is a virtual composite of the two atoms' states. The individual nodes are merely views into this value; they constitute the same information presented differently, like light through a prism. The gestalt is always internally consistent no matter which specific parts of it you inspect at any given time.
-
-This property is super important and useful. It cannot be replicated with Observables or any other callback-based mechanism (without doing extra impractical stuff involving topological sorting).
-
-The other thing which truly sets derivations apart is that they are *totally lazy*. Like values in Haskell they are computed just-in-time, i.e. on demand. This is another huge win because:
-
-- It decouples the computational complexity of updating atoms with that of computing their derivations. Derivations are only re-computed at atom-change time if they (the derivations) are actually used by an affected reactor. So, for example, you can declare an eternal relationship between *n* and *n*<sup>2</sup> without needing to fear the cost of re-computing *n*<sup>2</sup> every time *n* changes. That fear is transferred to whoever decides that they want to know the value of *n*<sup>2</sup> at all times, which is just how it should be.
-- It allows derivations to be automatically garbage collected when you don't need them any more, just like any other object. This is simple to the max! In fact, you don't need any special knowledge to avoid memory leaks with DerivableJS—it Just Works.
-- It permits true short-circuiting boolean logic in derivation structures, which turns out to be extraordinarily practical.
-
-
-### Tradeoffs
-
-You may be wondering how these benefits are achieved. The answer is simple: mark-and-sweep. Yes, [just like your trusty Garbage Collectors](https://en.wikipedia.org/wiki/Tracing_garbage_collection#Basic_algorithm) have been doing since the dawn of Lisp. It is actually more like mark-*react*-sweep, and it brings a couple of performance hits over streams, channels, and callback chains:
-
-* When an atom is changed, its entire derivation graph is traversed and 'marked'. All active reactors found in the graph are then gently prodded and told to decide whether they need to re-run themselves. This amounts to an additional whole-graph traversal in the worst case. The worst case also happens to be the common case :(
-* The sweep phase involves yet another probably-whole-graph traversal.
-
-So really each time an atom is changed, its entire derivation graph is likely to be traversed 3 times. I would argue that this is negligible for most UI-ish use cases. The traversal is really simple stuff: following pointers and doing numeric assignments/comparisons. Computers are stupidly good at that kind of thing. But if you're doing something *intense* then perhaps DerivableJS isn't the best choice and you should pick something with eager evaluation. Be appraised, however, that I've got a [fairly promising idea](#future-work) for how to reduce the traversal overhead after v1.0.0 drops.
-
-*Side note: during transactions only the mark phase occurs. And if an atom is changed more than once during a single transaction, only the bits of the derivation graph that get dereferenced between changes are re-marked.*
-
-A final potential drawback is that DerivableJS requires one to think and design in terms of pure functions and immutable data being lazily computed, which I think takes a little while to get comfortable with coming directly from an OO background.
-
 ## Usage
 
 DerivableJS is still quite new, but has been used for serious stuff in production. I think it is safe to consider it beta quality at this point.
@@ -281,26 +259,23 @@ The next best is the [routing walkthrough](https://github.com/ds300/derivablejs/
 
 I've also implemented a solution to @staltz's [flux challenge](https://github.com/staltz/flux-challenge/tree/master/submissions/ds300).
 
-And there are a few others [here](https://github.com/ds300/derivablejs/tree/master/examples/) too.
-
-More coming!
-
+There is a proper gitbook tutorial on the way!
 
 ##### npm
 Available as `derivable`.
 
 ##### Browser
-Either with browserify or, if need be, import `dist/derivable.min.js` directly (find it at `window.Derivable`).
+Either with browserify/webpack/common-js-bundler-du-jour or build as umd bundle with `npm run build -- --umd`
 
 ##### Batteries Not Included
-DerivableJS expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so you would do well to look at an FP library like [Ramda](http://ramdajs.com/) to make life easier. Also, if you want to do immutable collections properly, [Immutable](https://facebook.github.io/immutable-js/) or [Mori](http://swannodette.github.io/mori/) are probably the way to go. Godspeed!
+DerivableJS expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so get yoself some [Immutable](https://facebook.github.io/immutable-js/) datas.
 
 ##### Equality Woes
 JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
 
-If the data you're threading through DerivableJS needs its own notion of equality, make sure it has a `.equals` method and everything will be fine.
+If the data you're threading through DerivableJS needs its own notion of equality, make sure it has a sensible `.equals` method and everything will be fine.
 
-If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. Mori), then you'll need to re-initialize DerivableJS with a custom equality function.
+If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. mori), then you'll need to re-initialize DerivableJS with a custom equality function.
 
 ```javascript
 import { withEquality } from 'derivable'
@@ -310,17 +285,7 @@ const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 
 ## 1.0.0 Roadmap
 
-DerivableJS's API will be unstable until version 1.0.0 is released, whereafter the project will use [Semantic Versioning](http://semver.org/).
-
-I plan to wait for the project to pick up a bit more steam so I can get serious community feedback before pumping out a 1.0.0 release. This is to allow for breaking changes if the need arises.
-
-## Future Work
-
-1. <s>Shrink the code base. It is currently 5.4k minified and gzipped, but I didn't write the code with size in mind so I think it can get much smaller.</s> now about 3.6k, but could probably get smaller still
-1. Dynamic graph optimization. e.g. collapsing derivation branches of frequently-executed reactions into one derivation, maybe trying to align all the data in memory somehow. This would be similar to JIT tracing sans optimization, and could make enormous derivation graphs more feasible (i.e. change propagation could become linear in the number of reactors rather than linear in the number of derivation nodes. It wouldn't work with parent inference though; you'd have to write derivations in the `x.derive((x, y, z) => ..., y, z)` or `derive(x, (x, y, z) => ..., y z)` fashions. So do that if you want to get ahead of the curve!
-2. Investigate whether asynchronous transactions are possible, or indeed desirable.
-3. <s>Investigate debugging support.</s> - implemented in 0.10.0
-4. I've got a feeling one of the whole-graph traversals mentioned in [Tradeoffs](#tradeoffs) can be eliminated while maintaining all the goodness DerivableJS currently provides, but it would involve a lot of extra caching and it won't even be needed if (1) turns out to be fruitful, so I'll try that first.
+I think this is going to be 1.0.0 now.
 
 ## Contributing
 
@@ -330,7 +295,7 @@ I heartily welcome questions, feature requests, bug reports, and general suggest
 
 Special thanks to:
 
-- The [Futurice open source sponsorship program](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=progressbar) for funding recent development.
+- The [Futurice open source sponsorship program](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs) for funding recent development.
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
 - Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
 - David Weir and Jeremy Reffin for their invaluable mentorship.
