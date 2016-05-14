@@ -6,7 +6,12 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-Derivables are an observable-like state container with superpowers. This library is similar to [MobX](https://github.com/mobxjs/mobx), but distilled to a potent essence, faster, and with a strong focus on making side effects easy to manage. LINKY
+Derivables are an observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence.
+
+
+```
+npm install derivable
+```
 
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
