@@ -6,7 +6,7 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-Derivables are an observable-like state container with superpowers. This library is similar to [MobX](https://github.com/mobxjs/mobx), but distilled to a potent essence, and faster. LINKY
+Derivables are an observable-like state container with superpowers. This library is similar to [MobX](https://github.com/mobxjs/mobx), but distilled to a potent essence, faster, and with a strong focus on making side effects easy to manage. LINKY
 
 - [Derivation vs Observation](#derivation-vs-observation)
 - [Derivables](#derivables)
@@ -31,7 +31,7 @@ Derivables are an observable-like state container with superpowers. This library
 
 ### Types of State
 
-We tend not to think about this stuff explicitly, but there are a few different kinds of application state:
+We tend not to think about it much, but there are a few different kinds of application state:
 
 - **Constant state**
 
@@ -53,6 +53,47 @@ Some applications get by just fine with only these two kinds of state. Such appl
 
 ### Observables
 
+Observables came along one day and made it possible to define derivative state *explicitly* in terms of other pieces of state, without needing to know when or how those pieces of state get updated. What's more: the derivative state is kept up-to-date automatically.
+
+Here's an example of that using RxJS to derive the number of users in an IRC channel:
+
+```javascript
+const numUsers$ = channelUsers$.map(users => users.length);
+```
+
+Super easy right? What about if we want to check whether all users are in invisible mode, and display a notification if so?
+
+```javascript
+const numInvisibleUsers$ = channelUsers$.map(users =>
+  users.filter(user => user.isInvisible()).length
+);
+
+const allInvisible$ = numUsers$.combineLatest(
+  numInvisibleUsers$,
+  (a, b) => a === b
+);
+
+allInvisible$.subscribe(allInvisible => {
+  if (allInvisible) {
+    // show notification
+  } else {
+    // hide notification
+  }
+});
+```
+
+OK, now suppose that there are 15 users and all but one are invisible so the message is hidden. If an invisible user leaves, this is what happens:
+
+1. `numUsers$` gets set to `14`
+2. `allInvisible$` gets set to `true`
+3. the 'all invisible' notification is shown
+4. `numInvisibleUsers$` gets set to `13`
+5. `allInvisible$` gets set to `false`
+6. the 'all invisible' notification is hidden
+
+You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
+
+So what went wrong? Here's the low-down: Observables are built on top of event streams, which are built on top of callbacks. Callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event happens, you just *have* to notify people who are listening for that event, otherwise nothing happens. This results in a depth-first traversal of the observable graph which can cause glitchy behavior as illustrated above.
 
 ### Derivables
 
