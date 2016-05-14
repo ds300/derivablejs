@@ -27,8 +27,9 @@ Derivables are an observable-like state container with superpowers. This library
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+## Rationale
 
-## Types of State
+### Types of State
 
 We tend not to think about this stuff explicitly, but there are a few different kinds of application state:
 
@@ -40,17 +41,20 @@ We tend not to think about this stuff explicitly, but there are a few different 
 
   Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have really high-quality support for managing stack state, and nobody ever complains about it being hard (one exception I can think of off the top of my head would be Forth).
 
+Some applications get by just fine with only these two kinds of state. Such applications are essentially just functions themselves, e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—implicit or otherwise—through a new call stack, normally resulting in state changes and/or side effects. This internal, changing state can be further categorized:
+
 - **Atomic state**
 
-  This is state which persists across call stacks; where an individual call stack is associated with something like an external event being triggered or a task being scheduled by an event loop. i.e. an incursion of control into the system.
-
-  The value of a piece of atomic state is dependent only on things which have happened in the past to cause incursions of control into the system. Things like clicking a button or receiving a network request. Input events. Examples of atomic state would be things like normalized in-memory databases, redux stores, local caches of data stored elsewhere, etc.
+  The value of a piece of atomic state is dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your store is atomic state. Other examples of atomic state in a web app: mouse position, window size, page scroll offset, etc. On the backend: session data, DB cache, etc.
 
 - **Derivative state**
 
-  This is state whose value depends only on the *current* value of other bits of state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, etc. We tend to turn derivative state into stack state (i.e. we recompute it every time it is needed) as much as possible because otherwise it can be extremely hard to keep up-to-date.
+  This is state whose value depends only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, etc. We tend to turn derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
 
-## Derivables
+### Observables
+
+
+### Derivables
 
 Derivables are an observable-like state container which satisfy the notion that **state changes should not cascade over time**, e.g. if the value of state A depends on the value of state B, updates to B should atomically include updates to A—*they should be the same update*, i.e. there should be no accessible point in time where A has been updated but B has not. We don't seem to have a handle on this issue, and it causes serious mess in our brains and code.
 
