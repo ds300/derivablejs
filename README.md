@@ -9,9 +9,7 @@
 Derivables are an observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence.
 
 
-```
-npm install derivable
-```
+`npm install derivable`
 
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
@@ -98,19 +96,19 @@ OK, now suppose that there are three users and two of them are invisible so the 
 
 You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
 
-So what went wrong? Here's the low-down: Observables are built on top of callbacks, callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event is triggered, you simply *must* notify listeners, otherwise nothing happens! But if the listeners have listeners, they have to be notified too! This results in a depth-first traversal of the Observable graph which can cause glitchy behavior as illustrated above.
+So what went wrong? Here's the low-down: Observables are built on top of callbacks, callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event happens, you simply *must* notify listeners, otherwise nothing else can happen! But if the listeners have listeners, they have to be notified too, and so on and so forth. This results in a depth-first traversal of the Observable graph which can cause glitchy behavior as illustrated above. Note that the problem isn't solved by doing breadth-first traversal, you'd need to traverse the graph in topological order (which is totally impractical).
 
-Derivables get around this problem by using a push-pull system: if atomic state is changed, control is pushed directly to the leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in the correct order to avoid glitches.
+Derivables get around this problem by using a push-pull system: if atomic state is changed, control is pushed directly to the leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in topological order to avoid glitches.
 
-Since Derivables only have to model atomic and derivative state, they can do a few things waaay better than Observables:
+Since Derivables only have to model atomic and derivative state, they can also do a few other things waaay better than Observables:
 
-- **Grokkability/Wieldiness**
+- **Grokkability and Wieldiness**
 
-  Observables have notoriously labyrinthine APIs and semantics. Some might argue that it's because they're so powerful, but I would argue that it's because they try to do too much. You don't need that mess. Derivables only do a subset of what Observables try to do, but they do it cleanly and safely. You wouldn't use a chainsaw to dice an onion, would you?
+  Observables have notoriously labyrinthine APIs and semantics. Some might argue that it's because they're so powerful, and I would argue that it's just because they try to do too much. Either way, you don't need that mess. Derivables only do a subset of what Observables try to do, but they do it cleanly and safely. You wouldn't use a chainsaw to dice an onion, would you?
 
 - **Laziness**:
 
-  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up-to-date. This sounds like just a neat trick, but it allows one to do all kinds of insanely practical things. More on that later.
+  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up-to-date. This sounds like just a neat trick, but it allows one to do all kinds of insanely practical things. More on that in the book.
 
 - **Automatic Memory Management**
 
