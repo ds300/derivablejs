@@ -39,11 +39,11 @@ Since Derivables focus only on state updates, they are remarkably reasonaboutabl
 
 - **Laziness**:
 
-  Derivables have fine-grained laziness, which means that things you don't need right now are not kept up to date (until you need them again, of course). This sounds like just a neat trick, but it is profoundly liberating in practice. It lets you do all kinds of useful things. More on that later.
+  Derivables have fine-grained laziness, which means that only the things you actually need to know about right now are kept up to date. This sounds like just a neat trick, but it is profoundly liberating in practice. It lets you do all kinds of useful things. More on that later.
 
 - **Automatic Memory Management**
 
-  Observables are implemented on top of callbacks, which means that they need to maintain references to their dependents (how can you invoke a callback if you don't have a reference to it?). Derivables, on the other hand, have an entirely separate mechanism for reactivity, which means they can utilize a clever push-pull system and avoid the need for parents to store references to their children. LINKY
+  Observables are implemented on top of callbacks, which means that you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
 
   Again, this sounds like a minor thing at first, but turns out to be of immense practical benefit.
 
