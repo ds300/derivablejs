@@ -2,13 +2,17 @@
 <h3 align="center">State Made Simple → Effects Made Easy</h3>
 
 [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs) [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo)
+[![Empowered by Futurice's open source sponsorship program](https://img.shields.io/badge/sponsored%20by-chilicorn-ff69b4.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs)
 ---
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-Derivables are an observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with a pinch of speed, and with some innovative ideas about how to manage side effects.
+Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with a pinch of performance and a garnish of innovative ideas about how to manage side effects.
 
-`npm install derivable`
+- Installation: `npm install derivable`
+- API: [ds300.github.com/derivablejs](https://ds300.github.com/derivablejs)
+
+### Contents
 
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
@@ -43,7 +47,7 @@ We tend not to think about it much, but there are a few different kinds of appli
 
   Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have really high-quality support for managing stack state, and nobody ever complains about it being hard (maybe one exception is Forth).
 
-Some applications need only these two kinds of state. Such applications are essentially just functions themselves, e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally resulting in state changes and/or side effects. This internal, changing state can be further categorized:
+Some applications need only these two kinds of state. Such applications are essentially just functions themselves, e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
 - **Atomic state**
 
@@ -51,7 +55,9 @@ Some applications need only these two kinds of state. Such applications are esse
 
 - **Derivative state**
 
-  Dependent only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, the width in pixels of a div whose width is specified in percent, etc. We tend to coerce derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
+  Dependent only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, the pixel width of a div whose width is specified in percent, etc.
+
+  We tend to coerce derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
 
 ### Observables to the rescue?
 
@@ -63,7 +69,11 @@ Here's an example of that using RxJS to derive the number of users in an IRC cha
 const numUsers$ = channelUsers$.map(users => users.length);
 ```
 
-Super easy right? What about if we want to check whether all users are in invisible mode, and display a notification if so?
+So easy! And pure, right? It's just functions!
+
+What about if we want to check whether all users are in invisible mode, and display a notification if so?
+
+First let's find out how many invisible users there are, and then we can just check whether or not that number is the same as the total number of the users.
 
 ```javascript
 const numInvisibleUsers$ = channelUsers$.map(users =>
@@ -95,7 +105,7 @@ OK, now suppose that there are three users and two of them are invisible so the 
 
 You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
 
-So what went wrong? Here's the low-down: Observables are built on top of callbacks, callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event happens, you simply *must* notify listeners, otherwise nothing else can happen! But if the listeners have listeners, they have to be notified too, and so on and so forth. This results in a depth-first traversal of the Observable graph which can cause glitchy behavior as illustrated above. Note that the problem isn't solved by doing breadth-first traversal, you'd need to traverse the graph in topological order (which is totally impractical).
+So what went wrong? Here's the low-down: Observables are built on top of callbacks, callbacks are all about handling events, and events are all about triggering effects (either state updates or side effects). So when an event happens, you simply *must* notify listeners, otherwise nothing else can happen! But if the listeners have listeners, they have to be notified too, and so on and so forth. This results in a depth-first traversal of the Observable graph which can cause glitchy behavior when the graph is not a tree, as illustrated above. Note that the problem isn't solved by doing breadth-first traversal, you'd need to traverse the graph in topological order (which is totally impractical for mutable callback-based graphs).
 
 ### Derivables to the actual rescue!
 
@@ -244,10 +254,25 @@ The structure of this example can be depicted as the following DAG:
 
 ## Usage
 
-DerivableJS is still quite new, but has been used for serious stuff in production. I think it is safe to consider it beta quality at this point.
+DerivableJS is becoming fairly mature, and has been used for serious stuff in production with very few issues. I think it is safe to consider it beta quality at this point.
 
-##### API
-[See Here](https://ds300.github.com/derivablejs)
+If your app is non-trivial, use [Immutable](https://facebook.github.io/immutable-js/).
+
+##### With React
+
+[react-derivable](https://github.com/jevakallio/react-derivable) is where it's at.
+
+##### With Redux
+
+DerivableJS can be used as a kind-of replacement for reselect, by just doing something like this:
+
+```javascript
+const $Store = atom(null);
+
+myReduxStore.subscribe(() => $Store.set(myReduxStore.getState()));
+```
+
+and then you derive all your derivative state from $Store, rather than
 
 ##### Debugging
 
@@ -263,14 +288,8 @@ I've also implemented a solution to @staltz's [flux challenge](https://github.co
 
 There is a proper gitbook tutorial on the way!
 
-##### npm
-Available as `derivable`.
-
 ##### Browser
 Either with browserify/webpack/common-js-bundler-du-jour or build as umd bundle with `npm run build -- --umd`
-
-##### Batteries Not Included
-DerivableJS expects you to use immutable (or effectively immutable) data. It also expects derivation functions to be pure. JavaScript isn't really set up to handle such requirements out of the box, so get yoself some [Immutable](https://facebook.github.io/immutable-js/) datas.
 
 ##### Equality Woes
 JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
@@ -285,10 +304,6 @@ import { withEquality } from 'derivable'
 const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 ```
 
-## 1.0.0 Roadmap
-
-I think this is going to be 1.0.0 now.
-
 ## Contributing
 
 I heartily welcome questions, feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
@@ -297,9 +312,8 @@ I heartily welcome questions, feature requests, bug reports, and general suggest
 
 Special thanks to:
 
-- The [Futurice open source sponsorship program](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs) for funding recent development.
 - Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
-- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame) which was an awesome resource and gave me enough enthusiasm for the idea to hunker down and do it.
+- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame). My favourite README of all time. <3
 - David Weir and Jeremy Reffin for their invaluable mentorship.
 - Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
 
