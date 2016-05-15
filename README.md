@@ -8,25 +8,19 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with a pinch of performance and a garnish of innovative ideas about how to manage side effects.
 
-- Installation: `npm install derivable`
-- API: [ds300.github.com/derivablejs](https://ds300.github.com/derivablejs)
-
-### Contents
-
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
-  - [Observables](#observables)
-  - [Derivables](#derivables)
+  - [Observables to the rescue?](#observables-to-the-rescue)
+  - [Derivables to the actual rescue!](#derivables-to-the-actual-rescue)
+- [What even is a Derivable?](#what-even-is-a-derivable)
 - [Reactors](#reactors)
 - [Usage](#usage)
-      - [API](#api)
+      - [With React](#with-react)
+      - [With Redux](#with-redux)
       - [Debugging](#debugging)
       - [Examples (very wip)](#examples-very-wip)
-      - [npm](#npm)
       - [Browser](#browser)
-      - [Batteries Not Included](#batteries-not-included)
       - [Equality Woes](#equality-woes)
-- [1.0.0 Roadmap](#100-roadmap)
 - [Contributing](#contributing)
 - [Thanks](#thanks)
 - [License](#license)
