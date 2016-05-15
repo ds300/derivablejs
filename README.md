@@ -10,8 +10,6 @@ Derivables are an observable-like state container with superpowers. Think [MobX]
 
 `npm install derivable`
 
-This library is not an alternative to Redux, and it makes no API compromises for the sake of React integration. It is a lowish-level, tight-as-a-drum utility for managing [derivative state](#types-of-state) and side effects.
-
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
   - [Observables](#observables)
