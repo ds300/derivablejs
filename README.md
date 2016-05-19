@@ -64,7 +64,7 @@ const greetings = {
 
 // derive a greeting message based on the user's name and country.
 const greeting = countryCode.derive(cc => greetings[cc]);
-const message = derive`${greeting}, ${name}!`; // es6 tagged template strings!
+const message = derive(`${greeting}, ${name}!`); // es6 tagged template strings!
 
 // set up a Reactor to print the message every time it changes
 message.react(msg => console.log(msg));
