@@ -28,68 +28,72 @@ Derivables are an Observable-like momoizing state container with superpowers. Th
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ## State made simple
 
-This is a bold claim, I'll grant you. To be more specific, Derivables make 'derived' state simple, assuming that you already know how to make 'atomic' state simple. Let me explain just what the heck I'm talking about here...
+This is a bold claim, I'll grant you. To be more specific, Derivables make 'derived' state simple, assuming that you already know how to make 'atomic' state simple.
+
+Let me explain just what the heck I'm talking about here.
+
+### Derived and Atomic state
 
 We tend not to think about it much, but there are a few different kinds of application state:
 
-- **Constant state**
+- **Constant state** is defined at compile/init time. It never changes for the lifetime of an application and is therefore of no relevance here.
 
-  Defined at compile/init time and never changes for the lifetime of an application. Super boring.
+- **Stack state** is created on and bound to a runtime call stack. e.g. loop variables and intermediate results.
 
-- **Stack state**
+Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth, which literally provides a stack for managing state).
 
-  Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth).
-
-  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the places, times, and manners in which updates may occur.
+  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the means of updating stack state. Enforcing languages like Haskell actually disallow the direct mutation of stack state (except via black magic).
 
 Some applications need only these two kinds of state, being essentially just functions themselves. e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
-- **Atomic state**
-
-  Dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your whole store is atomic state. Other examples of atomic state in a web browser: mouse position, window size, and page scroll offset. On the backend: session data, DB cache, ...
+- **Atomic state** is dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your whole store is atomic state. Other examples of atomic state in a web browser: mouse position, window size, and page scroll offset. On the backend: session data, DB cache, ...
 
   Modern practices from the FP world are also making atomic state fairly simple to manage. Immutable data and pure functions combine well with things like software transactional memory, the actor model, atomic references, event sourcing, and so on. Again, these are *restrictive* tools for shrinking the set of ways in which state may be updated with the intention of increasing Reasonaboutability™.
 
-- **Derived state**
+- **Derived state** is directly dependent only on the *current* value of other bits of atomic or derived state. To illustrate:
 
-  Directly dependent only on the *current* value of other bits of atomic or derived state, e.g. whether or not an input form contains valid information, the number of inactive users an IRC channel, the pixel width of a div whose width is specified in percent, etc.
+  - Whether or not an input form is valid is dependent on the values currently held in the form's fields.
+  - The number of idle users an IRC channel is dependent on the list of all currently-connected users.
+  - The pixel width of a div whose width is specified in percent is dependent on the current pixel width of its parent, etc.
 
-  Derived state is often also stack state, in that we recompute it on-demand every time it is needed. This is a nicely simple way to go about things, but can create undesirable or untenable extra load for our CPUs and RAM chips. It can also be difficult to keep things DRY and maintain separation of domain concerns.
+  Derived state is often also stack state, in that we recompute it on-demand every time it is needed. This is a nicely simple way to go about things because it means that derived state is always consistent with the atomic state it depends upon (possibly indirectly). Unfortunately, doing this can create undesirable or untenable extra load for our poor CPUs and RAM sticks. It can also be difficult to keep things DRY because different concerns might require slightly different permutations or combinations of the same derived state.
 
   We therefore sometimes coerce derived state into atomic state by doing one of two things:
 
-   - Updating the derived state manually at the same time as its dependencies. This leaves dependency relationships implicit, requiring the programmer to know about them when making changes (basically impossible for non-savants working on real systems). This also makes it extremely difficult to maintain separation of concerns in business logic because dependency relationships freely cross domains and there's not much you can do about that.
+   - Updating the derived state manually at the same time as its dependencies. This leaves dependency relationships implicit, requiring the programmer to know about them when making changes (basically impossible for non-savants working on real systems). This also makes it extremely difficult to maintain separation of concerns in business logic because state dependency relationships freely and rightly cross domains.
 
-   - Artificially creating new events to notify others of state changes. This solves the separation of concerns problem, but can still get all kinds of messy. WHY? Side effects.
+   - Artificially creating new events to notify others of state changes. This solves the separation of concerns problem, but can still get hellaciously messy for the following reason: event listeners are no longer allowed to assume that they are at the root of a new incursion of control. And yet they do. And yes it matters. A lot.
 
-### Observables to the rescue?
+### Observables to the rescue!
 
-Observables are a decent tool for managing derived state. They allow one to define it explicitly in terms of other bits of state and have it kept up-to-date automatically.
+Luckily someone invented a fairly principled way of managing events and state updates that solves most of the problems of dealing with derived state: event streams (as popularized by Rx/Observables).
 
-Here's an example of that using RxJS to derive the number of users in an IRC channel:
+Observables allow one to define derived state explicitly in terms of other bits of state and have it kept up-to-date automatically.
+
+Here's an example of that using RxJS to derive the total number of users in an IRC channel:
 
 ```javascript
-const numUsers$ = channelUsers$.map(users => users.length);
+const numUsers$ = allUsers$.map(users => users.length);
 ```
 
-So easy! And pure, right? It's just functions!
+So far so easy. It's just a pure function being mapped over an abstract stream of values in time.
 
-What about if we want to check whether all users are in invisible mode, and display a notification if so?
+Things get complicated when you need to combine streams. e.g. what if we want to check whether all users are idle, and display a notification if so?
 
-First let's find out how many invisible users there are, and then we can just check whether or not that number is the same as the total number of the users.
+First let's find out how many idle users there are, and then we can just check whether or not that number is the same as the total number of the users.
 
 ```javascript
-const numInvisibleUsers$ = channelUsers$.map(users =>
-  users.filter(user => user.isInvisible()).length
+const numIdleUsers$ = allUsers$.map(users =>
+  users.filter(user => user.isIdle()).length
 );
 
-const allInvisible$ = numUsers$.combineLatest(
-  numInvisibleUsers$,
+const allIdle$ = numUsers$.combineLatest(
+  numIdleUsers$,
   (a, b) => a === b
 );
 
-allInvisible$.subscribe(allInvisible => {
-  if (allInvisible) {
+allIdle$.subscribe(allIdle => {
+  if (allIdle) {
     // show notification
   } else {
     // hide notification
@@ -97,14 +101,16 @@ allInvisible$.subscribe(allInvisible => {
 });
 ```
 
-OK, now suppose that there are three users and two of them are invisible so the message is hidden. If an invisible user leaves, this is what happens:
+DO GRAPH
+
+OK, now suppose that there are three users and two of them are idle so the message is hidden. If an idle user leaves, this is what happens:
 
 1. `numUsers$` gets set to `2`
-2. `allInvisible$` gets set to `true` (because `numInvisibleUsers$` hasn't been updated yet)
-3. the 'all invisible' notification is shown
-4. `numInvisibleUsers$` gets set to `1`
-5. `allInvisible$` gets set to `false`
-6. the 'all invisible' notification is hidden
+2. `allIdle$` gets set to `true`
+3. the 'all idle' notification is shown
+4. `numIdleUsers$` gets set to `1`
+5. `allIdle$` gets set to `false`
+6. the 'all idle' notification is hidden
 
 You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
 
