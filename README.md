@@ -40,7 +40,7 @@ We tend not to think about it much, but there are a few different kinds of appli
 
 - **Stack state** is created on and bound to a runtime call stack. e.g. loop variables and intermediate results.
 
-Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth, which literally provides a stack for managing state).
+  Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth, which literally provides a stack for managing state).
 
   Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the means of updating stack state. Enforcing languages like Haskell actually disallow the direct mutation of stack state (except via black magic).
 
