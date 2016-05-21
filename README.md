@@ -8,10 +8,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with extra performance and a garnish of innovative ideas about how to manage side effects.
 
-- [Rationale](#rationale)
-  - [Types of State](#types-of-state)
-  - [Observables to the rescue?](#observables-to-the-rescue)
-  - [Derivables to the actual rescue!](#derivables-to-the-actual-rescue)
+- [State made simple](#state-made-simple)
+  - [Derived and Atomic state](#derived-and-atomic-state)
 - [What even is a Derivable?](#what-even-is-a-derivable)
 - [Reactors](#reactors)
 - [Usage](#usage)
@@ -68,7 +66,7 @@ Some applications need only these two kinds of state, being essentially just fun
 
   - Artificially creating new events to notify others of state changes. This solves the separation of concerns problem, but can still get hellaciously messy because event listeners are no longer allowed to assume that the entire application state is consistent. And yet they all do.
 
-  This latter approach is particularly toxic in systems with relatively unprincipled approaches to state management (think OO, MVC) but can still be a source of much misery when using modern functional implementations of this approach like Rx/Observables.
+  This latter approach is particularly toxic in systems with relatively unprincipled approaches to state management (think OO, MVC) but can even be a source of misery when using modern functional implementations of this approach like Rx/Observables.
 
   To illustrate, here's an example of using RxJS to derive the total number of users in an IRC channel:
 
@@ -76,7 +74,7 @@ Some applications need only these two kinds of state, being essentially just fun
   const numUsers$ = allUsers$.map(users => users.length);
   ```
 
-  So far so easy. It's just a pure function being mapped over a temporally abstract sequence of values.
+  So far so easy. It's just a pure function being mapped over a 'stream' of values.
 
   Things get complicated when you need to combine streams. e.g. what if we want to check whether all users are idle, and display a notification if so?
 
