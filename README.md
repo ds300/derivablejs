@@ -42,7 +42,7 @@ We tend not to think about it much, but there are a few different kinds of appli
 
   Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth, which literally provides a stack for managing state).
 
-  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the means of updating stack state. Enforcing languages like Haskell actually disallow the direct mutation of stack state (except via black magic).
+  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the means of updating stack state. Languages which go the *enforcing* route like Haskell actually disallow the direct mutation of stack state (except via black magic).
 
 Some applications need only these two kinds of state, being essentially just functions themselves. e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
