@@ -1,12 +1,12 @@
 <h1 align="center">DerivableJS</h1>
-<h3 align="center">State Made Simple → Effects Made Easy</h3>
+<h3 align="center">State made simple → Effects made easy</h3>
 
 [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs) [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo) [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Empowered by Futurice's open source sponsorship program](https://img.shields.io/badge/sponsored%20by-chilicorn-ff69b4.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs)
 ---
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with a pinch of performance and a garnish of innovative ideas about how to manage side effects.
+Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with extra performance and a garnish of innovative ideas about how to manage side effects.
 
 - [Rationale](#rationale)
   - [Types of State](#types-of-state)
@@ -26,9 +26,9 @@ Derivables are an Observable-like momoizing state container with superpowers. Th
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-## Rationale
+## State made simple
 
-### Types of State
+This is a bold claim, I'll grant you. To be more specific, Derivables make 'derived' state simple, assuming that you already know how to make 'atomic' state simple. Let me explain just what the heck I'm talking about here...
 
 We tend not to think about it much, but there are a few different kinds of application state:
 
@@ -38,23 +38,33 @@ We tend not to think about it much, but there are a few different kinds of appli
 
 - **Stack state**
 
-  Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have really high-quality support for managing stack state, and nobody ever complains about it being hard (maybe one exception is Forth).
+  Created on the call stack. May be passed to and from functions, but never escapes the call stack on which it was created. e.g. loop variables and intermediate results. Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard (maybe one exception is Forth).
 
-Some applications need only these two kinds of state. Such applications are essentially just functions themselves, e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
+  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the places, times, and manners in which updates may occur.
+
+Some applications need only these two kinds of state, being essentially just functions themselves. e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
 - **Atomic state**
 
   Dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your whole store is atomic state. Other examples of atomic state in a web browser: mouse position, window size, and page scroll offset. On the backend: session data, DB cache, ...
 
-- **Derivative state**
+  Modern practices from the FP world are also making atomic state fairly simple to manage. Immutable data and pure functions combine well with things like software transactional memory, the actor model, atomic references, event sourcing, and so on. Again, these are *restrictive* tools for shrinking the set of ways in which state may be updated with the intention of increasing Reasonaboutability™.
 
-  Dependent only on the *current* value of other bits of atomic or derivative state, e.g. a virtual DOM tree in a React application, whether or not an input form is valid, the number of users currently connected to an IRC channel, the pixel width of a div whose width is specified in percent, etc.
+- **Derived state**
 
-  We tend to coerce derivative state into stack state (by recomputing it every time it is needed) or atomic state (by updating it manually at the same time as its dependencies) because our programming languages lack good built-in tools for managing derivative state.
+  Directly dependent only on the *current* value of other bits of atomic or derived state, e.g. whether or not an input form contains valid information, the number of inactive users an IRC channel, the pixel width of a div whose width is specified in percent, etc.
+
+  Derived state is often also stack state, in that we recompute it on-demand every time it is needed. This is a nicely simple way to go about things, but can create undesirable or untenable extra load for our CPUs and RAM chips. It can also be difficult to keep things DRY and maintain separation of domain concerns.
+
+  We therefore sometimes coerce derived state into atomic state by doing one of two things:
+
+   - Updating the derived state manually at the same time as its dependencies. This leaves dependency relationships implicit, requiring the programmer to know about them when making changes (basically impossible for non-savants working on real systems). This also makes it extremely difficult to maintain separation of concerns in business logic because dependency relationships freely cross domains and there's not much you can do about that.
+
+   - Artificially creating new events to notify others of state changes. This solves the separation of concerns problem, but can still get all kinds of messy. WHY? Side effects.
 
 ### Observables to the rescue?
 
-Observables are a decent tool for managing derivative state. They allow one to define it explicitly in terms of other bits of state and have it kept up-to-date automatically.
+Observables are a decent tool for managing derived state. They allow one to define it explicitly in terms of other bits of state and have it kept up-to-date automatically.
 
 Here's an example of that using RxJS to derive the number of users in an IRC channel:
 
@@ -104,7 +114,7 @@ So what went wrong? Here's the low-down: Observables are built on top of callbac
 
 Derivables get around this problem by using a push-pull system: if atomic state is changed, control is pushed directly to the leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in topological order to avoid glitches.
 
-Since Derivables only have to model atomic and derivative state, they can also do a few other things waaay better than Observables:
+Since Derivables only have to model atomic and derived state, they can also do a few other things waaay better than Observables:
 
 - **Grokkability and Wieldiness**
 
@@ -265,7 +275,7 @@ const $Store = atom(null);
 myReduxStore.subscribe(() => $Store.set(myReduxStore.getState()));
 ```
 
-and then you derive all your derivative state from $Store, rather than
+and then you derive all your derived state from $Store, rather than
 
 ##### Debugging
 
