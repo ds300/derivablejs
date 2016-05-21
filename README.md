@@ -38,9 +38,9 @@ We tend not to think about it much, but there are a few different kinds of appli
 
 - **Stack state** is created on a runtime call stack and bound to that same stack. e.g. loop variables and intermediate results.
 
-  Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard. Maybe one exception is Forth, which literally provides an actual stack.
+  Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard. Maybe one exception is Forth, which only provides a literal stack.
 
-  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the means of updating stack state. Languages which go for the *enforcing* approach like Haskell actually disallow the direct mutation of stack state (except via black magic).
+  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the set of ways in which one may update stack state. Languages which go for the *enforcing* approach like Haskell actually *prohibit* directly updating stack state in source code, but these restrictions end up allowing the compilers to emit machine code capable of all kinds of clever and safe stack mutation.
 
 Some applications need only these two kinds of state, being essentially just functions themselves. e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
@@ -48,7 +48,7 @@ Some applications need only these two kinds of state, being essentially just fun
 
   Modern practices from the FP world are also making atomic state fairly simple to manage. Immutable data and pure functions combine well with things like software transactional memory, the actor model, atomic references, event sourcing, and so on. Again, these are *restrictive* tools for shrinking the set of ways in which state may be updated, all with the perceived added bonus of increasing Reasonaboutability™.
 
-- **Derived state** is directly dependent only on the *current* value of other bits of atomic or derived state. To illustrate:
+- **Derived state** is directly dependent only on the *current* value of other bits of state. To illustrate:
 
   - **Whether or not an input form is valid** is dependent on the values currently held in the form's fields.
   - **The number of idle users in an IRC channel** is dependent on the list of all currently-connected users.
@@ -134,7 +134,7 @@ Since Derivables only have to model atomic and derived state, they can also do a
 
   Again, this sounds like a minor thing at first, but it turns out to be profoundly liberating.
 
-## What even is a Derivable?
+### What even is a Derivable?
 
 There are two types of Derivable:
 
