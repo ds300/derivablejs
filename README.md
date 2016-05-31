@@ -99,8 +99,6 @@ Some applications need only these two kinds of state, being essentially just fun
   });
   ```
 
-  DO GRAPH
-
   OK, now suppose that there are three users and two of them are idle so the message is hidden. If an idle user leaves, this is what happens:
 
   1. `numUsers$` gets set to `2`
@@ -116,11 +114,13 @@ Some applications need only these two kinds of state, being essentially just fun
 
   The event handler (observables are built on event handlers) which computes the values of the `allIdle$` stream assumes that its inputs, `numUsers$` and `numIdleUsers$`, are consistent with each other. Yeah that's an invalid assumption, but what else can it do? Event handlers *must* assume a consistent world, or be paralyzed by fear. They can't *defer* handling an event until consistency is restored, because who knows how and when that will happen? How do the event handlers even know whether their dependencies are inconsistent in the first place?
 
-  This inability-to-defer-effects requires observable graphs to be traversed depth-first and pre-order, like in the above diagram. This is the cause of glitches, which are just one kind of 'consistency' bug caused by effects being executed during a time period in which the state of the world is inconsistent with itself. Glitches are unique in that the prematurely-executed effects are executed *again* after consistency is restored, making them fairly innocuous when the effects in question are idempotent-ish like rendering views. But what if your network requests are glitchy? What if your atomic state updates are glitchy? Answer: things break.
+  This inability-to-defer-effects requires observable graphs to be traversed depth-first and pre-order, like in the above diagram. This is the cause of glitches, which are just one kind of 'consistency' bug caused by effects being executed during a time period in which the state of the world is internally inconsistent. Glitches are unique in that the prematurely-executed effects are executed *again* after consistency is restored, making them fairly innocuous when the effects in question are idempotent-ish like rendering views. But what if your network requests are glitchy? What if your atomic state updates are glitchy? Answer: things break.
 
-Derivables solve this problem by separating state derivation from event handling. event handlers to being the leaves of the graph. using a push-pull system: if atomic state is changed, control is pushed directly to the non-derivable leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in topological order to avoid glitches.
+Derivables solve this problem by separating state derivation from event handling. You still get a graph structure, but effects are only allowed at the leaves, and the roots are atomic state rather than event streams. When the atomic state changes, control is pushed directly to the event-handling leaves, which check to see whether they should execute their side effects.
 
-Since Derivables only have to model atomic and derived state, they can also do a few other things waaay better than Observables:
+<img src="img/derivable-example.svg" align="center" width="89%" />
+
+Since Derivables only have to model atomic and derived state, they can also do a few other things that observables can't:
 
 - **Grokkability and Wieldiness**
 
