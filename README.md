@@ -28,25 +28,23 @@ Derivables are an Observable-like momoizing state container with superpowers. Th
 
 This is a bold claim, I'll grant you. To be more specific, Derivables make 'derived' state simple, assuming that you already know how to make 'atomic' state simple.
 
-Let me explain just what the heck I'm talking about here.
-
 ### Derived and Atomic state
 
 We tend not to think about it much, but there are a few different kinds of application state:
 
 - **Constant state** is defined at compile/init time. It never changes for the lifetime of an application and is therefore of no relevance here.
 
-- **Stack state** is created on a runtime call stack and bound to that same stack. e.g. loop variables and intermediate results.
+- **Stack state** is created on a runtime call stack and bound to that same stack. e.g. loop variables and intermediate results. It is, at all times, under the influence of only one thread of control.
 
-  Programming languages tend to have nice support for managing stack state, and nobody ever complains about it being especially hard. Maybe one exception is Forth, which only provides a literal stack.
+  Programming languages tend to have nice support for managing stack state and nobody ever complains about it being especially hard. Think lexically-scoped variables, function parameters and return values, RAII, try-catch-finally, and so on.
 
-  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the set of ways in which one may update stack state. Languages which go for the *enforcing* approach like Haskell actually *prohibit* directly updating stack state in source code, but these restrictions end up allowing the compilers to emit machine code capable of all kinds of clever and safe stack mutation.
+  Functional programming languages turn the simplicity up a notch here by enabling or enforcing the use of pure functions and immutable data, which are effective tools to restrict the set of ways in which stack state may be updated. Languages opting for the *enforcing* approach, like Haskell, actually *prohibit* directly updating stack state in source code. And this prohibition ends up allowing the compilers to emit machine code capable of all kinds of clever and safe stack mutation.
 
 Some applications need only these two kinds of state, being essentially just functions themselves. e.g. compilers, audio/video transcoders, etc. But the vast majority of applications we use do this other thing where they have internal state which can be modified by external events. They are susceptible to *incursions of control* which carry some piece of data—explicitly or otherwise—through a new call stack, normally causing internal state changes and/or side effects. This internal, changing state can be further categorized:
 
 - **Atomic state** is dependent only on things which have happened in the past to cause incursions of control into the system, e.g. clicking the 'increment' button in a counter app causes the 'count' piece of atomic state to change. If you use Redux, your whole store is atomic state. Other examples of atomic state in a web browser: mouse position, window size, and page scroll offset. On the backend: session data, DB cache, ...
 
-  Modern practices from the FP world are also making atomic state fairly simple to manage. Immutable data and pure functions combine well with things like software transactional memory, the actor model, atomic references, event sourcing, and so on. Again, these are *restrictive* tools for shrinking the set of ways in which state may be updated, all with the perceived added bonus of increasing Reasonaboutability™.
+  Modern practices from the FP world are also making atomic state fairly simple to manage. Immutable data and pure functions combine well with things like software transactional memory, the actor model, atomic references, event sourcing, and so on. Again, these are *restrictive* tools for shrinking the set of ways in which state may be updated, all with the apparent added bonus of increasing Reasonaboutability™.
 
 - **Derived state** is directly dependent only on the *current* value of other bits of state. To illustrate:
 
@@ -56,15 +54,15 @@ Some applications need only these two kinds of state, being essentially just fun
 
   Derived state is often also stack state, in that we recompute it on-demand every time it is needed. This is a nicely simple way to go about things because it means that derived state is always consistent with the atomic state it depends upon (possibly indirectly). Alas there are a few drawbacks to this approach:
 
-  - It creates undesirable or untenable extra load for our poor CPUs and RAM sticks.
-  - It makes it difficult to keep things DRY because different concerns might require slightly different permutations or combinations of the same derived state.
-  - It makes it difficult to maintain separation of concerns, because state dependency relationships freely and rightly span multiple domains within a single app. Knowing how to compute a piece of derived state means knowing what its dependencies are and having access to the appropriate derivation logic.
+  - It creates undesirable or untenable **extra load for our CPUs and Garbage Collectors**.
+  - It makes it **difficult to keep things DRY** because different concerns might require slightly different permutations or combinations of the same derived state.
+  - It makes it **difficult to maintain separation of concerns**, because state dependency relationships freely and rightly span multiple domains within a single app. Knowing how to compute a piece of derived state means knowing what its dependencies are and having access to the appropriate derivation logic.
 
   We therefore sometimes coerce derived state into atomic state by doing one of two things:
 
-  - Updating the derived state manually at the same time as its dependencies. This leaves dependency relationships implicit, requiring the programmer to know about them when making changes (basically impossible for non-savants working on real systems). This also makes it extremely difficult to maintain separation of concerns in business logic for the same reason as above (i.e. that dependencies span domains).
+  - **Updating the derived state manually** at the same time as its dependencies. This leaves dependency relationships implicit, requiring the programmer to know about them when making changes (which is basically impossible for non-savants working on real systems). This also makes it extremely difficult to maintain separation of concerns in business logic for the same reason as above (i.e. that dependencies span domains).
 
-  - Artificially creating new events to notify others of state changes. This solves the separation of concerns problem, but can still get hellaciously messy because event listeners are no longer allowed to assume that the entire application state is consistent. And yet they all do.
+  - **Artificially creating new events** to notify others of state changes. This solves the separation of concerns problem, but can still get hellaciously messy because event listeners are no longer allowed to assume that the entire application state is consistent. And yet they all do.
 
   This latter approach is particularly toxic in systems with relatively unprincipled approaches to state management (think OO, MVC) but can even be a source of misery when using modern functional implementations of this approach like Rx/Observables.
 
@@ -78,13 +76,15 @@ Some applications need only these two kinds of state, being essentially just fun
 
   Things get complicated when you need to combine streams. e.g. what if we want to check whether all users are idle, and display a notification if so?
 
-  First let's find out how many idle users there are, and then we can just check whether or not that number is the same as the total number of the users.
+  I'm going to do this in a naïve-but-perfectly-reasonable-seeming way to illustrate a point:
 
   ```javascript
+  // first find out how many idle users there are
   const numIdleUsers$ = allUsers$.map(users =>
     users.filter(user => user.isIdle()).length
   );
 
+  // then just compare that with the total number of users
   const allIdle$ = numUsers$.combineLatest(
     numIdleUsers$,
     (a, b) => a === b
@@ -110,13 +110,15 @@ Some applications need only these two kinds of state, being essentially just fun
   5. `allIdle$` gets set to `false`
   6. the 'all idle' notification is hidden
 
+  <img src="img/observable-example.svg" align="center" width="89%" />
+
   You might have noticed that steps 2, 3, 5, and 6 should not have happened. This is what people in the know call a *glitch*.
 
-  So what went wrong? Here's the low-down: Observables are a tool for creating event handlers and composing them into directed graph structures. As we already learned, event handlers are all about triggering effects (either state updates or side effects), and they absolutely need to assume that the world they see when invoked is consistent (otherwise what can they do?).
+  The event handler (observables are built on event handlers) which computes the values of the `allIdle$` stream assumes that its inputs, `numUsers$` and `numIdleUsers$`, are consistent with each other. Yeah that's an invalid assumption, but what else can it do? Event handlers *must* assume a consistent world, or be paralyzed by fear. They can't *defer* handling an event until consistency is restored, because who knows how and when that will happen? How do the event handlers even know whether their dependencies are inconsistent in the first place?
 
-  So when an event happens, you simply *must* notify listeners, otherwise vital things might not occur. But if the listeners have listeners, they have to be notified too, and so on and so forth. This results in a depth-first traversal of the Observable graph which can cause glitchy behavior when the graph is not a tree, as illustrated above. Note that the problem isn't necessarily solved by doing breadth-first traversal. To avoid glitches you need to traverse dependency graphs in topological order, which is impossible to orchestrate in a system like RxJS which allows inner nodes to execute side effects.
+  This inability-to-defer-effects requires observable graphs to be traversed depth-first and pre-order, like in the above diagram. This is the cause of glitches, which are just one kind of 'consistency' bug caused by effects being executed during a time period in which the state of the world is inconsistent with itself. Glitches are unique in that the prematurely-executed effects are executed *again* after consistency is restored, making them fairly innocuous when the effects in question are idempotent-ish like rendering views. But what if your network requests are glitchy? What if your atomic state updates are glitchy? Answer: things break.
 
-Derivables get around this problem by using a push-pull system: if atomic state is changed, control is pushed directly to the non-derivable leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in topological order to avoid glitches.
+Derivables solve this problem by separating state derivation from event handling. event handlers to being the leaves of the graph. using a push-pull system: if atomic state is changed, control is pushed directly to the non-derivable leaves of the dependency graph which then pull changes down through the graph, automatically ensuring that nodes are evaluated in topological order to avoid glitches.
 
 Since Derivables only have to model atomic and derived state, they can also do a few other things waaay better than Observables:
 
