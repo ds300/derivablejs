@@ -64,13 +64,15 @@ Some applications need only these two kinds of state, being essentially just fun
 
   - **Artificially creating new events** to notify others of state changes. This solves the separation of concerns problem, but can still get hellaciously messy because event listeners are no longer allowed to assume that the entire application state is consistent. And yet they all do.
 
-  This latter approach is particularly toxic in systems with relatively unprincipled approaches to state management (think OO, MVC) but can even be a source of misery when using modern functional implementations of this approach like Rx/Observables.
+  This latter approach is particularly toxic in systems with relatively unprincipled approaches to state management (think OO, MVC) but can even be a source of misery when using modern 'functional' implementations of this approach like Rx/Observables.
 
   To illustrate, here's an example of using RxJS to derive the total number of users in an IRC channel:
 
   ```javascript
   const numUsers$ = allUsers$.map(users => users.length);
   ```
+
+  *N.B. If you're not familiar with Rx/Observables/'event streams'/'reactive programming', go check out this [supremely excellent introduction](https://gist.github.com/staltz/868e7e9bc2a7b8c1f754) by [@andrestaltz](https://twitter.com/andrestaltz).*
 
   So far so easy. It's just a pure function being mapped over a 'stream' of values.
 
@@ -114,17 +116,29 @@ Some applications need only these two kinds of state, being essentially just fun
 
   The event handler (observables are built on event handlers) which computes the values of the `allIdle$` stream assumes that its inputs, `numUsers$` and `numIdleUsers$`, are consistent with each other. Yeah that's an invalid assumption, but what else can it do? Event handlers *must* assume a consistent world, or be paralyzed by fear. They can't *defer* handling an event until consistency is restored, because who knows how and when that will happen? How do the event handlers even know whether their dependencies are inconsistent in the first place?
 
-  This inability-to-defer-effects requires observable graphs to be traversed depth-first and pre-order, like in the above diagram. This is the cause of glitches, which are just one kind of 'consistency' bug caused by effects being executed during a time period in which the state of the world is internally inconsistent. Glitches are unique in that the prematurely-executed effects are executed *again* after consistency is restored, making them fairly innocuous when the effects in question are idempotent-ish like rendering views. But what if your network requests are glitchy? What if your atomic state updates are glitchy? Answer: things break.
+  This inability-to-defer-effects requires observable graphs to be traversed depth-first and pre-order, like in the above diagram. This is the cause of glitches, which are just one kind of 'consistency' bug caused by effects being executed at a time when the state of the world is internally inconsistent. Glitches are unique in that the prematurely-executed effects are executed *again* after consistency is restored, making them fairly innocuous when the effects in question are idempotent-ish like rendering views. But what if your network requests are glitchy? What if your atomic state updates are glitchy? Answer: things break.
 
-Derivables solve this problem by separating state derivation from event handling. You still get a graph structure, but effects are only allowed at the leaves, and the roots are atomic state rather than event streams. When the atomic state changes, control is pushed directly to the event-handling leaves, which check to see whether they should execute their side effects.
+Derivables are a way to build state dependency graphs without using event listeners. Instead of depth-first evaluation, derivables use a push-pull system: Changes at the roots of the graph cause control to be *pushed* directly to the leaves of the graph, which then *pull* the changes downstream so that inner nodes are always evaluated in the correct order to avoid inconsistency.
+
+Here is how the above example would have panned out if done with derivables:
 
 <img src="img/derivable-example.svg" align="center" width="89%" />
 
-Since Derivables only have to model atomic and derived state, they can also do a few other things that observables can't:
+There are three different kinds of entity at play here:
 
-- **Grokkability and Wieldiness**
+ - Atomic state (`$AllUsers`)
+ - Derived state (`$numUsers`, `$numIdleUsers`, and `$allIdle`)
+ - Reactor (the thing at the bottom which shows/hides the message)
 
-  Observables have notoriously labyrinthine APIs and semantics. Some might argue that it's because they're so powerful, and I would argue that it's because they try to do too much. Either way, you don't need that mess. Derivables only do a subset of what Observables try to do, but they do it cleanly and safely. You wouldn't use a chainsaw to dice an onion, would you?
+And these are exactly the three different kinds of entity that DerivableJS models.
+
+Since derivables treat atomic and derived state differently, they can also do a few other novel tricks:
+
+- **Reasonaboutability™ and Wieldiness**
+
+  Observables have notoriously labyrinthine APIs and semantics. Some might argue that it's because they're so powerful, and I would argue that it's because they try to solve a *really goshdarn hard problem*: how to compose event listeners.
+
+  Derivables don't even entertain the thought of tackling that mess. They only do a subset of what Observables try to do, but they do it cleanly and safely with a tight API and oh-so-grokkable semantics. Would you use a chainsaw to dice an onion? I mean, yes, obviously, for science, but shut up you know what I mean.
 
 - **Laziness**
 
@@ -132,17 +146,41 @@ Since Derivables only have to model atomic and derived state, they can also do a
 
 - **Automatic Memory Management**
 
-  Since Observables are implemented on top of callbacks, you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
+  Since Observables are implemented on top of event listeners, you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
 
   Again, this sounds like a minor thing at first, but it turns out to be profoundly liberating.
 
-### What even is a Derivable?
+## Effects made easy
+
+The benefits listed above have a shared property: they reduce the set of things you need to know in order to do your job properly (as a programmer).
+
+- Thanks to guaranteed consistency you don't need to know where reactive data comes from in order to use it safely.
+- Thanks to laziness and garbage collection, you don't need to know when or even *if* a piece of state you define will be needed.
+- Thanks to grokkability you don't need to know some huge API and a bunch of design patterns for avoiding its pitfalls.
+
+This boon, needing to know fewer things, can and should be imparted to anything that needs to know things.
+
+A fantastic way to judge the long-term robustness of technical solutions is by asking a) what are the different components in this solution, and b) what do they need to know in order to do their jobs. If it seems like there are too many components and/or the they have too many concerns, that's probably the case and you should dismiss that solution.
+
+So here's one solution I think you shouldn't dismiss: how to do effects in software systems while minimizing the sets of things everybody needs to care about to do their job properly.
+
+1. **Input events** (incursions of control) should be treated as creating *epochs* in a system. An epoch is a period of time, and different epochs in a system represent possibly different states of the system. Input events should therefore be hooked up to plain old boring event handlers which do some effects. Those effects should be, in the vast majority of cases, state updates. Can also be side effects if
+
+2. ****
+
+
+
+## Further Reading/Viewing
+
+
+
+## Quick start
 
 There are two types of Derivable:
 
 - **Atoms**
 
-  Atoms are simple references to immutable values. They are the ground truth from which all else is derived.
+  Atoms are simple mutable references to immutable values. They represent the ground truth from which all else is derived.
 
   ```javascript
   import {atom} from 'derivable';
@@ -160,7 +198,7 @@ There are two types of Derivable:
 
 - **Derivations**
 
-  Derivations represent pure (as in 'pure function') transformation of values held in atoms. You can create them with the `.derive` method, which is a bit like the `.map` method of Observables.
+  Derivations represent pure (as in 'pure function') transformation of values held in atoms. You can create them with the `.derive` method, which is a bit like the `.map` method of Arrays and Observables.
 
   ```javascript
   const cyber = word => word.toUpperCase().split('').join(' ');
@@ -198,7 +236,7 @@ There are two types of Derivable:
   $transformedName.get(); // => 'naibaF'
   ```
 
-  `derivation` takes another function of zero arguments which should
+  `derivation` takes a function of zero arguments which should
   dereference one or more Derivables to compute the new derived value. DerivableJS then sneakily monitors who
   is dereferencing who to infer the parent-child relationships.
 
