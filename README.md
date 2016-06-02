@@ -142,35 +142,35 @@ Since derivables treat atomic and derived state differently, they can also do a 
 
 - **Laziness**
 
-  Derivables have fine-grained laziness, which means that values are only computed if you actually need them. This sounds like just a neat trick, but it allows one to do all kinds of insanely practical things, like declaratively encoding true short-circuiting boolean logic.
+  Derivables have fine-grained laziness, which means that derived values are only computed if you actually need them. This sounds like just a neat trick, but it allows one to do all kinds of insanely practical things, like declaratively encoding true short-circuiting boolean logic.
 
 - **Automatic Memory Management**
 
-  Since Observables are implemented on top of event listeners, you need to explicitly say when you don't need them anymore to avoid memory leaks. Derivables, on the other hand, have the same properties as ordinary JavaScript objects. i.e. if you simply lose your references to them, they go away.
+  State occupies memory, and if you're using event handlers to update derived state you probably need to worry about the lifecycles of those event handlers in order to avoid memory leaks. Derivables (and some implementations of observables) automatically take care of this. i.e. State containers which aren't being used by active subscriptions can simply be collected by the runtime CG without further ado.
 
   Again, this sounds like a minor thing at first, but it turns out to be profoundly liberating.
 
 ## Effects made easy
 
-The benefits listed above have a shared property: they reduce the set of things you need to know in order to do your job properly (as a programmer).
+The benefits listed above have a shared property: they shrink the set of things you need to worry about order to write robust code.
 
-- Thanks to guaranteed consistency you don't need to know where reactive data comes from in order to use it safely.
-- Thanks to laziness and garbage collection, you don't need to know when or even *if* a piece of state you define will be needed.
-- Thanks to grokkability you don't need to know some huge API and a bunch of design patterns for avoiding its pitfalls.
+- Thanks to guaranteed consistency you don't need to worry about where reactive data comes from.
+- Thanks to laziness and garbage collection you don't need to worry about when or even *if* a piece of state you define will be needed.
+- Thanks to grokkability you don't need to know some huge API and a bunch of design patterns for avoiding the weird corners.
 
-This boon, needing to know fewer things, can and should be imparted to anything that needs to know things.
+Having fewer concerns means fewer things can go wrong, so the guiding principle behind the system architecture I'm about to describe is that **agents of change in software systems should have as few concerns as possible**. Sounds obvious, but what does it look like when taken very very seriously indeed?
 
-A fantastic way to judge the long-term robustness of technical solutions is by asking a) what are the different components in this solution, and b) what do they need to know in order to do their jobs. If it seems like there are too many components and/or the they have too many concerns, that's probably the case and you should dismiss that solution.
+There is only one agent of change in software systems: incursions of control, i.e. external input events. They are the only vector for causing state changes and side effects. So, naïvely speaking, our input event handlers should be concerned with updating state and executing side effects. That's one-too-many concerns I reckon.
 
-So here's one solution I think you shouldn't dismiss: how to do effects in software systems while minimizing the sets of things everybody needs to care about to do their job properly.
+In the previous section I described a framework wherein state updates automatically trigger side effects. This framework also automatically updates derived state, so that the only thing event handlers need to worry about is updating atomic state. And because derivables work with immutable data, there are very few ways that can go wrong.
 
-1. **Input events** (incursions of control) should be treated as creating *epochs* in a system. An epoch is a period of time, and different epochs in a system represent possibly different states of the system. Input events should therefore be hooked up to plain old boring event handlers which do some effects. Those effects should be, in the vast majority of cases, state updates. Can also be side effects if
+If you go on to couple derivables with event sourcing, suddenly **event handlers only need to translate input events into domain events**, which is *obscenely easy*.
 
-2. ****
+## Further Reading
 
+Rich Hickey - Are we there yet
+re-frame README
 
-
-## Further Reading/Viewing
 
 
 
@@ -353,7 +353,7 @@ const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 
 ## Contributing
 
-I heartily welcome questions, feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbitting).
+I heartily welcome questions, feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbmitting).
 
 ## Thanks
 
