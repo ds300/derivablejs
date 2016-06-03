@@ -158,18 +158,22 @@ The benefits listed above have a shared property: they shrink the set of things 
 - Thanks to laziness and garbage collection you don't need to worry about when or even *if* a piece of state you define will be needed.
 - Thanks to grokkability you don't need to know some huge API and a bunch of design patterns for avoiding the weird corners.
 
-Having fewer concerns means fewer things can go wrong, so the guiding principle behind the system architecture I'm about to describe is that **agents of change in software systems should have as few concerns as possible**. Sounds obvious, but what does it look like when taken very very seriously indeed?
+Having fewer concerns means fewer things can go wrong, so the guiding principle behind the system architecture I'm about to describe is that **agents of change in software systems should have as few concerns as possible**. Sounds obvious, but what does it look like when one takes this notion very very seriously indeed?
 
-There is only one agent of change in software systems: incursions of control, i.e. external input events. They are the only vector for causing state changes and side effects. So, naïvely speaking, our input event handlers should be concerned with updating state and executing side effects. That's one-too-many concerns I reckon.
+There are two types of effects in software systems: state updates and side effects. State updates are internal and side effects are external. The only way to create either kind of effect is via incursions of control into the system, i.e. handling external events. So, naïvely speaking, our input event handlers should be concerned with updating state and executing side effects. That's too many concerns I reckon.
 
-In the previous section I described a framework wherein state updates automatically trigger side effects. This framework also automatically updates derived state, so that the only thing event handlers need to worry about is updating atomic state. And because derivables work with immutable data, there are very few ways that can go wrong.
+In the previous section I described a framework wherein updates to atomic state automatically trigger side effects while automatically and safely updating derived state. So by using that framework, event handlers need only worry about updating atomic state. And, as already discussed, we can keep that very simple with modern functional techniques. In fact, with redux-style event sourcing **event handlers only need to care about translating input events into domain events**, which is almost obscenely simple. So that's the first kind of effect made easy, but what about side effects?
 
-If you go on to couple derivables with event sourcing, suddenly **event handlers only need to translate input events into domain events**, which is *obscenely easy*.
+I'm gonna let you in on a little secret here: side effects are just state changes in *other* systems. Right up to the level of electronics and light and sound, all we do as programmers is dictate how systems should influence each others' state.
+
+Using derivables we can model the reality of this situation acutely by making liberal use of derived state to describe, in broad strokes, how we want the state of external systems to look when the state of our system looks a certain way. We can then write algorithms or even intermediary systems which know how to turn our rough descriptions into the real external thing.
+
+This is more or less the same approach to orchestrating side effects which was made popular by Facebook's React library. With React you derive 'virtual' DOM trees from your atomic state while the framework handles the task of making real DOM trees look just like the fake ones you derived.
 
 ## Further Reading
 
-Rich Hickey - Are we there yet
-re-frame README
+- Rich Hickey - Are we there yet
+- re-frame README
 
 
 
