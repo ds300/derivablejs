@@ -140,15 +140,29 @@ In the previous section I described a framework wherein updates to atomic state 
 
 I'm gonna let you in on a little secret here: side effects are just state changes in *other* systems. Right up to the level of electronics and light and sound, all we do as programmers is dictate how systems should influence each others' state.
 
-We can model the reality of this situation acutely with derivables by making liberal use of derived state to describe, in broad strokes, how we want the state of external systems to look when the state of our system looks a certain way. We can then write algorithms or even intermediary systems which know how make the external system's state look like our internal description.
+We can model the reality of this situation acutely with derivables by making liberal use of derived state to describe, in broad strokes, how we want the state of external systems to look when the state of our system looks a certain way. We can then write algorithms or even intermediary systems which know how make the external system's state look like our internal description. I'm going to call this approach 'declarative side effects' because, as a programmer, you don't initiate side effects by *dictating what should happen* but by *declaring what the end result should be* which is a much simpler thing to do.
 
-This is more or less the same approach you can find in Facebook's React library. With React you derive a 'virtual' DOM tree from your atomic state, and the framework handles the task of making a real DOM tree look just like the fake one you derived. As a programmer using React, all you need to worry about to robustly render views is *how they should look at a given point in time*. You don't need to know anything about how the reified DOM trees are instantiated or changed over time.
+This is more or less the same approach you can find in Facebook's React library. With React you derive a 'virtual' DOM tree from your atomic state, and the framework handles the task of making a real DOM tree look just like the fake one you derived. As a programmer using React, all you need to worry about to robustly render views is *how they should look at a given point in time*. You don't need to know anything about how the reified DOM trees are instantiated or mutated over time. Similarly, React doesn't need to know anything about your problem domain, all it needs is your virtual DOM trees.
 
-This is nice separation of concerns. How is it different from templating things like, e.g. angular?
+So how does this approach apply to other kinds of side effects? Network requests, for example? It depends on the kind of request:
 
-ok so that's view rendering but what about other ide effects? Network requests? file I/O? sleep/timeout?
+  - **Queries** which are idempotent can be modeled with derived state by computing the difference between the set of things you need to know and the set of things you currently know. i.e:
 
-It turns out that React is actually an intermediary system between your domain system and the browser, because it has it's own atomic state. It stores the *last* virtual DOM tree you derived, so that when you derive a new one it can calculate the difference between the two and perform minimal updates to the browser's DOM tree. Maintaining atomic state is the mark of a system.
+        things_to_fetch = things_i_need - things_i_have
+
+    It's normally a matter of course to model the things on the right hand side of that equation as atomic state. You can then map a function over your `things_to_fetch` set to derive a `http_requests_to_complete` set, and pass it off to some React-like library to worry about managing the actual requests.
+
+    Note that you can encode completion/rejection-handling logic into the descriptions of requests, and that this will be especially easy and useful if you're doing redux-style event sourcing.
+
+  - **Commands** which are not idempotent require a different approach. You can't use a set because order matters and it's often perfectly sensible to do the same thing more than once. Rather than deriving a set of request descriptions, it is necessary to curate a sequence of them as atomic state. The obvious data structure for this would be a queue which assigns enqueued values unique IDs and allows dequeuing from anywhere in the queue.
+
+This latter approach, using queues, can mimic any old effect.
+
+Things are better this way because it keeps your business logic pure, decoupling it from any particular environment and making it easy-as-heck to test.
+
+Things are worse this way because it's more verbose to implement and has some performance overhead.
+
+This way is optimized to prevent incidental complexity from growing over time, and is overkill for small projects.
 
 ## Further Reading
 
