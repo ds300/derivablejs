@@ -25,43 +25,44 @@ describe("the `is*` fns", function () {
       }, set: function set(_, x) {
         return x / 2;
       } });
-    var r = d.reactor(function (x) {
-      return console.log(x);
-    });
 
     (0, _assert2.default)(_derivable2.default.isAtom(a), "a is an atom");
     (0, _assert2.default)(!_derivable2.default.isAtom(d), "d is not an atom");
     (0, _assert2.default)(_derivable2.default.isAtom(l), "l is an atom");
-    (0, _assert2.default)(!_derivable2.default.isAtom(r), "r is not an atom");
 
     (0, _assert2.default)(!_derivable2.default.isDerivation(a), "a is not a derivation");
     (0, _assert2.default)(_derivable2.default.isDerivation(d), "d is a derivation");
     (0, _assert2.default)(_derivable2.default.isDerivation(l), "l is a derivation");
-    (0, _assert2.default)(!_derivable2.default.isDerivation(r), "r is not a derivation");
 
     (0, _assert2.default)(!_derivable2.default.isLensed(a), "a is not a lens");
     (0, _assert2.default)(_derivable2.default.isLensed(l), "l is a lens");
     (0, _assert2.default)(!_derivable2.default.isLensed(d), "d is not a lens");
-    (0, _assert2.default)(!_derivable2.default.isLensed(r), "r is not a lens");
-
-    (0, _assert2.default)(!_derivable2.default.isReactor(a), "a is a reactor");
-    (0, _assert2.default)(!_derivable2.default.isReactor(d), "d is a reactor");
-    (0, _assert2.default)(!_derivable2.default.isReactor(l), "l is a reactor");
-    (0, _assert2.default)(_derivable2.default.isReactor(r), "r is a reactor");
 
     (0, _assert2.default)(_derivable2.default.isDerivable(a), "a is derivable");
     (0, _assert2.default)(_derivable2.default.isDerivable(d), "d is derivable");
     (0, _assert2.default)(_derivable2.default.isDerivable(l), "l is derivable");
-    (0, _assert2.default)(!_derivable2.default.isDerivable(r), "r is not derivable");
   });
 });
 
 describe("the `struct` function", function () {
-  it("does nothing to a deriveable", function () {
-    var a = (0, _derivable.atom)(0);
-    var b = _derivable2.default.struct(a);
-
-    _assert2.default.strictEqual(b.get(), 0);
+  it("expects a plain object or a plain array", function () {
+    _assert.throws(function () {
+      _derivable.struct();
+    });
+    _assert.throws(function () {
+      _derivable.struct(53);
+    });
+    _assert.throws(function () {
+      _derivable.struct(new Date());
+    });
+    _assert.throws(function () {
+      _derivable.struct(_derivable.atom(4));
+    });
+    _derivable.struct({});
+    _derivable.struct([]);
+    _assert.throws(function () {
+      _derivable.struct(_derivable.struct({}));
+    });
   });
   it("turns an array of derivables into a derivable", function () {
     var fib1 = (0, _derivable.atom)(0),
@@ -356,9 +357,9 @@ describe("the `transact` function", function () {
 
     var timesChanged = 0;
 
-    _derivable2.default.struct({ a: a, b: b }).reactor(function () {
+    _derivable2.default.struct({ a: a, b: b }).react(function () {
       return timesChanged++;
-    }).start();
+    }, {skipFirst: true});
 
     _assert2.default.strictEqual(timesChanged, 0);
 
@@ -398,9 +399,9 @@ describe("the `transaction` function", function () {
 
     var timesChanged = 0;
 
-    _derivable2.default.struct({ a: a, b: b }).reactor(function () {
+    _derivable2.default.struct({ a: a, b: b }).react(function () {
       return timesChanged++;
-    }).start();
+    }, {skipFirst: true});
 
     _assert2.default.strictEqual(timesChanged, 0);
 
@@ -432,45 +433,17 @@ describe("the `transaction` function", function () {
   });
 });
 
-describe("defaultEquals", function () {
-  it("tests whether two values are strictly equal", function () {
-    (0, _assert2.default)(_derivable2.default.defaultEquals(5, 5));
-    (0, _assert2.default)(_derivable2.default.defaultEquals("buns", "buns"));
-    (0, _assert2.default)(!_derivable2.default.defaultEquals([1, 2, 3], [0, 1, 2].map(function (x) {
-      return x + 1;
-    })));
-    var x = {};
-    x['a'] = 'a';
-    x['b'] = 'b';
-    (0, _assert2.default)(!_derivable2.default.defaultEquals({ a: "a", b: 'b' }, x));
-  });
-  it("delegates to a .equals method if present", function () {
-    var x = { equals: function equals() {
-        return true;
-      } };
-    var y = { equals: function equals() {
-        return false;
-      } };
-    (0, _assert2.default)(_derivable2.default.defaultEquals(x, y));
-    (0, _assert2.default)(!_derivable2.default.defaultEquals(y, x));
-  });
-});
-
 describe("debug mode", function () {
   it("causes derivations and reactors to store the stacktraces of their" + " instantiation points", function () {
     var d = _derivable2.default.derivation(function () {
       return 0;
     });
     (0, _assert2.default)(!d.stack);
-    var b = d.reactor(function () {});
-    (0, _assert2.default)(!b.stack);
     _derivable2.default.setDebugMode(true);
     var e = _derivable2.default.derivation(function () {
       throw Error();
     });
     (0, _assert2.default)(e.stack);
-    var a = d.reactor(function () {});
-    (0, _assert2.default)(a.stack);
     _derivable2.default.setDebugMode(false);
   });
 
@@ -479,8 +452,6 @@ describe("debug mode", function () {
       return 0;
     });
     (0, _assert2.default)(!d.stack);
-    var b = d.reactor(function () {});
-    (0, _assert2.default)(!b.stack);
     _derivable2.default.setDebugMode(true);
     var e = _derivable2.default.derivation(function () {
       throw "cheese";
@@ -497,21 +468,6 @@ describe("debug mode", function () {
     } catch (e) {
       _assert2.default.strictEqual(e, 'cheese');
     };
-    var a = d.reactor(function () {
-      throw 'funions';
-    });
-    try {
-      var _err = console.error;
-      var _stack2 = void 0;
-      console.error = function (_stack) {
-        _stack2 = _stack;
-      };
-      a.start().force();
-      _assert2.default.strictEqual(_stack2, a.stack);
-      console.error = _err;
-    } catch (e) {
-      _assert2.default.strictEqual(e, 'funions');
-    };
     _derivable2.default.setDebugMode(false);
   });
 });
@@ -520,9 +476,9 @@ describe('the atomically function', function () {
   it('creates a transaction if not already in a transaction', function () {
     var $A = (0, _derivable.atom)('a');
     var numReactions = 0;
-    $A.reactor(function () {
+    $A.react(function () {
       return numReactions++;
-    }).start();
+    }, {skipFirst: true});
     _assert2.default.strictEqual(numReactions, 0);
 
     _derivable2.default.atomically(function () {
@@ -554,9 +510,9 @@ describe('the atomic function', function () {
   it('creates a transaction if not already in a transaction', function () {
     var $A = (0, _derivable.atom)('a');
     var numReactions = 0;
-    $A.reactor(function () {
+    $A.react(function () {
       return numReactions++;
-    }).start();
+    }, {skipFirst: true});
     _assert2.default.strictEqual(numReactions, 0);
 
     var res = _derivable2.default.atomic(function () {
@@ -585,30 +541,5 @@ describe('the atomic function', function () {
       _assert2.default.strictEqual($A.get(), 'b');
     });
     _assert2.default.strictEqual($A.get(), 'b');
-  });
-});
-
-describe('the .withEquality function', function () {
-  it("creates a new instance of derivablejs with the given equality semantics", function () {
-    var djs = _derivable2.default.withEquality(function (a, b) {
-      return false;
-    });
-
-    var a = djs.atom(0);
-    var numReactions = 0;
-
-    a.reactor(function () {
-      return numReactions++;
-    }).start();
-
-    _assert2.default.strictEqual(numReactions, 0);
-    a.set(0);
-    _assert2.default.strictEqual(numReactions, 1);
-    a.set(0);
-    _assert2.default.strictEqual(numReactions, 2);
-    a.set(0);
-    _assert2.default.strictEqual(numReactions, 3);
-    a.set(0);
-    _assert2.default.strictEqual(numReactions, 4);
   });
 });

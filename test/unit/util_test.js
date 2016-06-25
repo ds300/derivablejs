@@ -1,5 +1,7 @@
 'use strict';
 
+require('source-map-support');
+require('babel-register');
 var _util = require('../../src/util');
 
 var util = _interopRequireWildcard(_util);

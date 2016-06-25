@@ -81,9 +81,9 @@ var REACTOR = "REACTOR";
 
 function isDerivable(x) {
   return x &&
-         x._type === DERIVATION ||
-         x._type === ATOM ||
-         x._type === LENS;
+         (x._type === DERIVATION ||
+          x._type === ATOM ||
+          x._type === LENS);
 }
 
 function isAtom (x) {

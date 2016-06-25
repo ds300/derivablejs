@@ -408,49 +408,6 @@ describe("anonymous reactors", function () {
     }
   });
 
-  it('has .onStart and .onStop lifecycle hooks', function () {
-    var from = (0, _derivable.atom)(false);
-    var when = (0, _derivable.atom)(false);
-    var until = (0, _derivable.atom)(false);
-
-    var a = (0, _derivable.atom)('a');
-    var starts = 0;
-    var stops = 0;
-
-    a.react(function () {}, {
-      from: from,
-      when: when,
-      until: until,
-      onStart: function onStart() {
-        return starts++;
-      },
-      onStop: function onStop() {
-        return stops++;
-      }
-    });
-
-    _assert2.default.strictEqual(starts, 0);
-    _assert2.default.strictEqual(stops, 0);
-
-    from.set(true);
-    _assert2.default.strictEqual(starts, 0);
-    _assert2.default.strictEqual(stops, 0);
-    when.set(true);
-    _assert2.default.strictEqual(starts, 1);
-    _assert2.default.strictEqual(stops, 0);
-    when.set(false);
-    _assert2.default.strictEqual(starts, 1);
-    _assert2.default.strictEqual(stops, 1);
-    when.set(true);
-    _assert2.default.strictEqual(starts, 2);
-    _assert2.default.strictEqual(stops, 1);
-    until.set(true);
-    _assert2.default.strictEqual(starts, 2);
-    _assert2.default.strictEqual(stops, 2);
-    when.set(false);
-    _assert2.default.strictEqual(starts, 2);
-    _assert2.default.strictEqual(stops, 2);
-  });
 });
 
 describe("the .react method", function () {
@@ -506,9 +463,9 @@ describe("setting the values of atoms in a reaction phase", function () {
       return n * 2;
     };
 
-    var r = nmod2.reactor(function (_) {
+    var r = nmod2.react(function (_) {
       return n.swap(double);
-    }).start();
+    }, {skipFirst: true});
 
     _assert2.default.throws(function () {
       return n.set(2);
@@ -526,9 +483,9 @@ describe("tickers", function () {
 
     var b = "b";
 
-    a.reactor(function (a) {
+    a.react(function (a) {
       return b = a;
-    }).start();
+    }, {skipFirst: true});
 
     _assert2.default.strictEqual(b, "b");
 
@@ -571,9 +528,9 @@ describe("tickers", function () {
 
     var b = "b";
 
-    a.reactor(function (a) {
+    a.react(function (a) {
       return b = a;
-    }).start();
+    }, {skipFirst: true});
     _assert2.default.strictEqual(b, "b");
     a.set("c");
     _assert2.default.strictEqual(b, "b");
@@ -600,9 +557,9 @@ describe("tickers", function () {
     var a = (0, _derivable.atom)(null);
     var b = "b";
 
-    a.reactor(function (a) {
+    a.react(function (a) {
       return b = a;
-    }).start();
+    }, {skipFirst: true});
 
     a.set("a");
 
@@ -702,117 +659,6 @@ describe("tickers", function () {
   });
 });
 
-describe("dependent reactors", function () {
-  it("are invoked after their parent reactors", function () {
-    var arr = (0, _derivable.atom)([0, 1, 2]);
-
-    // set up reactor to print 3rd elem of arr, but don't start it
-    var A = arr.reactor(function (arr) {
-      return _assert2.default.strictEqual('2', arr[2].toString());
-    });
-
-    // instead control it by reacting to the length of the array
-    var B = arr.derive(function (a) {
-      return a.length;
-    }).reactor(function (len) {
-      if (len >= 3) {
-        if (!A.isActive()) A.start().force();
-      } else {
-        A.stop();
-      }
-    }).start().force();
-    // $> 2
-
-    // should not throw
-    arr.set([0, 1]);
-  });
-
-  it("are not stopped before their parent reactors", function () {
-    var state = (0, _derivable.atom)('a');
-    var A = state.reactor({
-      react: function react() {
-        return null;
-      },
-      onStop: function onStop() {
-        return null;
-      }
-    });
-    var B = state.reactor(function () {
-      return A.start();
-    }).start().force();
-
-    B.stop();
-
-    (0, _assert2.default)(A.isActive());
-  });
-
-  it("can't invole cyclical dependencies", function () {
-    var state = (0, _derivable.atom)('a');
-
-    var A = void 0;
-    var B = state.reactor(function (state) {
-      A.stop();
-      A.start().force();
-    });
-
-    A = state.reactor(function (state) {
-      B.stop();
-      B.start().force();
-    });
-
-    _assert2.default.throws(function () {
-      return B.start().force();
-    });
-  });
-
-  it("can't invole cyclical dependencies", function () {
-    var state = (0, _derivable.atom)('a');
-
-    var A = state.reactor(function () {
-      return null;
-    });
-    var B = state.reactor(function () {
-      return null;
-    });
-
-    A.adopt(B);
-    B.adopt(A);
-
-    A.start();
-    B.start();
-
-    _assert2.default.throws(function () {
-      return state.set('b');
-    });
-  });
-});
-
-describe('the `oprhan` and `adopt` methods', function () {
-  it('allow one to change the parent-child relationships manually', function () {
-    var state = (0, _derivable.atom)('a');
-
-    var A = state.reactor(function () {
-      return null;
-    });
-    var B = state.reactor(function () {
-      return null;
-    });
-
-    A.adopt(B);
-    B.adopt(A);
-
-    A.start();
-    B.start();
-
-    _assert2.default.throws(function () {
-      return state.set('b');
-    });
-
-    A.orphan();
-
-    state.set('c');
-  });
-});
 
 describe('the `when` optons to the `react` method', function () {
   it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', function () {
