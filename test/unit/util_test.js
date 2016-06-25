@@ -15,18 +15,18 @@ describe('the assign function polyfill', function () {
     var caps = { a: "A", b: "B" };
     var lower = { a: "a", b: "b", c: "c" };
     var init = {};
-    (0, _chai.expect)(util.assignPolyfill(init, lower, caps)).to.equal(init);
+    (0, _chai.expect)(util.assign(init, lower, caps)).to.equal(init);
     (0, _chai.expect)(init).to.deep.equal({
       a: "A", b: "B", c: "c"
     });
   });
   it('doesn\'t care about nulls', function () {
     var caps = { a: "A", b: "B" };
-    (0, _chai.expect)(util.assignPolyfill({}, caps, null)).to.deep.equal(caps);
-    (0, _chai.expect)(util.assignPolyfill({}, caps, null)).to.not.equal(caps);
+    (0, _chai.expect)(util.assign({}, caps, null)).to.deep.equal(caps);
+    (0, _chai.expect)(util.assign({}, caps, null)).to.not.equal(caps);
 
-    (0, _chai.expect)(util.assignPolyfill({}, null, caps, null)).to.deep.equal(caps);
-    (0, _chai.expect)(util.assignPolyfill({}, null, caps, null)).to.not.equal(caps);
+    (0, _chai.expect)(util.assign({}, null, caps, null)).to.deep.equal(caps);
+    (0, _chai.expect)(util.assign({}, null, caps, null)).to.not.equal(caps);
   });
 });
 

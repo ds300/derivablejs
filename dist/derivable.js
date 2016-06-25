@@ -2,7 +2,7 @@
 
 var keys = Object.keys;
 
-function assignPolyfill (obj) {
+function assign (obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
     var ks = keys(other || {});
@@ -12,12 +12,6 @@ function assignPolyfill (obj) {
     }
   }
   return obj;
-}
-
-var assign = Object.assign;
-
-if (!assign) {
-  assign = assignPolyfill;
 }
 
 function _is(a, b) {
@@ -139,8 +133,6 @@ function mark (node, reactors) {
       case REACTOR:
         reactors.push(child);
         break;
-      default:
-        throw new Error("Unrecognized child type");
     }
   }
 }
@@ -400,9 +392,7 @@ function _derivation (deriver) {
 
 function Reactor(parent, react, governor) {
   this._parent = parent;
-  if (react) {
-    this.react = react;
-  }
+  this.react = react;
   this._governor = governor || null;
   this._active = false;
   this._reacting = false;
@@ -415,10 +405,6 @@ function Reactor(parent, react, governor) {
 
 assign(Reactor.prototype, {
   start: function () {
-    if (this._active) {
-      throw new Error("already active");
-    }
-
     this._active = true;
 
     addToArray(this._parent._activeChildren, this);

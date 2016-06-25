@@ -9,3 +9,4 @@ coverage/
 lcov-report/
 html-report/
 lcov.info
+coverage-final.json
