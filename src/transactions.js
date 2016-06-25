@@ -47,11 +47,10 @@ function TransactionContext(parent) {
 
 export function maybeTrack (atom) {
   if (currentCtx !== null) {
-    var idx = currentCtx.modifiedAtoms.indexOf(atom);
-    if (idx === -1) {
+    if (!(atom._id in currentCtx.id2originalValue)) {
       currentCtx.modifiedAtoms.push(atom);
+      currentCtx.id2originalValue[atom._id] = atom._value;
     }
-    currentCtx.id2originalValue[atom._id] = atom._value;
   }
 }
 

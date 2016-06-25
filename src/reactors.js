@@ -20,10 +20,6 @@ function Reactor(parent, react, governor) {
 
 util.assign(Reactor.prototype, {
   start: function () {
-    if (this._active) {
-      throw new Error("already active");
-    }
-
     this._active = true;
 
     util.addToArray(this._parent._activeChildren, this);

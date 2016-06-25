@@ -21,7 +21,3 @@ export function isDerivation (x) {
 export function isLensed (x) {
   return x && x._type === LENS;
 }
-
-export function isReactor (x) {
-  return x && x._type === REACTOR;
-}

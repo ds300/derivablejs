@@ -14,7 +14,6 @@ export var isDerivable = types.isDerivable;
 export var isAtom = types.isAtom;
 export var isLensed = types.isLensed;
 export var isDerivation = types.isDerivation;
-export var isReactor = types.isReactor;
 export var derivation = _derivation;
 export var atom = _atom;
 export var atomic = transactions.atomic;

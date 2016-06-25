@@ -52,6 +52,23 @@ describe("the humble atom", function () {
     _assert2.default.strictEqual(a.get(), "a");
   });
 
+  it('should be able to go back to its original value with no ill effects', function () {
+    var a = _derivable.atom("a");
+    var reacted = false;
+    a.react(function () {
+      reacted = true;
+    }, {skipFirst: true});
+
+    _assert.strictEqual(reacted, false, "no reaction to begin with");
+
+    _derivable.transact(function () {
+      a.set("b");
+      a.set("a");
+    });
+
+    _assert.strictEqual(reacted, false, "no reaction should take place");
+  });
+
   it('can keep transaction values if they are\'t aborted', function () {
     var a = (0, _derivable.atom)("a");
     (0, _derivable.transact)(function () {

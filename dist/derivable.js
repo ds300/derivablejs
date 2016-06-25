@@ -98,10 +98,6 @@ function isLensed (x) {
   return x && x._type === LENS;
 }
 
-function isReactor (x) {
-  return x && x._type === REACTOR;
-}
-
 var UNKNOWN = 0;
 var CHANGED = 1;
 var UNCHANGED = 2;
@@ -174,11 +170,10 @@ function TransactionContext(parent) {
 
 function maybeTrack (atom) {
   if (currentCtx !== null) {
-    var idx = currentCtx.modifiedAtoms.indexOf(atom);
-    if (idx === -1) {
+    if (!(atom._id in currentCtx.id2originalValue)) {
       currentCtx.modifiedAtoms.push(atom);
+      currentCtx.id2originalValue[atom._id] = atom._value;
     }
-    currentCtx.id2originalValue[atom._id] = atom._value;
   }
 }
 
@@ -636,7 +631,6 @@ var isDerivable$1 = isDerivable;
 var isAtom$1 = isAtom;
 var isLensed$1 = isLensed;
 var isDerivation$1 = isDerivation;
-var isReactor$1 = isReactor;
 var derivation = _derivation;
 var atom = atom$1;
 var atomic$1 = atomic;
@@ -744,7 +738,6 @@ var derivable = Object.freeze({
   isAtom: isAtom$1,
   isLensed: isLensed$1,
   isDerivation: isDerivation$1,
-  isReactor: isReactor$1,
   derivation: derivation,
   atom: atom,
   atomic: atomic$1,
