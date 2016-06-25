@@ -81,9 +81,9 @@ var REACTOR = "REACTOR";
 
 function isDerivable(x) {
   return x &&
-         x.type === DERIVATION ||
-         x.type === ATOM ||
-         x.type === LENS;
+         x._type === DERIVATION ||
+         x._type === ATOM ||
+         x._type === LENS;
 }
 
 function isAtom (x) {
@@ -110,8 +110,9 @@ var DISCONNECTED = 3;
 var parentsStack = [];
 var child = null;
 
-function startCapturingParents (child) {
+function startCapturingParents (_child) {
   parentsStack.push([]);
+  child = _child;
 }
 function retrieveParents () {
   return parentsStack[parentsStack.length - 1];
@@ -260,8 +261,11 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
-  currentCtx.modifiedAtoms.forEach(function (atom) {
-    atom._value = currentCtx.id2originalValue[atom._id];
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
+  ctx.modifiedAtoms.forEach(function (atom) {
+    atom._value = ctx.id2originalValue[atom._id];
+    atom._state = UNCHANGED;
     mark(atom, []);
   });
 }
@@ -321,7 +325,7 @@ assign(Derivation.prototype, {
     var newParents = null;
 
     try {
-      startCapturingParents();
+      startCapturingParents(this);
       if (!DEBUG_MODE) {
         newVal = that._deriver();
       } else {
@@ -490,11 +494,11 @@ function makeReactor (derivable, f, opts) {
   function condDerivable(fOrD, name) {
     if (!isDerivable(fOrD)) {
       if (typeof fOrD === 'function') {
-        fOrD = _derivation(fOrD);
+        return _derivation(fOrD);
       } else if (typeof fOrD === 'boolean') {
-        fOrD = _derivation(function () { return fOrD; });
+        return _derivation(function () { return fOrD; });
       } else {
-        throw Error('react ' + name + ' condition must be derivable');
+        throw Error('react ' + name + ' condition must be derivable, got: ' + JSON.stringify(fOrD));
       }
     }
     return fOrD;
@@ -532,10 +536,10 @@ function makeReactor (derivable, f, opts) {
       reactor.stop();
       this.stop();
     } else if (conds.when) {
-      if (!reactor.isActive()) {
+      if (!reactor._active) {
         reactor.start().force();
       }
-    } else if (reactor.isActive()) {
+    } else if (reactor._active) {
       reactor.stop();
     }
   });
@@ -544,15 +548,13 @@ function makeReactor (derivable, f, opts) {
 
   // listen to from condition, starting the reactor controller
   // when appropriate
-
-  var initiator = new Reactor(condDerivable(opts.from, 'from'), function (from) {
+  var $from = condDerivable(opts.from, 'from');
+  var initiator = new Reactor($from, function (from) {
     if (from) {
       controller.start().force();
       this.stop();
     }
   });
-
-  controller._governor = initiator;
 
   initiator.start().force();
 }

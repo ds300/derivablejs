@@ -5,9 +5,9 @@ export var REACTOR = "REACTOR";
 
 export function isDerivable(x) {
   return x &&
-         x.type === DERIVATION ||
-         x.type === ATOM ||
-         x.type === LENS;
+         x._type === DERIVATION ||
+         x._type === ATOM ||
+         x._type === LENS;
 }
 
 export function isAtom (x) {

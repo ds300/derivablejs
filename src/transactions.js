@@ -134,8 +134,11 @@ function commitTransaction() {
 }
 
 function abortTransaction() {
-  currentCtx.modifiedAtoms.forEach(function (atom) {
-    atom._value = currentCtx.id2originalValue[atom._id];
+  var ctx = currentCtx;
+  currentCtx = ctx.parent;
+  ctx.modifiedAtoms.forEach(function (atom) {
+    atom._value = ctx.id2originalValue[atom._id];
+    atom._state = UNCHANGED;
     mark(atom, []);
   });
 }

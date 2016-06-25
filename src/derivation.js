@@ -29,7 +29,7 @@ util.assign(Derivation.prototype, {
     var newParents = null;
 
     try {
-      parents.startCapturingParents();
+      parents.startCapturingParents(this);
       if (!util.DEBUG_MODE) {
         newVal = that._deriver();
       } else {

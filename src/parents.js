@@ -3,8 +3,9 @@ import * as util from './util';
 var parentsStack = [];
 var child = null;
 
-export function startCapturingParents (child) {
+export function startCapturingParents (_child) {
   parentsStack.push([]);
+  child = _child;
 }
 export function retrieveParents () {
   return parentsStack[parentsStack.length - 1];

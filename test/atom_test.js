@@ -58,19 +58,19 @@ describe("the humble atom", () => {
     });
 
     let numReactions = 0;
-    a.reactor(() => numReactions++).start();
-    b.reactor(() => numReactions++).start();
+    a.react(() => numReactions++, {skipFirst: true});
+    b.react(() => numReactions++, {skipFirst: true});
 
-    assert.strictEqual(numReactions, 0);
+    assert.strictEqual(numReactions, 0, "0 a");
     a.set(0);
-    assert.strictEqual(numReactions, 0);
+    assert.strictEqual(numReactions, 0, "0 b");
     a.set(0);
-    assert.strictEqual(numReactions, 0);
+    assert.strictEqual(numReactions, 0, "0 c");
 
     b.set(0);
-    assert.strictEqual(numReactions, 1);
+    assert.strictEqual(numReactions, 1, "0 d");
     b.set(0);
-    assert.strictEqual(numReactions, 2);
+    assert.strictEqual(numReactions, 2, "0 e");
   });
 
 
@@ -93,9 +93,11 @@ describe('the concurrent modification of _reactors bug', () => {
     const $A = atom(false);
     const $B = atom(false);
 
-    let success = false;
+    let A_success = false;
+    let C_success = false;
 
     $A.react(A => {
+      A_success = true;
     }, {
       from: $A,
     });
@@ -103,18 +105,20 @@ describe('the concurrent modification of _reactors bug', () => {
     const $C = $A.and($B);
 
     $C.react(ready => {
-      success = true;
+      C_success = true;
     }, {
       from: $C
     });
 
-    assert.strictEqual(success, false);
-    // used to be taht this would cause the from controller on C to be igored
-    // during the ._maybeReact interation in .set
+    assert.strictEqual(A_success, false);
+    assert.strictEqual(C_success, false);
+    // used to be that this would cause the 'from' controller on C to be ignored
+    // during the ._maybeReact iteration in .set
     $A.set(true);
-    assert.strictEqual(success, false);
+    assert.strictEqual(A_success, true);
+    assert.strictEqual(C_success, false);
     $B.set(true);
 
-    assert.strictEqual(success, true);
+    assert.strictEqual(C_success, true, "expecting c success");
   });
 });

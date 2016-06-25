@@ -94,11 +94,11 @@ export function makeReactor (derivable, f, opts) {
   function condDerivable(fOrD, name) {
     if (!types.isDerivable(fOrD)) {
       if (typeof fOrD === 'function') {
-        fOrD = derivation(fOrD);
+        return derivation(fOrD);
       } else if (typeof fOrD === 'boolean') {
-        fOrD = derivation(function () { return fOrD; });
+        return derivation(function () { return fOrD; });
       } else {
-        throw Error('react ' + name + ' condition must be derivable');
+        throw Error('react ' + name + ' condition must be derivable, got: ' + JSON.stringify(fOrD));
       }
     }
     return fOrD;
@@ -136,10 +136,10 @@ export function makeReactor (derivable, f, opts) {
       reactor.stop();
       this.stop();
     } else if (conds.when) {
-      if (!reactor.isActive()) {
+      if (!reactor._active) {
         reactor.start().force();
       }
-    } else if (reactor.isActive()) {
+    } else if (reactor._active) {
       reactor.stop();
     }
   });
@@ -148,15 +148,13 @@ export function makeReactor (derivable, f, opts) {
 
   // listen to from condition, starting the reactor controller
   // when appropriate
-
-  var initiator = new Reactor(condDerivable(opts.from, 'from'), function (from) {
+  var $from = condDerivable(opts.from, 'from');
+  var initiator = new Reactor($from, function (from) {
     if (from) {
       controller.start().force();
       this.stop();
     }
   });
-
-  controller._governor = initiator;
 
   initiator.start().force();
 }

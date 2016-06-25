@@ -186,7 +186,7 @@ describe("a derivation", () => {
     const amod2map = a.derive(a => ({a: a % 2}));
 
     let numReactions = 0;
-    amod2map.reactor(() => numReactions++).start();
+    amod2map.react(() => numReactions++, {skipFirst: true});
 
     assert.strictEqual(numReactions, 0);
     a.set(7);
@@ -201,7 +201,7 @@ describe("a derivation", () => {
       .withEquality(({a: a}, {a: b}) => a === b);
 
     let numReactions2 = 0;
-    amod2map2.reactor(() => numReactions2++).start();
+    amod2map2.react(() => numReactions2++, {skipFirst: true});
 
     assert.strictEqual(numReactions2, 0);
     a.set(7);
