@@ -16,8 +16,6 @@ export function mark (node, reactors) {
       case REACTOR:
         reactors.push(child);
         break;
-      default:
-        throw new Error("Unrecognized child type");
     }
   }
 }

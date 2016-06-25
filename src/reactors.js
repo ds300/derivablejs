@@ -5,9 +5,7 @@ import {detach, derivation} from './derivation';
 
 function Reactor(parent, react, governor) {
   this._parent = parent;
-  if (react) {
-    this.react = react;
-  }
+  this.react = react;
   this._governor = governor || null;
   this._active = false;
   this._reacting = false;
