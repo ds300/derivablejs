@@ -1,7 +1,6 @@
 import * as util from './util';
 import * as parents from './parents';
 import * as transactions from './transactions';
-import epoch from './epoch';
 import * as types from './types';
 import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
 
@@ -54,9 +53,9 @@ util.assign(Derivation.prototype, {
 
     if (this._parents) {
       // disconnect old parents
-      const len = this._parents.length;
-      for (let i = 0; i < len; i++) {
-        const oldParent = this._parents[i];
+      var len = this._parents.length;
+      for (var i = 0; i < len; i++) {
+        var oldParent = this._parents[i];
         if (newParents.indexOf(oldParent) === -1) {
           detach(oldParent, this);
         }
@@ -71,8 +70,8 @@ util.assign(Derivation.prototype, {
     if (this._parents === null) {
       this._forceEval();
     } else if (this._state === UNKNOWN) {
-      const len = this._parents.length;
-      for (let i = 0; i < len; i++) {
+      var len = this._parents.length;
+      for (var i = 0; i < len; i++) {
         if (this._parents[i]._state !== UNCHANGED) {
           this._forceEval();
           break;
@@ -95,7 +94,7 @@ util.assign(Derivation.prototype, {
 export function detach (parent, child) {
   util.removeFromArray(parent._activeChildren, child);
   if (parent._activeChildren.length === 0 && parent._parents != null) {
-    const len = parent._parents.length;
+    var len = parent._parents.length;
     for (var i = 0; i < len; i++) {
       detach(parent._parents[i], parent);
     }

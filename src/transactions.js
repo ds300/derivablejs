@@ -1,4 +1,3 @@
-import epoch from './epoch';
 import * as util from './util';
 import {DERIVATION, LENS, REACTOR} from './types';
 import {UNKNOWN, UNCHANGED, CHANGED} from './states';

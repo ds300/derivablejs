@@ -88,5 +88,5 @@ module.exports = function (entry, destDir) {
 };
 
 if (require.main === module) {
-  module.exports('src/module.js', 'dist');
+  module.exports('src/index.js', 'dist');
 }

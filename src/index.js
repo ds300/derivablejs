@@ -12,3 +12,5 @@ assign(Lens.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
 module.exports = derivable;
+
+export default derivable;

@@ -1,41 +1,37 @@
 import * as util from './util';
 import * as transactions from './transactions';
-import {atom} from './atom';
+import {atom as _atom} from './atom';
 import * as reactors from './reactors';
 import * as types from './types';
-import {derivation} from './derivation';
-import {lens} from './lens';
+import {derivation as _derivation} from './derivation';
+import {lens as _lens} from './lens';
 
-var D = {
-  transact: transactions.transact,
-  defaultEquals: util.equals,
-  setDebugMode: util.setDebugMode,
-  transaction: transactions.transaction,
-  ticker: transactions.ticker,
-  Reactor: reactors.Reactor,
-  isDerivable: types.isDerivable,
-  isAtom: types.isAtom,
-  isLens: types.isLens,
-  isDerivation: types.isDerivation,
-  isReactor: types.isReactor,
-  derivation: derivation,
-  atom: atom,
-  atomic: transactions.atomic,
-  atomically: transactions.atomically,
-  lens: lens,
-};
+export var transact = transactions.transact;
+export var setDebugMode = util.setDebugMode;
+export var transaction = transactions.transaction;
+export var ticker = transactions.ticker;
+export var isDerivable = types.isDerivable;
+export var isAtom = types.isAtom;
+export var isLensed = types.isLensed;
+export var isDerivation = types.isDerivation;
+export var isReactor = types.isReactor;
+export var derivation = _derivation;
+export var atom = _atom;
+export var atomic = transactions.atomic;
+export var atomically = transactions.atomically;
+export var lens = _lens;
 
 /**
  * Template string tag for derivable strings
  */
-D.derive = function (parts) {
+export function derive (parts) {
   var args = util.slice(arguments, 1);
-  return D.derivation(function () {
+  return derivation(function () {
     var s = "";
     for (var i=0; i < parts.length; i++) {
       s += parts[i];
       if (i < args.length) {
-        s += D.unpack(args[i]);
+        s += unpack(args[i]);
       }
     }
     return s;
@@ -45,8 +41,8 @@ D.derive = function (parts) {
 /**
  * dereferences a thing if it is dereferencable, otherwise just returns it.
  */
-D.unpack = function (thing) {
-  if (D.isDerivable(thing)) {
+export function unpack (thing) {
+  if (isDerivable(thing)) {
     return thing.get();
   } else {
     return thing;
@@ -56,18 +52,18 @@ D.unpack = function (thing) {
 /**
  * lifts a non-monadic function to work on derivables
  */
-D.lift = function (f) {
+export function lift (f) {
   return function () {
     var args = arguments;
     var that = this;
-    return D.derivation(function () {
-      return f.apply(that, Array.prototype.map.call(args, D.unpack));
+    return derivation(function () {
+      return f.apply(that, Array.prototype.map.call(args, unpack));
     });
   };
 };
 
 function deepUnpack (thing) {
-  if (D.isDerivable(thing)) {
+  if (isDerivable(thing)) {
     return thing.get();
   } else if (thing instanceof Array) {
     return thing.map(deepUnpack);
@@ -84,9 +80,9 @@ function deepUnpack (thing) {
   }
 }
 
-D.struct = function (arg) {
+export function struct (arg) {
   if (arg.constructor === Object || arg instanceof Array) {
-    return D.derivation(function () {
+    return derivation(function () {
       return deepUnpack(arg);
     });
   } else {
@@ -97,10 +93,10 @@ D.struct = function (arg) {
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
-    return D.derivation(function () {
+    return derivation(function () {
       var val;
       for (var i = 0; i < args.length; i++) {
-        val = D.unpack(args[i]);
+        val = unpack(args[i]);
         if (breakOn(val)) {
           break;
         }
@@ -111,11 +107,7 @@ function andOrFn (breakOn) {
 }
 function identity (x) { return x; }
 function complement (f) { return function (x) { return !f(x); }; }
-D.or = andOrFn(identity);
-D.mOr = andOrFn(util.some);
-D.and = andOrFn(complement(identity));
-D.mAnd = andOrFn(complement(util.some));
-
-exports = D;
-
-exports['default'] = exports;
+export var or = andOrFn(identity);
+export var mOr = andOrFn(util.some);
+export var and = andOrFn(complement(identity));
+export var mAnd = andOrFn(complement(util.some));

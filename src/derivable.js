@@ -150,20 +150,20 @@ export var derivablePrototype = {
   __equals: function (a, b) {
     return (this._equals || util.equals)(a, b);
   },
+};
 
-  ['switch']: function () {
-    var args = arguments;
-    var that = this;
-    return this.derive(function (x) {
-      var i;
-      for (i = 0; i < args.length-1; i+=2) {
-        if (that.__equals(x, unpack(args[i]))) {
-          return unpack(args[i+1]);
-        }
+derivablePrototype.switch = function () {
+  var args = arguments;
+  var that = this;
+  return this.derive(function (x) {
+    var i;
+    for (i = 0; i < args.length-1; i+=2) {
+      if (that.__equals(x, unpack(args[i]))) {
+        return unpack(args[i+1]);
       }
-      if (i === args.length - 1) {
-        return unpack(args[i]);
-      }
-    });
-  },
+    }
+    if (i === args.length - 1) {
+      return unpack(args[i]);
+    }
+  });
 };

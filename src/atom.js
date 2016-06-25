@@ -1,9 +1,8 @@
 import * as util from './util';
 import * as transactions from './transactions';
-import epoch from './epoch';
 import * as parents from './parents';
-import {DERIVATION, LENS, REACTOR, ATOM} from './types';
-import {UNCHANGED, UNKNOWN, CHANGED} from './states';
+import {ATOM} from './types';
+import {UNCHANGED, CHANGED} from './states';
 
 export function Atom (value) {
   this._id = util.nextId();

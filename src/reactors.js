@@ -3,7 +3,7 @@ import * as util from './util';
 import {DISCONNECTED, UNKNOWN, UNCHANGED, CHANGED} from './states';
 import {detach, derivation} from './derivation';
 
-function Reactor(react, parent, governor) {
+function Reactor(parent, react, governor) {
   this._parent = parent;
   if (react) {
     this.react = react;
@@ -77,7 +77,7 @@ util.assign(Reactor.prototype, {
   },
 });
 
-function makeReactor (derivable, f, opts) {
+export function makeReactor (derivable, f, opts) {
   if (typeof f !== 'function') {
     throw Error('the first argument to .react must be a function');
   }
@@ -106,20 +106,16 @@ function makeReactor (derivable, f, opts) {
 
   // wrap reactor so f doesn't get a .this context, and to allow
   // stopping after one reaction if desired.
-  var reactor = this.reactor({
-    react: function (val) {
-      if (opts.skipFirst) {
-        opts.skipFirst = false;
-      } else {
-        f(val);
-        if (opts.once) {
-          this.stop();
-          controller.stop();
-        }
+  var reactor = new Reactor(derivable, function (val) {
+    if (opts.skipFirst) {
+      opts.skipFirst = false;
+    } else {
+      f(val);
+      if (opts.once) {
+        this.stop();
+        controller.stop();
       }
-    },
-    onStart: opts.onStart,
-    onStop: opts.onStop
+    }
   });
 
   // listen to when and until conditions, starting and stopping the
@@ -128,12 +124,14 @@ function makeReactor (derivable, f, opts) {
   var $until = condDerivable(opts.until, 'until');
   var $when = condDerivable(opts.when, 'when');
 
-  var controller = derivation(function () {
+  var $whenUntil = derivation(function () {
     return {
       until: $until.get(),
       when: $when.get(),
     };
-  }).reactor(function (conds) {
+  });
+
+  var controller = new Reactor($whenUntil, function (conds) {
     if (conds.until) {
       reactor.stop();
       this.stop();
@@ -146,12 +144,19 @@ function makeReactor (derivable, f, opts) {
     }
   });
 
+  reactor._governor = controller;
+
   // listen to from condition, starting the reactor controller
   // when appropriate
-  condDerivable(opts.from, 'from').reactor(function (from) {
+
+  var initiator = new Reactor(condDerivable(opts.from, 'from'), function (from) {
     if (from) {
       controller.start().force();
       this.stop();
     }
-  }).start().force();
+  });
+
+  controller._governor = initiator;
+
+  initiator.start().force();
 }

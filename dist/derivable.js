@@ -74,12 +74,90 @@ function setEquals (derivable, equals) {
   return derivable;
 };
 
-var epoch = {globalEpoch: 0};
-
 var ATOM = "ATOM";
 var DERIVATION = "DERIVATION";
 var LENS = "LENS";
 var REACTOR = "REACTOR";
+
+function isDerivable(x) {
+  return x &&
+         x.type === DERIVATION ||
+         x.type === ATOM ||
+         x.type === LENS;
+}
+
+function isAtom (x) {
+  return x && (x._type === ATOM || x._type === LENS);
+}
+
+function isDerivation (x) {
+  return x && (x._type === DERIVATION || x._type === LENS);
+}
+
+function isLensed (x) {
+  return x && x._type === LENS;
+}
+
+function isReactor (x) {
+  return x && x._type === REACTOR;
+}
+
+var UNKNOWN = 0;
+var CHANGED = 1;
+var UNCHANGED = 2;
+var DISCONNECTED = 3;
+
+var parentsStack = [];
+var child = null;
+
+function startCapturingParents (child) {
+  parentsStack.push([]);
+}
+function retrieveParents () {
+  return parentsStack[parentsStack.length - 1];
+}
+function stopCapturingParents () {
+  parentsStack.pop();
+  child = null;
+}
+
+function maybeCaptureParent (p) {
+  if (child !== null) {
+    parentsStack[parentsStack.length - 1].push(p);
+    addToArray(p._activeChildren, child);
+  }
+};
+
+function mark (node, reactors) {
+  for (var i = 0, len = node._activeChildren.length; i < len; i++) {
+    var child = node._activeChildren[i];
+    switch (child._type) {
+      case DERIVATION:
+      case LENS:
+        if (child._state !== UNKNOWN) {
+          child._state = UNKNOWN;
+          mark(child, reactors);
+        }
+        break;
+      case REACTOR:
+        reactors.push(child);
+        break;
+      default:
+        throw new Error("Unrecognized child type");
+    }
+  }
+}
+
+function processReactors (reactors) {
+  for (var i = 0, len = reactors.length; i < len; i++) {
+    var r = reactors[i];
+    if (r._reacting) {
+      throw new Error("Synchronous cyclical reactions disallowed. " +
+                      "Use setImmediate.");
+    }
+    r._maybeReact();
+  }
+}
 
 var TransactionAbortion = {};
 
@@ -89,9 +167,18 @@ function initiateAbortion() {
 
 function TransactionContext(parent) {
   this.parent = parent;
-  this.id2txnAtom = {};
-  this.globalEpoch = epoch.globalEpoch;
+  this.id2originalValue = {};
   this.modifiedAtoms = [];
+}
+
+function maybeTrack (atom) {
+  if (currentCtx !== null) {
+    var idx = currentCtx.modifiedAtoms.indexOf(atom);
+    if (idx === -1) {
+      currentCtx.modifiedAtoms.push(atom);
+    }
+    currentCtx.id2originalValue[atom._id] = atom._value;
+  }
 }
 
 var currentCtx = null;
@@ -115,6 +202,14 @@ function transact (f) {
   commitTransaction();
 };
 
+function atomically (f) {
+  if (!inTransaction()) {
+    transact(f);
+  } else {
+    f();
+  }
+}
+
 function transaction (f) {
   return function () {
     var args = slice(arguments, 0);
@@ -127,6 +222,18 @@ function transaction (f) {
   };
 };
 
+function atomic (f) {
+  return function () {
+    var args = slice(arguments, 0);
+    var that = this;
+    var result;
+    atomically(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  };
+}
+
 function beginTransaction() {
   currentCtx = new TransactionContext(currentCtx);
 }
@@ -134,48 +241,29 @@ function beginTransaction() {
 function commitTransaction() {
   var ctx = currentCtx;
   currentCtx = ctx.parent;
-  var reactors = [];
-  var numReactors = 0;
-  ctx.modifiedAtoms.forEach(function (a) {
-    if (currentCtx !== null) {
-      a.set(ctx.id2txnAtom[a._id]._value);
-    }
-    else {
-      a._set(ctx.id2txnAtom[a._id]._value);
-      numReactors = findReactors(a._activeChildren, reactors, numReactors);
-    }
-  });
+
   if (currentCtx === null) {
-    epoch.globalEpoch = ctx.globalEpoch;
-  } else {
-    currentCtx.globalEpoch = ctx.globalEpoch;
+    var reactors = [];
+    ctx.modifiedAtoms.forEach(function (a) {
+      if (a.__equals(a._value, ctx.id2originalValue[a._id])) {
+        a._state = UNCHANGED;
+      } else {
+        a._state = CHANGED;
+        mark(a, reactors);
+      }
+    });
+    processReactors(reactors);
+    ctx.modifiedAtoms.forEach(function (a) {
+      a._state = UNCHANGED;
+    });
   }
-  reactors.forEach(function (r) {
-    r._maybeReact();
-  });
 }
 
 function abortTransaction() {
-  var ctx = currentCtx;
-  currentCtx = ctx.parent;
-  if (currentCtx === null) {
-    epoch.globalEpoch = ctx.globalEpoch + 1;
-  }
-  else {
-    currentCtx.globalEpoch = ctx.globalEpoch + 1;
-  }
-}
-
-function findReactors(children, reactors, i) {
-  for (var j = 0, len = children.length; j < len; j++) {
-    var child = children[j];
-    if (child._type === REACTOR) {
-      reactors[i++] = child;
-    } else {
-      i = findReactors(child._activeChildren, reactors, i);
-    }
-  }
-  return i;
+  currentCtx.modifiedAtoms.forEach(function (atom) {
+    atom._value = currentCtx.id2originalValue[atom._id];
+    mark(atom, []);
+  });
 }
 
 var _tickerRefCount = 0;
@@ -208,171 +296,116 @@ function ticker () {
   };
 };
 
-var parentsStack = [];
+function Derivation (deriver) {
+  this._deriver = deriver;
+  this._parents = null;
+  this._type = DERIVATION;
+  this._value = unique;
+  this._equals = null;
+  this._activeChildren = [];
+  this._state = DISCONNECTED;
 
-function capturingParentsEpochs (f) {
-  var i = parentsStack.length;
-  parentsStack.push([]);
-  try {
-    f();
-    return parentsStack[i];
-  } finally {
-    parentsStack.pop();
+  if (DEBUG_MODE) {
+    this.stack = Error().stack;
   }
 };
 
-function captureParent (p) {
-  if (parentsStack.length > 0) {
-    var top = parentsStack[parentsStack.length - 1];
-    top.push(p, 0);
-    return top.length-1;
-  } else {
-    return -1;
-  }
-};
+assign(Derivation.prototype, {
+  _clone: function () {
+    return setEquals(_derivation(this._deriver), this._equals);
+  },
 
-function captureEpoch (idx, epoch) {
-  if (parentsStack.length > 0) {
-    parentsStack[parentsStack.length - 1][idx] = epoch;
-  }
-};
+  _forceEval: function () {
+    var that = this;
+    var newVal = null;
+    var newParents = null;
 
-function createPrototype (D, opts) {
-  return {
-    _clone: function () {
-      return setEquals(D.atom(this._value), this._equals);
-    },
-
-    set: function (value) {
-      if (currentCtx !== null) {
-        // we are in a transaction!
-        var inTxnThis = currentCtx.id2txnAtom[this._id];
-        if (inTxnThis != null) {
-          // we already have an in-txn verison of this atom, so update that
-          if (!this.__equals(value, inTxnThis._value)) {
-            inTxnThis._epoch++;
-            currentCtx.globalEpoch++;
-          }
-          inTxnThis._value = value;
-        } else {
-          // look for other versions of this atom in higher txn layers
-          var txnCtx = currentCtx.parent;
-          while (txnCtx !== null) {
-            inTxnThis = txnCtx.id2txnAtom[this._id];
-            if (inTxnThis !== void 0) {
-              // create new in-txn atom for this layer if need be
-              if (!this.__equals(inTxnThis._value, value)) {
-                var newInTxnThis = inTxnThis._clone();
-                newInTxnThis._id = this._id;
-                newInTxnThis._value = value;
-                newInTxnThis._epoch = inTxnThis._epoch + 1;
-                currentCtx.globalEpoch++;
-                currentCtx.id2txnAtom[this._id] = newInTxnThis;
-                addToArray(currentCtx.modifiedAtoms, this);
-              }
-              return;
-            } else {
-              txnCtx = txnCtx.parent;
-            }
-          }
-          // no in-txn versions of this atom yet;
-          currentCtx.globalEpoch++;
-          inTxnThis = this._clone();
-          inTxnThis._value = value;
-          inTxnThis._id = this._id;
-          inTxnThis._epoch = this._epoch + 1;
-          currentCtx.id2txnAtom[this._id] = inTxnThis;
-          addToArray(currentCtx.modifiedAtoms, this);
-        }
+    try {
+      startCapturingParents();
+      if (!DEBUG_MODE) {
+        newVal = that._deriver();
       } else {
-        // not in a transaction
-        if (!this.__equals(value, this._value)) {
-          this._set(value);
-          this._reactorBuffer.length = findReactors(
-            this._activeChildren, this._reactorBuffer, 0
-          );
-
-          for (var i = 0, len = this._reactorBuffer.length; i < len; i++) {
-            var r = this._reactorBuffer[i];
-            if (r._reacting) {
-              // avoid more try...finally overhead
-              this._reactorBuffer.length = 0;
-              throw new Error('cyclical update detected');
-            } else {
-              r._maybeReact();
-            }
-          }
-
-          this._reactorBuffer.length = 0;
+        try {
+          newVal = that._deriver();
+        } catch (e) {
+          console.error(that.stack);
+          throw e;
         }
       }
-    },
+      newParents = retrieveParents();
+    } finally {
+      stopCapturingParents();
+    }
 
-    _set: function (value) {
-      epoch.globalEpoch++;
-      this._epoch++;
-      this._value = value;
-    },
+    if (!this.__equals(newVal, this._value)) {
+      this._state = CHANGED;
+    } else {
+      this._state = UNCHANGED;
+    }
 
-    get: function () {
-      var inTxnThis;
-      var txnCtx = currentCtx;
-      while (txnCtx !== null) {
-        inTxnThis = txnCtx.id2txnAtom[this._id];
-        if (inTxnThis !== void 0) {
-          captureEpoch(captureParent(this), inTxnThis._epoch);
-          return inTxnThis._value;
-        }
-        else {
-          txnCtx = txnCtx.parent;
+    if (this._parents) {
+      // disconnect old parents
+      var len = this._parents.length;
+      for (var i = 0; i < len; i++) {
+        var oldParent = this._parents[i];
+        if (newParents.indexOf(oldParent) === -1) {
+          detach(oldParent, this);
         }
       }
-      captureEpoch(captureParent(this), this._epoch);
+    }
+
+    this._parents = newParents;
+    this._value = newVal;
+  },
+
+  _update: function () {
+    if (this._parents === null) {
+      this._forceEval();
+    } else if (this._state === UNKNOWN) {
+      var len = this._parents.length;
+      for (var i = 0; i < len; i++) {
+        if (this._parents[i]._state !== UNCHANGED) {
+          this._forceEval();
+          break;
+        }
+      }
+    }
+  },
+
+  get: function () {
+    if (this._activeChildren.length > 0) {
+      maybeCaptureParent(this);
+      this._update();
       return this._value;
-    },
+    } else {
+      return this._deriver();
+    }
+  },
+});
 
-    _getEpoch: function () {
-      var inTxnThis;
-      var txnCtx = currentCtx;
-      while (txnCtx !== null) {
-        inTxnThis = txnCtx.id2txnAtom[this._id];
-        if (inTxnThis !== void 0) {
-          return inTxnThis._epoch;
-        }
-        else {
-          txnCtx = txnCtx.parent;
-        }
-      }
-      return this._epoch;
-    },
+function detach (parent, child) {
+  removeFromArray(parent._activeChildren, child);
+  if (parent._activeChildren.length === 0 && parent._parents != null) {
+    var len = parent._parents.length;
+    for (var i = 0; i < len; i++) {
+      detach(parent._parents[i], parent);
+    }
+    parent._parents = null;
+    parent._state = DISCONNECTED;
+  }
+}
 
-    _unlisten: function () {},
-    _listen: function () {},
-  };
-};
+function _derivation (deriver) {
+  return new Derivation(deriver);
+}
 
-function construct (atom, value) {
-  atom._id = nextId();
-  atom._activeChildren = [];
-  atom._reactorBuffer = [];
-  atom._epoch = 0;
-  atom._value = value;
-  atom._type = ATOM;
-  atom._equals = null;
-  atom._atoms = [atom];
-  return atom;
-};
-
-var reactorParentStack = [];
-
-function Reactor(react, derivable) {
-  this._derivable = derivable;
+function Reactor(parent, react, governor) {
+  this._parent = parent;
   if (react) {
     this.react = react;
   }
-  this._parent = null;
+  this._governor = governor || null;
   this._active = false;
-  this._yielding = false;
   this._reacting = false;
   this._type = REACTOR;
 
@@ -383,26 +416,26 @@ function Reactor(react, derivable) {
 
 assign(Reactor.prototype, {
   start: function () {
-    this._lastValue = this._derivable.get();
-    this._lastEpoch = this._derivable._epoch;
-
-    addToArray(this._derivable._activeChildren, this);
-    this._derivable._listen();
-
-    var len = reactorParentStack.length;
-    if (len > 0) {
-      this._parent = reactorParentStack[len - 1];
+    if (this._active) {
+      throw new Error("already active");
     }
+
     this._active = true;
-    this.onStart && this.onStart();
+
+    addToArray(this._parent._activeChildren, this);
+
+    if (this._parent._state === DISCONNECTED) {
+      this._parent._state = UNKNOWN;
+    }
+
+    this._parent.get();
     return this;
   },
+
   _force: function (nextValue) {
     try {
-      reactorParentStack.push(this);
       this._reacting = true;
       this.react(nextValue);
-
     } catch (e) {
       if (DEBUG_MODE) {
         console.error(this.stack);
@@ -410,684 +443,510 @@ assign(Reactor.prototype, {
       throw e;
     } finally {
       this._reacting = false;
-      reactorParentStack.pop();
     }
   },
+
   force: function () {
-    this._force(this._derivable.get());
+    this._force(this._parent.get());
 
     return this;
   },
+
   _maybeReact: function () {
     if (!this._reacting && this._active) {
-      if (this._yielding) {
-        throw Error('reactor dependency cycle detected');
-      }
-      if (this._parent !== null) {
-        this._yielding = true;
-        try {
-          this._parent._maybeReact();
-        } finally {
-          this._yielding = false;
-        }
+      if (this._governor !== null) {
+        this._governor._maybeReact();
       }
       // maybe the reactor was stopped by the parent
       if (this._active) {
-        var nextValue = this._derivable.get();
-        if (this._derivable._epoch !== this._lastEpoch &&
-            !this._derivable.__equals(nextValue, this._lastValue)) {
+        var nextValue = this._parent.get();
+        if (this._parent._state === CHANGED) {
           this._force(nextValue);
         }
-
-        this._lastEpoch = this._derivable._epoch;
-        this._lastValue = nextValue;
       }
     }
   },
   stop: function () {
-    removeFromArray(this._derivable._activeChildren, this);
-    this._derivable._unlisten();
-
-    this._parent = null;
+    detach(this._parent, this);
     this._active = false;
-    this.onStop && this.onStop();
     return this;
-  },
-  orphan: function () {
-    this._parent = null;
-    return this;
-  },
-  adopt: function (child) {
-    child._parent = this;
-    return this;
-  },
-  isActive: function () {
-    return this._active;
   },
 });
 
-function createPrototype$1 (D, opts) {
-  var x = {
+function makeReactor (derivable, f, opts) {
+  if (typeof f !== 'function') {
+    throw Error('the first argument to .react must be a function');
+  }
+
+  opts = assign({
+    once: false,
+    from: true,
+    until: false,
+    when: true,
+    skipFirst: false,
+  }, opts);
+
+  // coerce fn or bool to derivable<bool>
+  function condDerivable(fOrD, name) {
+    if (!isDerivable(fOrD)) {
+      if (typeof fOrD === 'function') {
+        fOrD = _derivation(fOrD);
+      } else if (typeof fOrD === 'boolean') {
+        fOrD = _derivation(function () { return fOrD; });
+      } else {
+        throw Error('react ' + name + ' condition must be derivable');
+      }
+    }
+    return fOrD;
+  }
+
+  // wrap reactor so f doesn't get a .this context, and to allow
+  // stopping after one reaction if desired.
+  var reactor = new Reactor(derivable, function (val) {
+    if (opts.skipFirst) {
+      opts.skipFirst = false;
+    } else {
+      f(val);
+      if (opts.once) {
+        this.stop();
+        controller.stop();
+      }
+    }
+  });
+
+  // listen to when and until conditions, starting and stopping the
+  // reactor as appropriate, and stopping this controller when until
+  // condition becomes true
+  var $until = condDerivable(opts.until, 'until');
+  var $when = condDerivable(opts.when, 'when');
+
+  var $whenUntil = _derivation(function () {
+    return {
+      until: $until.get(),
+      when: $when.get(),
+    };
+  });
+
+  var controller = new Reactor($whenUntil, function (conds) {
+    if (conds.until) {
+      reactor.stop();
+      this.stop();
+    } else if (conds.when) {
+      if (!reactor.isActive()) {
+        reactor.start().force();
+      }
+    } else if (reactor.isActive()) {
+      reactor.stop();
+    }
+  });
+
+  reactor._governor = controller;
+
+  // listen to from condition, starting the reactor controller
+  // when appropriate
+
+  var initiator = new Reactor(condDerivable(opts.from, 'from'), function (from) {
+    if (from) {
+      controller.start().force();
+      this.stop();
+    }
+  });
+
+  controller._governor = initiator;
+
+  initiator.start().force();
+}
+
+function Atom (value) {
+  this._id = nextId();
+  this._activeChildren = [];
+  this._value = value;
+  this._state = UNCHANGED;
+  this._type = ATOM;
+  this._equals = null;
+  return this;
+};
+
+assign(Atom.prototype, {
+  _clone: function () {
+    return setEquals(atom$1(this._value), this._equals);
+  },
+
+  set: function (value) {
+    maybeTrack(this);
+
+    var oldValue = this._value;
+    this._value = value;
+
+    if (!inTransaction()) {
+      if (!this.__equals(value, oldValue)) {
+        try {
+          this._state = CHANGED;
+          var reactors = [];
+          mark(this, reactors);
+          processReactors(reactors);
+        } finally {
+          this._state = UNCHANGED;
+        }
+      }
+    }
+  },
+
+  get: function () {
+    maybeCaptureParent(this);
+    return this._value;
+  },
+});
+
+function atom$1 (value) {
+  return new Atom(value);
+}
+
+function Lens (descriptor) {
+  Derivation.call(this, descriptor.get);
+  this._lensDescriptor = descriptor;
+  this._type = LENS;
+}
+
+assign(Lens.prototype, Derivation.prototype, {
+  _clone: function () {
+    return setEquals(new Lens(this._lensDescriptor), this._equals);
+  },
+
+  set: function (value) {
+    var that = this;
+    atomically(function () {
+      that._lensDescriptor.set(value);
+    });
+    return this;
+  },
+});
+
+function lens$1 (descriptor) {
+  return new Lens(descriptor);
+}
+
+var transact$1 = transact;
+var setDebugMode$1 = setDebugMode;
+var transaction$1 = transaction;
+var ticker$1 = ticker;
+var isDerivable$1 = isDerivable;
+var isAtom$1 = isAtom;
+var isLensed$1 = isLensed;
+var isDerivation$1 = isDerivation;
+var isReactor$1 = isReactor;
+var derivation = _derivation;
+var atom = atom$1;
+var atomic$1 = atomic;
+var atomically$1 = atomically;
+var lens = lens$1;
+
+/**
+ * Template string tag for derivable strings
+ */
+function derive (parts) {
+  var args = slice(arguments, 1);
+  return derivation(function () {
+    var s = "";
+    for (var i=0; i < parts.length; i++) {
+      s += parts[i];
+      if (i < args.length) {
+        s += unpack(args[i]);
+      }
+    }
+    return s;
+  });
+};
+
+/**
+ * dereferences a thing if it is dereferencable, otherwise just returns it.
+ */
+function unpack (thing) {
+  if (isDerivable$1(thing)) {
+    return thing.get();
+  } else {
+    return thing;
+  }
+};
+
+/**
+ * lifts a non-monadic function to work on derivables
+ */
+function lift (f) {
+  return function () {
+    var args = arguments;
+    var that = this;
+    return derivation(function () {
+      return f.apply(that, Array.prototype.map.call(args, unpack));
+    });
+  };
+};
+
+function deepUnpack (thing) {
+  if (isDerivable$1(thing)) {
+    return thing.get();
+  } else if (thing instanceof Array) {
+    return thing.map(deepUnpack);
+  } else if (thing.constructor === Object) {
+    var result = {};
+    var keys$$ = keys(thing);
+    for (var i = keys$$.length; i--;) {
+      var prop = keys$$[i];
+      result[prop] = deepUnpack(thing[prop]);
+    }
+    return result;
+  } else {
+    return thing;
+  }
+}
+
+function struct (arg) {
+  if (arg.constructor === Object || arg instanceof Array) {
+    return derivation(function () {
+      return deepUnpack(arg);
+    });
+  } else {
+    throw new Error("`struct` expects plain Object or Array");
+  }
+};
+
+function andOrFn (breakOn) {
+  return function () {
+    var args = arguments;
+    return derivation(function () {
+      var val;
+      for (var i = 0; i < args.length; i++) {
+        val = unpack(args[i]);
+        if (breakOn(val)) {
+          break;
+        }
+      }
+      return val;
+    });
+  };
+}
+function identity (x) { return x; }
+function complement (f) { return function (x) { return !f(x); }; }
+var or = andOrFn(identity);
+var mOr = andOrFn(some);
+var and = andOrFn(complement(identity));
+var mAnd = andOrFn(complement(some));
+
+
+var derivable = Object.freeze({
+  transact: transact$1,
+  setDebugMode: setDebugMode$1,
+  transaction: transaction$1,
+  ticker: ticker$1,
+  isDerivable: isDerivable$1,
+  isAtom: isAtom$1,
+  isLensed: isLensed$1,
+  isDerivation: isDerivation$1,
+  isReactor: isReactor$1,
+  derivation: derivation,
+  atom: atom,
+  atomic: atomic$1,
+  atomically: atomically$1,
+  lens: lens,
+  derive: derive,
+  unpack: unpack,
+  lift: lift,
+  struct: struct,
+  or: or,
+  mOr: mOr,
+  and: and,
+  mAnd: mAnd
+});
+
+var derivablePrototype = {
     /**
      * Creates a derived value whose state will always be f applied to this
      * value
      */
-    derive: function (f, a, b, c, d) {
-      var that = this;
-      switch (arguments.length) {
-      case 0:
-        throw new Error('.derive takes at least one argument');
-      case 1:
-        switch (typeof f) {
-          case 'function':
-            return D.derivation(function () {
-              return f(that.get());
+  derive: function (f, a, b, c, d) {
+    var that = this;
+    switch (arguments.length) {
+    case 0:
+      throw new Error('.derive takes at least one argument');
+    case 1:
+      switch (typeof f) {
+        case 'function':
+          return derivation(function () {
+            return f(that.get());
+          });
+        case 'string':
+        case 'number':
+          return derivation(function () {
+            return that.get()[unpack(f)];
+          });
+        default:
+          if (f instanceof Array) {
+            return f.map(function (x) {
+              return that.derive(x);
             });
-          case 'string':
-          case 'number':
-            return D.derivation(function () {
-              return that.get()[D.unpack(f)];
+          } else if (f instanceof RegExp) {
+            return derivation(function () {
+              return that.get().match(f);
             });
-          default:
-            if (f instanceof Array) {
-              return f.map(function (x) {
-                return that.derive(x);
-              });
-            } else if (f instanceof RegExp) {
-              return D.derivation(function () {
-                return that.get().match(f);
-              });
-            } else if (D.isDerivable(f)) {
-              return D.derivation(function () {
-                var deriver = f.get();
-                var thing = that.get();
-                switch (typeof deriver) {
-                  case 'function':
-                    return deriver(thing);
-                  case 'string':
-                  case 'number':
-                    return thing[deriver];
-                  default:
-                    if (deriver instanceof RegExp) {
-                      return thing.match(deriver);
-                    } else {
-                      throw Error('type error');
-                    }
-                }
-              });
-            } else {
-              throw Error('type error');
-            }
-        }
-      case 2:
-        return D.derivation(function () {
-          return f(that.get(), D.unpack(a));
-        });
-      case 3:
-        return D.derivation(function () {
-          return f(that.get(), D.unpack(a), D.unpack(b));
-        });
-      case 4:
-        return D.derivation(function () {
-          return f(that.get(),
-                   D.unpack(a),
-                   D.unpack(b),
-                   D.unpack(c));
-        });
-      case 5:
-        return D.derivation(function () {
-          return f(that.get(),
-                   D.unpack(a),
-                   D.unpack(b),
-                   D.unpack(c),
-                   D.unpack(d));
-        });
-      default:
-        var args = ([that]).concat(slice(arguments, 1));
-        return D.derivation(function () {
-          return f.apply(null, args.map(D.unpack));
-        });
-      }
-    },
-
-
-
-    reactor: function (f) {
-      if (typeof f === 'function') {
-        return new Reactor(f, this);
-      } else if (f instanceof Reactor) {
-        if (typeof f.react !== 'function') {
-          throw new Error('reactor missing .react method');
-        }
-        f._derivable = this;
-        return f;
-      } else if (f && f.react) {
-        return assign(new Reactor(null, this), f);
-      } else {
-        throw new Error("Unrecognized type for reactor " + f);
-      }
-    },
-
-    react: function (f, opts) {
-      if (typeof f !== 'function') {
-        throw Error('the first argument to .react must be a function');
-      }
-
-      opts = assign({
-        once: false,
-        from: true,
-        until: false,
-        when: true,
-        skipFirst: false,
-      }, opts);
-
-      // coerce fn or bool to derivable<bool>
-      function condDerivable(fOrD, name) {
-        if (!D.isDerivable(fOrD)) {
-          if (typeof fOrD === 'function') {
-            fOrD = D.derivation(fOrD);
-          } else if (typeof fOrD === 'boolean') {
-            fOrD = D.atom(fOrD);
+          } else if (isDerivable(f)) {
+            return derivation(function () {
+              var deriver = f.get();
+              var thing = that.get();
+              switch (typeof deriver) {
+                case 'function':
+                  return deriver(thing);
+                case 'string':
+                case 'number':
+                  return thing[deriver];
+                default:
+                  if (deriver instanceof RegExp) {
+                    return thing.match(deriver);
+                  } else {
+                    throw Error('type error');
+                  }
+              }
+            });
           } else {
-            throw Error('react ' + name + ' condition must be derivable');
+            throw Error('type error');
           }
-        }
-        return fOrD;
       }
-
-      // wrap reactor so f doesn't get a .this context, and to allow
-      // stopping after one reaction if desired.
-      var reactor = this.reactor({
-        react: function (val) {
-          if (opts.skipFirst) {
-            opts.skipFirst = false;
-          } else {
-            f(val);
-            if (opts.once) {
-              this.stop();
-              controller.stop();
-            }
-          }
-        },
-        onStart: opts.onStart,
-        onStop: opts.onStop
+    case 2:
+      return derivation(function () {
+        return f(that.get(), unpack(a));
       });
-
-      // listen to when and until conditions, starting and stopping the
-      // reactor as appropriate, and stopping this controller when until
-      // condition becomes true
-      var controller = D.struct({
-        until: condDerivable(opts.until, 'until'),
-        when: condDerivable(opts.when, 'when')
-      }).reactor(function (conds) {
-        if (conds.until) {
-          reactor.stop();
-          this.stop();
-        } else if (conds.when) {
-          if (!reactor.isActive()) {
-            reactor.start().force();
-          }
-        } else if (reactor.isActive()) {
-          reactor.stop();
-        }
+    case 3:
+      return derivation(function () {
+        return f(that.get(), unpack(a), unpack(b));
       });
-
-      // listen to from condition, starting the reactor controller
-      // when appropriate
-      condDerivable(opts.from, 'from').reactor(function (from) {
-        if (from) {
-          controller.start().force();
-          this.stop();
-        }
-      }).start().force();
-    },
-
-    is: function (other) {
-      return D.lift(this._equals || opts.equals)(this, other);
-    },
-
-    and: function (other) {
-      return this.derive(function (x) {return x && D.unpack(other);});
-    },
-
-    or: function (other) {
-      return this.derive(function (x) {return x || D.unpack(other);});
-    },
-
-    then: function (thenClause, elseClause) {
-      return this.derive(function (x) {
-        return D.unpack(x ? thenClause : elseClause);
+    case 4:
+      return derivation(function () {
+        return f(that.get(),
+                 unpack(a),
+                 unpack(b),
+                 unpack(c));
       });
-    },
-
-    mThen: function (thenClause, elseClause) {
-      return this.derive(function (x) {
-        return D.unpack(some(x) ? thenClause : elseClause);
+    case 5:
+      return derivation(function () {
+        return f(that.get(),
+                 unpack(a),
+                 unpack(b),
+                 unpack(c),
+                 unpack(d));
       });
-    },
+    default:
+      var args = ([that]).concat(slice(arguments, 1));
+      return derivation(function () {
+        return f.apply(null, args.map(unpack));
+      });
+    }
+  },
 
-    mOr: function (other) {
-      return this.mThen(this, other);
-    },
+  react: function (f, opts) {
+    makeReactor(this, f, opts);
+  },
 
-    mDerive: function (arg) {
-      if (arguments.length === 1 && arg instanceof Array) {
-        var that = this;
-        return arg.map(function (a) { return that.mDerive(a); });
-      } else {
-        return this.mThen(this.derive.apply(this, arguments));
-      }
-    },
+  is: function (other) {
+    return lift(this._equals || equals)(this, other);
+  },
 
-    mAnd: function (other) {
-      return this.mThen(other, this);
-    },
+  and: function (other) {
+    return this.derive(function (x) {return x && unpack(other);});
+  },
 
-    not: function () {
-      return this.derive(function (x) { return !x; });
-    },
+  or: function (other) {
+    return this.derive(function (x) {return x || unpack(other);});
+  },
 
-    withEquality: function (equals) {
-      if (equals) {
-        if (typeof equals !== 'function') {
-          throw new Error('equals must be function');
-        }
-      } else {
-        equals = null;
-      }
-
-      return setEquals(this._clone(), equals);
-    },
-
-    __equals: function (a, b) {
-      return (this._equals || opts.equals)(a, b);
-    },
-  };
-
-  x.switch = function () {
-    var args = arguments;
+  then: function (thenClause, elseClause) {
     return this.derive(function (x) {
-      var i;
-      for (i = 0; i < args.length-1; i+=2) {
-        if (opts.equals(x, D.unpack(args[i]))) {
-          return D.unpack(args[i+1]);
-        }
+      return unpack(x ? thenClause : elseClause);
+    });
+  },
+
+  mThen: function (thenClause, elseClause) {
+    return this.derive(function (x) {
+      return unpack(some(x) ? thenClause : elseClause);
+    });
+  },
+
+  mOr: function (other) {
+    return this.mThen(this, other);
+  },
+
+  mDerive: function (arg) {
+    if (arguments.length === 1 && arg instanceof Array) {
+      var that = this;
+      return arg.map(function (a) { return that.mDerive(a); });
+    } else {
+      return this.mThen(this.derive.apply(this, arguments));
+    }
+  },
+
+  mAnd: function (other) {
+    return this.mThen(other, this);
+  },
+
+  not: function () {
+    return this.derive(function (x) { return !x; });
+  },
+
+  withEquality: function (equals) {
+    if (equals) {
+      if (typeof equals !== 'function') {
+        throw new Error('equals must be function');
       }
-      if (i === args.length - 1) {
-        return D.unpack(args[i]);
+    } else {
+      equals = null;
+    }
+
+    return setEquals(this._clone(), equals);
+  },
+
+  __equals: function (a, b) {
+    return (this._equals || equals)(a, b);
+  },
+};
+
+derivablePrototype.switch = function () {
+  var args = arguments;
+  var that = this;
+  return this.derive(function (x) {
+    var i;
+    for (i = 0; i < args.length-1; i+=2) {
+      if (that.__equals(x, unpack(args[i]))) {
+        return unpack(args[i+1]);
+      }
+    }
+    if (i === args.length - 1) {
+      return unpack(args[i]);
+    }
+  });
+};
+
+var mutablePrototype = {
+  swap: function (f) {
+    var args = slice(arguments, 0);
+    args[0] = this.get();
+    return this.set(f.apply(null, args));
+  },
+  lens: function (monoLensDescriptor) {
+    var that = this;
+    return new Lens({
+      get: function () {
+        return monoLensDescriptor.get(that.get());
+      },
+      set: function (val) {
+        that.set(monoLensDescriptor.set(that.get(), val));
       }
     });
-  };
-
-  return x;
+  },
 };
 
-function createPrototype$2 (D, opts) {
-  return {
-    _clone: function () {
-      return setEquals(D.derivation(this._deriver), this._equals);
-    },
+assign(Derivation.prototype, derivablePrototype);
+assign(Lens.prototype, derivablePrototype, mutablePrototype);
+assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
-    _forceEval: function () {
-      var that = this;
-      var newVal = null;
-      var capturedParentsEpochs = capturingParentsEpochs(function () {
-        if (!DEBUG_MODE) {
-          newVal = that._deriver();
-        } else {
-          try {
-            newVal = that._deriver();
-          } catch (e) {
-            console.error(that.stack);
-            throw e;
-          }
-        }
-      });
+module.exports = derivable;
 
-      if (!this.__equals(newVal, this._value)) {
-        this._epoch++;
-      }
-
-      if (this._refCount > 0) {
-        var i = 0, j = 0;
-        var oldLen = this._lastParentsEpochs.length;
-        var newLen = capturedParentsEpochs.length;
-
-        while (i < oldLen && j < newLen) {
-          if (this._lastParentsEpochs[i] !== capturedParentsEpochs[j]) {
-            break;
-          } else {
-            i += 2;
-            j += 2;
-          }
-        }
-
-        while (i < oldLen) {
-          removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
-          this._lastParentsEpochs[i]._unlisten();
-          i += 2;
-        }
-
-        while (j < newLen) {
-          addToArray(capturedParentsEpochs[j]._activeChildren, this);
-          capturedParentsEpochs[j]._listen();
-          j += 2;
-        }
-      }
-
-      this._lastParentsEpochs = capturedParentsEpochs;
-      this._value = newVal;
-    },
-
-    _update: function () {
-      var globalEpoch = currentCtx === null ?
-                         epoch.globalEpoch :
-                         currentCtx.globalEpoch;
-      if (this._lastGlobalEpoch !== globalEpoch) {
-        if (this._value === unique) {
-          // brand spanking new, so force eval
-          this._forceEval();
-        } else {
-          for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-            var parent_1 = this._lastParentsEpochs[i];
-            var lastParentEpoch = this._lastParentsEpochs[i + 1];
-            var currentParentEpoch;
-            if (parent_1._type === ATOM) {
-              currentParentEpoch = parent_1._getEpoch();
-            } else {
-              parent_1._update();
-              currentParentEpoch = parent_1._epoch;
-            }
-            if (currentParentEpoch !== lastParentEpoch) {
-              this._forceEval();
-              return;
-            }
-          }
-        }
-        this._lastGlobalEpoch = globalEpoch;
-      }
-    },
-
-    get: function () {
-      var idx = captureParent(this);
-      this._update();
-      captureEpoch(idx, this._epoch);
-      return this._value;
-    },
-
-    _listen: function () {
-      this._refCount++;
-      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-        var parent = this._lastParentsEpochs[i];
-        if (this._refCount === 1) {
-          // any compiler worth its salt will hoist this check of the loop
-          addToArray(parent._activeChildren, this);
-        }
-        parent._listen();
-      }
-    },
-
-    _unlisten: function () {
-      this._refCount--;
-      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-        var parent = this._lastParentsEpochs[i];
-        if (this._refCount === 0) {
-          // any compiler worth its salt will hoist this check of the loop
-          removeFromArray(parent._activeChildren, this);
-        }
-        parent._unlisten();
-      }
-    },
-  };
-};
-
-function construct$1 (obj, deriver) {
-  obj._deriver = deriver;
-  obj._lastParentsEpochs = [];
-  obj._lastGlobalEpoch = epoch.globalEpoch - 1;
-  obj._epoch = 0;
-  obj._type = DERIVATION;
-  obj._value = unique;
-  obj._equals = null;
-  obj._activeChildren = [];
-  obj._refCount = 0;
-
-  if (DEBUG_MODE) {
-    obj.stack = Error().stack;
-  }
-
-  return obj;
-};
-
-function createPrototype$3 (D, _) {
-  return {
-    swap: function (f) {
-      var args = slice(arguments, 0);
-      args[0] = this.get();
-      return this.set(f.apply(null, args));
-    },
-    lens: function (monoLensDescriptor) {
-      var that = this;
-      return D.lens({
-        get: function () {
-          return monoLensDescriptor.get(that.get());
-        },
-        set: function (val) {
-          that.set(monoLensDescriptor.set(that.get(), val));
-        }
-      });
-    },
-  };
-};
-
-function createPrototype$4 (D, _) {
-  return {
-    _clone: function () {
-      return setEquals(D.lens(this._lensDescriptor), this._equals);
-    },
-
-    set: function (value) {
-      var that = this;
-      D.atomically(function () {
-        that._lensDescriptor.set(value);
-      });
-      return this;
-    },
-  };
-};
-
-function construct$2 (derivation, descriptor) {
-  derivation._lensDescriptor = descriptor;
-  derivation._type = LENS;
-
-  return derivation;
-};
-
-var defaultConfig = { equals: equals };
-
-function constructModule (config) {
-  config = assign({}, defaultConfig, config || {});
-
-  var D = {
-    transact: transact,
-    defaultEquals: equals,
-    setDebugMode: setDebugMode,
-    transaction: transaction,
-    ticker: ticker,
-    Reactor: Reactor,
-    isAtom: function (x) {
-      return x && (x._type === ATOM || x._type === LENS);
-    },
-    isDerivable: function (x) {
-      return x && (x._type === ATOM ||
-                   x._type === LENS ||
-                   x._type === DERIVATION);
-    },
-    isDerivation: function (x) {
-      return x && (x._type === DERIVATION || x._type === LENS);
-    },
-    isLensed: function (x) {
-      return x && x._type === LENS;
-    },
-    isReactor: function (x) {
-      return x && x._type === REACTOR;
-    },
-  };
-
-  var Derivable  = createPrototype$1(D, config);
-  var Mutable    = createPrototype$3(D, config);
-
-  var Atom       = assign({}, Mutable, Derivable,
-                               createPrototype(D, config));
-
-  var Derivation = assign({}, Derivable,
-                               createPrototype$2(D, config));
-
-  var Lens       = assign({}, Mutable, Derivation,
-                              createPrototype$4(D, config));
-
-
-  /**
-   * Constructs a new atom whose state is the given value
-   */
-  D.atom = function (val) {
-    return construct(Object.create(Atom), val);
-  };
-
-  /**
-   * Returns a copy of f which runs atomically
-   */
-  D.atomic = function (f) {
-    return function () {
-      var result;
-      var that = this;
-      var args = arguments;
-      D.atomically(function () {
-        result = f.apply(that, args);
-      });
-      return result;
-    };
-  };
-
-  D.atomically = function (f) {
-    if (inTransaction()) {
-      f();
-    } else {
-      D.transact(f);
-    }
-  };
-
-  D.derivation = function (f) {
-    return construct$1(Object.create(Derivation), f);
-  };
-
-  /**
-   * Template string tag for derivable strings
-   */
-  D.derive = function (parts) {
-    var args = slice(arguments, 1);
-    return D.derivation(function () {
-      var s = "";
-      for (var i=0; i < parts.length; i++) {
-        s += parts[i];
-        if (i < args.length) {
-          s += D.unpack(args[i]);
-        }
-      }
-      return s;
-    });
-  };
-
-  /**
-   * creates a new lens
-   */
-  D.lens = function (descriptor) {
-    return construct$2(
-      construct$1(Object.create(Lens), descriptor.get),
-      descriptor
-    );
-  };
-
-  /**
-   * dereferences a thing if it is dereferencable, otherwise just returns it.
-   */
-  D.unpack = function (thing) {
-    if (D.isDerivable(thing)) {
-      return thing.get();
-    } else {
-      return thing;
-    }
-  };
-
-  /**
-   * lifts a non-monadic function to work on derivables
-   */
-  D.lift = function (f) {
-    return function () {
-      var args = arguments;
-      var that = this;
-      return D.derivation(function () {
-        return f.apply(that, Array.prototype.map.call(args, D.unpack));
-      });
-    };
-  };
-
-  function deepUnpack (thing) {
-    if (D.isDerivable(thing)) {
-      return thing.get();
-    } else if (thing instanceof Array) {
-      return thing.map(deepUnpack);
-    } else if (thing.constructor === Object) {
-      var result = {};
-      var keys$$ = keys(thing);
-      for (var i = keys$$.length; i--;) {
-        var prop = keys$$[i];
-        result[prop] = deepUnpack(thing[prop]);
-      }
-      return result;
-    } else {
-      return thing;
-    }
-  }
-
-  D.struct = function (arg) {
-    if (arg.constructor === Object || arg instanceof Array) {
-      return D.derivation(function () {
-        return deepUnpack(arg);
-      });
-    } else {
-      throw new Error("`struct` expects plain Object or Array");
-    }
-  };
-
-  function andOrFn (breakOn) {
-    return function () {
-      var args = arguments;
-      return D.derivation(function () {
-        var val;
-        for (var i = 0; i < args.length; i++) {
-          val = D.unpack(args[i]);
-          if (breakOn(val)) {
-            break;
-          }
-        }
-        return val;
-      });
-    };
-  }
-  function identity (x) { return x; }
-  function complement (f) { return function (x) { return !f(x); }; }
-  D.or = andOrFn(identity);
-  D.mOr = andOrFn(some);
-  D.and = andOrFn(complement(identity));
-  D.mAnd = andOrFn(complement(some));
-
-  return D;
-}
-
-assign(exports, constructModule());
-exports.withEquality = function (equals) {
-  return constructModule({equals: equals});
-};
-exports['default'] = exports;
+module.exports = derivable;
 //# sourceMappingURL=derivable.js.map
