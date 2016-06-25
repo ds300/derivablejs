@@ -1,544 +1,614 @@
-import imut from 'immutable';
-import _, {atom, derive, derivation, transact} from '../dist/derivable';
-import assert from 'assert';
+'use strict';
 
-describe("the `is*` fns", () => {
-  it ("just work, don't worry about it", () => {
-    let a = atom(0);
-    let d = a.derive(x => x * 2);
-    let l = a.lens({get: x => x * 2, set: (_, x) => x / 2});
-    let r = d.reactor(x => console.log(x));
+var _immutable = require('immutable');
 
-    assert(_.isAtom(a), "a is an atom");
-    assert(!_.isAtom(d), "d is not an atom");
-    assert(_.isAtom(l), "l is an atom");
-    assert(!_.isAtom(r), "r is not an atom");
+var _immutable2 = _interopRequireDefault(_immutable);
 
-    assert(!_.isDerivation(a), "a is not a derivation");
-    assert(_.isDerivation(d), "d is a derivation");
-    assert(_.isDerivation(l), "l is a derivation");
-    assert(!_.isDerivation(r), "r is not a derivation");
+var _derivable = require('../dist/derivable');
 
-    assert(!_.isLensed(a), "a is not a lens");
-    assert(_.isLensed(l), "l is a lens");
-    assert(!_.isLensed(d), "d is not a lens");
-    assert(!_.isLensed(r), "r is not a lens");
+var _derivable2 = _interopRequireDefault(_derivable);
 
-    assert(!_.isReactor(a), "a is a reactor");
-    assert(!_.isReactor(d), "d is a reactor");
-    assert(!_.isReactor(l), "l is a reactor");
-    assert(_.isReactor(r), "r is a reactor");
+var _assert = require('assert');
 
-    assert(_.isDerivable(a), "a is derivable");
-    assert(_.isDerivable(d), "d is derivable");
-    assert(_.isDerivable(l), "l is derivable");
-    assert(!_.isDerivable(r), "r is not derivable");
+var _assert2 = _interopRequireDefault(_assert);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe("the `is*` fns", function () {
+  it("just work, don't worry about it", function () {
+    var a = (0, _derivable.atom)(0);
+    var d = a.derive(function (x) {
+      return x * 2;
+    });
+    var l = a.lens({ get: function get(x) {
+        return x * 2;
+      }, set: function set(_, x) {
+        return x / 2;
+      } });
+    var r = d.reactor(function (x) {
+      return console.log(x);
+    });
+
+    (0, _assert2.default)(_derivable2.default.isAtom(a), "a is an atom");
+    (0, _assert2.default)(!_derivable2.default.isAtom(d), "d is not an atom");
+    (0, _assert2.default)(_derivable2.default.isAtom(l), "l is an atom");
+    (0, _assert2.default)(!_derivable2.default.isAtom(r), "r is not an atom");
+
+    (0, _assert2.default)(!_derivable2.default.isDerivation(a), "a is not a derivation");
+    (0, _assert2.default)(_derivable2.default.isDerivation(d), "d is a derivation");
+    (0, _assert2.default)(_derivable2.default.isDerivation(l), "l is a derivation");
+    (0, _assert2.default)(!_derivable2.default.isDerivation(r), "r is not a derivation");
+
+    (0, _assert2.default)(!_derivable2.default.isLensed(a), "a is not a lens");
+    (0, _assert2.default)(_derivable2.default.isLensed(l), "l is a lens");
+    (0, _assert2.default)(!_derivable2.default.isLensed(d), "d is not a lens");
+    (0, _assert2.default)(!_derivable2.default.isLensed(r), "r is not a lens");
+
+    (0, _assert2.default)(!_derivable2.default.isReactor(a), "a is a reactor");
+    (0, _assert2.default)(!_derivable2.default.isReactor(d), "d is a reactor");
+    (0, _assert2.default)(!_derivable2.default.isReactor(l), "l is a reactor");
+    (0, _assert2.default)(_derivable2.default.isReactor(r), "r is a reactor");
+
+    (0, _assert2.default)(_derivable2.default.isDerivable(a), "a is derivable");
+    (0, _assert2.default)(_derivable2.default.isDerivable(d), "d is derivable");
+    (0, _assert2.default)(_derivable2.default.isDerivable(l), "l is derivable");
+    (0, _assert2.default)(!_derivable2.default.isDerivable(r), "r is not derivable");
   });
 });
 
-describe("the `struct` function", () => {
-  it ("does nothing to a deriveable", () => {
-    let a = atom(0);
-    let b = _.struct(a);
+describe("the `struct` function", function () {
+  it("does nothing to a deriveable", function () {
+    var a = (0, _derivable.atom)(0);
+    var b = _derivable2.default.struct(a);
 
-    assert.strictEqual(b.get(), 0);
-  })
-  it("turns an array of derivables into a derivable", () => {
-    let fib1 = atom(0),
-        fib2 = atom(1),
-        fib = derivation(() => fib1.get() + fib2.get());
+    _assert2.default.strictEqual(b.get(), 0);
+  });
+  it("turns an array of derivables into a derivable", function () {
+    var fib1 = (0, _derivable.atom)(0),
+        fib2 = (0, _derivable.atom)(1),
+        fib = (0, _derivable.derivation)(function () {
+      return fib1.get() + fib2.get();
+    });
 
-    let grouped = _.struct([fib1, fib2, fib]);
-    assert.deepEqual([0,1,1], grouped.get());
+    var grouped = _derivable2.default.struct([fib1, fib2, fib]);
+    _assert2.default.deepEqual([0, 1, 1], grouped.get());
 
     fib1.set(1);
-    assert.deepEqual([1,1,2], grouped.get());
+    _assert2.default.deepEqual([1, 1, 2], grouped.get());
   });
 
-  it("turns a map of derivables into a derivable", () => {
-    let name = atom("wilbur"),
-        telephone = atom("0987654321");
+  it("turns a map of derivables into a derivable", function () {
+    var name = (0, _derivable.atom)("wilbur"),
+        telephone = (0, _derivable.atom)("0987654321");
 
-    let grouped = _.struct({name, telephone});
+    var grouped = _derivable2.default.struct({ name: name, telephone: telephone });
 
-    assert.deepEqual({name: "wilbur", telephone: "0987654321"}, grouped.get());
+    _assert2.default.deepEqual({ name: "wilbur", telephone: "0987654321" }, grouped.get());
 
     name.set("Jemimah");
     telephone.set("n/a");
 
-    assert.deepEqual({name: "Jemimah", telephone: "n/a"}, grouped.get());
+    _assert2.default.deepEqual({ name: "Jemimah", telephone: "n/a" }, grouped.get());
   });
 
-  it("actually turns any arbitrarily nested structure of"
-     +" maybe-derivables into a derivable", () => {
-    let name = atom("wilbur"),
-        telephone = atom("0987654321"),
-        friend1Name = atom("Sylvester"),
-        friend1Telephone = atom("blub");
+  it("actually turns any arbitrarily nested structure of" + " maybe-derivables into a derivable", function () {
+    var name = (0, _derivable.atom)("wilbur"),
+        telephone = (0, _derivable.atom)("0987654321"),
+        friend1Name = (0, _derivable.atom)("Sylvester"),
+        friend1Telephone = (0, _derivable.atom)("blub");
 
-    let grouped = _.struct({
-      name, telephone,
+    var grouped = _derivable2.default.struct({
+      name: name, telephone: telephone,
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: friend1Name, telephone: friend1Telephone}, "others"]
+      friends: [{ name: friend1Name, telephone: friend1Telephone }, "others"]
     });
 
-    let expected1 = {
+    var expected1 = {
       name: "wilbur",
       telephone: "0987654321",
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: "Sylvester", telephone: "blub"}, "others"]
+      friends: [{ name: "Sylvester", telephone: "blub" }, "others"]
     };
 
-    assert.deepEqual(expected1, grouped.get());
+    _assert2.default.deepEqual(expected1, grouped.get());
 
     friend1Name.set("Brittany");
 
-    let expected2 = {
+    var expected2 = {
       name: "wilbur",
       telephone: "0987654321",
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: "Brittany", telephone: "blub"}, "others"]
+      friends: [{ name: "Brittany", telephone: "blub" }, "others"]
     };
 
-    assert.deepEqual(expected2, grouped.get());
+    _assert2.default.deepEqual(expected2, grouped.get());
   });
 
-  it("only accepts plain objects or arrays", () => {
-    assert.throws(() => _.struct(3));
-    assert.throws(() => _.struct("blah"));
-    assert.throws(() => _.struct(new Error()));
+  it("only accepts plain objects or arrays", function () {
+    _assert2.default.throws(function () {
+      return _derivable2.default.struct(3);
+    });
+    _assert2.default.throws(function () {
+      return _derivable2.default.struct("blah");
+    });
+    _assert2.default.throws(function () {
+      return _derivable2.default.struct(new Error());
+    });
     function A() {};
-    assert.throws(() => _.struct(new A()));
-    assert.throws(() => _.struct(/\d+/));
+    _assert2.default.throws(function () {
+      return _derivable2.default.struct(new A());
+    });
+    _assert2.default.throws(function () {
+      return _derivable2.default.struct(/\d+/);
+    });
   });
 });
 
-
-describe("boolean logic", () => {
-  it("is well understood", () => {
-    let a = atom(true),
-        b = atom(true),
-        aANDb = _.and(a, b),
-        aORb = _.or(a, b),
+describe("boolean logic", function () {
+  it("is well understood", function () {
+    var a = (0, _derivable.atom)(true),
+        b = (0, _derivable.atom)(true),
+        aANDb = _derivable2.default.and(a, b),
+        aORb = _derivable2.default.or(a, b),
         NOTa = a.not();
 
-    assert.strictEqual(aANDb.get(), true, "true & true = true");
-    assert.strictEqual(aORb.get(), true, "true | true = true");
-    assert.strictEqual(NOTa.get(), false, "!true = false")
+    _assert2.default.strictEqual(aANDb.get(), true, "true & true = true");
+    _assert2.default.strictEqual(aORb.get(), true, "true | true = true");
+    _assert2.default.strictEqual(NOTa.get(), false, "!true = false");
 
     b.set(false);
 
-    assert.strictEqual(aANDb.get(), false, "true & false = false");
-    assert.strictEqual(aORb.get(), true, "true | false = true");
+    _assert2.default.strictEqual(aANDb.get(), false, "true & false = false");
+    _assert2.default.strictEqual(aORb.get(), true, "true | false = true");
 
     a.set(false);
 
-    assert.strictEqual(aANDb.get(), false, "false & false = false");
-    assert.strictEqual(aORb.get(), false, "false | false = false");
-    assert.strictEqual(NOTa.get(), true, "!false = true");
+    _assert2.default.strictEqual(aANDb.get(), false, "false & false = false");
+    _assert2.default.strictEqual(aORb.get(), false, "false | false = false");
+    _assert2.default.strictEqual(NOTa.get(), true, "!false = true");
   });
 
-  it("is mirrored for dealing with null/undefined", () => {
-    let a = atom(false),
-        b = atom(false),
-        aANDb = _.mAnd(a, b).mThen(true, false),
-        aORb = _.mOr(a, b).mThen(true, false);
+  it("is mirrored for dealing with null/undefined", function () {
+    var a = (0, _derivable.atom)(false),
+        b = (0, _derivable.atom)(false),
+        aANDb = _derivable2.default.mAnd(a, b).mThen(true, false),
+        aORb = _derivable2.default.mOr(a, b).mThen(true, false);
 
-    assert.strictEqual(aANDb.get(), true, "false m& false m= true");
-    assert.strictEqual(aORb.get(), true, "false m| false m= true");
+    _assert2.default.strictEqual(aANDb.get(), true, "false m& false m= true");
+    _assert2.default.strictEqual(aORb.get(), true, "false m| false m= true");
 
     a.set(null);
 
-    assert.strictEqual(aANDb.get(), false, "null m& false m= false");
-    assert.strictEqual(aORb.get(), true, "null m| false m= true");
+    _assert2.default.strictEqual(aANDb.get(), false, "null m& false m= false");
+    _assert2.default.strictEqual(aORb.get(), true, "null m| false m= true");
 
     b.set(null);
 
-    assert.strictEqual(aANDb.get(), false, "null m& null m= false");
-    assert.strictEqual(aORb.get(), false, "null m| null m= false");
-  })
+    _assert2.default.strictEqual(aANDb.get(), false, "null m& null m= false");
+    _assert2.default.strictEqual(aORb.get(), false, "null m| null m= false");
+  });
 });
 
+describe("control flow", function () {
+  it("allows different paths to be taken depending on conditions", function () {
+    var number = (0, _derivable.atom)(0);
+    var even = number.derive(function (n) {
+      return n % 2 === 0;
+    });
 
+    var message = even.then("even", "odd");
 
-describe("control flow", () => {
-  it ("allows different paths to be taken depending on conditions", () => {
-    let number = atom(0);
-    let even = number.derive(n => n % 2 === 0);
-
-    let message = even.then("even", "odd");
-
-    assert.strictEqual(message.get(), "even");
+    _assert2.default.strictEqual(message.get(), "even");
 
     number.set(1);
 
-    assert.strictEqual(message.get(), "odd");
+    _assert2.default.strictEqual(message.get(), "odd");
   });
 
-  it("doesn't evaluate untaken paths", () => {
-    let number = atom(0);
-    let even = number.derive(n => n % 2 === 0);
+  it("doesn't evaluate untaken paths", function () {
+    var number = (0, _derivable.atom)(0);
+    var even = number.derive(function (n) {
+      return n % 2 === 0;
+    });
 
-    let dideven = false;
-    let didodd = false;
+    var dideven = false;
+    var didodd = false;
 
-    let chooseAPath = even.then(
-      derivation(() => {
-        dideven = true;
-      }),
-      derivation(() => {
-        didodd = true;
-      })
-    );
+    var chooseAPath = even.then((0, _derivable.derivation)(function () {
+      dideven = true;
+    }), (0, _derivable.derivation)(function () {
+      didodd = true;
+    }));
 
     chooseAPath.get();
 
-    assert(dideven && !didodd, "didnt eval odd path");
+    (0, _assert2.default)(dideven && !didodd, "didnt eval odd path");
 
     dideven = false;
 
-    assert(!dideven && !didodd, "didnt eval anything yet1");
+    (0, _assert2.default)(!dideven && !didodd, "didnt eval anything yet1");
 
     number.set(1);
 
-    assert(!dideven && !didodd, "didnt eval anything yet2");
+    (0, _assert2.default)(!dideven && !didodd, "didnt eval anything yet2");
 
     chooseAPath.get();
 
-    assert(!dideven && didodd, "didnt eval even path");
+    (0, _assert2.default)(!dideven && didodd, "didnt eval even path");
   });
 
-  it("same goes for the switch statement", () => {
-    let thing = atom("Tigran");
+  it("same goes for the switch statement", function () {
+    var thing = (0, _derivable.atom)("Tigran");
 
-    let result = thing.switch(
-      "Banana", "YUMMY",
-      532,      "FiveThreeTwo",
-      "Tigran", "Hamasayan"
-    );
+    var result = thing.switch("Banana", "YUMMY", 532, "FiveThreeTwo", "Tigran", "Hamasayan");
 
-    assert.strictEqual("Hamasayan", result.get());
+    _assert2.default.strictEqual("Hamasayan", result.get());
 
     thing.set("Banana");
 
-    assert.strictEqual("YUMMY", result.get());
+    _assert2.default.strictEqual("YUMMY", result.get());
 
     thing.set(532);
 
-    assert.strictEqual("FiveThreeTwo", result.get());
+    _assert2.default.strictEqual("FiveThreeTwo", result.get());
 
     thing.set("nonsense");
 
-    assert(result.get() === void 0);
+    (0, _assert2.default)(result.get() === void 0);
 
-    let switcheroo = atom("a");
+    var switcheroo = (0, _derivable.atom)("a");
 
-    let dida = false,
+    var dida = false,
         didb = false,
         didc = false,
         didx = false;
 
-    let conda = atom("a"),
-        condb = atom("b"),
-        condc = atom("c");
+    var conda = (0, _derivable.atom)("a"),
+        condb = (0, _derivable.atom)("b"),
+        condc = (0, _derivable.atom)("c");
 
-    let chooseAPath = switcheroo.switch(
-      conda, derivation(() => dida = true),
-      condb, derivation(() => didb = true),
-      condc, derivation(() => didc = true),
-      //else
-      derivation(() => didx = true)
-    );
+    var chooseAPath = switcheroo.switch(conda, (0, _derivable.derivation)(function () {
+      return dida = true;
+    }), condb, (0, _derivable.derivation)(function () {
+      return didb = true;
+    }), condc, (0, _derivable.derivation)(function () {
+      return didc = true;
+    }),
+    //else
+    (0, _derivable.derivation)(function () {
+      return didx = true;
+    }));
 
-    assert(!dida && !didb && !didc && !didx, "did nothing yet 1");
+    (0, _assert2.default)(!dida && !didb && !didc && !didx, "did nothing yet 1");
 
     chooseAPath.get();
-    assert(dida && !didb && !didc && !didx, "did a");
+    (0, _assert2.default)(dida && !didb && !didc && !didx, "did a");
 
     dida = false;
     switcheroo.set("b");
-    assert(!dida && !didb && !didc && !didx, "did nothing yet 2");
+    (0, _assert2.default)(!dida && !didb && !didc && !didx, "did nothing yet 2");
 
     chooseAPath.get();
-    assert(!dida && didb && !didc && !didx, "did b");
+    (0, _assert2.default)(!dida && didb && !didc && !didx, "did b");
 
     didb = false;
     switcheroo.set("c");
-    assert(!dida && !didb && !didc && !didx, "did nothing yet 3");
+    (0, _assert2.default)(!dida && !didb && !didc && !didx, "did nothing yet 3");
 
     chooseAPath.get();
-    assert(!dida && !didb && didc && !didx, "did b");
+    (0, _assert2.default)(!dida && !didb && didc && !didx, "did b");
 
     didc = false;
     switcheroo.set("blubr");
-    assert(!dida && !didb && !didc && !didx, "did nothing yet 4");
+    (0, _assert2.default)(!dida && !didb && !didc && !didx, "did nothing yet 4");
 
     chooseAPath.get();
-    assert(!dida && !didb && !didc && didx, "did else");
+    (0, _assert2.default)(!dida && !didb && !didc && didx, "did else");
   });
 });
 
+describe("the lift function", function () {
+  it("lifts a function which operates on values to operate on derivables", function () {
+    var plus = function plus(a, b) {
+      return a + b;
+    };
+    var dPlus = _derivable2.default.lift(plus);
 
-describe("the lift function", () => {
-  it("lifts a function which operates on values to operate on derivables", () => {
-    let plus = (a, b) => a + b;
-    let dPlus = _.lift(plus);
+    var a = (0, _derivable.atom)(5);
+    var b = (0, _derivable.atom)(10);
+    var c = dPlus(a, b);
 
-    let a = atom(5);
-    let b = atom(10);
-    let c = dPlus(a, b);
-
-    assert.equal(15, c.get());
+    _assert2.default.equal(15, c.get());
   });
 
-  it("can be used in ordinary FP stuff", () => {
-    const cells = [0,1,2].map(atom);
+  it("can be used in ordinary FP stuff", function () {
+    var cells = [0, 1, 2].map(_derivable.atom);
 
-    const add = _.lift((a, b) => a + b);
+    var add = _derivable2.default.lift(function (a, b) {
+      return a + b;
+    });
 
-    const sum = cells.reduce(add);
+    var sum = cells.reduce(add);
 
-    let expected = 3;
-    let equalsExpected = false;
-    sum.react(x => equalsExpected = x === expected);
-    assert(equalsExpected);
+    var expected = 3;
+    var equalsExpected = false;
+    sum.react(function (x) {
+      return equalsExpected = x === expected;
+    });
+    (0, _assert2.default)(equalsExpected);
 
     expected = 4;
     equalsExpected = false;
-    cells[0].swap(x => x+1);
-    assert(equalsExpected);
+    cells[0].swap(function (x) {
+      return x + 1;
+    });
+    (0, _assert2.default)(equalsExpected);
   });
 });
 
-describe("the `transact` function", () => {
-  it("executes a function in the context of a transaction", () => {
-    const a = atom("a"),
-          b = atom("b");
+describe("the `transact` function", function () {
+  it("executes a function in the context of a transaction", function () {
+    var a = (0, _derivable.atom)("a"),
+        b = (0, _derivable.atom)("b");
 
-    let timesChanged = 0;
+    var timesChanged = 0;
 
-    _.struct({a, b}).reactor(() => timesChanged++).start();
+    _derivable2.default.struct({ a: a, b: b }).reactor(function () {
+      return timesChanged++;
+    }).start();
 
-    assert.strictEqual(timesChanged, 0);
+    _assert2.default.strictEqual(timesChanged, 0);
 
-    const setAAndB = (a_val, b_val) => {
+    var setAAndB = function setAAndB(a_val, b_val) {
       a.set(a_val);
       b.set(b_val);
     };
 
     setAAndB("aye", "bee");
 
-    assert.strictEqual(timesChanged, 2);
-    assert.strictEqual(a.get(), "aye");
-    assert.strictEqual(b.get(), "bee");
+    _assert2.default.strictEqual(timesChanged, 2);
+    _assert2.default.strictEqual(a.get(), "aye");
+    _assert2.default.strictEqual(b.get(), "bee");
 
-    transact(() => setAAndB("a", "b"));
+    (0, _derivable.transact)(function () {
+      return setAAndB("a", "b");
+    });
 
-    assert.strictEqual(timesChanged, 3);
-    assert.strictEqual(a.get(), "a");
-    assert.strictEqual(b.get(), "b");
+    _assert2.default.strictEqual(timesChanged, 3);
+    _assert2.default.strictEqual(a.get(), "a");
+    _assert2.default.strictEqual(b.get(), "b");
 
-    transact(() => setAAndB(5, 6));
+    (0, _derivable.transact)(function () {
+      return setAAndB(5, 6);
+    });
 
-    assert.strictEqual(timesChanged, 4);
-    assert.strictEqual(a.get(), 5);
-    assert.strictEqual(b.get(), 6);
+    _assert2.default.strictEqual(timesChanged, 4);
+    _assert2.default.strictEqual(a.get(), 5);
+    _assert2.default.strictEqual(b.get(), 6);
   });
 });
 
-describe("the `transaction` function", () => {
-  it("wraps a function such that its body is executed in a txn", () => {
-    const a = atom("a"),
-          b = atom("b");
+describe("the `transaction` function", function () {
+  it("wraps a function such that its body is executed in a txn", function () {
+    var a = (0, _derivable.atom)("a"),
+        b = (0, _derivable.atom)("b");
 
-    let timesChanged = 0;
+    var timesChanged = 0;
 
-    _.struct({a, b}).reactor(() => timesChanged++).start();
+    _derivable2.default.struct({ a: a, b: b }).reactor(function () {
+      return timesChanged++;
+    }).start();
 
-    assert.strictEqual(timesChanged, 0);
+    _assert2.default.strictEqual(timesChanged, 0);
 
-    const setAAndB = (a_val, b_val) => {
+    var setAAndB = function setAAndB(a_val, b_val) {
       a.set(a_val);
       b.set(b_val);
       return a_val + b_val;
     };
 
-    assert.strictEqual(setAAndB("aye", "bee"), "ayebee");
+    _assert2.default.strictEqual(setAAndB("aye", "bee"), "ayebee");
 
-    assert.strictEqual(timesChanged, 2);
-    assert.strictEqual(a.get(), "aye");
-    assert.strictEqual(b.get(), "bee");
+    _assert2.default.strictEqual(timesChanged, 2);
+    _assert2.default.strictEqual(a.get(), "aye");
+    _assert2.default.strictEqual(b.get(), "bee");
 
-    const tSetAAndB = _.transaction(setAAndB);
+    var tSetAAndB = _derivable2.default.transaction(setAAndB);
 
-    assert.strictEqual(tSetAAndB("a", "b"), "ab");
+    _assert2.default.strictEqual(tSetAAndB("a", "b"), "ab");
 
-    assert.strictEqual(timesChanged, 3);
-    assert.strictEqual(a.get(), "a");
-    assert.strictEqual(b.get(), "b");
+    _assert2.default.strictEqual(timesChanged, 3);
+    _assert2.default.strictEqual(a.get(), "a");
+    _assert2.default.strictEqual(b.get(), "b");
 
-    assert.strictEqual(tSetAAndB(2, 3), 5);
+    _assert2.default.strictEqual(tSetAAndB(2, 3), 5);
 
-    assert.strictEqual(timesChanged, 4);
-    assert.strictEqual(a.get(), 2);
-    assert.strictEqual(b.get(), 3);
+    _assert2.default.strictEqual(timesChanged, 4);
+    _assert2.default.strictEqual(a.get(), 2);
+    _assert2.default.strictEqual(b.get(), 3);
   });
 });
 
-describe("defaultEquals", () => {
-  it("tests whether two values are strictly equal", () => {
-    assert(_.defaultEquals(5, 5));
-    assert(_.defaultEquals("buns", "buns"));
-    assert(!_.defaultEquals([1,2,3], [0,1,2].map(x => x+1)));
+describe("defaultEquals", function () {
+  it("tests whether two values are strictly equal", function () {
+    (0, _assert2.default)(_derivable2.default.defaultEquals(5, 5));
+    (0, _assert2.default)(_derivable2.default.defaultEquals("buns", "buns"));
+    (0, _assert2.default)(!_derivable2.default.defaultEquals([1, 2, 3], [0, 1, 2].map(function (x) {
+      return x + 1;
+    })));
     var x = {};
     x['a'] = 'a';
     x['b'] = 'b';
-    assert(!_.defaultEquals({a: "a", b: 'b'}, x));
+    (0, _assert2.default)(!_derivable2.default.defaultEquals({ a: "a", b: 'b' }, x));
   });
-  it("delegates to a .equals method if present", () => {
-    var x = {equals: () => true};
-    var y = {equals: () => false};
-    assert(_.defaultEquals(x, y));
-    assert(!_.defaultEquals(y, x));
-  });
-});
-
-
-describe("debug mode", () => {
-  it("causes derivations and reactors to store the stacktraces of their"
-     + " instantiation points", () =>{
-    const d = _.derivation(() => 0);
-    assert(!d.stack);
-    const b = d.reactor(() => {});
-    assert(!b.stack);
-    _.setDebugMode(true);
-    const e = _.derivation(() => { throw Error(); });
-    assert(e.stack);
-    const a = d.reactor(() => {});
-    assert(a.stack);
-    _.setDebugMode(false);
-  });
-
-  it("causes stack traces to be printed when things derivations and reactors throw errors", () => {
-    const d = _.derivation(() => 0);
-    assert(!d.stack);
-    const b = d.reactor(() => {});
-    assert(!b.stack);
-    _.setDebugMode(true);
-    const e = _.derivation(() => { throw "cheese"; });
-    try {
-      const err = console.error;
-      let stack;
-      console.error = (_stack) => { stack = _stack; };
-      e.get();
-      assert.strictEqual(stack, e.stack);
-      console.error = err;
-    } catch (e) {
-      assert.strictEqual(e, 'cheese');
-    };
-    const a = d.reactor(() => { throw 'funions'; });
-    try {
-      const err = console.error;
-      let stack;
-      console.error = (_stack) => { stack = _stack; };
-      a.start().force();
-      assert.strictEqual(stack, a.stack);
-      console.error = err;
-    } catch (e) {
-      assert.strictEqual(e, 'funions');
-    };
-    _.setDebugMode(false);
+  it("delegates to a .equals method if present", function () {
+    var x = { equals: function equals() {
+        return true;
+      } };
+    var y = { equals: function equals() {
+        return false;
+      } };
+    (0, _assert2.default)(_derivable2.default.defaultEquals(x, y));
+    (0, _assert2.default)(!_derivable2.default.defaultEquals(y, x));
   });
 });
 
-describe('the atomically function', () => {
-  it('creates a transaction if not already in a transaction', () => {
-    const $A = atom('a');
-    let numReactions = 0;
-    $A.reactor(() => numReactions++).start();
-    assert.strictEqual(numReactions, 0);
-
-    _.atomically(() => {
-      $A.set('b');
-      assert.strictEqual(numReactions, 0);
+describe("debug mode", function () {
+  it("causes derivations and reactors to store the stacktraces of their" + " instantiation points", function () {
+    var d = _derivable2.default.derivation(function () {
+      return 0;
     });
-    assert.strictEqual(numReactions, 1);
+    (0, _assert2.default)(!d.stack);
+    var b = d.reactor(function () {});
+    (0, _assert2.default)(!b.stack);
+    _derivable2.default.setDebugMode(true);
+    var e = _derivable2.default.derivation(function () {
+      throw Error();
+    });
+    (0, _assert2.default)(e.stack);
+    var a = d.reactor(function () {});
+    (0, _assert2.default)(a.stack);
+    _derivable2.default.setDebugMode(false);
   });
 
-  it("doesn't create new transactions if already in a transaction", () => {
-    const $A = atom('a');
+  it("causes stack traces to be printed when things derivations and reactors throw errors", function () {
+    var d = _derivable2.default.derivation(function () {
+      return 0;
+    });
+    (0, _assert2.default)(!d.stack);
+    var b = d.reactor(function () {});
+    (0, _assert2.default)(!b.stack);
+    _derivable2.default.setDebugMode(true);
+    var e = _derivable2.default.derivation(function () {
+      throw "cheese";
+    });
+    try {
+      var err = console.error;
+      var stack = void 0;
+      console.error = function (_stack) {
+        stack = _stack;
+      };
+      e.get();
+      _assert2.default.strictEqual(stack, e.stack);
+      console.error = err;
+    } catch (e) {
+      _assert2.default.strictEqual(e, 'cheese');
+    };
+    var a = d.reactor(function () {
+      throw 'funions';
+    });
+    try {
+      var _err = console.error;
+      var _stack2 = void 0;
+      console.error = function (_stack) {
+        _stack2 = _stack;
+      };
+      a.start().force();
+      _assert2.default.strictEqual(_stack2, a.stack);
+      console.error = _err;
+    } catch (e) {
+      _assert2.default.strictEqual(e, 'funions');
+    };
+    _derivable2.default.setDebugMode(false);
+  });
+});
 
-    _.transact(() => {
+describe('the atomically function', function () {
+  it('creates a transaction if not already in a transaction', function () {
+    var $A = (0, _derivable.atom)('a');
+    var numReactions = 0;
+    $A.reactor(function () {
+      return numReactions++;
+    }).start();
+    _assert2.default.strictEqual(numReactions, 0);
+
+    _derivable2.default.atomically(function () {
+      $A.set('b');
+      _assert2.default.strictEqual(numReactions, 0);
+    });
+    _assert2.default.strictEqual(numReactions, 1);
+  });
+
+  it("doesn't create new transactions if already in a transaction", function () {
+    var $A = (0, _derivable.atom)('a');
+
+    _derivable2.default.transact(function () {
       try {
-        _.atomically(() => {
+        _derivable2.default.atomically(function () {
           $A.set('b');
-          assert.strictEqual($A.get(), 'b');
+          _assert2.default.strictEqual($A.get(), 'b');
           throw new Error();
         });
       } catch (ignored) {}
       // no transaction created so change to $A persists
-      assert.strictEqual($A.get(), 'b');
+      _assert2.default.strictEqual($A.get(), 'b');
     });
-    assert.strictEqual($A.get(), 'b');
+    _assert2.default.strictEqual($A.get(), 'b');
   });
 });
 
-describe('the atomic function', () => {
-  it('creates a transaction if not already in a transaction', () => {
-    const $A = atom('a');
-    let numReactions = 0;
-    $A.reactor(() => numReactions++).start();
-    assert.strictEqual(numReactions, 0);
+describe('the atomic function', function () {
+  it('creates a transaction if not already in a transaction', function () {
+    var $A = (0, _derivable.atom)('a');
+    var numReactions = 0;
+    $A.reactor(function () {
+      return numReactions++;
+    }).start();
+    _assert2.default.strictEqual(numReactions, 0);
 
-    const res = _.atomic(() => {
+    var res = _derivable2.default.atomic(function () {
       $A.set('b');
-      assert.strictEqual(numReactions, 0);
+      _assert2.default.strictEqual(numReactions, 0);
       return 3;
     })();
 
-    assert.strictEqual(numReactions, 1);
+    _assert2.default.strictEqual(numReactions, 1);
 
-    assert.strictEqual(res, 3);
+    _assert2.default.strictEqual(res, 3);
   });
 
-  it("doesn't create new transactions if already in a transaction", () => {
-    const $A = atom('a');
+  it("doesn't create new transactions if already in a transaction", function () {
+    var $A = (0, _derivable.atom)('a');
 
-    _.transact(() => {
+    _derivable2.default.transact(function () {
       try {
-        _.atomic(() => {
+        _derivable2.default.atomic(function () {
           $A.set('b');
-          assert.strictEqual($A.get(), 'b');
+          _assert2.default.strictEqual($A.get(), 'b');
           throw new Error();
         })();
       } catch (ignored) {}
       // no transaction created so change to $A persists
-      assert.strictEqual($A.get(), 'b');
+      _assert2.default.strictEqual($A.get(), 'b');
     });
-    assert.strictEqual($A.get(), 'b');
+    _assert2.default.strictEqual($A.get(), 'b');
   });
 });
 
-describe('the .withEquality function', () => {
-  it("creates a new instance of derivablejs with the given equality semantics", () => {
-    const djs = _.withEquality((a, b) => false);
+describe('the .withEquality function', function () {
+  it("creates a new instance of derivablejs with the given equality semantics", function () {
+    var djs = _derivable2.default.withEquality(function (a, b) {
+      return false;
+    });
 
-    const a = djs.atom(0);
-    let numReactions = 0;
+    var a = djs.atom(0);
+    var numReactions = 0;
 
-    a.reactor(() => numReactions++).start();
+    a.reactor(function () {
+      return numReactions++;
+    }).start();
 
-    assert.strictEqual(numReactions, 0);
+    _assert2.default.strictEqual(numReactions, 0);
     a.set(0);
-    assert.strictEqual(numReactions, 1);
+    _assert2.default.strictEqual(numReactions, 1);
     a.set(0);
-    assert.strictEqual(numReactions, 2);
+    _assert2.default.strictEqual(numReactions, 2);
     a.set(0);
-    assert.strictEqual(numReactions, 3);
+    _assert2.default.strictEqual(numReactions, 3);
     a.set(0);
-    assert.strictEqual(numReactions, 4);
+    _assert2.default.strictEqual(numReactions, 4);
   });
 });

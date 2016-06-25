@@ -1,568 +1,685 @@
-import imut from 'immutable';
-import _, {atom, transact, Reactor} from '../dist/derivable';
-import assert from 'assert';
+'use strict';
 
-describe("anonymous reactors", () => {
-  it('are created with the .react method', () => {
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; });
+var _immutable = require('immutable');
 
-    assert.strictEqual(val, 'a');
+var _immutable2 = _interopRequireDefault(_immutable);
+
+var _derivable = require('../dist/derivable');
+
+var _derivable2 = _interopRequireDefault(_derivable);
+
+var _assert = require('assert');
+
+var _assert2 = _interopRequireDefault(_assert);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe("anonymous reactors", function () {
+  it('are created with the .react method', function () {
+    var a = (0, _derivable.atom)('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    });
+
+    _assert2.default.strictEqual(val, 'a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
   });
 
-  it('can start when the `from` condition becomes truthy', () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {from: cond});
+  it('can start when the `from` condition becomes truthy', function () {
+    var cond = (0, _derivable.atom)(false);
+    var a = (0, _derivable.atom)('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { from: cond });
 
-    assert.strictEqual(val, null);
+    _assert2.default.strictEqual(val, null);
 
     cond.set('truthy value');
 
-    assert.strictEqual(val, 'a');
+    _assert2.default.strictEqual(val, 'a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
   });
 
-  it('can stop (forever) when the `until` condition becomes truthy', () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {until: cond});
+  it('can stop (forever) when the `until` condition becomes truthy', function () {
+    var cond = (0, _derivable.atom)(false);
+    var a = (0, _derivable.atom)('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { until: cond });
 
-    assert.strictEqual(val, 'a');
+    _assert2.default.strictEqual(val, 'a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
 
     cond.set('truthy value');
 
     a.set('c');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
 
     cond.set(false);
 
     a.set('d');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
   });
 
-  it('can start and stop when the `when` condition becomes truthy and falsey respectively',  () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {when: cond});
+  it('can start and stop when the `when` condition becomes truthy and falsey respectively', function () {
+    var cond = (0, _derivable.atom)(false);
+    var a = (0, _derivable.atom)('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { when: cond });
 
-    assert.strictEqual(val, null);
+    _assert2.default.strictEqual(val, null);
 
     cond.set('truthy value');
 
-    assert.strictEqual(val, 'a');
+    _assert2.default.strictEqual(val, 'a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
 
     cond.set(0); //falsey value
 
     a.set('c');
 
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
 
     cond.set(1); //truthy value
 
-    assert.strictEqual(val, 'c');
+    _assert2.default.strictEqual(val, 'c');
   });
 
-  it('can have `from`, `when`, and `until` specified as functions', () => {
+  it('can have `from`, `when`, and `until` specified as functions', function () {
     {
-      const cond = atom(false);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {when: () => cond.get()});
+      (function () {
+        var cond = (0, _derivable.atom)(false);
+        var a = (0, _derivable.atom)('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: function when() {
+            return cond.get();
+          } });
 
-      assert.strictEqual(val, null);
+        _assert2.default.strictEqual(val, null);
 
-      cond.set('truthy value');
+        cond.set('truthy value');
 
-      assert.strictEqual(val, 'a');
+        _assert2.default.strictEqual(val, 'a');
+      })();
     }
     {
-      const cond = atom(false);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from: () => cond.get()});
+      (function () {
+        var cond = (0, _derivable.atom)(false);
+        var a = (0, _derivable.atom)('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { from: function from() {
+            return cond.get();
+          } });
 
-      assert.strictEqual(val, null);
+        _assert2.default.strictEqual(val, null);
 
-      cond.set('truthy value');
+        cond.set('truthy value');
 
-      assert.strictEqual(val, 'a');
+        _assert2.default.strictEqual(val, 'a');
+      })();
     }
     {
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {until: () => a.is('b').get()});
+      (function () {
+        var a = (0, _derivable.atom)('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { until: function until() {
+            return a.is('b').get();
+          } });
 
-      assert.strictEqual(val, 'a');
+        _assert2.default.strictEqual(val, 'a');
 
-      a.set('c');
+        a.set('c');
 
-      assert.strictEqual(val, 'c');
+        _assert2.default.strictEqual(val, 'c');
 
-      a.set('b');
+        a.set('b');
 
-      assert.strictEqual(val, 'c');
+        _assert2.default.strictEqual(val, 'c');
 
-      a.set('a');
+        a.set('a');
 
-      assert.strictEqual(val, 'c');
+        _assert2.default.strictEqual(val, 'c');
+      })();
     }
   });
 
-  it('doesnt like it when `from`, `when`, and `until` are other things', () => {
-    const a = atom('a');
-    assert.throws(() => a.react(() => null, {from: 'a string'}));
-    assert.throws(() => a.react(() => null, {when: 3}));
-    assert.throws(() => a.react(() => null, {until: new Date()}));
+  it('doesnt like it when `from`, `when`, and `until` are other things', function () {
+    var a = (0, _derivable.atom)('a');
+    _assert2.default.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { from: 'a string' });
+    });
+    _assert2.default.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { when: 3 });
+    });
+    _assert2.default.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { until: new Date() });
+    });
   });
 
-  it('can have `from`, `when`, and `until` conditions all at once', () => {
+  it('can have `from`, `when`, and `until` conditions all at once', function () {
     {
       // normal usage
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(false);
+      var from = (0, _derivable.atom)(false);
+      var when = (0, _derivable.atom)(false);
+      var until = (0, _derivable.atom)(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var a = (0, _derivable.atom)('a');
+      var val = null;
+      a.react(function (a) {
+        val = a;
+      }, { from: from, when: when, until: until });
 
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(val, null);
 
       from.set(true);
       // when is still false
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(val, null);
       when.set(true);
-      assert.strictEqual(val, 'a');
+      _assert2.default.strictEqual(val, 'a');
       a.set('b');
-      assert.strictEqual(val, 'b');
+      _assert2.default.strictEqual(val, 'b');
       when.set(false);
       a.set('c');
-      assert.strictEqual(val, 'b');
+      _assert2.default.strictEqual(val, 'b');
       when.set(true);
-      assert.strictEqual(val, 'c');
+      _assert2.default.strictEqual(val, 'c');
       until.set(true);
       a.set('d');
-      assert.strictEqual(val, 'c');
+      _assert2.default.strictEqual(val, 'c');
     }
     {
       // until already true
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(true);
+      var _from = (0, _derivable.atom)(false);
+      var _when = (0, _derivable.atom)(false);
+      var _until = (0, _derivable.atom)(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a = (0, _derivable.atom)('a');
+      var _val = null;
+      _a.react(function (a) {
+        _val = a;
+      }, { from: _from, when: _when, until: _until });
 
-      assert.strictEqual(val, null);
-      from.set(true);
+      _assert2.default.strictEqual(_val, null);
+      _from.set(true);
       // when is still false
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val, null);
+      _when.set(true);
+      _assert2.default.strictEqual(_val, null);
     }
     {
       // until already true
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(true);
+      var _from2 = (0, _derivable.atom)(false);
+      var _when2 = (0, _derivable.atom)(false);
+      var _until2 = (0, _derivable.atom)(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a2 = (0, _derivable.atom)('a');
+      var _val2 = null;
+      _a2.react(function (a) {
+        _val2 = a;
+      }, { from: _from2, when: _when2, until: _until2 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
+      _assert2.default.strictEqual(_val2, null);
+      _from2.set(true);
       // when is still false
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val2, null);
+      _when2.set(true);
+      _assert2.default.strictEqual(_val2, null);
     }
     {
       // when already true
-      const from = atom(false);
-      const when = atom(true);
-      const until = atom(false);
+      var _from3 = (0, _derivable.atom)(false);
+      var _when3 = (0, _derivable.atom)(true);
+      var _until3 = (0, _derivable.atom)(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a3 = (0, _derivable.atom)('a');
+      var _val3 = null;
+      _a3.react(function (a) {
+        _val3 = a;
+      }, { from: _from3, when: _when3, until: _until3 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
-      assert.strictEqual(val, 'a');
+      _assert2.default.strictEqual(_val3, null);
+      _from3.set(true);
+      _assert2.default.strictEqual(_val3, 'a');
     }
     {
       // from and when already true
-      const from = atom(true);
-      const when = atom(true);
-      const until = atom(false);
+      var _from4 = (0, _derivable.atom)(true);
+      var _when4 = (0, _derivable.atom)(true);
+      var _until4 = (0, _derivable.atom)(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a4 = (0, _derivable.atom)('a');
+      var _val4 = null;
+      _a4.react(function (a) {
+        _val4 = a;
+      }, { from: _from4, when: _when4, until: _until4 });
 
-      assert.strictEqual(val, 'a');
+      _assert2.default.strictEqual(_val4, 'a');
     }
     {
       // from and until already true
-      const from = atom(true);
-      const when = atom(false);
-      const until = atom(true);
+      var _from5 = (0, _derivable.atom)(true);
+      var _when5 = (0, _derivable.atom)(false);
+      var _until5 = (0, _derivable.atom)(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a5 = (0, _derivable.atom)('a');
+      var _val5 = null;
+      _a5.react(function (a) {
+        _val5 = a;
+      }, { from: _from5, when: _when5, until: _until5 });
 
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val5, null);
+      _when5.set(true);
+      _assert2.default.strictEqual(_val5, null);
     }
     {
       // until and when already true
-      const from = atom(false);
-      const when = atom(true);
-      const until = atom(true);
+      var _from6 = (0, _derivable.atom)(false);
+      var _when6 = (0, _derivable.atom)(true);
+      var _until6 = (0, _derivable.atom)(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a6 = (0, _derivable.atom)('a');
+      var _val6 = null;
+      _a6.react(function (a) {
+        _val6 = a;
+      }, { from: _from6, when: _when6, until: _until6 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val6, null);
+      _from6.set(true);
+      _assert2.default.strictEqual(_val6, null);
     }
     {
-      // when and until become true atomically
-      const when = atom(false);
-      const until = atom(false);
+      (function () {
+        // when and until become true atomically
+        var when = (0, _derivable.atom)(false);
+        var until = (0, _derivable.atom)(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {when, until});
+        var a = (0, _derivable.atom)('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: when, until: until });
 
-      assert.strictEqual(val, null);
-      _.atomically(() => {
-        when.set(true);
-        until.set(true);
-      });
+        _assert2.default.strictEqual(val, null);
+        _derivable2.default.atomically(function () {
+          when.set(true);
+          until.set(true);
+        });
 
-      assert.strictEqual(val, null);
+        _assert2.default.strictEqual(val, null);
+      })();
     }
   });
 
-  it('can specify that the first reaction should be skipped', () => {
-    const when = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {skipFirst: true, when});
+  it('can specify that the first reaction should be skipped', function () {
+    var when = (0, _derivable.atom)(false);
+    var a = (0, _derivable.atom)('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { skipFirst: true, when: when });
 
-    assert.strictEqual(val, null);
+    _assert2.default.strictEqual(val, null);
     when.set(true);
-    assert.strictEqual(val, null);
+    _assert2.default.strictEqual(val, null);
     a.set('b');
-    assert.strictEqual(val, 'b');
+    _assert2.default.strictEqual(val, 'b');
   });
 
-  it('can specify that a reaction should only happen once', () => {
+  it('can specify that a reaction should only happen once', function () {
     {
       // without skipFirst
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {once: true});
+      var a = (0, _derivable.atom)('a');
+      var val = null;
+      a.react(function (a) {
+        val = a;
+      }, { once: true });
 
-      assert.strictEqual(val, 'a');
+      _assert2.default.strictEqual(val, 'a');
 
       a.set('b');
-      assert.strictEqual(val, 'a');
+      _assert2.default.strictEqual(val, 'a');
     }
     {
       // with skipFirst
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {skipFirst: true, once: true});
+      var _a7 = (0, _derivable.atom)('a');
+      var _val7 = null;
+      _a7.react(function (a) {
+        _val7 = a;
+      }, { skipFirst: true, once: true });
 
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val7, null);
 
-      a.set('b');
-      assert.strictEqual(val, 'b');
-      a.set('c');
-      assert.strictEqual(val, 'b');
+      _a7.set('b');
+      _assert2.default.strictEqual(_val7, 'b');
+      _a7.set('c');
+      _assert2.default.strictEqual(_val7, 'b');
     }
     {
       // with when
-      const when = atom(false);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {when, once: true});
+      var when = (0, _derivable.atom)(false);
+      var _a8 = (0, _derivable.atom)('a');
+      var _val8 = null;
+      _a8.react(function (a) {
+        _val8 = a;
+      }, { when: when, once: true });
 
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val8, null);
 
-      a.set('b');
+      _a8.set('b');
 
-      assert.strictEqual(val, null);
+      _assert2.default.strictEqual(_val8, null);
       when.set(true);
 
-      assert.strictEqual(val, 'b');
+      _assert2.default.strictEqual(_val8, 'b');
 
-      a.set('c');
-      assert.strictEqual(val, 'b');
+      _a8.set('c');
+      _assert2.default.strictEqual(_val8, 'b');
     }
   });
 
-  it('has .onStart and .onStop lifecycle hooks', () => {
-    const from = atom(false);
-    const when = atom(false);
-    const until = atom(false);
+  it('has .onStart and .onStop lifecycle hooks', function () {
+    var from = (0, _derivable.atom)(false);
+    var when = (0, _derivable.atom)(false);
+    var until = (0, _derivable.atom)(false);
 
-    const a = atom('a');
-    let starts = 0;
-    let stops = 0;
+    var a = (0, _derivable.atom)('a');
+    var starts = 0;
+    var stops = 0;
 
-    a.react(() => {}, {
-      from,
-      when,
-      until,
-      onStart: () => starts++,
-      onStop: () => stops++
+    a.react(function () {}, {
+      from: from,
+      when: when,
+      until: until,
+      onStart: function onStart() {
+        return starts++;
+      },
+      onStop: function onStop() {
+        return stops++;
+      }
     });
 
-    assert.strictEqual(starts, 0);
-    assert.strictEqual(stops, 0);
+    _assert2.default.strictEqual(starts, 0);
+    _assert2.default.strictEqual(stops, 0);
 
     from.set(true);
-    assert.strictEqual(starts, 0);
-    assert.strictEqual(stops, 0);
+    _assert2.default.strictEqual(starts, 0);
+    _assert2.default.strictEqual(stops, 0);
     when.set(true);
-    assert.strictEqual(starts, 1);
-    assert.strictEqual(stops, 0);
+    _assert2.default.strictEqual(starts, 1);
+    _assert2.default.strictEqual(stops, 0);
     when.set(false);
-    assert.strictEqual(starts, 1);
-    assert.strictEqual(stops, 1);
+    _assert2.default.strictEqual(starts, 1);
+    _assert2.default.strictEqual(stops, 1);
     when.set(true);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 1);
+    _assert2.default.strictEqual(starts, 2);
+    _assert2.default.strictEqual(stops, 1);
     until.set(true);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 2);
+    _assert2.default.strictEqual(starts, 2);
+    _assert2.default.strictEqual(stops, 2);
     when.set(false);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 2);
+    _assert2.default.strictEqual(starts, 2);
+    _assert2.default.strictEqual(stops, 2);
   });
 });
 
-describe("the .react method", () => {
-  it("must have a function as the first argument", () => {
-    assert.throws(() => atom(5).react());
-    assert.throws(() => atom(5).react(4));
-    assert.throws(() => atom(5).react(''));
-    assert.throws(() => atom(5).react({}));
+describe("the .react method", function () {
+  it("must have a function as the first argument", function () {
+    _assert2.default.throws(function () {
+      return (0, _derivable.atom)(5).react();
+    });
+    _assert2.default.throws(function () {
+      return (0, _derivable.atom)(5).react(4);
+    });
+    _assert2.default.throws(function () {
+      return (0, _derivable.atom)(5).react('');
+    });
+    _assert2.default.throws(function () {
+      return (0, _derivable.atom)(5).react({});
+    });
   });
 });
 
-describe("setting the values of atoms in a reaction phase", () => {
-  it("is ok as long as no cycles are created", () => {
-    const a = atom("a");
+describe("setting the values of atoms in a reaction phase", function () {
+  it("is ok as long as no cycles are created", function () {
+    var a = (0, _derivable.atom)("a");
 
-    const b = atom("b");
+    var b = (0, _derivable.atom)("b");
 
-    a.react(a => b.set(b.get() + a));
+    a.react(function (a) {
+      return b.set(b.get() + a);
+    });
 
-    assert.strictEqual(b.get(), "ba");
+    _assert2.default.strictEqual(b.get(), "ba");
 
     a.set("aa");
 
-    assert.strictEqual(b.get(), "baaa");
+    _assert2.default.strictEqual(b.get(), "baaa");
 
     // derivable disallows
-    assert.throws(() => b.react(b => a.set(b)));
+    _assert2.default.throws(function () {
+      return b.react(function (b) {
+        return a.set(b);
+      });
+    });
   });
 
-  it("is not allowed if the atom in question is upstream of the reactor", () => {
-    const n = atom(3);
+  it("is not allowed if the atom in question is upstream of the reactor", function () {
+    var n = (0, _derivable.atom)(3);
 
     // currently 1
-    const nmod2 = n.derive(x => x % 2);
+    var nmod2 = n.derive(function (x) {
+      return x % 2;
+    });
 
-    const double = n => n * 2;
+    var double = function double(n) {
+      return n * 2;
+    };
 
-    const r = nmod2.reactor(_ => n.swap(double)).start();
+    var r = nmod2.reactor(function (_) {
+      return n.swap(double);
+    }).start();
 
-    assert.throws(() => n.set(2));
+    _assert2.default.throws(function () {
+      return n.set(2);
+    });
     // nmod2 becomes 0, reactor triggers n being set to 4
     // reactor caught up in sweep again, identified as cycle
   });
 });
 
-describe("tickers", () => {
-  it("allow reacting at custom intervals", () => {
-    const a = atom("a");
+describe("tickers", function () {
+  it("allow reacting at custom intervals", function () {
+    var a = (0, _derivable.atom)("a");
 
-    const ticker = _.ticker();
+    var ticker = _derivable2.default.ticker();
 
-    let b = "b";
+    var b = "b";
 
-    a.reactor(a => b = a).start();
+    a.reactor(function (a) {
+      return b = a;
+    }).start();
 
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
 
     a.set("c");
 
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
 
     a.set("d");
 
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
 
     ticker.tick();
 
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
 
     a.set("e");
 
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
 
     a.set("f");
 
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
 
     ticker.tick();
 
-    assert.strictEqual(b, "f");
+    _assert2.default.strictEqual(b, "f");
 
     ticker.release();
   });
 
-  it("can be used by more than one piece of the stack", () => {
-    const a = atom("a");
-    const ticker1 = _.ticker();
-    const ticker2 = _.ticker();
-    const ticker3 = _.ticker();
+  it("can be used by more than one piece of the stack", function () {
+    var a = (0, _derivable.atom)("a");
+    var ticker1 = _derivable2.default.ticker();
+    var ticker2 = _derivable2.default.ticker();
+    var ticker3 = _derivable2.default.ticker();
 
-    assert(ticker1 !== ticker2);
-    assert(ticker1 !== ticker3);
-    assert(ticker2 !== ticker3);
+    (0, _assert2.default)(ticker1 !== ticker2);
+    (0, _assert2.default)(ticker1 !== ticker3);
+    (0, _assert2.default)(ticker2 !== ticker3);
 
-    let b = "b";
+    var b = "b";
 
-    a.reactor(a => b = a).start();
-    assert.strictEqual(b, "b");
+    a.reactor(function (a) {
+      return b = a;
+    }).start();
+    _assert2.default.strictEqual(b, "b");
     a.set("c");
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
     a.set("d");
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
     ticker1.tick();
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
     a.set("e");
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
     a.set("f");
-    assert.strictEqual(b, "d");
+    _assert2.default.strictEqual(b, "d");
     ticker2.tick();
-    assert.strictEqual(b, "f");
+    _assert2.default.strictEqual(b, "f");
     a.set("g");
     ticker3.tick();
-    assert.strictEqual(b, "g");
+    _assert2.default.strictEqual(b, "g");
 
     ticker1.release();
     ticker2.release();
     ticker3.release();
   });
 
-  it("are reference counted", () => {
-    const a = atom(null);
-    let b = "b";
+  it("are reference counted", function () {
+    var a = (0, _derivable.atom)(null);
+    var b = "b";
 
-    a.reactor(a => b = a).start();
+    a.reactor(function (a) {
+      return b = a;
+    }).start();
 
     a.set("a");
 
-    assert.strictEqual(b, "a");
+    _assert2.default.strictEqual(b, "a");
 
-    const ticker1 = _.ticker();
-    const ticker2 = _.ticker();
-    const ticker3 = _.ticker();
+    var ticker1 = _derivable2.default.ticker();
+    var ticker2 = _derivable2.default.ticker();
+    var ticker3 = _derivable2.default.ticker();
 
     a.set("b");
 
-    assert.strictEqual(b, "a");
+    _assert2.default.strictEqual(b, "a");
 
     ticker1.release();
-    assert.strictEqual(b, "a");
+    _assert2.default.strictEqual(b, "a");
     ticker2.release();
-    assert.strictEqual(b, "a");
+    _assert2.default.strictEqual(b, "a");
     ticker3.release();
-    assert.strictEqual(b, "b");
+    _assert2.default.strictEqual(b, "b");
 
     a.set("c");
 
-    assert.strictEqual(b, "c");
-
+    _assert2.default.strictEqual(b, "c");
   });
 
-  it('can reset the global state to the last tick', () => {
-    const a = atom('a');
-    const b = atom('b');
+  it('can reset the global state to the last tick', function () {
+    var a = (0, _derivable.atom)('a');
+    var b = (0, _derivable.atom)('b');
 
-    const t = _.ticker();
+    var t = _derivable2.default.ticker();
 
     a.set('b');
     b.set('a');
 
-    assert.strictEqual(a.get(), 'b');
-    assert.strictEqual(b.get(), 'a');
+    _assert2.default.strictEqual(a.get(), 'b');
+    _assert2.default.strictEqual(b.get(), 'a');
 
     t.reset();
 
-    assert.strictEqual(a.get(), 'a');
-    assert.strictEqual(b.get(), 'b');
+    _assert2.default.strictEqual(a.get(), 'a');
+    _assert2.default.strictEqual(b.get(), 'b');
 
     t.release();
-    assert.throws(() => t.reset());
+    _assert2.default.throws(function () {
+      return t.reset();
+    });
   });
 
-  it("cannot be used after being released", () => {
-    let t1 = _.ticker();
-    let t2 = _.ticker();
+  it("cannot be used after being released", function () {
+    var t1 = _derivable2.default.ticker();
+    var t2 = _derivable2.default.ticker();
 
     t1.release();
 
-    assert.throws(() => t1.release());
+    _assert2.default.throws(function () {
+      return t1.release();
+    });
 
     t2.release();
 
-    assert.throws(() => t2.tick());
+    _assert2.default.throws(function () {
+      return t2.tick();
+    });
   });
 
-  it("should not cause parents to be investigated in the wrong order", () => {
-    const a = atom(null);
-    const b = a.derive(a => a.toString());
-    const c = a.then(b, 'a is null');
+  it("should not cause parents to be investigated in the wrong order", function () {
+    var a = (0, _derivable.atom)(null);
+    var b = a.derive(function (a) {
+      return a.toString();
+    });
+    var c = a.then(b, 'a is null');
 
-    let expecting = 'a is null';
+    var expecting = 'a is null';
 
-    c.react(c => assert.strictEqual(c, expecting));
+    c.react(function (c) {
+      return _assert2.default.strictEqual(c, expecting);
+    });
 
     expecting = 'some other string';
 
@@ -573,25 +690,31 @@ describe("tickers", () => {
     a.set(null);
   });
 
-  it("can be created in reactors", () => {
-    const a = atom('a');
+  it("can be created in reactors", function () {
+    var a = (0, _derivable.atom)('a');
 
-    _.transact(() => {
+    _derivable2.default.transact(function () {
       a.set('b');
-      a.react(a => console.log(a));
+      a.react(function (a) {
+        return console.log(a);
+      });
     });
   });
 });
 
-describe("dependent reactors", () => {
-  it("are invoked after their parent reactors", () => {
-    const arr = atom([0, 1, 2]);
+describe("dependent reactors", function () {
+  it("are invoked after their parent reactors", function () {
+    var arr = (0, _derivable.atom)([0, 1, 2]);
 
     // set up reactor to print 3rd elem of arr, but don't start it
-    const A = arr.reactor(arr => assert.strictEqual('2', arr[2].toString()));
+    var A = arr.reactor(function (arr) {
+      return _assert2.default.strictEqual('2', arr[2].toString());
+    });
 
     // instead control it by reacting to the length of the array
-    const B = arr.derive(a => a.length).reactor(len => {
+    var B = arr.derive(function (a) {
+      return a.length;
+    }).reactor(function (len) {
       if (len >= 3) {
         if (!A.isActive()) A.start().force();
       } else {
@@ -601,44 +724,56 @@ describe("dependent reactors", () => {
     // $> 2
 
     // should not throw
-    arr.set([0,1]);
+    arr.set([0, 1]);
   });
 
-  it("are not stopped before their parent reactors", () => {
-    const state = atom('a');
-    const A = state.reactor({
-      react: () => null,
-      onStop: () => null
+  it("are not stopped before their parent reactors", function () {
+    var state = (0, _derivable.atom)('a');
+    var A = state.reactor({
+      react: function react() {
+        return null;
+      },
+      onStop: function onStop() {
+        return null;
+      }
     });
-    const B = state.reactor(() => A.start()).start().force();
+    var B = state.reactor(function () {
+      return A.start();
+    }).start().force();
 
     B.stop();
 
-    assert(A.isActive());
+    (0, _assert2.default)(A.isActive());
   });
 
-  it("can't invole cyclical dependencies", () => {
-    const state = atom('a');
+  it("can't invole cyclical dependencies", function () {
+    var state = (0, _derivable.atom)('a');
 
-    let A;
-    const B = state.reactor(state => {
+    var A = void 0;
+    var B = state.reactor(function (state) {
       A.stop();
       A.start().force();
     });
 
-    A = state.reactor(state => {
+    A = state.reactor(function (state) {
       B.stop();
       B.start().force();
     });
 
-    assert.throws(() => B.start().force());
+    _assert2.default.throws(function () {
+      return B.start().force();
+    });
   });
 
-  it("can't invole cyclical dependencies", () => {
-    const state = atom('a');
+  it("can't invole cyclical dependencies", function () {
+    var state = (0, _derivable.atom)('a');
 
-    const A = state.reactor(() => null);
-    const B = state.reactor(() => null);
+    var A = state.reactor(function () {
+      return null;
+    });
+    var B = state.reactor(function () {
+      return null;
+    });
 
     A.adopt(B);
     B.adopt(A);
@@ -646,16 +781,22 @@ describe("dependent reactors", () => {
     A.start();
     B.start();
 
-    assert.throws(() => state.set('b'));
+    _assert2.default.throws(function () {
+      return state.set('b');
+    });
   });
 });
 
-describe('the `oprhan` and `adopt` methods', () => {
-  it('allow one to change the parent-child relationships manually', () => {
-    const state = atom('a');
+describe('the `oprhan` and `adopt` methods', function () {
+  it('allow one to change the parent-child relationships manually', function () {
+    var state = (0, _derivable.atom)('a');
 
-    const A = state.reactor(() => null);
-    const B = state.reactor(() => null);
+    var A = state.reactor(function () {
+      return null;
+    });
+    var B = state.reactor(function () {
+      return null;
+    });
 
     A.adopt(B);
     B.adopt(A);
@@ -663,7 +804,9 @@ describe('the `oprhan` and `adopt` methods', () => {
     A.start();
     B.start();
 
-    assert.throws(() => state.set('b'));
+    _assert2.default.throws(function () {
+      return state.set('b');
+    });
 
     A.orphan();
 
@@ -671,33 +814,37 @@ describe('the `oprhan` and `adopt` methods', () => {
   });
 });
 
-describe('the `when` optons to the `react` method', () => {
-  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
-    const $Cond = atom(false);
-    const $N = atom(0);
-    const inc = x => x + 1;
+describe('the `when` optons to the `react` method', function () {
+  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', function () {
+    var $Cond = (0, _derivable.atom)(false);
+    var $N = (0, _derivable.atom)(0);
+    var inc = function inc(x) {
+      return x + 1;
+    };
 
-    let i = 0;
-    $N.react(n => i++, {when: $Cond});
+    var i = 0;
+    $N.react(function (n) {
+      return i++;
+    }, { when: $Cond });
 
-    assert.strictEqual(i, 0);
+    _assert2.default.strictEqual(i, 0);
 
     $N.swap(inc);
 
-    assert.strictEqual(i, 0);
+    _assert2.default.strictEqual(i, 0);
 
     $Cond.set(true);
 
-    assert.strictEqual(i, 1);
+    _assert2.default.strictEqual(i, 1);
 
     $N.swap(inc);
 
-    assert.strictEqual(i, 2);
+    _assert2.default.strictEqual(i, 2);
 
     $N.swap(inc);
     $N.swap(inc);
 
-    assert.strictEqual(i, 4);
+    _assert2.default.strictEqual(i, 4);
 
     // it uses truthy/falsiness
     $Cond.set(0);
@@ -705,28 +852,32 @@ describe('the `when` optons to the `react` method', () => {
     $N.swap(inc);
     $N.swap(inc);
 
-    assert.strictEqual(i, 4);
+    _assert2.default.strictEqual(i, 4);
   });
 
-  it('casts the condition to a boolean', () => {
-    const $Cond = atom("blub");
-    const $N = atom(0);
-    const inc = x => x + 1;
+  it('casts the condition to a boolean', function () {
+    var $Cond = (0, _derivable.atom)("blub");
+    var $N = (0, _derivable.atom)(0);
+    var inc = function inc(x) {
+      return x + 1;
+    };
 
-    let i = 0;
+    var i = 0;
 
-    $N.react(n => i++, {when: $Cond});
+    $N.react(function (n) {
+      return i++;
+    }, { when: $Cond });
 
-    assert.strictEqual(i, 1);
+    _assert2.default.strictEqual(i, 1);
 
     $N.swap(inc);
-    assert.strictEqual(i, 2);
+    _assert2.default.strictEqual(i, 2);
     $N.swap(inc);
     $N.swap(inc);
     $N.swap(inc);
-    assert.strictEqual(i, 5);
+    _assert2.default.strictEqual(i, 5);
     $Cond.set("steve");
     // sould cause .force() if not casting to boolean, which would inc i
-    assert.strictEqual(i, 5);
+    _assert2.default.strictEqual(i, 5);
   });
 });

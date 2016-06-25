@@ -1,637 +1,727 @@
-import _, {atom, derive, derivation, transact} from '../dist/derivable';
-import assert from 'assert';
-import { fromJS } from 'immutable'
-import { label } from './util';
+'use strict';
 
-describe("a derivation", () => {
-  const oneGigabyte = 1024 * 1024 * 1024;
-  const bytes = atom(oneGigabyte);
-  let kiloBytes, megaBytes;
+var _templateObject = _taggedTemplateLiteral(['', ' ', ''], ['', ' ', '']);
 
-  const orderUp = (n, order=1) => {
-    return order > 0 ? orderUp(n / 1024, order-1) : n
+var _derivable = require('../dist/derivable');
+
+var _derivable2 = _interopRequireDefault(_derivable);
+
+var _assert = require('assert');
+
+var _assert2 = _interopRequireDefault(_assert);
+
+var _immutable = require('immutable');
+
+var _util = require('./util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+describe("a derivation", function () {
+  var oneGigabyte = 1024 * 1024 * 1024;
+  var bytes = (0, _derivable.atom)(oneGigabyte);
+  var kiloBytes = void 0,
+      megaBytes = void 0;
+
+  var orderUp = function orderUp(n) {
+    var order = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+
+    return order > 0 ? orderUp(n / 1024, order - 1) : n;
   };
 
-  it("can be created via the Atom.derive(f) method", () => {
+  it("can be created via the Atom.derive(f) method", function () {
     kiloBytes = bytes.derive(orderUp);
-    assert.strictEqual(kiloBytes.get(), 1024 * 1024)
+    _assert2.default.strictEqual(kiloBytes.get(), 1024 * 1024);
   });
 
-  it("can also be created via the derivation function in the derivable package", () => {
-    megaBytes = derivation(() => orderUp(kiloBytes.get()));
-    assert.strictEqual(megaBytes.get(), 1024);
+  it("can also be created via the derivation function in the derivable package", function () {
+    megaBytes = (0, _derivable.derivation)(function () {
+      return orderUp(kiloBytes.get());
+    });
+    _assert2.default.strictEqual(megaBytes.get(), 1024);
   });
 
-  it("can derive from more than one atom", () => {
-    const order = label(atom(0), "O");
-    const orderName = label(order.derive(order => {
-      return (["bytes", "kilobytes", "megabytes", "gigabytes"])[order];
+  it("can derive from more than one atom", function () {
+    var order = (0, _util.label)((0, _derivable.atom)(0), "O");
+    var orderName = (0, _util.label)(order.derive(function (order) {
+      return ["bytes", "kilobytes", "megabytes", "gigabytes"][order];
     }), "ON");
-    const size = label(bytes.derive(orderUp, order), "!size!");
-    const sizeString = derive`${size} ${orderName}`;
+    var size = (0, _util.label)(bytes.derive(orderUp, order), "!size!");
+    var sizeString = (0, _derivable.derive)(_templateObject, size, orderName);
 
-    assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
-    assert.strictEqual(sizeString.get(), bytes.get() + " bytes");
+    _assert2.default.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
+    _assert2.default.strictEqual(sizeString.get(), bytes.get() + " bytes");
     order.set(1);
-    assert.strictEqual(size.get(), kiloBytes.get(), "size is in kbs when order is 1");
-    assert.strictEqual(sizeString.get(), kiloBytes.get() + " kilobytes");
+    _assert2.default.strictEqual(size.get(), kiloBytes.get(), "size is in kbs when order is 1");
+    _assert2.default.strictEqual(sizeString.get(), kiloBytes.get() + " kilobytes");
     order.set(2);
-    assert.strictEqual(size.get(), megaBytes.get(), "size is in mbs when order is 2");
-    assert.strictEqual(sizeString.get(), megaBytes.get() + " megabytes");
+    _assert2.default.strictEqual(size.get(), megaBytes.get(), "size is in mbs when order is 2");
+    _assert2.default.strictEqual(sizeString.get(), megaBytes.get() + " megabytes");
     order.set(3);
-    assert.strictEqual(size.get(), 1, "size is in gbs when order is 2");
-    assert.strictEqual(sizeString.get(), "1 gigabytes");
+    _assert2.default.strictEqual(size.get(), 1, "size is in gbs when order is 2");
+    _assert2.default.strictEqual(sizeString.get(), "1 gigabytes");
   });
 
-  it("implements the derivable interface", () => {
-    let name = atom("smithe");
-    let size6 = name.derive(x => x.length === 6);
-    let startsWithS = name.derive(x => x[0] === "s");
-    let endsWithE = name.derive(x => x[x.length-1] === "e");
+  it("implements the derivable interface", function () {
+    var name = (0, _derivable.atom)("smithe");
+    var size6 = name.derive(function (x) {
+      return x.length === 6;
+    });
+    var startsWithS = name.derive(function (x) {
+      return x[0] === "s";
+    });
+    var endsWithE = name.derive(function (x) {
+      return x[x.length - 1] === "e";
+    });
 
-    assert.strictEqual(size6.get(), true, "has length 6");
-    assert.strictEqual(startsWithS.get(), true, "starts with s");
-    assert.strictEqual(endsWithE.get(), true, "ends wth e");
+    _assert2.default.strictEqual(size6.get(), true, "has length 6");
+    _assert2.default.strictEqual(startsWithS.get(), true, "starts with s");
+    _assert2.default.strictEqual(endsWithE.get(), true, "ends wth e");
 
-    let isSmithe = name.is(atom("smithe"));
+    var isSmithe = name.is((0, _derivable.atom)("smithe"));
 
-    assert.strictEqual(isSmithe.get(), true, "is smithe");
+    _assert2.default.strictEqual(isSmithe.get(), true, "is smithe");
 
-    let size6orE = size6.or(endsWithE);
-    let size6andE = size6.and(endsWithE);
-    let sOrE = startsWithS.or(endsWithE);
-    let sAndE = startsWithS.and(endsWithE);
+    var size6orE = size6.or(endsWithE);
+    var size6andE = size6.and(endsWithE);
+    var sOrE = startsWithS.or(endsWithE);
+    var sAndE = startsWithS.and(endsWithE);
 
-    assert.strictEqual(size6orE.get(), true);
-    assert.strictEqual(size6andE.get(), true);
-    assert.strictEqual(sOrE.get(), true);
-    assert.strictEqual(sAndE.get(), true);
+    _assert2.default.strictEqual(size6orE.get(), true);
+    _assert2.default.strictEqual(size6andE.get(), true);
+    _assert2.default.strictEqual(sOrE.get(), true);
+    _assert2.default.strictEqual(sAndE.get(), true);
 
     name.set("smithy");
 
-    assert.strictEqual(size6.get(), true, "has length 6");
-    assert.strictEqual(startsWithS.get(), true, "starts with s");
-    assert.strictEqual(endsWithE.get(), false, "ends wth y");
+    _assert2.default.strictEqual(size6.get(), true, "has length 6");
+    _assert2.default.strictEqual(startsWithS.get(), true, "starts with s");
+    _assert2.default.strictEqual(endsWithE.get(), false, "ends wth y");
 
-    assert.strictEqual(isSmithe.get(), false, "is not smithe");
+    _assert2.default.strictEqual(isSmithe.get(), false, "is not smithe");
 
-    assert.strictEqual(size6orE.get(), true);
-    assert.strictEqual(size6andE.get(), false);
-    assert.strictEqual(sOrE.get(), true);
-    assert.strictEqual(sAndE.get(), false);
+    _assert2.default.strictEqual(size6orE.get(), true);
+    _assert2.default.strictEqual(size6andE.get(), false);
+    _assert2.default.strictEqual(sOrE.get(), true);
+    _assert2.default.strictEqual(sAndE.get(), false);
 
-    assert.strictEqual(size6orE.not().get(), false);
-    assert.strictEqual(size6andE.not().get(), true);
-    assert.strictEqual(sOrE.not().get(), false);
-    assert.strictEqual(sAndE.not().get(), true);
+    _assert2.default.strictEqual(size6orE.not().get(), false);
+    _assert2.default.strictEqual(size6andE.not().get(), true);
+    _assert2.default.strictEqual(sOrE.not().get(), false);
+    _assert2.default.strictEqual(sAndE.not().get(), true);
 
-    assert.strictEqual(size6orE.not().not().get(), true);
-    assert.strictEqual(size6andE.not().not().get(), false);
-    assert.strictEqual(sOrE.not().not().get(), true);
-    assert.strictEqual(sAndE.not().not().get(), false);
+    _assert2.default.strictEqual(size6orE.not().not().get(), true);
+    _assert2.default.strictEqual(size6andE.not().not().get(), false);
+    _assert2.default.strictEqual(sOrE.not().not().get(), true);
+    _assert2.default.strictEqual(sAndE.not().not().get(), false);
 
-    assert.strictEqual(name.derive('length').get(), 6);
-    assert.strictEqual(name.derive(0).get(), "s");
+    _assert2.default.strictEqual(name.derive('length').get(), 6);
+    _assert2.default.strictEqual(name.derive(0).get(), "s");
 
-    let x = startsWithS.then(
-      () => assert(true, "smithy starts with s"),
-      () => assert(false, "smithy what?")
-    ).get()();
+    var x = startsWithS.then(function () {
+      return (0, _assert2.default)(true, "smithy starts with s");
+    }, function () {
+      return (0, _assert2.default)(false, "smithy what?");
+    }).get()();
 
+    endsWithE.then(function () {
+      return (0, _assert2.default)(false, "smithy doesn't end in e?!");
+    }, function () {
+      return (0, _assert2.default)(true, "smithy ends in y yo");
+    }).get()();
 
-    endsWithE.then(
-      () => assert(false, "smithy doesn't end in e?!"),
-      () => assert(true, "smithy ends in y yo")
-    ).get()();
-
-    let firstLetter = name.derive(x => x[0]);
-
-    firstLetter.switch(
-      "a", () => assert(false, "smithy doesn't start with a"),
-      "b", () => assert(false, "smithy doesn't start with b"),
-      "s", () => assert(true, "smithy starts with s")
-    ).get()();
-
-    it("allows a default value", done => {
-      firstLetter.switch(
-        "a", () => assert(false, "smithy doesn't start with a"),
-        "b", () => assert(false, "smithy doesn't start with b"),
-        "x", "blah",
-        () => assert(true, "yay")
-      ).get()();
+    var firstLetter = name.derive(function (x) {
+      return x[0];
     });
 
-    const nonexistent = atom(null);
-    assert(nonexistent.mThen(false, true).get(), "null doesn't exist");
+    firstLetter.switch("a", function () {
+      return (0, _assert2.default)(false, "smithy doesn't start with a");
+    }, "b", function () {
+      return (0, _assert2.default)(false, "smithy doesn't start with b");
+    }, "s", function () {
+      return (0, _assert2.default)(true, "smithy starts with s");
+    }).get()();
+
+    it("allows a default value", function (done) {
+      firstLetter.switch("a", function () {
+        return (0, _assert2.default)(false, "smithy doesn't start with a");
+      }, "b", function () {
+        return (0, _assert2.default)(false, "smithy doesn't start with b");
+      }, "x", "blah", function () {
+        return (0, _assert2.default)(true, "yay");
+      }).get()();
+    });
+
+    var nonexistent = (0, _derivable.atom)(null);
+    (0, _assert2.default)(nonexistent.mThen(false, true).get(), "null doesn't exist");
 
     nonexistent.set(false);
-    assert(nonexistent.mThen(true, false).get(), "false exists");
+    (0, _assert2.default)(nonexistent.mThen(true, false).get(), "false exists");
 
     nonexistent.set(void 0);
-    assert(nonexistent.mThen(false, true).get(), "undefined doesn't exist");
+    (0, _assert2.default)(nonexistent.mThen(false, true).get(), "undefined doesn't exist");
 
     nonexistent.set("");
-    assert(nonexistent.mThen(true, false).get(), "the empty string exists");
+    (0, _assert2.default)(nonexistent.mThen(true, false).get(), "the empty string exists");
 
     nonexistent.set(0);
-    assert(nonexistent.mThen(true, false).get(), "zero exists");
+    (0, _assert2.default)(nonexistent.mThen(true, false).get(), "zero exists");
 
+    var nestedStuff = (0, _derivable.atom)((0, _immutable.fromJS)({ a: { b: { c: false } } }));
+    var get = function get(x, y) {
+      return x.get(y);
+    };
+    var innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').mOr('not found');
 
-    const nestedStuff = atom(fromJS({a: {b: {c: false}}}));
-    const get = (x, y) => x.get(y);
-    const innermost = nestedStuff.mDerive(get, 'a')
-                                 .mDerive(get, 'b')
-                                 .mDerive(get, 'c')
-                                 .mOr('not found');
+    _assert2.default.strictEqual(innermost.get(), false);
 
-    assert.strictEqual(innermost.get(), false);
+    nestedStuff.set((0, _immutable.fromJS)({ a: { b: { c: 'found' } } }));
 
-    nestedStuff.set(fromJS({a: {b: {c: 'found'}}}));
+    _assert2.default.strictEqual(innermost.get(), 'found');
 
-    assert.strictEqual(innermost.get(), 'found');
+    nestedStuff.set((0, _immutable.fromJS)({ a: { b: { d: 'd' } } }));
 
-    nestedStuff.set(fromJS({a: {b: {d: 'd'}}}));
+    _assert2.default.strictEqual(innermost.get(), 'not found');
 
-    assert.strictEqual(innermost.get(), 'not found');
+    nestedStuff.set((0, _immutable.fromJS)({ a: { d: { d: 'd' } } }));
 
-    nestedStuff.set(fromJS({a: {d: {d: 'd'}}}));
+    _assert2.default.strictEqual(innermost.get(), 'not found');
 
-    assert.strictEqual(innermost.get(), 'not found');
+    nestedStuff.set((0, _immutable.fromJS)({ d: { d: { d: 'd' } } }));
 
-    nestedStuff.set(fromJS({d: {d: {d: 'd'}}}));
-
-    assert.strictEqual(innermost.get(), 'not found');
+    _assert2.default.strictEqual(innermost.get(), 'not found');
 
     nestedStuff.set(null);
 
-    assert.strictEqual(innermost.get(), 'not found');
+    _assert2.default.strictEqual(innermost.get(), 'not found');
 
-    const thingOr = nestedStuff.mOr('not there');
-    assert.strictEqual(thingOr.get(), 'not there');
+    var thingOr = nestedStuff.mOr('not there');
+    _assert2.default.strictEqual(thingOr.get(), 'not there');
 
     nestedStuff.set(false);
-    assert.strictEqual(thingOr.get(), false);
+    _assert2.default.strictEqual(thingOr.get(), false);
 
-    const thingAnd = nestedStuff.mAnd('yes there');
+    var thingAnd = nestedStuff.mAnd('yes there');
 
-    assert.strictEqual(thingAnd.get(), 'yes there');
+    _assert2.default.strictEqual(thingAnd.get(), 'yes there');
 
     nestedStuff.set(null);
 
-    assert.strictEqual(thingAnd.get(), null);
+    _assert2.default.strictEqual(thingAnd.get(), null);
   });
 
-  it('can be re-instantiated with custom equality-checking', () => {
-    const a = atom(5);
-    const amod2map = a.derive(a => ({a: a % 2}));
+  it('can be re-instantiated with custom equality-checking', function () {
+    var a = (0, _derivable.atom)(5);
+    var amod2map = a.derive(function (a) {
+      return { a: a % 2 };
+    });
 
-    let numReactions = 0;
-    amod2map.react(() => numReactions++, {skipFirst: true});
+    var numReactions = 0;
+    amod2map.react(function () {
+      return numReactions++;
+    }, { skipFirst: true });
 
-    assert.strictEqual(numReactions, 0);
+    _assert2.default.strictEqual(numReactions, 0);
     a.set(7);
-    assert.strictEqual(numReactions, 1);
+    _assert2.default.strictEqual(numReactions, 1);
     a.set(9);
-    assert.strictEqual(numReactions, 2);
+    _assert2.default.strictEqual(numReactions, 2);
     a.set(11);
-    assert.strictEqual(numReactions, 3);
+    _assert2.default.strictEqual(numReactions, 3);
 
-    const amod2map2 = a
-      .derive(a => ({a: a % 2}))
-      .withEquality(({a: a}, {a: b}) => a === b);
+    var amod2map2 = a.derive(function (a) {
+      return { a: a % 2 };
+    }).withEquality(function (_ref, _ref2) {
+      var a = _ref.a;
+      var b = _ref2.a;
+      return a === b;
+    });
 
-    let numReactions2 = 0;
-    amod2map2.react(() => numReactions2++, {skipFirst: true});
+    var numReactions2 = 0;
+    amod2map2.react(function () {
+      return numReactions2++;
+    }, { skipFirst: true });
 
-    assert.strictEqual(numReactions2, 0);
+    _assert2.default.strictEqual(numReactions2, 0);
     a.set(7);
-    assert.strictEqual(numReactions2, 0);
+    _assert2.default.strictEqual(numReactions2, 0);
     a.set(9);
-    assert.strictEqual(numReactions2, 0);
+    _assert2.default.strictEqual(numReactions2, 0);
     a.set(11);
-    assert.strictEqual(numReactions2, 0);
+    _assert2.default.strictEqual(numReactions2, 0);
   });
 });
 
-describe("the derive method", () => {
-  it("'pluck's when given a string or derivable string", () => {
-    const obj = atom({nested: 'nested!', other: 'also nested!'});
+describe("the derive method", function () {
+  it("'pluck's when given a string or derivable string", function () {
+    var obj = (0, _derivable.atom)({ nested: 'nested!', other: 'also nested!' });
 
-    const nested = obj.derive('nested');
-    assert.strictEqual(nested.get(), 'nested!');
+    var nested = obj.derive('nested');
+    _assert2.default.strictEqual(nested.get(), 'nested!');
 
-    const prop = atom('nested');
-    const item = obj.derive(prop);
-    assert.strictEqual(item.get(), 'nested!');
-    prop.set('other')
-    assert.strictEqual(item.get(), 'also nested!');
+    var prop = (0, _derivable.atom)('nested');
+    var item = obj.derive(prop);
+    _assert2.default.strictEqual(item.get(), 'nested!');
+    prop.set('other');
+    _assert2.default.strictEqual(item.get(), 'also nested!');
   });
-  it("also 'pluck's when given a number or derivable number", () => {
-    const arr = atom([1,2,3]);
+  it("also 'pluck's when given a number or derivable number", function () {
+    var arr = (0, _derivable.atom)([1, 2, 3]);
 
-    const middle = arr.derive(1);
-    assert.strictEqual(middle.get(), 2);
+    var middle = arr.derive(1);
+    _assert2.default.strictEqual(middle.get(), 2);
 
-    const cursor = atom(0);
-    const item = arr.derive(cursor);
+    var cursor = (0, _derivable.atom)(0);
+    var item = arr.derive(cursor);
 
-    assert.strictEqual(item.get(), 1);
+    _assert2.default.strictEqual(item.get(), 1);
     cursor.set(1);
-    assert.strictEqual(item.get(), 2);
+    _assert2.default.strictEqual(item.get(), 2);
     cursor.set(2);
-    assert.strictEqual(item.get(), 3);
+    _assert2.default.strictEqual(item.get(), 3);
   });
 
-  it("uses RegExp objects to do string matching", () => {
-    const string = atom("this is a lovely string");
-    const words = string.derive(/\w+/g);
+  it("uses RegExp objects to do string matching", function () {
+    var string = (0, _derivable.atom)("this is a lovely string");
+    var words = string.derive(/\w+/g);
 
-    assert.deepEqual(words.get(), ['this', 'is', 'a', 'lovely', 'string']);
+    _assert2.default.deepEqual(words.get(), ['this', 'is', 'a', 'lovely', 'string']);
 
-    const firstLetters = string.derive(/\b\w/g);
-    assert.deepEqual(firstLetters.get(), ['t', 'i', 'a', 'l', 's']);
+    var firstLetters = string.derive(/\b\w/g);
+    _assert2.default.deepEqual(firstLetters.get(), ['t', 'i', 'a', 'l', 's']);
 
     string.set("you are so kind");
-    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+    _assert2.default.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
   });
 
-  it("throws when given no aguments", () => {
-    assert.throws(() => {
-      atom(null).derive();
+  it("throws when given no aguments", function () {
+    _assert2.default.throws(function () {
+      (0, _derivable.atom)(null).derive();
     });
   });
 
-  it("destructures derivables", () => {
-    const s = atom({a: "aye", b: "bee", c: "cee"});
-    let [a, b, c] = s.derive(['a', 'b', 'c']);
+  it("destructures derivables", function () {
+    var s = (0, _derivable.atom)({ a: "aye", b: "bee", c: "cee" });
 
-    assert.strictEqual(a.get(), "aye");
-    assert.strictEqual(b.get(), "bee");
-    assert.strictEqual(c.get(), "cee");
+    var _s$derive = s.derive(['a', 'b', 'c']);
+
+    var a = _s$derive[0];
+    var b = _s$derive[1];
+    var c = _s$derive[2];
+
+
+    _assert2.default.strictEqual(a.get(), "aye");
+    _assert2.default.strictEqual(b.get(), "bee");
+    _assert2.default.strictEqual(c.get(), "cee");
 
     // swap a and c over
 
-    const aKey = atom('c');
-    const cKey = atom('a');
-    [a, b, c] = s.derive([aKey, 'b', cKey]);
+    var aKey = (0, _derivable.atom)('c');
+    var cKey = (0, _derivable.atom)('a');
 
-    assert.strictEqual(a.get(), "cee");
-    assert.strictEqual(b.get(), "bee");
-    assert.strictEqual(c.get(), "aye");
+    var _s$derive3 = s.derive([aKey, 'b', cKey]);
+
+    a = _s$derive3[0];
+    b = _s$derive3[1];
+    c = _s$derive3[2];
+
+
+    _assert2.default.strictEqual(a.get(), "cee");
+    _assert2.default.strictEqual(b.get(), "bee");
+    _assert2.default.strictEqual(c.get(), "aye");
 
     aKey.set('a');
     cKey.set('c');
 
-    assert.strictEqual(a.get(), "aye");
-    assert.strictEqual(b.get(), "bee");
-    assert.strictEqual(c.get(), "cee");
+    _assert2.default.strictEqual(a.get(), "aye");
+    _assert2.default.strictEqual(b.get(), "bee");
+    _assert2.default.strictEqual(c.get(), "cee");
 
-    const arr = atom(['naught','one','two']);
-    const [naught, one, two] = arr.derive([0, 1, atom(2)]);
+    var arr = (0, _derivable.atom)(['naught', 'one', 'two']);
 
-    assert.strictEqual(naught.get(), "naught");
-    assert.strictEqual(one.get(), "one");
-    assert.strictEqual(two.get(), "two");
+    var _arr$derive = arr.derive([0, 1, (0, _derivable.atom)(2)]);
+
+    var naught = _arr$derive[0];
+    var one = _arr$derive[1];
+    var two = _arr$derive[2];
+
+
+    _assert2.default.strictEqual(naught.get(), "naught");
+    _assert2.default.strictEqual(one.get(), "one");
+    _assert2.default.strictEqual(two.get(), "two");
 
     arr.set(['love', 'fifteen', 'thirty']);
 
-    assert.strictEqual(naught.get(), "love");
-    assert.strictEqual(one.get(), "fifteen");
-    assert.strictEqual(two.get(), "thirty");
+    _assert2.default.strictEqual(naught.get(), "love");
+    _assert2.default.strictEqual(one.get(), "fifteen");
+    _assert2.default.strictEqual(two.get(), "thirty");
   });
 
-  it('can also do destructuring with regexps etc', () => {
-    const string = atom("you are so kind");
+  it('can also do destructuring with regexps etc', function () {
+    var string = (0, _derivable.atom)("you are so kind");
 
-    const [firstLetters, len, lastWord, firstChar] = string.derive([
-      /\b\w/g,
-      'length',
-      s => s.split(' ').pop(),
-      0
-    ]);
+    var _string$derive = string.derive([/\b\w/g, 'length', function (s) {
+      return s.split(' ').pop();
+    }, 0]);
 
-    assert.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
-    assert.strictEqual(len.get(), 15);
-    assert.strictEqual(lastWord.get(), 'kind');
-    assert.strictEqual(firstChar.get(), 'y');
+    var firstLetters = _string$derive[0];
+    var len = _string$derive[1];
+    var lastWord = _string$derive[2];
+    var firstChar = _string$derive[3];
+
+
+    _assert2.default.deepEqual(firstLetters.get(), ['y', 'a', 's', 'k']);
+    _assert2.default.strictEqual(len.get(), 15);
+    _assert2.default.strictEqual(lastWord.get(), 'kind');
+    _assert2.default.strictEqual(firstChar.get(), 'y');
 
     string.set('thank you');
 
-    assert.deepEqual(firstLetters.get(), ['t', 'y']);
-    assert.strictEqual(len.get(), 9);
-    assert.strictEqual(lastWord.get(), 'you');
-    assert.strictEqual(firstChar.get(), 't');
+    _assert2.default.deepEqual(firstLetters.get(), ['t', 'y']);
+    _assert2.default.strictEqual(len.get(), 9);
+    _assert2.default.strictEqual(lastWord.get(), 'you');
+    _assert2.default.strictEqual(firstChar.get(), 't');
   });
 
-  it('can derive with derivable functions', () => {
-    const $Deriver = atom(n => n * 2);
+  it('can derive with derivable functions', function () {
+    var $Deriver = (0, _derivable.atom)(function (n) {
+      return n * 2;
+    });
 
-    const $A = atom(4);
+    var $A = (0, _derivable.atom)(4);
 
-    const $b = $A.derive($Deriver);
+    var $b = $A.derive($Deriver);
 
-    assert.strictEqual($b.get(), 8);
+    _assert2.default.strictEqual($b.get(), 8);
 
-    $Deriver.set(n => n / 2);
+    $Deriver.set(function (n) {
+      return n / 2;
+    });
 
-    assert.strictEqual($b.get(), 2);
+    _assert2.default.strictEqual($b.get(), 2);
   });
 
-  it('can derive with derivable regexps', () => {
-    const $Deriver = atom(/[a-z]+/);
+  it('can derive with derivable regexps', function () {
+    var $Deriver = (0, _derivable.atom)(/[a-z]+/);
 
-    const $A = atom("29892funtimes232");
+    var $A = (0, _derivable.atom)("29892funtimes232");
 
-    const $b = $A.derive($Deriver);
+    var $b = $A.derive($Deriver);
 
-    assert.strictEqual($b.get()[0], "funtimes");
+    _assert2.default.strictEqual($b.get()[0], "funtimes");
 
     $Deriver.set(/\d+/);
 
-    assert.strictEqual($b.get()[0], "29892");
+    _assert2.default.strictEqual($b.get()[0], "29892");
   });
 
-  it(`can't derive with some kinds of things`, () => {
-    assert.throws(() => atom("blah").derive(new Date()));
+  it('can\'t derive with some kinds of things', function () {
+    _assert2.default.throws(function () {
+      return (0, _derivable.atom)("blah").derive(new Date());
+    });
   });
 
-  it(`can't derive with some kinds of derivable things`, () => {
-    const $Deriver = atom(new Date());
+  it('can\'t derive with some kinds of derivable things', function () {
+    var $Deriver = (0, _derivable.atom)(new Date());
 
-    const $A = atom("29892funtimes232");
+    var $A = (0, _derivable.atom)("29892funtimes232");
 
-    const $b = $A.derive($Deriver);
+    var $b = $A.derive($Deriver);
 
-    assert.throws(() => $b.get());
+    _assert2.default.throws(function () {
+      return $b.get();
+    });
   });
 
-  function add () {
-    return Array.prototype.reduce.call(arguments, (a, b) => a + b, 0);
+  function add() {
+    return Array.prototype.reduce.call(arguments, function (a, b) {
+      return a + b;
+    }, 0);
   }
-  it(`can work with three args`, () => {
-    assert.strictEqual(atom(1).derive(add, 2, 3).get(), 6);
-    assert.strictEqual(atom(1).derive(add, atom(2), atom(3)).get(), 6);
+  it('can work with three args', function () {
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, 2, 3).get(), 6);
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, (0, _derivable.atom)(2), (0, _derivable.atom)(3)).get(), 6);
   });
 
-  it(`can work with four args`, () => {
-    assert.strictEqual(atom(1).derive(add, 2, 3, 4).get(), 10);
-    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4).get(), 10);
+  it('can work with four args', function () {
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, 2, 3, 4).get(), 10);
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, (0, _derivable.atom)(2), (0, _derivable.atom)(3), 4).get(), 10);
   });
 
-  it(`can work with five args`, () => {
-    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5).get(), 15);
-    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5).get(), 15);
+  it('can work with five args', function () {
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, 2, 3, 4, 5).get(), 15);
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, (0, _derivable.atom)(2), (0, _derivable.atom)(3), 4, 5).get(), 15);
   });
-  it(`can work with six args`, () => {
-    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5, 6).get(), 21);
-    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5, atom(6)).get(), 21);
+  it('can work with six args', function () {
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, 2, 3, 4, 5, 6).get(), 21);
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, (0, _derivable.atom)(2), (0, _derivable.atom)(3), 4, 5, (0, _derivable.atom)(6)).get(), 21);
   });
-  it(`can work with seven args`, () => {
-    assert.strictEqual(atom(1).derive(add, 2, 3, 4, 5, 6, 7).get(), 28);
-    assert.strictEqual(atom(1).derive(add, atom(2), atom(3), 4, 5, atom(6), atom(7)).get(), 28);
+  it('can work with seven args', function () {
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, 2, 3, 4, 5, 6, 7).get(), 28);
+    _assert2.default.strictEqual((0, _derivable.atom)(1).derive(add, (0, _derivable.atom)(2), (0, _derivable.atom)(3), 4, 5, (0, _derivable.atom)(6), (0, _derivable.atom)(7)).get(), 28);
   });
 });
 
-describe("mDerive", () => {
-  it('is like derive, but propagates nulls', () => {
-    const thing = atom({prop: 'val'});
-    const val = thing.mDerive('prop');
+describe("mDerive", function () {
+  it('is like derive, but propagates nulls', function () {
+    var thing = (0, _derivable.atom)({ prop: 'val' });
+    var val = thing.mDerive('prop');
 
-    assert.strictEqual(val.get(), 'val');
+    _assert2.default.strictEqual(val.get(), 'val');
     thing.set(null);
-    assert.equal(val.get(), null);
+    _assert2.default.equal(val.get(), null);
 
-    const [foo, bar] = thing.mDerive(['foo', 'bar']);
+    var _thing$mDerive = thing.mDerive(['foo', 'bar']);
 
-    assert.equal(foo.get(), null);
-    assert.equal(bar.get(), null);
+    var foo = _thing$mDerive[0];
+    var bar = _thing$mDerive[1];
 
-    thing.set({foo: 'FOO!', bar: 'BAR!'});
 
-    assert.strictEqual(foo.get(), 'FOO!');
-    assert.strictEqual(bar.get(), 'BAR!');
+    _assert2.default.equal(foo.get(), null);
+    _assert2.default.equal(bar.get(), null);
+
+    thing.set({ foo: 'FOO!', bar: 'BAR!' });
+
+    _assert2.default.strictEqual(foo.get(), 'FOO!');
+    _assert2.default.strictEqual(bar.get(), 'BAR!');
   });
 });
 
-describe("derivations inside a transaction", () => {
-  it("can take on temporary values", () => {
-    const a = atom(0);
-    const plusOne = a.derive(a => a + 1);
+describe("derivations inside a transaction", function () {
+  it("can take on temporary values", function () {
+    var a = (0, _derivable.atom)(0);
+    var plusOne = a.derive(function (a) {
+      return a + 1;
+    });
 
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
 
-    transact(abort => {
+    (0, _derivable.transact)(function (abort) {
       a.set(1);
-      assert.strictEqual(plusOne.get(), 2);
+      _assert2.default.strictEqual(plusOne.get(), 2);
       abort();
     });
 
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
 
-    let thrown = null;
+    var thrown = null;
     try {
-      transact(() => {
+      (0, _derivable.transact)(function () {
         a.set(2);
-        assert.strictEqual(plusOne.get(), 3);
+        _assert2.default.strictEqual(plusOne.get(), 3);
         throw "death";
       });
     } catch (e) {
       thrown = e;
     }
 
-    assert.strictEqual(thrown, "death");
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(thrown, "death");
+    _assert2.default.strictEqual(plusOne.get(), 1);
   });
-  it('can take on temporary values even in nested transactions', () => {
-    const a = atom(0);
-    const plusOne = a.derive(a => a + 1);
+  it('can take on temporary values even in nested transactions', function () {
+    var a = (0, _derivable.atom)(0);
+    var plusOne = a.derive(function (a) {
+      return a + 1;
+    });
 
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
 
-    transact(abort => {
+    (0, _derivable.transact)(function (abort) {
       a.set(1);
-      assert.strictEqual(plusOne.get(), 2);
-      transact(abort => {
+      _assert2.default.strictEqual(plusOne.get(), 2);
+      (0, _derivable.transact)(function (abort) {
         a.set(2);
-        assert.strictEqual(plusOne.get(), 3);
-        transact(abort => {
+        _assert2.default.strictEqual(plusOne.get(), 3);
+        (0, _derivable.transact)(function (abort) {
           a.set(3);
-          assert.strictEqual(plusOne.get(), 4);
+          _assert2.default.strictEqual(plusOne.get(), 4);
           abort();
         });
-        assert.strictEqual(plusOne.get(), 3);
+        _assert2.default.strictEqual(plusOne.get(), 3);
         abort();
       });
-      assert.strictEqual(plusOne.get(), 2);
+      _assert2.default.strictEqual(plusOne.get(), 2);
       abort();
     });
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
   });
 
-  it('can be dereferenced in nested transactions', () => {
-    const a = atom(0);
-    const plusOne = a.derive(a => a + 1);
+  it('can be dereferenced in nested transactions', function () {
+    var a = (0, _derivable.atom)(0);
+    var plusOne = a.derive(function (a) {
+      return a + 1;
+    });
 
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
 
-    transact(() => {
-      assert.strictEqual(plusOne.get(), 1);
-      transact(() => {
-        assert.strictEqual(plusOne.get(), 1);
-        transact(() => {
-          assert.strictEqual(plusOne.get(), 1);
+    (0, _derivable.transact)(function () {
+      _assert2.default.strictEqual(plusOne.get(), 1);
+      (0, _derivable.transact)(function () {
+        _assert2.default.strictEqual(plusOne.get(), 1);
+        (0, _derivable.transact)(function () {
+          _assert2.default.strictEqual(plusOne.get(), 1);
         });
       });
     });
 
     a.set(1);
-    transact(() => {
-      transact(() => {
-        transact(() => {
-          assert.strictEqual(plusOne.get(), 2);
+    (0, _derivable.transact)(function () {
+      (0, _derivable.transact)(function () {
+        (0, _derivable.transact)(function () {
+          _assert2.default.strictEqual(plusOne.get(), 2);
         });
       });
     });
   });
 
-  it('can be mutated indirectly in nested transactions', () => {
-    const a = atom(0);
-    const plusOne = a.derive(a => a + 1);
+  it('can be mutated indirectly in nested transactions', function () {
+    var a = (0, _derivable.atom)(0);
+    var plusOne = a.derive(function (a) {
+      return a + 1;
+    });
 
-    assert.strictEqual(plusOne.get(), 1);
+    _assert2.default.strictEqual(plusOne.get(), 1);
 
-    transact(() => {
-      transact(() => {
-        transact(() => {
+    (0, _derivable.transact)(function () {
+      (0, _derivable.transact)(function () {
+        (0, _derivable.transact)(function () {
           a.set(1);
         });
       });
     });
 
-    assert.strictEqual(plusOne.get(), 2);
+    _assert2.default.strictEqual(plusOne.get(), 2);
 
-    transact(() => {
-      transact(() => {
-        transact(() => {
+    (0, _derivable.transact)(function () {
+      (0, _derivable.transact)(function () {
+        (0, _derivable.transact)(function () {
           a.set(2);
         });
       });
-      assert.strictEqual(plusOne.get(), 3);
+      _assert2.default.strictEqual(plusOne.get(), 3);
     });
 
-    transact(() => {
-      transact(() => {
-        transact(() => {
+    (0, _derivable.transact)(function () {
+      (0, _derivable.transact)(function () {
+        (0, _derivable.transact)(function () {
           a.set(3);
         });
-        assert.strictEqual(plusOne.get(), 4);
+        _assert2.default.strictEqual(plusOne.get(), 4);
       });
     });
   });
 });
 
-describe("nested derivables", () => {
-  it("should work in the appropriate fashion", () => {
-    const $$A = atom(null);
-    const $a = $$A.mDerive($a => $a.get());
+describe("nested derivables", function () {
+  it("should work in the appropriate fashion", function () {
+    var $$A = (0, _derivable.atom)(null);
+    var $a = $$A.mDerive(function ($a) {
+      return $a.get();
+    });
 
-    assert($a.get() == null);
+    (0, _assert2.default)($a.get() == null);
 
-    const $B = atom(5);
+    var $B = (0, _derivable.atom)(5);
 
     $$A.set($B);
 
-    assert.strictEqual($a.get(), 5);
+    _assert2.default.strictEqual($a.get(), 5);
 
     var reaction_b = null;
-    $a.react(b => {
+    $a.react(function (b) {
       reaction_b = b;
-    },
-    {skipFirst: true}
-    );
+    }, { skipFirst: true });
 
-    assert.strictEqual(reaction_b, null);
+    _assert2.default.strictEqual(reaction_b, null);
 
     $B.set(10);
-    assert.strictEqual(reaction_b, 10);
+    _assert2.default.strictEqual(reaction_b, 10);
 
     $B.set(4);
-    assert.strictEqual(reaction_b, 4);
+    _assert2.default.strictEqual(reaction_b, 4);
 
-    const $C = atom(9);
+    var $C = (0, _derivable.atom)(9);
     $$A.set($C);
-    assert.strictEqual(reaction_b, 9);
+    _assert2.default.strictEqual(reaction_b, 9);
   });
 
-  it("should let reactors adapt to changes in atoms", () => {
-    const $$A = atom(null);
-    const $a = $$A.mDerive($a => $a.get());
+  it("should let reactors adapt to changes in atoms", function () {
+    var $$A = (0, _derivable.atom)(null);
+    var $a = $$A.mDerive(function ($a) {
+      return $a.get();
+    });
 
-    const $B = atom('junk');
+    var $B = (0, _derivable.atom)('junk');
 
-    const $isJunk = $B.is('junk');
+    var $isJunk = $B.is('junk');
 
-    let isJunk = null;
+    var isJunk = null;
 
-    $a.react(a => {
+    $a.react(function (a) {
       isJunk = a;
     });
 
-    assert(isJunk == null);
+    (0, _assert2.default)(isJunk == null);
 
     $$A.set($isJunk);
 
-    assert.strictEqual(isJunk, true, "bad one");
+    _assert2.default.strictEqual(isJunk, true, "bad one");
 
     $B.set('not junk');
-    assert.strictEqual(isJunk, false, "bad other");
+    _assert2.default.strictEqual(isJunk, false, "bad other");
   });
 
-  it("should not interfere with lifecycle control", () => {
-    const $$A = atom(null);
-    const $a = $$A.mDerive($a => $a.get());
+  it("should not interfere with lifecycle control", function () {
+    var $$A = (0, _derivable.atom)(null);
+    var $a = $$A.mDerive(function ($a) {
+      return $a.get();
+    });
 
-    const $B = atom('junk');
+    var $B = (0, _derivable.atom)('junk');
 
-    const $isJunk = $B.is('junk');
+    var $isJunk = $B.is('junk');
 
-    let isJunk = null;
+    var isJunk = null;
 
-    $a.react(a => {
+    $a.react(function (a) {
       isJunk = a;
-    }, {when: $a});
+    }, { when: $a });
 
-    assert(isJunk == null);
+    (0, _assert2.default)(isJunk == null);
 
     $$A.set($isJunk);
 
-    assert.strictEqual(isJunk, true);
+    _assert2.default.strictEqual(isJunk, true);
 
     $B.set('not junk');
     // still junk
-    assert.strictEqual(isJunk, true);
+    _assert2.default.strictEqual(isJunk, true);
   });
 
-  it("should not interfere with boolean casting?!", () => {
-    const $$Running = atom(null);
-    const $running = $$Running.mDerive($a => $a.get());
+  it("should not interfere with boolean casting?!", function () {
+    var $$Running = (0, _derivable.atom)(null);
+    var $running = $$Running.mDerive(function ($a) {
+      return $a.get();
+    });
 
-    let running = null;
-    $running.derive(x => !!x).react(r => {
+    var running = null;
+    $running.derive(function (x) {
+      return !!x;
+    }).react(function (r) {
       running = r;
     });
 
+    (0, _assert2.default)(!running);
 
-    assert(!running);
-
-    const $Running = atom(false);
+    var $Running = (0, _derivable.atom)(false);
 
     $$Running.set($Running);
 
-    assert(!running);
+    (0, _assert2.default)(!running);
 
     $Running.set(true);
 
-    assert(running);
+    (0, _assert2.default)(running);
   });
 });
