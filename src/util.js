@@ -1,6 +1,6 @@
 export var keys = Object.keys;
 
-export function assignPolyfill (obj) {
+export function assign (obj) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
     var ks = keys(other || {});
@@ -10,12 +10,6 @@ export function assignPolyfill (obj) {
     }
   }
   return obj;
-}
-
-export var assign = Object.assign;
-
-if (!assign) {
-  assign = assignPolyfill;
 }
 
 function _is(a, b) {
