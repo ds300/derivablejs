@@ -1,28 +1,22 @@
+import * as util from './util';
+
 var parentsStack = [];
+var child = null;
 
-export function capturingParentsEpochs (f) {
-  var i = parentsStack.length;
+export function startCapturingParents (child) {
   parentsStack.push([]);
-  try {
-    f();
-    return parentsStack[i];
-  } finally {
-    parentsStack.pop();
-  }
-};
+}
+export function retrieveParents () {
+  return parentsStack[parentsStack.length - 1];
+}
+export function stopCapturingParents () {
+  parentsStack.pop();
+  child = null;
+}
 
-export function captureParent (p) {
-  if (parentsStack.length > 0) {
-    var top = parentsStack[parentsStack.length - 1];
-    top.push(p, 0);
-    return top.length-1;
-  } else {
-    return -1;
-  }
-};
-
-export function captureEpoch (idx, epoch) {
-  if (parentsStack.length > 0) {
-    parentsStack[parentsStack.length - 1][idx] = epoch;
+export function maybeCaptureParent (p) {
+  if (child !== null) {
+    parentsStack[parentsStack.length - 1].push(p);
+    util.addToArray(p._activeChildren, child);
   }
 };

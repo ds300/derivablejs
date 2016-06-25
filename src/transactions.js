@@ -1,6 +1,38 @@
 import epoch from './epoch';
 import * as util from './util';
-import * as types from './types';
+import {DERIVATION, LENS, REACTOR} from './types';
+import {UNKNOWN, UNCHANGED, CHANGED} from './states';
+
+export function mark (node, reactors) {
+  for (var i = 0, len = node._activeChildren.length; i < len; i++) {
+    var child = node._activeChildren[i];
+    switch (child._type) {
+      case DERIVATION:
+      case LENS:
+        if (child._state !== UNKNOWN) {
+          child._state = UNKNOWN;
+          mark(child, reactors);
+        }
+        break;
+      case REACTOR:
+        reactors.push(child);
+        break;
+      default:
+        throw new Error("Unrecognized child type");
+    }
+  }
+}
+
+export function processReactors (reactors) {
+  for (var i = 0, len = reactors.length; i < len; i++) {
+    var r = reactors[i];
+    if (r._reacting) {
+      throw new Error("Synchronous cyclical reactions disallowed. " +
+                      "Use setImmediate.");
+    }
+    r._maybeReact();
+  }
+}
 
 var TransactionAbortion = {};
 
@@ -10,9 +42,18 @@ function initiateAbortion() {
 
 function TransactionContext(parent) {
   this.parent = parent;
-  this.id2txnAtom = {};
-  this.globalEpoch = epoch.globalEpoch;
+  this.id2originalValue = {};
   this.modifiedAtoms = [];
+}
+
+export function maybeTrack (atom) {
+  if (currentCtx !== null) {
+    var idx = currentCtx.modifiedAtoms.indexOf(atom);
+    if (idx === -1) {
+      currentCtx.modifiedAtoms.push(atom);
+    }
+    currentCtx.id2originalValue[atom._id] = atom._value;
+  }
 }
 
 export var currentCtx = null;
@@ -36,6 +77,14 @@ export function transact (f) {
   commitTransaction();
 };
 
+export function atomically (f) {
+  if (!inTransaction()) {
+    transact(f);
+  } else {
+    f();
+  }
+}
+
 export function transaction (f) {
   return function () {
     var args = util.slice(arguments, 0);
@@ -48,6 +97,18 @@ export function transaction (f) {
   };
 };
 
+export function atomic (f) {
+  return function () {
+    var args = util.slice(arguments, 0);
+    var that = this;
+    var result;
+    atomically(function () {
+      result = f.apply(that, args);
+    });
+    return result;
+  };
+}
+
 function beginTransaction() {
   currentCtx = new TransactionContext(currentCtx);
 }
@@ -55,48 +116,29 @@ function beginTransaction() {
 function commitTransaction() {
   var ctx = currentCtx;
   currentCtx = ctx.parent;
-  var reactors = [];
-  var numReactors = 0;
-  ctx.modifiedAtoms.forEach(function (a) {
-    if (currentCtx !== null) {
-      a.set(ctx.id2txnAtom[a._id]._value);
-    }
-    else {
-      a._set(ctx.id2txnAtom[a._id]._value);
-      numReactors = findReactors(a._activeChildren, reactors, numReactors);
-    }
-  });
+
   if (currentCtx === null) {
-    epoch.globalEpoch = ctx.globalEpoch;
-  } else {
-    currentCtx.globalEpoch = ctx.globalEpoch;
+    var reactors = [];
+    ctx.modifiedAtoms.forEach(function (a) {
+      if (a.__equals(a._value, ctx.id2originalValue[a._id])) {
+        a._state = UNCHANGED;
+      } else {
+        a._state = CHANGED;
+        mark(a, reactors);
+      }
+    });
+    processReactors(reactors);
+    ctx.modifiedAtoms.forEach(function (a) {
+      a._state = UNCHANGED;
+    });
   }
-  reactors.forEach(function (r) {
-    r._maybeReact();
-  });
 }
 
 function abortTransaction() {
-  var ctx = currentCtx;
-  currentCtx = ctx.parent;
-  if (currentCtx === null) {
-    epoch.globalEpoch = ctx.globalEpoch + 1;
-  }
-  else {
-    currentCtx.globalEpoch = ctx.globalEpoch + 1;
-  }
-}
-
-export function findReactors(children, reactors, i) {
-  for (var j = 0, len = children.length; j < len; j++) {
-    var child = children[j];
-    if (child._type === types.REACTOR) {
-      reactors[i++] = child;
-    } else {
-      i = findReactors(child._activeChildren, reactors, i);
-    }
-  }
-  return i;
+  currentCtx.modifiedAtoms.forEach(function (atom) {
+    atom._value = currentCtx.id2originalValue[atom._id];
+    mark(atom, []);
+  });
 }
 
 var _tickerRefCount = 0;

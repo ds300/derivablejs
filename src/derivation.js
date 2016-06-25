@@ -3,140 +3,107 @@ import * as parents from './parents';
 import * as transactions from './transactions';
 import epoch from './epoch';
 import * as types from './types';
+import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
 
-export function createPrototype (D, opts) {
-  return {
-    _clone: function () {
-      return util.setEquals(D.derivation(this._deriver), this._equals);
-    },
-
-    _forceEval: function () {
-      var that = this;
-      var newVal = null;
-      var capturedParentsEpochs = parents.capturingParentsEpochs(function () {
-        if (!util.DEBUG_MODE) {
-          newVal = that._deriver();
-        } else {
-          try {
-            newVal = that._deriver();
-          } catch (e) {
-            console.error(that.stack);
-            throw e;
-          }
-        }
-      });
-
-      if (!this.__equals(newVal, this._value)) {
-        this._epoch++;
-      }
-
-      if (this._refCount > 0) {
-        var i = 0, j = 0;
-        var oldLen = this._lastParentsEpochs.length;
-        var newLen = capturedParentsEpochs.length;
-
-        while (i < oldLen && j < newLen) {
-          if (this._lastParentsEpochs[i] !== capturedParentsEpochs[j]) {
-            break;
-          } else {
-            i += 2;
-            j += 2;
-          }
-        }
-
-        while (i < oldLen) {
-          util.removeFromArray(this._lastParentsEpochs[i]._activeChildren, this);
-          this._lastParentsEpochs[i]._unlisten();
-          i += 2;
-        }
-
-        while (j < newLen) {
-          util.addToArray(capturedParentsEpochs[j]._activeChildren, this);
-          capturedParentsEpochs[j]._listen();
-          j += 2;
-        }
-      }
-
-      this._lastParentsEpochs = capturedParentsEpochs;
-      this._value = newVal;
-    },
-
-    _update: function () {
-      var globalEpoch = transactions.currentCtx === null ?
-                         epoch.globalEpoch :
-                         transactions.currentCtx.globalEpoch;
-      if (this._lastGlobalEpoch !== globalEpoch) {
-        if (this._value === util.unique) {
-          // brand spanking new, so force eval
-          this._forceEval();
-        } else {
-          for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-            var parent_1 = this._lastParentsEpochs[i];
-            var lastParentEpoch = this._lastParentsEpochs[i + 1];
-            var currentParentEpoch;
-            if (parent_1._type === types.ATOM) {
-              currentParentEpoch = parent_1._getEpoch();
-            } else {
-              parent_1._update();
-              currentParentEpoch = parent_1._epoch;
-            }
-            if (currentParentEpoch !== lastParentEpoch) {
-              this._forceEval();
-              return;
-            }
-          }
-        }
-        this._lastGlobalEpoch = globalEpoch;
-      }
-    },
-
-    get: function () {
-      var idx = parents.captureParent(this);
-      this._update();
-      parents.captureEpoch(idx, this._epoch);
-      return this._value;
-    },
-
-    _listen: function () {
-      this._refCount++;
-      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-        var parent = this._lastParentsEpochs[i];
-        if (this._refCount === 1) {
-          // any compiler worth its salt will hoist this check of the loop
-          util.addToArray(parent._activeChildren, this);
-        }
-        parent._listen();
-      }
-    },
-
-    _unlisten: function () {
-      this._refCount--;
-      for (var i = 0, len = this._lastParentsEpochs.length; i < len; i += 2) {
-        var parent = this._lastParentsEpochs[i];
-        if (this._refCount === 0) {
-          // any compiler worth its salt will hoist this check of the loop
-          util.removeFromArray(parent._activeChildren, this);
-        }
-        parent._unlisten();
-      }
-    },
-  };
-};
-
-export function construct (obj, deriver) {
-  obj._deriver = deriver;
-  obj._lastParentsEpochs = [];
-  obj._lastGlobalEpoch = epoch.globalEpoch - 1;
-  obj._epoch = 0;
-  obj._type = types.DERIVATION;
-  obj._value = util.unique;
-  obj._equals = null;
-  obj._activeChildren = [];
-  obj._refCount = 0;
+export function Derivation (deriver) {
+  this._deriver = deriver;
+  this._parents = null;
+  this._type = types.DERIVATION;
+  this._value = util.unique;
+  this._equals = null;
+  this._activeChildren = [];
+  this._state = DISCONNECTED;
 
   if (util.DEBUG_MODE) {
-    obj.stack = Error().stack;
+    this.stack = Error().stack;
   }
-
-  return obj;
 };
+
+util.assign(Derivation.prototype, {
+  _clone: function () {
+    return util.setEquals(derivation(this._deriver), this._equals);
+  },
+
+  _forceEval: function () {
+    var that = this;
+    var newVal = null;
+    var newParents = null;
+
+    try {
+      parents.startCapturingParents();
+      if (!util.DEBUG_MODE) {
+        newVal = that._deriver();
+      } else {
+        try {
+          newVal = that._deriver();
+        } catch (e) {
+          console.error(that.stack);
+          throw e;
+        }
+      }
+      newParents = parents.retrieveParents();
+    } finally {
+      parents.stopCapturingParents();
+    }
+
+    if (!this.__equals(newVal, this._value)) {
+      this._state = CHANGED;
+    } else {
+      this._state = UNCHANGED;
+    }
+
+    if (this._parents) {
+      // disconnect old parents
+      const len = this._parents.length;
+      for (let i = 0; i < len; i++) {
+        const oldParent = this._parents[i];
+        if (newParents.indexOf(oldParent) === -1) {
+          detach(oldParent, this);
+        }
+      }
+    }
+
+    this._parents = newParents;
+    this._value = newVal;
+  },
+
+  _update: function () {
+    if (this._parents === null) {
+      this._forceEval();
+    } else if (this._state === UNKNOWN) {
+      const len = this._parents.length;
+      for (let i = 0; i < len; i++) {
+        if (this._parents[i]._state !== UNCHANGED) {
+          this._forceEval();
+          break;
+        }
+      }
+    }
+  },
+
+  get: function () {
+    if (this._activeChildren.length > 0) {
+      parents.maybeCaptureParent(this);
+      this._update();
+      return this._value;
+    } else {
+      return this._deriver();
+    }
+  },
+});
+
+export function detach (parent, child) {
+  util.removeFromArray(parent._activeChildren, child);
+  if (parent._activeChildren.length === 0 && parent._parents != null) {
+    const len = parent._parents.length;
+    for (var i = 0; i < len; i++) {
+      detach(parent._parents[i], parent);
+    }
+    parent._parents = null;
+    parent._state = DISCONNECTED;
+  }
+}
+
+export function derivation (deriver) {
+  return new Derivation(deriver);
+}
