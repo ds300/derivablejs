@@ -44,6 +44,7 @@
     "coveralls": "^2.11.9",
     "doctoc": "^1.0.0",
     "immutable": "^3.7.4",
+    "mobx": "^2.3.3",
     "mocha": "^2.2.5",
     "mocha-istanbul": "^0.2.0",
     "nyc": "^6.4.0",
