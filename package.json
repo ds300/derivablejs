@@ -17,7 +17,7 @@
     "docs": "node scripts/make-docs.js",
     "toc": "./node_modules/.bin/doctoc README.md",
     "clean": "rm -rf dist",
-    "all": "npm run clean && npm run build && npm run coverage && npm run docs && npm run stats && npm run toc"
+    "all": "npm run clean && npm run build && npm run test && npm run coverage && npm run docs && npm run stats && npm run bench && npm run toc"
   },
   "main": "dist/derivable.js",
   "typings": "dist/derivable.d.ts",
