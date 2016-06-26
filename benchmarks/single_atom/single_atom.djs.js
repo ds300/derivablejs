@@ -1,15 +1,19 @@
 'use strict';
+const expected = require('./_expected-output');
+const assert = require('assert');
 
 const atom = require('../../dist/derivable').atom;
 
-const val = atom(0);
+module.exports = function () {
+  const val = atom(0);
 
-let sum = 0;
+  let sum = 0;
 
-val.react(v => sum += v);
+  val.react(v => sum += v);
 
-for (var i = 0; i < 1000000; i++) {
-  val.set(i);
-}
+  for (var i = 0; i < 100000; i++) {
+    val.set(i);
+  }
 
-console.log("SUM", sum);
+  assert.strictEqual(sum, expected);
+};

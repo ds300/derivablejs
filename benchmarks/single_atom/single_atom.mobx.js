@@ -1,17 +1,21 @@
 'use strict';
+const expected = require('./_expected-output');
+const assert = require('assert');
 
 const mobx = require('mobx');
 
-const val = mobx.observable(0);
+module.exports = function () {
+  const val = mobx.observable(0);
 
-let sum = 0;
+  let sum = 0;
 
-mobx.autorun(() => {
-  sum += val.get();
-});
+  mobx.autorun(() => {
+    sum += val.get();
+  });
 
-for (var i = 0; i < 1000000; i++) {
-  val.set(i);
-}
+  for (var i = 0; i < 100000; i++) {
+    val.set(i);
+  }
 
-console.log("SUM", sum);
+  assert.strictEqual(sum, expected);
+};
