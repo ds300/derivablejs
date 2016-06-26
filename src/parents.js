@@ -3,11 +3,11 @@ import * as util from './util';
 var parentsStack = [];
 var child = null;
 
-export function startCapturingParents (_child) {
-  parentsStack.push([]);
+export function startCapturingParents (_child, parents) {
+  parentsStack.push({parents: parents, offset: 0});
   child = _child;
 }
-export function retrieveParents () {
+export function retrieveParentsFrame () {
   return parentsStack[parentsStack.length - 1];
 }
 export function stopCapturingParents () {
@@ -17,7 +17,32 @@ export function stopCapturingParents () {
 
 export function maybeCaptureParent (p) {
   if (child !== null) {
-    parentsStack[parentsStack.length - 1].push(p);
-    util.addToArray(p._activeChildren, child);
+    var frame = parentsStack[parentsStack.length - 1];
+    if (frame.parents[frame.offset] === p) {
+      // nothing to do, just skip over
+      frame.offset++;
+    } else {
+      // look for this parent elsewhere
+      var idx = frame.parents.indexOf(p);
+      if (idx === -1) {
+        // not seen this parent yet, add it in the correct place
+        // and push the one currently there to the end (likely that we'll be
+        // getting rid of it)
+        util.addToArray(p._activeChildren, child);
+        frame.parents.push(frame.parents[frame.offset]);
+        frame.parents[frame.offset] = p;
+        frame.offset++;
+      } else {
+        if (idx > frame.offset) {
+          // seen this parent after current point in array, so swap positions
+          // with current point's parent
+          var tmp = frame.parents[idx];
+          frame.parents[idx] = frame.parents[frame.offset];
+          frame.parents[frame.offset] = tmp;
+          frame.offset++;
+        }
+        // else seen this parent at previous point and so don't increment offset
+      }
+    }
   }
 };

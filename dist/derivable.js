@@ -100,11 +100,11 @@ var DISCONNECTED = 3;
 var parentsStack = [];
 var child = null;
 
-function startCapturingParents (_child) {
-  parentsStack.push([]);
+function startCapturingParents (_child, parents) {
+  parentsStack.push({parents: parents, offset: 0});
   child = _child;
 }
-function retrieveParents () {
+function retrieveParentsFrame () {
   return parentsStack[parentsStack.length - 1];
 }
 function stopCapturingParents () {
@@ -114,8 +114,33 @@ function stopCapturingParents () {
 
 function maybeCaptureParent (p) {
   if (child !== null) {
-    parentsStack[parentsStack.length - 1].push(p);
-    addToArray(p._activeChildren, child);
+    var frame = parentsStack[parentsStack.length - 1];
+    if (frame.parents[frame.offset] === p) {
+      // nothing to do, just skip over
+      frame.offset++;
+    } else {
+      // look for this parent elsewhere
+      var idx = frame.parents.indexOf(p);
+      if (idx === -1) {
+        // not seen this parent yet, add it in the correct place
+        // and push the one currently there to the end (likely that we'll be
+        // getting rid of it)
+        addToArray(p._activeChildren, child);
+        frame.parents.push(frame.parents[frame.offset]);
+        frame.parents[frame.offset] = p;
+        frame.offset++;
+      } else {
+        if (idx > frame.offset) {
+          // seen this parent after current point in array, so swap positions
+          // with current point's parent
+          var tmp = frame.parents[idx];
+          frame.parents[idx] = frame.parents[frame.offset];
+          frame.parents[frame.offset] = tmp;
+          frame.offset++;
+        }
+        // else seen this parent at previous point and so don't increment offset
+      }
+    }
   }
 };
 
@@ -309,10 +334,13 @@ assign(Derivation.prototype, {
   _forceEval: function () {
     var that = this;
     var newVal = null;
-    var newParents = null;
+    var newNumParents;
 
     try {
-      startCapturingParents(this);
+      if (this._parents === null) {
+        this._parents = [];
+      }
+      startCapturingParents(this, this._parents);
       if (!DEBUG_MODE) {
         newVal = that._deriver();
       } else {
@@ -323,7 +351,7 @@ assign(Derivation.prototype, {
           throw e;
         }
       }
-      newParents = retrieveParents();
+      newNumParents = retrieveParentsFrame().offset;
     } finally {
       stopCapturingParents();
     }
@@ -334,18 +362,11 @@ assign(Derivation.prototype, {
       this._state = UNCHANGED;
     }
 
-    if (this._parents) {
-      // disconnect old parents
-      var len = this._parents.length;
-      for (var i = 0; i < len; i++) {
-        var oldParent = this._parents[i];
-        if (newParents.indexOf(oldParent) === -1) {
-          detach(oldParent, this);
-        }
-      }
+    while (newNumParents < this._parents.length) {
+      var oldParent = this._parents[newNumParents++];
+      detach(oldParent, this);
     }
 
-    this._parents = newParents;
     this._value = newVal;
   },
 

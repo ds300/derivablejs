@@ -26,10 +26,13 @@ util.assign(Derivation.prototype, {
   _forceEval: function () {
     var that = this;
     var newVal = null;
-    var newParents = null;
+    var newNumParents;
 
     try {
-      parents.startCapturingParents(this);
+      if (this._parents === null) {
+        this._parents = [];
+      }
+      parents.startCapturingParents(this, this._parents);
       if (!util.DEBUG_MODE) {
         newVal = that._deriver();
       } else {
@@ -40,7 +43,7 @@ util.assign(Derivation.prototype, {
           throw e;
         }
       }
-      newParents = parents.retrieveParents();
+      newNumParents = parents.retrieveParentsFrame().offset;
     } finally {
       parents.stopCapturingParents();
     }
@@ -51,18 +54,11 @@ util.assign(Derivation.prototype, {
       this._state = UNCHANGED;
     }
 
-    if (this._parents) {
-      // disconnect old parents
-      var len = this._parents.length;
-      for (var i = 0; i < len; i++) {
-        var oldParent = this._parents[i];
-        if (newParents.indexOf(oldParent) === -1) {
-          detach(oldParent, this);
-        }
-      }
+    while (newNumParents < this._parents.length) {
+      var oldParent = this._parents[newNumParents++];
+      detach(oldParent, this);
     }
 
-    this._parents = newParents;
     this._value = newVal;
   },
 

@@ -74,6 +74,6 @@ if (require.main === module) {
       .forEach(dir => {
         bench2results[dir] = runBenchmark(path.join('benchmarks', dir));
       });
-    fs.writeFileSync('benchmark-results.json', JSON.stringify(bench2results));
+    fs.writeFileSync('benchmark-results.json', JSON.stringify(bench2results, null, '  '));
   }
 }
