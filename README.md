@@ -4,7 +4,7 @@
 [![npm](https://img.shields.io/npm/v/derivable.svg?maxAge=2592000)](https://www.npmjs.com/package/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs)  [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo) [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Empowered by Futurice's open source sponsorship program](https://img.shields.io/badge/sponsor-chilicorn-ff69b4.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs) [![.min.gz size](https://img.shields.io/badge/.min.gz%20size-3.4k-blue.svg)](http://github.com)
 ---
 
-Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with extra performance and a garnish of innovative ideas about how to manage side effects.
+Derivables are an Observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with two heaped spoonfuls of extra performance and a garnish of side effects innovation.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -207,14 +207,13 @@ const { atom, derive, ..._} = withEquality(myCustomEqualityChecker);
 
 I heartily welcome questions, feature requests, bug reports, and general suggestions/criticism on the github issue tracker. I also welcome bugfixes via pull request (please read CONTRIBUTING.md before sumbmitting).
 
-## Thanks
+## Inspiration <3
 
-Special thanks to:
-
-- Alan Dipert and Micha Niskin, creators of Javelin (and Boot!). [Their talk on Javelin](http://www.infoq.com/presentations/ClojureScript-Javelin) was the first exposure I had to these ideas.
-- Michael Thompson for the [re-frame README](https://github.com/Day8/re-frame). My favourite README of all time. <3
-- David Weir and Jeremy Reffin for their invaluable mentorship.
-- Rich Hickey and the Clojure community for being a constant source of ideas and for making programming even more fun.
+- [Are we there yet?](https://www.infoq.com/presentations/Are-We-There-Yet-Rich-Hickey)
+- The [re-frame README](https://github.com/Day8/re-frame)
+- [ratom.cljs](https://github.com/reagent-project/reagent/blob/master/src/reagent/ratom.cljs)
+- [Turning the database inside out](https://www.youtube.com/watch?v=fU9hR3kiOK0)
+- [Simple Made Easy](https://www.infoq.com/presentations/Simple-Made-Easy)
 
 ## License
 
