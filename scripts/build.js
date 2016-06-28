@@ -75,10 +75,8 @@ module.exports = function (entry, destDir) {
       return bundle;
     })
     .then(function (bundle) {
-      if (require('process').argv.indexOf('--umd') > -1) {
-        var umdBundle = umdIfy(bundle);
-        writeBundle(umdBundle, outUMDJS, outMinUMDJS);
-      }
+      var umdBundle = umdIfy(bundle);
+      writeBundle(umdBundle, outUMDJS, outMinUMDJS);
       return bundle;
     })
     .catch(function (error) {
