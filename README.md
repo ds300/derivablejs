@@ -4,24 +4,26 @@
 [![npm version](https://badge.fury.io/js/derivable.svg)](http://badge.fury.io/js/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs)  [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo) [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Empowered by Futurice's open source sponsorship program](https://img.shields.io/badge/sponsored%20by-chilicorn-ff69b4.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs) [![.min.gz size](https://img.shields.io/badge/.min.gz%20size-3.4k-blue.svg)](http://github.com)
 ---
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 Derivables are an Observable-like momoizing state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with extra performance and a garnish of innovative ideas about how to manage side effects.
 
-- [State made simple](#state-made-simple)
-  - [Derived and Atomic state](#derived-and-atomic-state)
-- [What even is a Derivable?](#what-even-is-a-derivable)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Quick start](#quick-start)
 - [Reactors](#reactors)
 - [Usage](#usage)
-      - [With React](#with-react)
-      - [With Redux](#with-redux)
-      - [Debugging](#debugging)
-      - [Examples (very wip)](#examples-very-wip)
-      - [Browser](#browser)
-      - [Equality Woes](#equality-woes)
+  - [With React](#with-react)
+  - [With Redux](#with-redux)
+  - [Debugging](#debugging)
+  - [Examples (very wip)](#examples-very-wip)
+  - [Browser](#browser)
+  - [Equality Woes](#equality-woes)
 - [Contributing](#contributing)
 - [Thanks](#thanks)
 - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 ## Quick start
@@ -155,11 +157,11 @@ DerivableJS is becoming fairly mature, and has been used for serious stuff in pr
 
 If your app is non-trivial, use [Immutable](https://facebook.github.io/immutable-js/).
 
-##### With React
+### With React
 
 [react-derivable](https://github.com/jevakallio/react-derivable) is where it's at.
 
-##### With Redux
+### With Redux
 
 DerivableJS can be used as a kind-of replacement for reselect, by just doing something like this:
 
@@ -171,11 +173,11 @@ myReduxStore.subscribe(() => $Store.set(myReduxStore.getState()));
 
 and then you derive all your derived state from $Store, rather than
 
-##### Debugging
+### Debugging
 
 Due to inversion of control, the stack traces you get when your derivations throw errors can be totally unhelpful. There is a nice way to solve this problem for dev time. See [setDebugMode](https://ds300.github.com/derivablejs/#derivable-setDebugMode) for more info.
 
-##### Examples (very wip)
+### Examples (very wip)
 
 The best example of writing good code with Derivables right now is the [talk demo](https://github.com/ds300/derivables-talk-demo), which is presented as a 'diff tutorial' and should be read from the initial commit.
 
@@ -185,10 +187,10 @@ I've also implemented a solution to @staltz's [flux challenge](https://github.co
 
 There is a proper gitbook tutorial on the way!
 
-##### Browser
+### Browser
 Either with browserify/webpack/common-js-bundler-du-jour or build as umd bundle with `npm run build -- --umd`
 
-##### Equality Woes
+### Equality Woes
 JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
 
 If the data you're threading through DerivableJS needs its own notion of equality, make sure it has a sensible `.equals` method and everything will be fine.
