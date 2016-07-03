@@ -4,7 +4,7 @@ var parentsStack = [];
 var child = null;
 
 export function startCapturingParents (_child, parents) {
-  parentsStack.push({parents: parents, offset: 0});
+  parentsStack.push({parents: parents, offset: 0, child: _child});
   child = _child;
 }
 export function retrieveParentsFrame () {
@@ -12,7 +12,9 @@ export function retrieveParentsFrame () {
 }
 export function stopCapturingParents () {
   parentsStack.pop();
-  child = null;
+  child = parentsStack.length === 0
+          ? null
+          : parentsStack[parentsStack.length - 1].child;
 }
 
 export function maybeCaptureParent (p) {

@@ -20,7 +20,7 @@ Derivables are an Observable-like state container with superpowers. Think [MobX]
   - [Browser](#browser)
   - [Equality Woes](#equality-woes)
 - [Contributing](#contributing)
-- [Thanks](#thanks)
+- [Inspiration <3](#inspiration-3)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
