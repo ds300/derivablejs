@@ -385,15 +385,24 @@ assign(Derivation.prototype, {
 
   _update: function () {
     if (this._parents === null) {
+      // this._state === DISCONNECTED
       this._forceEval();
+      // this._state === CHANGED ?
     } else if (this._state === UNKNOWN) {
       var len = this._parents.length;
       for (var i = 0; i < len; i++) {
-        if (this._parents[i]._state !== UNCHANGED) {
+        var parent = this._parents[i];
+
+        if (parent._state === UNKNOWN) {
+          parent._update();
+        }
+
+        if (parent._state === CHANGED) {
           this._forceEval();
           break;
         }
       }
+      this._state === UNCHANGED;
     }
   },
 
@@ -442,10 +451,6 @@ assign(Reactor.prototype, {
     this._active = true;
 
     addToArray(this._parent._activeChildren, this);
-
-    if (this._parent._state === DISCONNECTED) {
-      this._parent._state = UNKNOWN;
-    }
 
     this._parent.get();
     return this;

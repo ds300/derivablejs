@@ -22,10 +22,6 @@ util.assign(Reactor.prototype, {
 
     util.addToArray(this._parent._activeChildren, this);
 
-    if (this._parent._state === DISCONNECTED) {
-      this._parent._state = UNKNOWN;
-    }
-
     this._parent.get();
     return this;
   },
