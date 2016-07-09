@@ -8,14 +8,14 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "./node_modules/.bin/mocha --recursive",
+    "test": "mocha --recursive",
     "bench": "node scripts/bench.js",
-    "coverage": "./scripts/coverage.sh && ./node_modules/.bin/istanbul report --include=coverage-final.json text",
-    "show-coverage": "./scripts/coverage.sh && ./node_modules/.bin/istanbul report --include=coverage-final.json html && open coverage/index.html",
-    "report-coverage": "./scripts/coverage.sh && ./node_modules/.bin/istanbul report --include=coverage-final.json lcov && cat coverage/lcov.info | ./node_modules/.bin/coveralls",
+    "coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json text",
+    "show-coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json html && open coverage/index.html",
+    "report-coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json lcov && cat coverage/lcov.info | coveralls",
     "stats": "node scripts/stats.js",
     "docs": "node scripts/make-docs.js",
-    "toc": "./node_modules/.bin/doctoc README.md",
+    "toc": "doctoc README.md",
     "clean": "rm -rf dist",
     "all": "npm run clean && npm run build && npm run test && npm run coverage && npm run docs && npm run stats && npm run bench && npm run toc"
   },
@@ -49,7 +49,6 @@
     "mobx": "^2.3.3",
     "mocha": "^2.2.5",
     "mocha-istanbul": "^0.2.0",
-    "nyc": "^6.4.0",
     "rollup": "^0.26.1",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.24"
