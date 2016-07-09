@@ -44,9 +44,6 @@ declare module derivable {
     switch(...args: any[]): Derivable<any>;
 
     withEquality(equals: (a: any, b: any) => boolean): this;
-
-    reactor(r: Reactor<T>): Reactor<T>;
-    reactor(f: (value: T) => void): Reactor<T>;
   }
 
   export interface Atom<T> extends Derivable<T> {
@@ -83,33 +80,6 @@ declare module derivable {
     skipFirst?: boolean;
 
     once?: boolean;
-
-    onStart?: () => void;
-
-    onStop?: () => void;
-  }
-
-  export class Reactor<T> {
-
-    constructor ();
-
-    start(): Reactor<T>;
-
-    stop(): Reactor<T>;
-
-    force(): Reactor<T>;
-
-    isActive(): boolean;
-
-    orphan(): Reactor<T>;
-
-    adopt(child: Reactor<any>): Reactor<T>;
-
-    react(value: T): void;
-
-    onStart(): void;
-
-    onStop(): void;
   }
 
   function atom<T>(value: T): Atom<T>;
@@ -142,8 +112,6 @@ declare module derivable {
 
   function isLensed(obj: any): boolean;
 
-  function isReactor(obj: any): boolean;
-
   function derive(strings: string[], ...things: any[]): Derivable<string>;
 
   function or(...conditions: any[]): Derivable<any>;
@@ -153,10 +121,6 @@ declare module derivable {
   function and(...conditions: any[]): Derivable<any>;
 
   function mAnd(...conditions: any[]): Derivable<any>;
-
-  function withEquality(equals: (a: any, b: any) => boolean): any;
-
-  function defaultEquals(a: any, b: any): boolean;
 
   function setDebugMode(debugMode: boolean): void;
 
