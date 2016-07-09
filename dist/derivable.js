@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 var keys = Object.keys;
 
 function assign (obj) {
@@ -59,7 +61,7 @@ function some (x) {
 };
 
 var DEBUG_MODE = false;
-function setDebugMode (val) {
+function setDebugMode$1 (val) {
   DEBUG_MODE = !!val;
 };
 
@@ -73,22 +75,22 @@ var DERIVATION = "DERIVATION";
 var LENS = "LENS";
 var REACTOR = "REACTOR";
 
-function isDerivable(x) {
+function isDerivable$1(x) {
   return x &&
          (x._type === DERIVATION ||
           x._type === ATOM ||
           x._type === LENS);
 }
 
-function isAtom (x) {
+function isAtom$1 (x) {
   return x && (x._type === ATOM || x._type === LENS);
 }
 
-function isDerivation (x) {
+function isDerivation$1 (x) {
   return x && (x._type === DERIVATION || x._type === LENS);
 }
 
-function isLensed (x) {
+function isLensed$1 (x) {
   return x && x._type === LENS;
 }
 
@@ -202,7 +204,7 @@ function inTransaction () {
   return currentCtx !== null;
 };
 
-function transact (f) {
+function transact$1 (f) {
   beginTransaction();
   try {
     f.call(null, initiateAbortion);
@@ -217,32 +219,32 @@ function transact (f) {
   commitTransaction();
 };
 
-function atomically (f) {
+function atomically$1 (f) {
   if (!inTransaction()) {
-    transact(f);
+    transact$1(f);
   } else {
     f();
   }
 }
 
-function transaction (f) {
+function transaction$1 (f) {
   return function () {
     var args = slice(arguments, 0);
     var that = this;
     var result;
-    transact(function () {
+    transact$1(function () {
       result = f.apply(that, args);
     });
     return result;
   };
 };
 
-function atomic (f) {
+function atomic$1 (f) {
   return function () {
     var args = slice(arguments, 0);
     var that = this;
     var result;
-    atomically(function () {
+    atomically$1(function () {
       result = f.apply(that, args);
     });
     return result;
@@ -286,7 +288,7 @@ function abortTransaction() {
 
 var _tickerRefCount = 0;
 
-function ticker () {
+function ticker$1 () {
   if (_tickerRefCount === 0) {
     beginTransaction();
   }
@@ -501,7 +503,7 @@ function makeReactor (derivable, f, opts) {
 
   // coerce fn or bool to derivable<bool>
   function condDerivable(fOrD, name) {
-    if (!isDerivable(fOrD)) {
+    if (!isDerivable$1(fOrD)) {
       if (typeof fOrD === 'function') {
         return _derivation(fOrD);
       } else if (typeof fOrD === 'boolean') {
@@ -580,7 +582,7 @@ function Atom (value) {
 
 assign(Atom.prototype, {
   _clone: function () {
-    return setEquals(atom$1(this._value), this._equals);
+    return setEquals(atom$2(this._value), this._equals);
   },
 
   set: function (value) {
@@ -609,7 +611,7 @@ assign(Atom.prototype, {
   },
 });
 
-function atom$1 (value) {
+function atom$2 (value) {
   return new Atom(value);
 }
 
@@ -626,42 +628,42 @@ assign(Lens.prototype, Derivation.prototype, {
 
   set: function (value) {
     var that = this;
-    atomically(function () {
+    atomically$1(function () {
       that._lensDescriptor.set(value);
     });
     return this;
   },
 });
 
-function lens$1 (descriptor) {
+function lens$2 (descriptor) {
   return new Lens(descriptor);
 }
 
-var transact$1 = transact;
-var setDebugMode$1 = setDebugMode;
-var transaction$1 = transaction;
-var ticker$1 = ticker;
-var isDerivable$1 = isDerivable;
-var isAtom$1 = isAtom;
-var isLensed$1 = isLensed;
-var isDerivation$1 = isDerivation;
-var derivation = _derivation;
-var atom = atom$1;
-var atomic$1 = atomic;
-var atomically$1 = atomically;
-var lens = lens$1;
+var transact$2 = transact$1;
+var setDebugMode$2 = setDebugMode$1;
+var transaction$2 = transaction$1;
+var ticker$2 = ticker$1;
+var isDerivable$2 = isDerivable$1;
+var isAtom$2 = isAtom$1;
+var isLensed$2 = isLensed$1;
+var isDerivation$2 = isDerivation$1;
+var derivation$1 = _derivation;
+var atom$1 = atom$2;
+var atomic$2 = atomic$1;
+var atomically$2 = atomically$1;
+var lens$1 = lens$2;
 
 /**
  * Template string tag for derivable strings
  */
-function derive (parts) {
+function derive$1 (parts) {
   var args = slice(arguments, 1);
-  return derivation(function () {
+  return derivation$1(function () {
     var s = "";
     for (var i=0; i < parts.length; i++) {
       s += parts[i];
       if (i < args.length) {
-        s += unpack(args[i]);
+        s += unpack$1(args[i]);
       }
     }
     return s;
@@ -671,8 +673,8 @@ function derive (parts) {
 /**
  * dereferences a thing if it is dereferencable, otherwise just returns it.
  */
-function unpack (thing) {
-  if (isDerivable$1(thing)) {
+function unpack$1 (thing) {
+  if (isDerivable$2(thing)) {
     return thing.get();
   } else {
     return thing;
@@ -682,18 +684,18 @@ function unpack (thing) {
 /**
  * lifts a non-monadic function to work on derivables
  */
-function lift (f) {
+function lift$1 (f) {
   return function () {
     var args = arguments;
     var that = this;
-    return derivation(function () {
-      return f.apply(that, Array.prototype.map.call(args, unpack));
+    return derivation$1(function () {
+      return f.apply(that, Array.prototype.map.call(args, unpack$1));
     });
   };
 };
 
 function deepUnpack (thing) {
-  if (isDerivable$1(thing)) {
+  if (isDerivable$2(thing)) {
     return thing.get();
   } else if (thing instanceof Array) {
     return thing.map(deepUnpack);
@@ -710,9 +712,9 @@ function deepUnpack (thing) {
   }
 }
 
-function struct (arg) {
+function struct$1 (arg) {
   if (arg.constructor === Object || arg instanceof Array) {
-    return derivation(function () {
+    return derivation$1(function () {
       return deepUnpack(arg);
     });
   } else {
@@ -720,13 +722,22 @@ function struct (arg) {
   }
 };
 
+function wrapPreviousState$1 (f, init) {
+  var lastState = init;
+  return function (newState) {
+    var result = f.call(this, newState, lastState);
+    lastState = newState;
+    return result;
+  };
+}
+
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
-    return derivation(function () {
+    return derivation$1(function () {
       var val;
       for (var i = 0; i < args.length; i++) {
-        val = unpack(args[i]);
+        val = unpack$1(args[i]);
         if (breakOn(val)) {
           break;
         }
@@ -737,34 +748,35 @@ function andOrFn (breakOn) {
 }
 function identity (x) { return x; }
 function complement (f) { return function (x) { return !f(x); }; }
-var or = andOrFn(identity);
-var mOr = andOrFn(some);
-var and = andOrFn(complement(identity));
-var mAnd = andOrFn(complement(some));
+var or$1 = andOrFn(identity);
+var mOr$1 = andOrFn(some);
+var and$1 = andOrFn(complement(identity));
+var mAnd$1 = andOrFn(complement(some));
 
 
 var derivable = Object.freeze({
-  transact: transact$1,
-  setDebugMode: setDebugMode$1,
-  transaction: transaction$1,
-  ticker: ticker$1,
-  isDerivable: isDerivable$1,
-  isAtom: isAtom$1,
-  isLensed: isLensed$1,
-  isDerivation: isDerivation$1,
-  derivation: derivation,
-  atom: atom,
-  atomic: atomic$1,
-  atomically: atomically$1,
-  lens: lens,
-  derive: derive,
-  unpack: unpack,
-  lift: lift,
-  struct: struct,
-  or: or,
-  mOr: mOr,
-  and: and,
-  mAnd: mAnd
+  transact: transact$2,
+  setDebugMode: setDebugMode$2,
+  transaction: transaction$2,
+  ticker: ticker$2,
+  isDerivable: isDerivable$2,
+  isAtom: isAtom$2,
+  isLensed: isLensed$2,
+  isDerivation: isDerivation$2,
+  derivation: derivation$1,
+  atom: atom$1,
+  atomic: atomic$2,
+  atomically: atomically$2,
+  lens: lens$1,
+  derive: derive$1,
+  unpack: unpack$1,
+  lift: lift$1,
+  struct: struct$1,
+  wrapPreviousState: wrapPreviousState$1,
+  or: or$1,
+  mOr: mOr$1,
+  and: and$1,
+  mAnd: mAnd$1
 });
 
 var derivablePrototype = {
@@ -780,13 +792,13 @@ var derivablePrototype = {
     case 1:
       switch (typeof f) {
         case 'function':
-          return derivation(function () {
+          return derivation$1(function () {
             return f(that.get());
           });
         case 'string':
         case 'number':
-          return derivation(function () {
-            return that.get()[unpack(f)];
+          return derivation$1(function () {
+            return that.get()[unpack$1(f)];
           });
         default:
           if (f instanceof Array) {
@@ -794,11 +806,11 @@ var derivablePrototype = {
               return that.derive(x);
             });
           } else if (f instanceof RegExp) {
-            return derivation(function () {
+            return derivation$1(function () {
               return that.get().match(f);
             });
-          } else if (isDerivable(f)) {
-            return derivation(function () {
+          } else if (isDerivable$1(f)) {
+            return derivation$1(function () {
               var deriver = f.get();
               var thing = that.get();
               switch (typeof deriver) {
@@ -820,32 +832,32 @@ var derivablePrototype = {
           }
       }
     case 2:
-      return derivation(function () {
-        return f(that.get(), unpack(a));
+      return derivation$1(function () {
+        return f(that.get(), unpack$1(a));
       });
     case 3:
-      return derivation(function () {
-        return f(that.get(), unpack(a), unpack(b));
+      return derivation$1(function () {
+        return f(that.get(), unpack$1(a), unpack$1(b));
       });
     case 4:
-      return derivation(function () {
+      return derivation$1(function () {
         return f(that.get(),
-                 unpack(a),
-                 unpack(b),
-                 unpack(c));
+                 unpack$1(a),
+                 unpack$1(b),
+                 unpack$1(c));
       });
     case 5:
-      return derivation(function () {
+      return derivation$1(function () {
         return f(that.get(),
-                 unpack(a),
-                 unpack(b),
-                 unpack(c),
-                 unpack(d));
+                 unpack$1(a),
+                 unpack$1(b),
+                 unpack$1(c),
+                 unpack$1(d));
       });
     default:
       var args = ([that]).concat(slice(arguments, 1));
-      return derivation(function () {
-        return f.apply(null, args.map(unpack));
+      return derivation$1(function () {
+        return f.apply(null, args.map(unpack$1));
       });
     }
   },
@@ -855,26 +867,26 @@ var derivablePrototype = {
   },
 
   is: function (other) {
-    return lift(this._equals || equals)(this, other);
+    return lift$1(this._equals || equals)(this, other);
   },
 
   and: function (other) {
-    return this.derive(function (x) {return x && unpack(other);});
+    return this.derive(function (x) {return x && unpack$1(other);});
   },
 
   or: function (other) {
-    return this.derive(function (x) {return x || unpack(other);});
+    return this.derive(function (x) {return x || unpack$1(other);});
   },
 
   then: function (thenClause, elseClause) {
     return this.derive(function (x) {
-      return unpack(x ? thenClause : elseClause);
+      return unpack$1(x ? thenClause : elseClause);
     });
   },
 
   mThen: function (thenClause, elseClause) {
     return this.derive(function (x) {
-      return unpack(some(x) ? thenClause : elseClause);
+      return unpack$1(some(x) ? thenClause : elseClause);
     });
   },
 
@@ -922,12 +934,12 @@ derivablePrototype.switch = function () {
   return this.derive(function (x) {
     var i;
     for (i = 0; i < args.length-1; i+=2) {
-      if (that.__equals(x, unpack(args[i]))) {
-        return unpack(args[i+1]);
+      if (that.__equals(x, unpack$1(args[i]))) {
+        return unpack$1(args[i+1]);
       }
     }
     if (i === args.length - 1) {
-      return unpack(args[i]);
+      return unpack$1(args[i]);
     }
   });
 };
@@ -955,7 +967,51 @@ assign(Derivation.prototype, derivablePrototype);
 assign(Lens.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
-module.exports = derivable;
 
-module.exports = derivable;
+var transact = transact$2;
+var setDebugMode = setDebugMode$2;
+var transaction = transaction$2;
+var ticker = ticker$2;
+var isDerivable = isDerivable$2;
+var isAtom = isAtom$2;
+var isLensed = isLensed$2;
+var isDerivation = isDerivation$2;
+var derivation = derivation$1;
+var atom = atom$1;
+var atomic = atomic$2;
+var atomically = atomically$2;
+var lens = lens$1;
+var derive = derive$1;
+var unpack = unpack$1;
+var lift = lift$1;
+var struct = struct$1;
+var wrapPreviousState = wrapPreviousState$1;
+var or = or$1;
+var mOr = mOr$1;
+var and = and$1;
+var mAnd = mAnd$1;
+
+exports.transact = transact;
+exports.setDebugMode = setDebugMode;
+exports.transaction = transaction;
+exports.ticker = ticker;
+exports.isDerivable = isDerivable;
+exports.isAtom = isAtom;
+exports.isLensed = isLensed;
+exports.isDerivation = isDerivation;
+exports.derivation = derivation;
+exports.atom = atom;
+exports.atomic = atomic;
+exports.atomically = atomically;
+exports.lens = lens;
+exports.derive = derive;
+exports.unpack = unpack;
+exports.lift = lift;
+exports.struct = struct;
+exports.wrapPreviousState = wrapPreviousState;
+exports.or = or;
+exports.mOr = mOr;
+exports.and = and;
+exports.mAnd = mAnd;
+exports['default'] = derivable;
 //# sourceMappingURL=derivable.js.map

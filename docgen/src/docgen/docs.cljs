@@ -342,7 +342,7 @@
                [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
                [:script {:src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"}]
                [:script (html/raw "hljs.initHighlightingOnLoad();")]
-               [:script {:src "dist/derivable.min.js"}]
+               [:script {:src "dist/derivable.umd.min.js"}]
                [:script {:src "resources/js/sticky.js"}]
                (stylesheet "http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700")
                (stylesheet "http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic")

@@ -543,3 +543,22 @@ describe('the atomic function', function () {
     _assert2.default.strictEqual($A.get(), 'b');
   });
 });
+
+describe('the wrapPreviousState function', function () {
+  it('wraps a function of one argument, passing in previous arguments', function () {
+    var f = _derivable.wrapPreviousState(function (a, b) { return a + b;} , 0);
+
+    _assert.strictEqual(f(1), 1);
+    _assert.strictEqual(f(2), 3);
+    _assert.strictEqual(f(3), 5);
+    _assert.strictEqual(f(4), 7);
+    _assert.strictEqual(f(5), 9);
+    _assert.strictEqual(f(6), 11);
+  });
+  it('the init arg is optional', function () {
+    var f = _derivable.wrapPreviousState(function (a, b) { return a + (b || 10);});
+
+    _assert.strictEqual(f(1), 11);
+    _assert.strictEqual(f(2), 3);
+  });
+});

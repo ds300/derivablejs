@@ -89,6 +89,15 @@ export function struct (arg) {
   }
 };
 
+export function wrapPreviousState (f, init) {
+  var lastState = init;
+  return function (newState) {
+    var result = f.call(this, newState, lastState);
+    lastState = newState;
+    return result;
+  };
+}
+
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;

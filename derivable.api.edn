@@ -851,6 +851,26 @@
     all values are not null or undefined. Otherwise it returns null or
     undefined.")
 
+  ((wrapPreviousState A B) [fn (=> [currentState A previousState A] B) init? A] (=> [currentState A] B)
+    "Takes a function of two arguments. Returns a function which takes one argument.
+    The returned function invokes the given function with the 'current' argument and
+    the 'previous' argument. For the first invocation, the {{init?}} argument is
+    passed as the 'previous' argument, or `undefined` if not given.
+
+    Useful for doing 'diff'-based reactors. e.g. Facebook's React.
+
+    ```js
+    const adder = wrapPreviousState((a, b) => a + b, 0);
+
+    adder(1); // => 1
+    adder(1); // => 2
+    adder(2); // => 3
+    adder(2); // => 4
+    adder(3); // => 5
+    adder(3); // => 6
+    ```
+    ")
+
   (setDebugMode [debugMode boolean] void
     "Enable or disable debug mode.
 

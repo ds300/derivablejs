@@ -11,6 +11,28 @@ assign(Derivation.prototype, derivablePrototype);
 assign(Lens.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
-module.exports = derivable;
+
+export var transact = derivable.transact;
+export var setDebugMode = derivable.setDebugMode;
+export var transaction = derivable.transaction;
+export var ticker = derivable.ticker;
+export var isDerivable = derivable.isDerivable;
+export var isAtom = derivable.isAtom;
+export var isLensed = derivable.isLensed;
+export var isDerivation = derivable.isDerivation;
+export var derivation = derivable.derivation;
+export var atom = derivable.atom;
+export var atomic = derivable.atomic;
+export var atomically = derivable.atomically;
+export var lens = derivable.lens;
+export var derive = derivable.derive;
+export var unpack = derivable.unpack;
+export var lift = derivable.lift;
+export var struct = derivable.struct;
+export var wrapPreviousState = derivable.wrapPreviousState;
+export var or = derivable.or;
+export var mOr = derivable.mOr;
+export var and = derivable.and;
+export var mAnd = derivable.mAnd;
 
 export default derivable;

@@ -122,6 +122,8 @@ declare module derivable {
 
   function mAnd(...conditions: any[]): Derivable<any>;
 
+  function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
+
   function setDebugMode(debugMode: boolean): void;
 
   export interface Ticker {
