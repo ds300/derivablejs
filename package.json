@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "mocha --recursive",
+    "test": "mocha --recursive && (cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",
     "coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json text",
     "show-coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json html && open coverage/index.html",
