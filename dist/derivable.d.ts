@@ -23,6 +23,8 @@ declare module derivable {
 
     react(f: (value: T) => void, options?: Lifecycle): void;
 
+    mReact(f: (value: T) => void, options?: Lifecycle): void;
+
     get(): T;
 
     is(other: any): Derivable<boolean>;

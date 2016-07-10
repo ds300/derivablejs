@@ -90,6 +90,20 @@ export var derivablePrototype = {
     makeReactor(this, f, opts);
   },
 
+  mReact: function (f, opts) {
+    var mWhen = this.mThen(true, false);
+    if (opts && 'when' in opts && opts.when !== true) {
+      var when = opts.when;
+      if (typeof when === 'function' || when === false) {
+        when = derivation(when);
+      } else if (!types.isDerivable(when)) {
+        throw new Error('when condition must be bool, function, or derivable');
+      }
+      mWhen = when.and(mWhen);
+    }
+    return this.react(f, util.assign({}, opts, {when: mWhen}));
+  },
+
   is: function (other) {
     var that = this;
     return this.derive(function (x) {

@@ -897,6 +897,20 @@ var derivablePrototype = {
     makeReactor(this, f, opts);
   },
 
+  mReact: function (f, opts) {
+    var mWhen = this.mThen(true, false);
+    if (opts && 'when' in opts && opts.when !== true) {
+      var when = opts.when;
+      if (typeof when === 'function' || when === false) {
+        when = derivation$1(when);
+      } else if (!isDerivable$1(when)) {
+        throw new Error('when condition must be bool, function, or derivable');
+      }
+      mWhen = when.and(mWhen);
+    }
+    return this.react(f, assign({}, opts, {when: mWhen}));
+  },
+
   is: function (other) {
     var that = this;
     return this.derive(function (x) {

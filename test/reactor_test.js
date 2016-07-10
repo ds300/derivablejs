@@ -727,3 +727,100 @@ describe('the `when` optons to the `react` method', function () {
     _assert2.default.strictEqual(i, 5);
   });
 });
+
+describe('the .mReact method', function () {
+  it('only reacts when the thing in the derivable is not null or undefined', function () {
+    var a = _derivable.atom(null);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    });
+
+    _assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    _assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    _assert.strictEqual(_a, "House");
+  });
+
+  it('merges any given when condition', function () {
+    var a = _derivable.atom(null);
+    var alive = _derivable.atom(true);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    }, {when: alive});
+
+    _assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    _assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    _assert.strictEqual(_a, "House");
+
+    a.set("Tree");
+
+    _assert.strictEqual(_a, "Tree");
+
+    alive.set(false);
+
+    a.set("House");
+
+    _assert.strictEqual(_a, "Tree");
+  });
+
+  it(`shouldn't touch any other conditions`, function () {
+    var a = _derivable.atom(null);
+    var alive = _derivable.atom(true);
+    var from = _derivable.atom(false);
+    var until = _derivable.atom(false);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    }, {when: alive, from: from, until: until});
+
+    _assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    _assert.strictEqual(_a, "Tree");
+
+    from.set(true);
+
+    _assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    _assert.strictEqual(_a, "House");
+
+    alive.set(false);
+
+    a.set("Tree");
+
+    _assert.strictEqual(_a, "House");
+
+    alive.set(true);
+
+    _assert.strictEqual(_a, "Tree");
+
+    until.set(true);
+
+    a.set("House");
+    
+    _assert.strictEqual(_a, "Tree");
+
+  });
+});

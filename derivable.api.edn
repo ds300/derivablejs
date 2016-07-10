@@ -241,6 +241,10 @@
       ```
       ")
 
+    (mReact [f (=> [value T] void) options? Lifecycle] void
+      "As {{react}} but reactions only take place when the value held in this
+      derivable is not `null` or `undefined`.")
+
 
     (get [] T
       "Returns the current value of this derivable.
