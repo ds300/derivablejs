@@ -780,7 +780,7 @@ describe('the .mReact method', function () {
     _assert.strictEqual(_a, "Tree");
   });
 
-  it(`shouldn't touch any other conditions`, function () {
+  it("shouldn't touch any other conditions", function () {
     var a = _derivable.atom(null);
     var alive = _derivable.atom(true);
     var from = _derivable.atom(false);
@@ -819,7 +819,7 @@ describe('the .mReact method', function () {
     until.set(true);
 
     a.set("House");
-    
+
     _assert.strictEqual(_a, "Tree");
 
   });
