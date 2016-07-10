@@ -30,6 +30,7 @@ export var unpack = derivable.unpack;
 export var lift = derivable.lift;
 export var struct = derivable.struct;
 export var wrapPreviousState = derivable.wrapPreviousState;
+export var captureDereferences = derivable.captureDereferences;
 export var or = derivable.or;
 export var mOr = derivable.mOr;
 export var and = derivable.and;

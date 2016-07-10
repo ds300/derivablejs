@@ -140,9 +140,16 @@ function maybeCaptureParent (p) {
         // not seen this parent yet, add it in the correct place
         // and push the one currently there to the end (likely that we'll be
         // getting rid of it)
-        addToArray(p._activeChildren, child);
-        frame.parents.push(frame.parents[frame.offset]);
-        frame.parents[frame.offset] = p;
+        // sneaky hack for doing captureDereferences
+        if (child !== void 0) {
+          addToArray(p._activeChildren, child);
+        }
+        if (frame.offset === frame.parents.length) {
+          frame.parents.push(p);
+        } else {
+          frame.parents.push(frame.parents[frame.offset]);
+          frame.parents[frame.offset] = p;
+        }
         frame.offset++;
       } else {
         if (idx > frame.offset) {
@@ -377,10 +384,13 @@ assign(Derivation.prototype, {
       this._state = UNCHANGED;
     }
 
-    while (newNumParents < this._parents.length) {
-      var oldParent = this._parents[newNumParents++];
+    for (var i = newNumParents, len = this._parents.length; i < len; i++) {
+      var oldParent = this._parents[i];
       detach(oldParent, this);
+      this._parents[i] = null;
     }
+
+    this._parents.length = newNumParents;
 
     this._value = newVal;
   },
@@ -404,18 +414,25 @@ assign(Derivation.prototype, {
           break;
         }
       }
-      this._state === UNCHANGED;
+      if (this._state === UNKNOWN) {
+        this._state = UNCHANGED;
+      }
     }
   },
 
   get: function () {
+    maybeCaptureParent(this);
     if (this._activeChildren.length > 0) {
-      maybeCaptureParent(this);
       this._update();
-      return this._value;
     } else {
-      return this._deriver();
+      startCapturingParents(void 0, []);
+      try {
+        this._value = this._deriver();
+      } finally {
+        stopCapturingParents();
+      }
     }
+    return this._value;
   },
 });
 
@@ -512,6 +529,8 @@ function makeReactor (derivable, f, opts) {
     skipFirst: false,
   }, opts);
 
+  var skipFirst = opts.skipFirst;
+
   // coerce fn or bool to derivable<bool>
   function condDerivable(fOrD, name) {
     if (!isDerivable$1(fOrD)) {
@@ -529,8 +548,8 @@ function makeReactor (derivable, f, opts) {
   // wrap reactor so f doesn't get a .this context, and to allow
   // stopping after one reaction if desired.
   var reactor = new Reactor(derivable, function (val) {
-    if (opts.skipFirst) {
-      opts.skipFirst = false;
+    if (skipFirst) {
+      skipFirst = false;
     } else {
       f(val);
       if (opts.once) {
@@ -742,6 +761,17 @@ function wrapPreviousState$1 (f, init) {
   };
 }
 
+function captureDereferences$1 (f) {
+  var captured = [];
+  startCapturingParents(void 0, captured);
+  try {
+    f();
+  } finally {
+    stopCapturingParents();
+  }
+  return captured;
+}
+
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
@@ -784,6 +814,7 @@ var derivable = Object.freeze({
   lift: lift$1,
   struct: struct$1,
   wrapPreviousState: wrapPreviousState$1,
+  captureDereferences: captureDereferences$1,
   or: or$1,
   mOr: mOr$1,
   and: and$1,
@@ -878,7 +909,10 @@ var derivablePrototype = {
   },
 
   is: function (other) {
-    return lift$1(this._equals || equals)(this, other);
+    var that = this;
+    return this.derive(function (x) {
+      return that.__equals(x, unpack$1(other));
+    });
   },
 
   and: function (other) {
@@ -997,6 +1031,7 @@ var unpack = unpack$1;
 var lift = lift$1;
 var struct = struct$1;
 var wrapPreviousState = wrapPreviousState$1;
+var captureDereferences = captureDereferences$1;
 var or = or$1;
 var mOr = mOr$1;
 var and = and$1;
@@ -1020,6 +1055,7 @@ exports.unpack = unpack;
 exports.lift = lift;
 exports.struct = struct;
 exports.wrapPreviousState = wrapPreviousState;
+exports.captureDereferences = captureDereferences;
 exports.or = or;
 exports.mOr = mOr;
 exports.and = and;

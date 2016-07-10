@@ -562,3 +562,46 @@ describe('the wrapPreviousState function', function () {
     _assert.strictEqual(f(2), 3);
   });
 });
+
+describe('the captureDereferences function', function () {
+  it('executes the given function, returning an array of captured dereferences', function () {
+    var a = _derivable.atom("a");
+    var b = _derivable.atom("b");
+    var c = a.derive('length');
+
+    var _a = _derivable.captureDereferences(function () {
+      a.get();
+    });
+    _assert.deepEqual(_a, [a]);
+
+    var _ab = _derivable.captureDereferences(function () {
+      a.get();
+      b.get();
+    });
+    _assert.deepEqual(_ab, [a, b]);
+
+    var _ba = _derivable.captureDereferences(function () {
+      b.get();
+      a.get();
+    });
+    _assert.deepEqual(_ba, [b, a]);
+
+    var _c = _derivable.captureDereferences(function () {
+      c.get();
+    });
+    _assert.deepEqual(_c, [c]);
+
+    var _ca = _derivable.captureDereferences(function () {
+      c.get();
+      a.get();
+    });
+    _assert.deepEqual(_ca, [c, a]);
+
+    var _cab = _derivable.captureDereferences(function () {
+      c.get();
+      a.get();
+      b.get();
+    });
+    _assert.deepEqual(_cab, [c, a, b]);
+  });
+});

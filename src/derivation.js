@@ -54,10 +54,13 @@ util.assign(Derivation.prototype, {
       this._state = UNCHANGED;
     }
 
-    while (newNumParents < this._parents.length) {
-      var oldParent = this._parents[newNumParents++];
+    for (var i = newNumParents, len = this._parents.length; i < len; i++) {
+      var oldParent = this._parents[i];
       detach(oldParent, this);
+      this._parents[i] = null;
     }
+
+    this._parents.length = newNumParents;
 
     this._value = newVal;
   },
@@ -81,18 +84,25 @@ util.assign(Derivation.prototype, {
           break;
         }
       }
-      this._state === UNCHANGED;
+      if (this._state === UNKNOWN) {
+        this._state = UNCHANGED;
+      }
     }
   },
 
   get: function () {
+    parents.maybeCaptureParent(this);
     if (this._activeChildren.length > 0) {
-      parents.maybeCaptureParent(this);
       this._update();
-      return this._value;
     } else {
-      return this._deriver();
+      parents.startCapturingParents(void 0, []);
+      try {
+        this._value = this._deriver();
+      } finally {
+        parents.stopCapturingParents();
+      }
     }
+    return this._value;
   },
 });
 

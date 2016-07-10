@@ -2,6 +2,7 @@ import * as util from './util';
 import * as transactions from './transactions';
 import {atom as _atom} from './atom';
 import * as reactors from './reactors';
+import * as parents from './parents';
 import * as types from './types';
 import {derivation as _derivation} from './derivation';
 import {lens as _lens} from './lens';
@@ -96,6 +97,17 @@ export function wrapPreviousState (f, init) {
     lastState = newState;
     return result;
   };
+}
+
+export function captureDereferences (f) {
+  var captured = [];
+  parents.startCapturingParents(void 0, captured);
+  try {
+    f();
+  } finally {
+    parents.stopCapturingParents();
+  }
+  return captured;
 }
 
 function andOrFn (breakOn) {

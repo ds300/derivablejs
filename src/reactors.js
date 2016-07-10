@@ -80,6 +80,8 @@ export function makeReactor (derivable, f, opts) {
     skipFirst: false,
   }, opts);
 
+  var skipFirst = opts.skipFirst;
+
   // coerce fn or bool to derivable<bool>
   function condDerivable(fOrD, name) {
     if (!types.isDerivable(fOrD)) {
@@ -97,8 +99,8 @@ export function makeReactor (derivable, f, opts) {
   // wrap reactor so f doesn't get a .this context, and to allow
   // stopping after one reaction if desired.
   var reactor = new Reactor(derivable, function (val) {
-    if (opts.skipFirst) {
-      opts.skipFirst = false;
+    if (skipFirst) {
+      skipFirst = false;
     } else {
       f(val);
       if (opts.once) {

@@ -124,6 +124,8 @@ declare module derivable {
 
   function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 
+  function captureDereferences(fn: () => void): Derivable<any>[];
+
   function setDebugMode(debugMode: boolean): void;
 
   export interface Ticker {

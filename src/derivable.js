@@ -91,7 +91,10 @@ export var derivablePrototype = {
   },
 
   is: function (other) {
-    return lift(this._equals || util.equals)(this, other);
+    var that = this;
+    return this.derive(function (x) {
+      return that.__equals(x, unpack(other));
+    });
   },
 
   and: function (other) {

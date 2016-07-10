@@ -871,6 +871,10 @@
     ```
     ")
 
+  (captureDereferences [fn (=> [] void)] [(Derivable any)]
+    "Takes a function and executes it while capturing the set of derivables
+    which are dereferenced. Returns an array of those derivables.")
+
   (setDebugMode [debugMode boolean] void
     "Enable or disable debug mode.
 

@@ -30,9 +30,16 @@ export function maybeCaptureParent (p) {
         // not seen this parent yet, add it in the correct place
         // and push the one currently there to the end (likely that we'll be
         // getting rid of it)
-        util.addToArray(p._activeChildren, child);
-        frame.parents.push(frame.parents[frame.offset]);
-        frame.parents[frame.offset] = p;
+        // sneaky hack for doing captureDereferences
+        if (child !== void 0) {
+          util.addToArray(p._activeChildren, child);
+        }
+        if (frame.offset === frame.parents.length) {
+          frame.parents.push(p);
+        } else {
+          frame.parents.push(frame.parents[frame.offset]);
+          frame.parents[frame.offset] = p;
+        }
         frame.offset++;
       } else {
         if (idx > frame.offset) {
