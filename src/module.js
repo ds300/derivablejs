@@ -7,6 +7,7 @@ import * as types from './types';
 import {derivation as _derivation} from './derivation';
 import {lens as _lens} from './lens';
 
+export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;
 export var setDebugMode = util.setDebugMode;
 export var transaction = transactions.transaction;

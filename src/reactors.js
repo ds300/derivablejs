@@ -3,7 +3,7 @@ import * as util from './util';
 import {DISCONNECTED, UNKNOWN, UNCHANGED, CHANGED} from './states';
 import {detach, derivation} from './derivation';
 
-function Reactor(parent, react, governor) {
+export function Reactor(parent, react, governor) {
   this._parent = parent;
   this.react = react;
   this._governor = governor || null;

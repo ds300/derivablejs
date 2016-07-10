@@ -658,6 +658,7 @@ function lens$2 (descriptor) {
   return new Lens(descriptor);
 }
 
+var __Reactor$1 = Reactor;
 var transact$2 = transact$1;
 var setDebugMode$2 = setDebugMode$1;
 var transaction$2 = transaction$1;
@@ -785,6 +786,7 @@ var mAnd$1 = andOrFn(complement(some));
 
 
 var derivable = Object.freeze({
+  __Reactor: __Reactor$1,
   transact: transact$2,
   setDebugMode: setDebugMode$2,
   transaction: transaction$2,
@@ -1016,6 +1018,7 @@ assign(Lens.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
 
+var __Reactor = __Reactor$1;
 var transact = transact$2;
 var setDebugMode = setDebugMode$2;
 var transaction = transaction$2;
@@ -1040,6 +1043,7 @@ var mOr = mOr$1;
 var and = and$1;
 var mAnd = mAnd$1;
 
+exports.__Reactor = __Reactor;
 exports.transact = transact;
 exports.setDebugMode = setDebugMode;
 exports.transaction = transaction;

@@ -12,6 +12,7 @@ assign(Lens.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
 
+export var __Reactor = derivable.__Reactor;
 export var transact = derivable.transact;
 export var setDebugMode = derivable.setDebugMode;
 export var transaction = derivable.transaction;
