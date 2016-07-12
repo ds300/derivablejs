@@ -1,5 +1,6 @@
 import {derivablePrototype} from './derivable';
 import {mutablePrototype} from './mutable';
+import {observablePrototype} from './observable';
 import {Derivation} from './derivation';
 import {Lens} from './lens';
 import {Atom} from './atom';
@@ -7,9 +8,9 @@ import {assign} from './util';
 
 import * as derivable from './module';
 
-assign(Derivation.prototype, derivablePrototype);
-assign(Lens.prototype, derivablePrototype, mutablePrototype);
-assign(Atom.prototype, derivablePrototype, mutablePrototype);
+assign(Derivation.prototype, derivablePrototype, observablePrototype);
+assign(Lens.prototype, derivablePrototype, observablePrototype, mutablePrototype);
+assign(Atom.prototype, derivablePrototype, observablePrototype, mutablePrototype);
 
 
 export var __Reactor = derivable.__Reactor;

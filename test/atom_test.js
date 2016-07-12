@@ -1,5 +1,7 @@
 'use strict';
 
+var $$observable = require('symbol-observable').default;
+var Rx = require('rxjs');
 var derivable = require('../dist/derivable');
 var assert = require('assert');
 
@@ -116,6 +118,96 @@ describe("the humble atom", function () {
     });
     derivable.atom(4).withEquality(null);
     derivable.atom(4).withEquality(void 0);
+  });
+
+  describe('interop with ES Observable via $$observable symbol', function() {
+
+    it('should exist', function () {
+      var atom = derivable.atom(42);
+      assert.strictEqual(typeof atom[$$observable], 'function');
+    });
+
+    it('should be subscribable', function () {
+      var atom = derivable.atom(42);
+      var observable = atom[$$observable]();
+      assert.strictEqual(typeof observable.subscribe, 'function');
+    });
+
+    it('should return a subscription object when subscribed', function () {
+      var atom = derivable.atom(42);
+      var observable = atom[$$observable]();
+      var subscription = observable.subscribe({})
+      assert.strictEqual(typeof subscription, 'object');
+      assert.strictEqual(typeof subscription.unsubscribe, 'function');
+    });
+
+    it('should pass an integration test with no unsubscribe', function () {
+      var atom = derivable.atom(42);
+      var observable = atom[$$observable]();
+      var results = [];
+
+      observable.subscribe({
+        next(value) {
+          results.push(value);
+        }
+      });
+
+      atom.set(43);
+      atom.set(44);
+
+      assert.deepEqual(
+        results,
+        [42, 43, 44]
+      );
+    });
+
+    it('should pass an integration test with an unsubscribe', function () {
+      var atom = derivable.atom(42);
+      var observable = atom[$$observable]();
+      var results = [];
+
+      var subscription = observable.subscribe({
+        next(value) {
+          results.push(value);
+        }
+      });
+
+      atom.set(43);
+      subscription.unsubscribe();
+      atom.set(44);
+
+      assert.deepEqual(
+        results,
+        [42, 43]
+      );
+    });
+
+    it('should pass an integration test with a common library (RxJS)', function () {
+      var atom = derivable.atom({value: 42});
+      var observable = Rx.Observable.from(atom);
+      var results = [];
+
+      var subscription = observable
+        .map(function(value) {
+          return Object.assign({}, value, {fromRx: true});
+        })
+        .subscribe(function(value) {
+          results.push(value);
+        });
+
+      atom.set({value: 43});
+      subscription.unsubscribe()
+      atom.set({value: 44});
+
+      assert.deepEqual(
+        results,
+        [
+          {value: 42, fromRx: true},
+          {value: 43, fromRx: true}
+        ]
+      );
+    });
+
   });
 });
 
