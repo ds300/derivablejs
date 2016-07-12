@@ -1,9 +1,13 @@
 export var keys = Object.keys;
+export var symbols = Object.getOwnPropertySymbols;
 
 export function assign (obj) {
   for (var i = 1; i < arguments.length; i++) {
-    var other = arguments[i];
-    var ks = keys(other || {});
+    var other = arguments[i] || {};
+    var ks = keys(other);
+    if (symbols) {
+      ks = ks.concat(symbols(other));
+    }
     for (var j = ks.length; j--;) {
       var prop = ks[j];
       obj[prop] = other[prop];
