@@ -20,9 +20,9 @@
     "all": "npm run clean && npm run build && npm run test && npm run coverage && npm run docs && npm run stats && npm run bench && npm run toc"
   },
   "main": "dist/derivable.js",
-  "typings": "dist/derivable.d.ts",
+  "typings": "derivable.d.ts",
   "typescript": {
-    "definition": "dist/derivable.d.ts"
+    "definition": "derivable.d.ts"
   },
   "keywords": [
     "immutable",
