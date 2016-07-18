@@ -1,35 +1,22 @@
-import style, {minWidth} from './style';
+import style, {minWidth, colors} from './style';
 import React from 'react';
 import Highlight from './highlight';
 
 const className = style.registerStyle({
-  padding: '30px',
-  'p': {
-    border: '1px solid black',
-    padding: '30px',
-    '&:hover': {
-      border: '1px solid white',
-    },
-    '&.dotted': {
-      border: '1px dotted red',
-      cursor: 'pointer',
-      '.smiley': {
-        fontWeight: '900',
-      },
-    },
-  },
+  backgroundColor: colors.aoi,
+  color: 'white',
 });
 
 export default function Body () {
   return (
-    <div>
+    <div className={className}>
       <section className='left-nav'>
         <ul>
           <li><a href="#introduction">Introduction</a></li>
           <li><a href="#introduction">Other place</a></li>
         </ul>
       </section>
-      <section className={className}>
+      <section>
         <div className="container">
           <div className="doc-part">
             <p>some words about something</p>
