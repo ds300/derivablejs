@@ -7,7 +7,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "node scripts/build.js && cp derivable.d.ts dist/ && cp derivable.js.flow dist/",
+    "prepublish": "npm run build",
+    "build": "node scripts/build.js && cp derivable.d.ts derivable.js.flow dist/",
     "test": "mocha --recursive",
     "ci:test": "mocha --recursive && (cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",

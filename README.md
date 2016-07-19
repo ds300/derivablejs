@@ -173,7 +173,7 @@ Due to inversion of control, the stack traces you get when your derivations thro
 Coming soon.
 
 ### Browser
-Either with browserify/webpack/common-js-bundler-du-jour or grab the UMD bundle from `dist/derivable.umd[.min].js`.
+Either with browserify/webpack/common-js-bundler-du-jour, or clone the repo, run `npm install && npm run build`, then grab the UMD bundle from `dist/derivable.umd[.min].js` (source maps are also available).
 
 ```javascript
 import { withEquality } from 'derivable'
