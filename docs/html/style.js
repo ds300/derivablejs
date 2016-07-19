@@ -1,12 +1,12 @@
-import { create } from 'free-style';
-
-const style = create();
+import style from 'stylee-mcstyleface';
 
 export default style;
 
-style.registerRule('body', {
-  fontFamily: '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";'
-});
+style.rules `
+  body {
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  }
+`;
 
 export const minWidth = {
   tablet: '@media (min-width: 768px)',

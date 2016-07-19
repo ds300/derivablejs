@@ -1,7 +1,5 @@
 import React from 'react';
 import Header from './header';
-import Body from './body';
-import FRP from './frp';
 import ElevatorPitch from './elevator';
 import Promise from 'bluebird';
 import {File, Dir} from '../utils/metalsmith-react';

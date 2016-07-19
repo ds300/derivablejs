@@ -2,32 +2,33 @@ import style, {minWidth, colors} from './style';
 import React from 'react';
 import Highlight from './highlight';
 
-const className = style.registerStyle({
-  backgroundColor: colors.clean_pondwater,
-  padding: '10px 10px 30px',
-  display: 'flex',
-  flexFlow: 'column',
-  alignItems: 'center',
-  color: "#093f50",
-  'h1': {
-    textAlign: 'center',
-    fontWeight: 500,
-  },
-  '.copy': {
-    maxWidth: '700px',
-    padding: '0px 10px',
-    borderRadius: '14px',
-    'p': {
-      fontSize: '11pt',
-      [minWidth.tablet]: {
-        fontSize: '12pt',
-      },
-      [minWidth.tablet]: {
-        fontSize: '14pt',
-      },
-    },
-  },
-});
+const className = style.register `
+  background-color: ${colors.clean_pondwater};
+  padding: 10px 10px 30px;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  color: #093f50;
+  h1 {
+    text-align: center;
+    font-weight: 500;
+  }
+  .copy {
+    max-width: 700px;
+    padding: 0px 10px;
+    border-radius: 14px;
+    p {
+      font-size: 11pt;
+      ${minWidth.tablet} {
+        font-size: 12pt;
+      }
+      ${minWidth.desktop} {
+        font-size: 14pt;
+      }
+    }
+  }
+`;
+
 
 export default function ElevatorPitch () {
   return (
