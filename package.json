@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "build": "node scripts/build.js && cp derivable.d.ts dist/ && cp derivable.js.flow dist/",
-    "test": "mocha --recursive && (cd test_flow && npm install && npm test)",
+    "test": "mocha --recursive",
+    "ci:test": "mocha --recursive && (cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",
     "coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json text",
     "show-coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json html && open coverage/index.html",
