@@ -4,5 +4,7 @@ node_js:
   - "5.1"
   - "4.2"
   - "0.12"
-script: npm run ci:test
+script:
+- npm run build
+- npm run ci:test
 after_success: npm run report-coverage
