@@ -6,6 +6,8 @@
 
 Derivables are an Observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with two heaped spoonfuls of extra performance, a garnish of side effects innovation, and a healthy side-salad of immutability.
 
+**This README is work in progress. Please refer to the master branch's README for rationale etc.**
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -159,43 +161,19 @@ If your app is non-trivial, use [Immutable](https://facebook.github.io/immutable
 
 ### With React
 
-[react-derivable](https://github.com/jevakallio/react-derivable) is where it's at.
-
-### With Redux
-
-DerivableJS can be used as a kind-of replacement for reselect, by just doing something like this:
-
-```javascript
-const $Store = atom(null);
-
-myReduxStore.subscribe(() => $Store.set(myReduxStore.getState()));
-```
-
-and then you derive all your derived state from $Store, rather than
+The fantastic project [react-derivable](https://github.com/andreypopp/react-derivable) lets you use
+derivables in your render method, providing seamless interop with component-local state and props.
 
 ### Debugging
 
 Due to inversion of control, the stack traces you get when your derivations throw errors can be totally unhelpful. There is a nice way to solve this problem for dev time. See [setDebugMode](https://ds300.github.com/derivablejs/#derivable-setDebugMode) for more info.
 
-### Examples (very wip)
+### Examples
 
-The best example of writing good code with Derivables right now is the [talk demo](https://github.com/ds300/derivables-talk-demo), which is presented as a 'diff tutorial' and should be read from the initial commit.
-
-The next best is the [routing walkthrough](https://github.com/ds300/derivablejs/tree/master/examples/routing/README.md)
-
-I've also implemented a solution to @staltz's [flux challenge](https://github.com/staltz/flux-challenge/tree/master/submissions/ds300).
-
-There is a proper gitbook tutorial on the way!
+Coming soon.
 
 ### Browser
-Either with browserify/webpack/common-js-bundler-du-jour or build as umd bundle with `npm run build -- --umd`
-
-### Equality Woes
-JavaScript is entirely whack when it comes to equality. People do [crazy jazz](https://github.com/ramda/ramda/blob/v0.16.0/src/internal/_equals.js) trying to figure out if some stuff is the same as some other stuff.
-
-If the data you're threading through DerivableJS needs its own notion of equality, make sure it has a sensible `.equals` method and everything will be fine.
-
-If you're using a data library with some custom non-standard mechanism for doing equality checks (e.g. mori), then you'll need to re-initialize DerivableJS with a custom equality function.
+Either with browserify/webpack/common-js-bundler-du-jour or grab the UMD bundle from `dist/derivable.umd[.min].js`.
 
 ```javascript
 import { withEquality } from 'derivable'
