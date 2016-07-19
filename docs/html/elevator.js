@@ -8,6 +8,7 @@ const className = style.registerStyle({
   display: 'flex',
   flexFlow: 'column',
   alignItems: 'center',
+  color: "#093f50",
   'h1': {
     textAlign: 'center',
     fontWeight: 500,
