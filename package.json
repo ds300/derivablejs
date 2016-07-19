@@ -7,8 +7,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "node scripts/build.js && cp derivable.d.ts dist/ && cp derivable.js.flow dist/",
     "test": "mocha --recursive",
+    "ci:test": "mocha --recursive && (cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",
     "coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json text",
     "show-coverage": "./scripts/coverage.sh && istanbul report --include=coverage-final.json html && open coverage/index.html",
@@ -20,7 +21,7 @@
     "all": "npm run clean && npm run build && npm run test && npm run coverage && npm run docs && npm run stats && npm run bench && npm run toc"
   },
   "main": "dist/derivable.js",
-  "typings": "derivable.d.ts",
+  "typings": "dist/derivable.d.ts",
   "typescript": {
     "definition": "derivable.d.ts"
   },
@@ -49,7 +50,9 @@
     "mobx": "^2.3.3",
     "mocha": "^2.2.5",
     "mocha-istanbul": "^0.2.0",
+    "promise": "^7.1.1",
     "rollup": "^0.26.1",
+    "source-map": "^0.5.6",
     "source-map-support": "^0.3.2",
     "uglify-js": "^2.4.24"
   },

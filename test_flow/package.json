@@ -1,0 +1,14 @@
+{
+  "name": "derivable-flow-test",
+  "version": "1.0.0",
+  "main": "test.js",
+  "scripts": {
+    "test": "flow check"
+  },
+  "dependencies": {
+    "derivable": "../"
+  },
+  "devDependencies": {
+    "flow-bin": "^0.29.0"
+  }
+}
