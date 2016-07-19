@@ -6,6 +6,7 @@ img/
 resources/
 scripts/
 test/
+test_flow/
 travis.yml
 .babelrc
 benchmark-results.*
