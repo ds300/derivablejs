@@ -23,7 +23,7 @@
   "main": "dist/derivable.js",
   "typings": "dist/derivable.d.ts",
   "typescript": {
-    "definition": "derivable.d.ts"
+    "definition": "dist/derivable.d.ts"
   },
   "keywords": [
     "immutable",
