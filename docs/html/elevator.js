@@ -4,12 +4,20 @@ import Highlight from './highlight';
 
 const className = style.register `
   background-color: ${colors.teardrop};
-  padding: 10px 10px 30px;
+  padding: 30px 10px 40px;
   display: flex;
   flex-flow: column;
   align-items: center;
   color: white;
+  ${minWidth.tablet} {
+    padding-top: 50px;
+  }
+  ${minWidth.desktop} {
+    padding-top: 80px;
+    flex-flow: row;
+  }
   .pitch {
+    flex: 1 1 auto;
     display: flex;
     flex-flow: column;
     align-items: center;
@@ -18,6 +26,7 @@ const className = style.register `
       text-align: center;
       font-weight: 100;
       margin: 0;
+      margin-left: -30px;
       padding: 20px 0px;
       background-position: left center;
       background-repeat: no-repeat;
@@ -27,19 +36,24 @@ const className = style.register `
         background-image: url('/img/declarative-icon.svg');
       }
       &.functional {
-        padding-left: 60px;
-        padding-right: 5px;
         background-image: url('/img/functional-icon.svg');
       }
       &.reactive {
-        padding-left: 55px;
-        padding-right: 10px;
         background-image: url('/img/reactive-icon.svg');
       }
     }
   }
   p {
-    max-width: 700px;
+    max-width: 600px;
+    ${minWidth.desktop} {
+      font-size: 11pt;
+      padding: 0 15px;
+    }
+
+    ${minWidth.largeDesktop} {
+      font-size: 12pt;
+      max-width: 450px;
+    }
   }
 `;
 
