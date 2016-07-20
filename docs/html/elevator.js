@@ -15,6 +15,7 @@ const className = style.register `
   ${minWidth.desktop} {
     padding-top: 80px;
     flex-flow: row;
+    align-items: flex-start;
   }
   .pitch {
     flex: 1 1 auto;
@@ -67,9 +68,9 @@ export default function ElevatorPitch () {
         </h1>
         <p>
           Saying is easier than doing, especially as domain complexity grows.
-          DerivableJS lets you describe what your application state
-          should look like, while handling the nasty business
-          of satisfying your description at all times.
+          DerivableJS lets you simply describe what your application state
+          should look like and when side effects should happen. The nasty
+          business of making it all work properly is taken care of.
         </p>
       </div>
       <div className='pitch'>
@@ -89,9 +90,9 @@ export default function ElevatorPitch () {
         </h1>
         <p>
           Manual or unprincipled change propagation can be a calamitous
-          source of bugs. DerivableJS provides synchronous
-          automatic change propagation and wisely dictates
-          when side effects should happen.
+          source of bugs. DerivableJS provides automatic, synchronous,
+          and minimal change propagation; wisely deciding
+          when side effects should happen to avoid wasted CPU cycles.
         </p>
       </div>
     </section>
