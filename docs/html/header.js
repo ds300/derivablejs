@@ -46,6 +46,11 @@ const className = style.register `
       font-size: 45px;
     }
   }
+  p {
+    text-align: center;
+    padding: 20px;
+    max-width: 500px;
+  }
   ul {
     position: absolute;
     top: 0px;
@@ -78,6 +83,10 @@ export default function Header () {
       <h2>
         State made simple
       </h2>
+      <p>
+        A clean and unobstrusive microframework for managing
+        state and side effects in JavaScript.
+      </p>
       <ul>
         <li>
           <a href="docs/">Documentation</a>

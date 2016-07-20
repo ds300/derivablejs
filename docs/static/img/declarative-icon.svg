@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 490 370">
+  <title>declarative-icon</title>
+  <path d="M666.68,88H257a40.11,40.11,0,0,0-40,40V364.21A39.94,39.94,0,0,0,257,404H655.84L707,458V128C707,106,688.68,88,666.68,88Z" transform="translate(-217 -88)" style="fill: #69d2e7"/>
+  <rect x="153" y="135.5" width="169" height="126.5" style="fill: #fff;stroke: #fff;stroke-miterlimit: 10;stroke-width: 6px"/>
+  <polyline points="278 85 278 65 302 65 302 104" style="fill: #fff;stroke: #fff;stroke-miterlimit: 10;stroke-width: 6px"/>
+  <polygon points="132.5 135 237.25 52.56 342 135 132.5 135" style="fill: #f38630;stroke: #f38630;stroke-miterlimit: 10;stroke-width: 6px"/>
+  <rect x="215" y="198.75" width="44.5" height="63.25" style="fill: #f38630;stroke: #f38630;stroke-miterlimit: 10;stroke-width: 6px"/>
+</svg>

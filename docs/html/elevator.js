@@ -9,19 +9,37 @@ const className = style.register `
   flex-flow: column;
   align-items: center;
   color: white;
-  h1 {
-    text-align: center;
-    font-weight: 100;
+  .pitch {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    h1 {
+      text-align: center;
+      font-weight: 100;
+      margin: 0;
+      padding: 20px 0px;
+      background-position: left center;
+      background-repeat: no-repeat;
+      background-size: 50px 50px;
+      padding-left: 65px;
+      &.declarative {
+        background-image: url('/img/declarative-icon.svg');
+      }
+      &.functional {
+        padding-left: 60px;
+        padding-right: 5px;
+        background-image: url('/img/functional-icon.svg');
+      }
+      &.reactive {
+        padding-left: 55px;
+        padding-right: 10px;
+        background-image: url('/img/reactive-icon.svg');
+      }
+    }
   }
   p {
     max-width: 700px;
-    font-size: 11pt;
-    ${minWidth.tablet} {
-      font-size: 12pt;
-    }
-    ${minWidth.desktop} {
-      font-size: 14pt;
-    }
   }
 `;
 
@@ -30,7 +48,7 @@ export default function ElevatorPitch () {
   return (
     <section className={className}>
       <div className='pitch'>
-        <h1>
+        <h1 className='declarative'>
           Declarative
         </h1>
         <p>
@@ -41,18 +59,18 @@ export default function ElevatorPitch () {
         </p>
       </div>
       <div className='pitch'>
-        <h1>
+        <h1 className='functional'>
           Functional
         </h1>
         <p>
-          Pure functions and immutable data are at the heart of effective
-          state management in any good system. Higher-order functions are a
-          catalyst for code reuse and grokkability. DerivableJS embraces
+          Pure functions and immutable data tend to be at the heart of effective
+          state management in robust systems. Higher-order functions are a
+          boon for code reuse and grokkability. DerivableJS embraces
           both with gusto.
         </p>
       </div>
       <div className='pitch'>
-        <h1>
+        <h1 className='reactive'>
           Reactive
         </h1>
         <p>
