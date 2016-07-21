@@ -1,4 +1,4 @@
-import style from 'stylee-mcstyleface';
+import style from 'stylie-mcstyleface';
 
 export default style;
 
@@ -15,6 +15,7 @@ export const colors = {
   giant_goldfish: '#F38630',
   unreal_food_pils: '#FA6900',
 
+  aoi_dark: "#219eb7",
   teardrop: '#3a7580',
 };
 

@@ -3,7 +3,7 @@
 !.flowconfig
 !.npmignore
 !.travis.yml
-!.eslintrc.json
+!.eslintrc*
 !.babelrc*
 npm-debug.log
 node_modules/

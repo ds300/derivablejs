@@ -11,9 +11,11 @@ const className = style.register `
   color: white;
   ${minWidth.tablet} {
     padding-top: 50px;
+    padding-bottom: 50px;
   }
   ${minWidth.desktop} {
     padding-top: 80px;
+    padding-bottom: 80px;
     flex-flow: row;
     align-items: flex-start;
   }

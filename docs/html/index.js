@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './header';
 import ElevatorPitch from './elevator';
+import Views from './views';
 import Promise from 'bluebird';
 import {File, Dir} from '../utils/metalsmith-react';
 
@@ -8,8 +9,8 @@ const indexPage = (
   <html>
     <head>
       <link rel="stylesheet" type="text/css" href="css/normalize.css" />
-      <link rel="stylesheet" type="text/css" href="css/syntax-highlight-style.css" />
       <link rel="stylesheet" type="text/css" href="css/bundle.css" />
+      <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700' rel='stylesheet' type='text/css' />
       <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700,300italic,400italic' rel='stylesheet' type='text/css' />
       <link rel="shortcut icon" href="favicon.ico" />
       <link rel="apple-touch-icon" href="favicon.png" />
@@ -20,6 +21,7 @@ const indexPage = (
     <body>
       <Header/>
       <ElevatorPitch/>
+      <Views/>
       <script type="text/javascript" src="js/bundle.js"></script>
     </body>
   </html>
