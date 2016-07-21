@@ -49,6 +49,7 @@ const className = style.register `
     ${minWidth.desktop} {
       font-size: 11pt;
       padding: 0 15px;
+      text-align: center;
     }
 
     ${minWidth.largeDesktop} {
@@ -69,8 +70,8 @@ export default function ElevatorPitch () {
         <p>
           Saying is easier than doing, especially as domain complexity grows.
           DerivableJS lets you simply describe what your application state
-          should look like and when side effects should happen. The nasty
-          business of making it all work properly is taken care of.
+          should look like, while handling the painful task of keeping everything
+          in sync.
         </p>
       </div>
       <div className='pitch'>
@@ -89,10 +90,10 @@ export default function ElevatorPitch () {
           Reactive
         </h1>
         <p>
-          Manual or unprincipled change propagation can be a calamitous
-          source of bugs. DerivableJS provides automatic, synchronous,
-          and minimal change propagation; wisely deciding
-          when side effects should happen to avoid wasted CPU cycles.
+          Unprincipled change propagation can be a frightful source of bugs
+          and CPU churn. DerivableJS provides automatic minimal change
+          propagation; wisely deciding when things should be updated to avoid
+          errors and wasted cycles.
         </p>
       </div>
     </section>
