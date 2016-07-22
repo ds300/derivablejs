@@ -1,5 +1,5 @@
 {
-  "name": "snabbdom-derivable-counter-example",
+  "name": "derivable-example-counter-vanilla",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -16,9 +16,6 @@
     "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
-    "derivable": "^1.0.0-beta9",
-    "react": "^15.2.1",
-    "react-derivable": "^0.1.0",
-    "react-dom": "^15.2.1"
+    "derivable": "^1.0.0-beta10"
   }
 }
