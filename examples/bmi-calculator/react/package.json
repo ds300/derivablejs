@@ -1,0 +1,26 @@
+{
+  "name": "derivable-example-bmi-calculator-react",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --inline"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
+    "babel-preset-react": "^6.11.1",
+    "babel-preset-stage-2": "^6.11.0",
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "^1.14.1"
+  },
+  "dependencies": {
+    "derivable": "^1.0.0-beta10",
+    "react": "^15.2.1",
+    "react-derivable": "^0.1.0",
+    "react-dom": "^15.2.1"
+  }
+}
