@@ -38,7 +38,6 @@ export default function Views () {
         </a>
         .
       </p>
-      <CounterExamples/>
     </section>
   );
 };

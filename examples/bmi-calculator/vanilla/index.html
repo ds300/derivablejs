@@ -6,10 +6,25 @@
 </head>
 
 <body>
-	<input type="number" id="weight-lb"/> weight (lb) <br/>
-	<input type="number" id="weight-kg"/> weight (kg) <br/>
-	<input type="range" id="height-range" min="50" max="300"/> height: <span id="height-label"></span>cm <br/>
-	Your BMI: <span id="bmi"></span>
+	<div>
+		<input type='number' id='weight-lb' /> weight (lb)
+	</div>
+	<div>
+		<input type='number' id='weight-kg' /> weight (kg)
+	</div>
+	<div>
+		<input type='range' id='height-cm' min='100' max='270'/>
+		height: <span id='height-cm-label'></span>cm
+	</div>
+	<div>
+		<input type='range' id='height-feet' min='3' max='8' />
+		<input type='range' id='height-inches' min='0' max='11' />
+		height: <span id='height-feet-inches-label'></span>
+	</div>
+	<div>
+		Your bmi is <span id='bmi-label'></span>,
+		which makes you <span id='body-type-label'></span>
+	</div>
   <script src="bundle.js"></script>
 </body>
 </html>

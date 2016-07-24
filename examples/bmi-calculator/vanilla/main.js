@@ -1,75 +1,122 @@
-import {atom, lift, transaction} from 'derivable';
+import {atom, lift, transaction, derive} from 'derivable';
 
-// step 1.
-// define atomic state and constants
-
-const $Weight = atom(60);
-const $EditingUnit = atom(null);
-
-const $HeightCM = atom(150);
-
+/**
+ * calculate a body mass index from a weight (in kilograms) and a
+ * height (in centimeters)
+ */
 function bmi (weightKG, heightCM) {
-  return weightKG / Math.pow(heightCM / 100, 2);
+  return Math.round(weightKG / Math.pow(heightCM / 100, 2));
 }
 
-// step 2.
-// derive some data
+/**
+ * convert a length in centimters to feet and inches components,
+ * rounding to the nearest inch
+ */
+function cm2feetInches (cm) {
+  const totalInches = (cm * 0.393701);
+  let feet = Math.floor(totalInches / 12);
+  let inches = Math.round(totalInches - (feet * 12));
+  if (inches === 12) {
+    feet += 1;
+    inches = 0;
+  }
+  return { feet, inches };
+}
 
-// use kg by default
-const $activeUnit = $EditingUnit.or('kg');
+/**
+ * convert a length in feet and inches to centimeters, rounding to the
+ * nearest centimeter.
+ */
+function feetInches2cm ({feet, inches}) {
+  return Math.round(((feet * 12) + inches) / 0.393701);
+}
 
-const $weightLB = $activeUnit.switch(
-  "lb", $Weight,
-  "kg", $Weight.derive(w => w / 0.453592)
-).derive(Math.round);
 
-// another way to achieve the same effect:
-const $weightKG = $activeUnit.is("kg")
-  .then($Weight, $Weight.derive(w => w * 0.453592))
-  .derive(Math.round);
-
-const $bmi = lift(bmi)($weightKG, $HeightCM);
+const $ = document.getElementById.bind(document);
 
 window.addEventListener('load', () => {
-  const $ = document.getElementById.bind(document);
+
+  // step 1.
+  // define atomic state
+
+  const $Weight = {lb: atom(150)};
+  const $Height = {cm: atom(170)};
+  const $FocusedWeightUnit = atom(null);
+
+  // step 2.
+  // derive some data
+
+  $Weight.kg = $Weight.lb.lens({
+    get: lb => Math.round(lb * 0.453592),
+    set: (_, kg) => Math.round(kg / 0.453592),
+  });
+
+  $Height.feetInches = $Height.cm.lens({
+    get: cm2feetInches,
+    set: (_, feetInches) => feetInches2cm(feetInches),
+  });
+
+  const [$feet, $inches] = $Height.feetInches.derive(['feet', 'inches']);
+
+  const $bmi = lift(bmi)($Weight.kg, $Height.cm);
+
+  const $bodyType = $bmi.derive(bmi =>
+    bmi < 18.5 ? "underweight"
+    : bmi < 25 ? "normal"
+    : bmi < 30 ? "overweight"
+    : "obese"
+  );
+
   // step 3
   // react to the changing data
 
-  $bmi.react(bmi => {
-    $('bmi').textContent = bmi.toString();
-  });
+  function setText(elemID, $value) {
+    $value.react(v => {
+      $(elemID).textContent = v.toString();
+    });
+  }
 
-  $weightLB.react(lb => {
-    $('weight-lb').value = lb;
-  }, {
-    // avoid setting input value while user is typing
-    when: $EditingUnit.is('lb').not()
-  });
+  setText('bmi-label', $bmi);
+  setText('body-type-label', $bodyType);
+  setText('height-cm-label', $Height.cm);
+  setText('height-feet-inches-label', derive`${$feet}'${$inches}"`);
 
-  $weightKG.react(kg => {
-    $('weight-kg').value = kg;
-  }, { when: $EditingUnit.is('kg').not() });
+  function setValue(elemID, $value, when) {
+    $value.react(v => {
+      $(elemID).value = v;
+    }, {when: when || true});
+  }
 
-  $HeightCM.react(h => {
-    $('height-label').textContent = h.toString();
-  });
+  setValue('weight-lb', $Weight.lb, $FocusedWeightUnit.is('lb').not());
+  setValue('weight-kg', $Weight.kg, $FocusedWeightUnit.is('kg').not());
+  setValue('height-cm', $Height.cm);
+  setValue('height-feet', $feet);
+  setValue('height-inches', $inches);
 
   // step 4
   // hook up input events
 
-  $('height-range').addEventListener('input', e => {
-    $HeightCM.set(e.target.value);
+  // range sliders
+  $('height-cm').addEventListener('input', e => {
+    $Height.cm.set(e.target.value);
+  });
+  $('height-feet').addEventListener('input', e => {
+    $Height.feetInches.swap(({inches}) => ({
+      inches, feet: parseInt(e.target.value)
+    }));
+  });
+  $('height-inches').addEventListener('input', e => {
+    $Height.feetInches.swap(({feet}) => ({
+      feet, inches: parseInt(e.target.value)
+    }));
   });
 
+  // weight inputs
   ['lb', 'kg'].forEach(unit => {
-    $('weight-' + unit).addEventListener('input', e => {
-      $Weight.set(e.target.value);
-    });
-    // changing > 1 thing at once, so wrap in a transaction to
-    // avoid intermediate reactions
-    $('weight-' + unit).addEventListener('focus', transaction(e => {
-      $EditingUnit.set(unit);
-      $Weight.set(e.target.value);
+    const inputElem = $('weight-' + unit);
+    inputElem.addEventListener('input', transaction(e => {
+      $FocusedWeightUnit.set(unit);
+      $Weight[unit].set(e.target.value);
     }));
   });
 });
