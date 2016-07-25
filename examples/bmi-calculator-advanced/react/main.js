@@ -38,19 +38,14 @@ function feetInches2cm ({feet, inches}) {
 /**
  * A controlled input field whose value is backed by an atom
  */
-const AtomBackedInput = reactive(class AtomBackedInput extends React.Component {
-  render () {
-    const {$Value, ...props} = this.props;
-    return (
-      <input
-        ref="input"
-        {...props}
-        value={$Value.get()}
-        onChange={e => $Value.set(e.target.value)}
-        />
-    );
-  }
-});
+const AtomBackedInput = reactive(({$Value, ...props}) => (
+  <input
+    ref="input"
+    {...props}
+    value={$Value.get()}
+    onChange={e => $Value.set(e.target.value)}
+    />
+));
 
 /**
  * A self-contained component for calculating BMIs in either
