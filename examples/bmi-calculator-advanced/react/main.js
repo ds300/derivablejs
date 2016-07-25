@@ -38,7 +38,7 @@ function feetInches2cm ({feet, inches}) {
 /**
  * A controlled input field whose value is backed by an atom
  */
-const $Input = reactive(class $Input extends React.Component {
+const AtomBackedInput = reactive(class AtomBackedInput extends React.Component {
   render () {
     const {$Value, ...props} = this.props;
     return (
@@ -105,15 +105,15 @@ const BMICalculator = reactive(class extends React.Component {
     return (
       <div>
         <div>
-          <$Input type='number' $Value={this.$WeightLB}/>&nbsp;
+          <AtomBackedInput type='number' $Value={this.$WeightLB}/>&nbsp;
           weight (lb)
         </div>
         <div>
-          <$Input type='number' $Value={this.$WeightKG}/>&nbsp;
+          <AtomBackedInput type='number' $Value={this.$WeightKG}/>&nbsp;
           weight (kg)
         </div>
         <div>
-          <$Input
+          <AtomBackedInput
             type='range'
             $Value={this.$HeightCM}
             min="100"
@@ -121,12 +121,12 @@ const BMICalculator = reactive(class extends React.Component {
           height: {Math.round(this.$HeightCM.get())}cm
         </div>
         <div>
-          <$Input
+          <AtomBackedInput
             type='range'
             $Value={this.$Feet}
             min="3"
             max="8"/>&nbsp;
-          <$Input
+          <AtomBackedInput
             type='range'
             $Value={this.$Inches}
             min="0"

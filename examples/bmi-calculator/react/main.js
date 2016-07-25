@@ -12,23 +12,6 @@ function bmi (weightKG, heightCM) {
 }
 
 /**
- * A controlled input field whose value is backed by an atom
- */
-const $Input = reactive(class $Input extends React.Component {
-  render () {
-    const {$Value, ...props} = this.props;
-    return (
-      <input
-        ref="input"
-        {...props}
-        value={$Value.get()}
-        onChange={e => $Value.set(e.target.value)}
-        />
-    );
-  }
-});
-
-/**
  * A self-contained component for calculating BMIs in either
  * imperial or metric measurements
  */
@@ -55,12 +38,17 @@ const BMICalculator = reactive(class extends React.Component {
     return (
       <div>
         <div>
-          <$Input type='number' $Value={this.$WeightKG}/> weight (kg)
+          <input
+            type='number'
+            value={this.$WeightKG.get()}
+            onChange={e => this.$WeightKG.set(e.target.value)}/>&nbsp;
+          weight (kg)
         </div>
         <div>
-          <$Input
+          <input
             type='range'
-            $Value={this.$HeightCM}
+            value={this.$HeightCM.get()}
+            onChange={e => this.$HeightCM.set(e.target.value)}
             min="100"
             max="270"/>&nbsp;
           height: {Math.round(this.$HeightCM.get())}cm
