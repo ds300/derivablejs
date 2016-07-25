@@ -40,7 +40,6 @@ function feetInches2cm ({feet, inches}) {
  */
 const AtomBackedInput = reactive(({$Value, ...props}) => (
   <input
-    ref="input"
     {...props}
     value={$Value.get()}
     onChange={e => $Value.set(e.target.value)}
