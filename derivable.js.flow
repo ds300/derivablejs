@@ -100,9 +100,9 @@ declare export function struct(obj: mixed): Derivable<mixed>;
 
 declare export function unpack(obj: mixed): mixed;
 
+declare export function lift<A, B, C, D, E>(f: (a: A, b: B, c: C, d: D) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>), d: (D | Derivable<D>)) => Derivable<E>;
+
 declare export function lift(f: (...args: Array<mixed>) => mixed): (...args: Array<Derivable<mixed>>) => Derivable<mixed>;
-declare export function lift<A, B, E>(f: (a: A, b: B) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>)) => Derivable<E>;
-declare export function lift<A, B, C, E>(f: (a: A, b: B, c: C) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>)) => Derivable<E>;
 
 declare export function isAtom(obj: mixed): boolean;
 

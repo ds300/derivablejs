@@ -3,7 +3,7 @@
   */
 
 import type {Atom, Derivable} from 'derivable';
-import {atom, transaction, atomic} from 'derivable';
+import {atom, transaction, atomic, lift} from 'derivable';
 
 function testDerivations() {
 
@@ -88,5 +88,19 @@ function testTransaction() {
 
   // $ExpectError: arg should be a function
   atomic('oops');
+
+}
+
+function testLift() {
+
+  let plusOne = (a: number) => a + 1;
+  let add = (a: number, b: number) => a + b;
+
+  let dPlusOne = lift(plusOne);
+  let dTwentyTwo: Derivable<number> = dPlusOne(atom(21));
+  let dTwentyThree: Derivable<number> = dPlusOne(22);
+
+  let dAdd = lift(add);
+  let dFour : Derivable<number> = dAdd(atom(2), atom(2));
 
 }
