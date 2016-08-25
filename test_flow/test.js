@@ -3,7 +3,7 @@
   */
 
 import type {Atom, Derivable} from 'derivable';
-import {atom} from 'derivable';
+import {atom, transaction, atomic} from 'derivable';
 
 function testDerivations() {
 
@@ -62,4 +62,31 @@ function testThen() {
   let a = atom(42);
   let b: Derivable<string | boolean> = a.then('ok', false);
   let c: Derivable<string | boolean> = a.mThen('ok', false);
+}
+
+function testTransaction() {
+
+  let plusOne = (a: number) => a + 1;
+
+  let tPlusOne = transaction(plusOne);
+
+  let aPlusOne = atomic(plusOne);
+
+  let twentyTwo: number = tPlusOne(21);
+  let twentyThree: number = aPlusOne(22);
+
+  let add = (a: number, b: number) => a + b;
+
+  let tAdd = transaction(add);
+  let aAdd = atomic(add);
+
+  let four: number = tAdd(2, 2);
+  let five: number = tAdd(2, 2);
+
+  // $ExpectError: arg should be a function
+  transaction(42);
+
+  // $ExpectError: arg should be a function
+  atomic('oops');
+
 }

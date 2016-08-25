@@ -90,11 +90,11 @@ declare export function lens<T>(lens: CompositeLens<T>): Atom<T>;
 
 declare export function transact(f: () => void): void;
 
-declare export function transaction(f: (...args: Array<mixed>) => mixed): (...args: Array<mixed>) => mixed;
+declare export function transaction<F: Function>(f: F): F;
 
 declare export function atomically(f: () => void): void;
 
-declare export function atomic(f: (...args: Array<mixed>) => mixed): (...args: Array<mixed>) => mixed;
+declare export function atomic<F: Function>(f: F): F;
 
 declare export function struct(obj: mixed): Derivable<mixed>;
 
