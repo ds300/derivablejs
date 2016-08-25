@@ -100,7 +100,21 @@ function testLift() {
   let dTwentyTwo: Derivable<number> = dPlusOne(atom(21));
   let dTwentyThree: Derivable<number> = dPlusOne(22);
 
+  // $ExpectError: expected a number or Derivable<number>
+  dPlusOne('oops');
+
+  // $ExpectError: expected a number or Derivable<number>
+  dPlusOne(atom('oops'));
+
   let dAdd = lift(add);
-  let dFour : Derivable<number> = dAdd(atom(2), atom(2));
+  let dFour: Derivable<number> = dAdd(atom(2), atom(2));
+  let dFive: Derivable<number> = dAdd(2, 3);
+  let dSix: Derivable<number> = dAdd(3, atom(3));
+
+  // $ExpectError: expected a number or Derivable<number>
+  dAdd(false, 21);
+
+  // $ExpectError: expected a number or Derivable<number>
+  dAdd(atom(false), 21);
 
 }
