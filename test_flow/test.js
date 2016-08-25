@@ -2,22 +2,46 @@
   * @flow
   */
 
-import type {Atom} from 'derivable';
+import type {Atom, Derivable} from 'derivable';
 import {atom} from 'derivable';
 
-let a: Atom<number> = atom(21);
+function testDerivations() {
 
-// $ExpectError
-a.set('ok');
+  let a: Atom<number> = atom(21);
 
-// $ExpectError
-let c: string = a.get();
+  // $ExpectError
+  a.set('ok');
 
-a.set(42);
+  // $ExpectError
+  let c: string = a.get();
 
-let b = a.derive(v => v * 2);
+  a.set(42);
 
-// $ExpectError
-let d: string = b.get();
+  let b = a.derive(v => v * 2);
 
-let e: number = b.get();
+  // $ExpectError
+  let d: string = b.get();
+
+  let e: number = b.get();
+
+  let maybeA: Atom<?number> = atom(null);
+
+  // $ExpectError: value might be null
+  maybeA.derive(value => value * 2);
+
+  let maybeAx2: Derivable<?number> = maybeA.mDerive(value => value * 2);
+}
+
+function testReactions() {
+
+  let c: Atom<?{x: number}> = atom(null);
+
+  c.react(v => {
+    // $ExpectError: v might be null
+    console.log(v.x);
+  });
+
+  c.mReact(v => {
+    console.log(v.x);
+  });
+}

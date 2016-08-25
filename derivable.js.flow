@@ -14,14 +14,14 @@ export interface Derivable<T> {
   derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
   derive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
-  mDerive<E>(f: (value: T) => E): Derivable<E>;
-  mDerive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
-  mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
-  mDerive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
+  mDerive<E>(f: (value: $NonMaybeType<T>) => E): Derivable<E>;
+  mDerive<A, E>(f: (value: $NonMaybeType<T>, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+  mDerive<A, B, E>(f: (value: $NonMaybeType<T>, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
+  mDerive<E>(f: (value: $NonMaybeType<T>, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
   react(f: (value: T) => void, options?: Lifecycle): void;
 
-  mReact(f: (value: T) => void, options?: Lifecycle): void;
+  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle): void;
 
   get(): T;
 
