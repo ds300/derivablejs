@@ -27,17 +27,17 @@ export interface Derivable<T> {
 
   is(other: mixed): Derivable<boolean>;
 
-  and(other: mixed): Derivable<mixed>;
+  and(other: mixed): Derivable<boolean>;
 
-  mAnd(other: mixed): Derivable<mixed>;
+  mAnd(other: mixed): Derivable<boolean>;
 
-  or(other: mixed): Derivable<mixed>;
+  or(other: mixed): Derivable<boolean>;
 
-  mOr(other: mixed): Derivable<mixed>;
+  mOr(other: mixed): Derivable<boolean>;
 
-  then(thenD: mixed, elseD: mixed): Derivable<mixed>;
+  then<X, Y>(thenD: X, elseD: Y): Derivable<X | Y>;
 
-  mThen(thenD: mixed, elseD: mixed): Derivable<mixed>;
+  mThen<X, Y>(thenD: mixed, elseD: mixed): Derivable<X | Y>;
 
   not(): Derivable<boolean>;
 
@@ -114,13 +114,13 @@ declare export function isLensed(obj: mixed): boolean;
 
 declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
 
-declare export function or(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function or(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function mOr(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function mOr(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function and(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function and(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function mAnd(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function mAnd(...conditions: Array<mixed>): Derivable<boolean>;
 
 declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 

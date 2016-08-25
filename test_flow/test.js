@@ -45,3 +45,21 @@ function testReactions() {
     console.log(v.x);
   });
 }
+
+function testLogicComb() {
+
+  let a = atom(true);
+  let and: Derivable<boolean> = a.and(atom(false));
+  let mAnd: Derivable<boolean> = a.mAnd(atom(false));
+  let or: Derivable<boolean> = a.or(atom(false));
+  let mOr: Derivable<boolean> = a.mOr(atom(false));
+  let not: Derivable<boolean> = a.not();
+
+}
+
+function testThen() {
+
+  let a = atom(42);
+  let b: Derivable<string | boolean> = a.then('ok', false);
+  let c: Derivable<string | boolean> = a.mThen('ok', false);
+}
