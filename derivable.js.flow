@@ -43,7 +43,7 @@ export interface Derivable<T> {
 
   switch(...args: Array<mixed>): Derivable<mixed>;
 
-  withEquality(equals: (a: mixed, b: mixed) => boolean): Derivable<T>;
+  withEquality(equals: (a: mixed, b: mixed) => *): Derivable<T>;
 };
 
 export interface Atom<T> extends Derivable<T> {

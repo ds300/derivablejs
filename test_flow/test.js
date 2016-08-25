@@ -118,3 +118,11 @@ function testLift() {
   dAdd(atom(false), 21);
 
 }
+
+function testWithEquality() {
+
+  let a: Atom<{x: number}> = atom({x: 42})
+  let b: Derivable<{x: number}> = a.withEquality((a, b) => {
+    return a && b && typeof a === 'object' && typeof b === 'object' && a.x === b.x;
+  });
+}
