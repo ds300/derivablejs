@@ -14,36 +14,36 @@ export interface Derivable<T> {
   derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
   derive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
-  mDerive<E>(f: (value: T) => E): Derivable<E>;
-  mDerive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
-  mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
-  mDerive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
+  mDerive<E>(f: (value: $NonMaybeType<T>) => E): Derivable<E>;
+  mDerive<A, E>(f: (value: $NonMaybeType<T>, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+  mDerive<A, B, E>(f: (value: $NonMaybeType<T>, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
+  mDerive<E>(f: (value: $NonMaybeType<T>, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
   react(f: (value: T) => void, options?: Lifecycle): void;
 
-  mReact(f: (value: T) => void, options?: Lifecycle): void;
+  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle): void;
 
   get(): T;
 
   is(other: mixed): Derivable<boolean>;
 
-  and(other: mixed): Derivable<mixed>;
+  and(other: mixed): Derivable<boolean>;
 
-  mAnd(other: mixed): Derivable<mixed>;
+  mAnd(other: mixed): Derivable<boolean>;
 
-  or(other: mixed): Derivable<mixed>;
+  or(other: mixed): Derivable<boolean>;
 
-  mOr(other: mixed): Derivable<mixed>;
+  mOr(other: mixed): Derivable<boolean>;
 
-  then(thenD: mixed, elseD: mixed): Derivable<mixed>;
+  then<X, Y>(thenD: X, elseD: Y): Derivable<X | Y>;
 
-  mThen(thenD: mixed, elseD: mixed): Derivable<mixed>;
+  mThen<X, Y>(thenD: mixed, elseD: mixed): Derivable<X | Y>;
 
   not(): Derivable<boolean>;
 
   switch(...args: Array<mixed>): Derivable<mixed>;
 
-  withEquality(equals: (a: mixed, b: mixed) => boolean): Derivable<T>;
+  withEquality(equals: (a: mixed, b: mixed) => *): Derivable<T>;
 };
 
 export interface Atom<T> extends Derivable<T> {
@@ -90,19 +90,19 @@ declare export function lens<T>(lens: CompositeLens<T>): Atom<T>;
 
 declare export function transact(f: () => void): void;
 
-declare export function transaction(f: (...args: Array<mixed>) => mixed): (...args: Array<mixed>) => mixed;
+declare export function transaction<F: Function>(f: F): F;
 
 declare export function atomically(f: () => void): void;
 
-declare export function atomic(f: (...args: Array<mixed>) => mixed): (...args: Array<mixed>) => mixed;
+declare export function atomic<F: Function>(f: F): F;
 
 declare export function struct(obj: mixed): Derivable<mixed>;
 
 declare export function unpack(obj: mixed): mixed;
 
+declare export function lift<A, B, C, D, E>(f: (a: A, b: B, c: C, d: D) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>), d: (D | Derivable<D>)) => Derivable<E>;
+
 declare export function lift(f: (...args: Array<mixed>) => mixed): (...args: Array<Derivable<mixed>>) => Derivable<mixed>;
-declare export function lift<A, B, E>(f: (a: A, b: B) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>)) => Derivable<E>;
-declare export function lift<A, B, C, E>(f: (a: A, b: B, c: C) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>)) => Derivable<E>;
 
 declare export function isAtom(obj: mixed): boolean;
 
@@ -114,13 +114,13 @@ declare export function isLensed(obj: mixed): boolean;
 
 declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
 
-declare export function or(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function or(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function mOr(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function mOr(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function and(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function and(...conditions: Array<mixed>): Derivable<boolean>;
 
-declare export function mAnd(...conditions: Array<mixed>): Derivable<mixed>;
+declare export function mAnd(...conditions: Array<mixed>): Derivable<boolean>;
 
 declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 
