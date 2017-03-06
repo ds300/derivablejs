@@ -8,7 +8,7 @@ export function Reactor(parent, react, governor) {
   this.react = react;
   this._governor = governor || null;
   this._active = false;
-  this._reacting = false;
+  this._reacting = 0;
   this._type = types.REACTOR;
 
   if (util.DEBUG_MODE) {
@@ -28,7 +28,7 @@ util.assign(Reactor.prototype, {
 
   _force: function (nextValue) {
     try {
-      this._reacting = true;
+      this._reacting++;
       this.react(nextValue);
     } catch (e) {
       if (util.DEBUG_MODE) {
@@ -36,7 +36,7 @@ util.assign(Reactor.prototype, {
       }
       throw e;
     } finally {
-      this._reacting = false;
+      this._reacting--;
     }
   },
 
@@ -47,8 +47,8 @@ util.assign(Reactor.prototype, {
   },
 
   _maybeReact: function () {
-    if (!this._reacting && this._active) {
-      if (this._governor !== null) {
+    if (this._active) {
+    if (this._governor !== null) {
         this._governor._maybeReact();
       }
       // maybe the reactor was stopped by the parent

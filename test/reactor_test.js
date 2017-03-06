@@ -441,7 +441,7 @@ describe("setting the values of atoms in a reaction phase", function () {
     });
   });
 
-  it("is not allowed if the atom in question is upstream of the reactor", function () {
+  it("is allowed if the atom in question is upstream of the reactor as long as equilibrium is reached", function () {
     var n = derivable.atom(3);
 
     // currently 1
@@ -453,15 +453,13 @@ describe("setting the values of atoms in a reaction phase", function () {
       return n * 2;
     };
 
-    var r = nmod2.react(function (_) {
+    nmod2.react(function (_) {
       return n.swap(double);
     }, {skipFirst: true});
 
-    assert.throws(function () {
-      return n.set(2);
-    });
-    // nmod2 becomes 0, reactor triggers n being set to 4
-    // reactor caught up in sweep again, identified as cycle
+    // nmod2 becomes 0, reactor triggers n being set to 4, nmod2 doesn't change and cycle stops
+    n.set(2);
+    assert.strictEqual(n.get(), 4);
   });
 });
 

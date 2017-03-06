@@ -23,8 +23,8 @@ export function mark (node, reactors) {
 export function processReactors (reactors) {
   for (var i = 0, len = reactors.length; i < len; i++) {
     var r = reactors[i];
-    if (r._reacting) {
-      throw new Error("Synchronous cyclical reactions disallowed. " +
+    if (r._reacting >= 10) {
+      throw new Error("Too deep synchronous cyclical reactions disallowed. " +
                       "Use setImmediate.");
     }
     r._maybeReact();
