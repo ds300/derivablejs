@@ -1,0 +1,5 @@
+.*
+!.eslintrc
+!.gitignore
+bundle.js
+node_modules/

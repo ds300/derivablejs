@@ -1,133 +1,156 @@
-import imut from 'immutable';
-import _, {atom, derive, derivation, transact} from '../dist/derivable';
-import assert from 'assert';
+'use strict';
 
-describe("the `is*` fns", () => {
-  it ("just work, don't worry about it", () => {
-    let a = atom(0);
-    let d = a.derive(x => x * 2);
-    let l = a.lens({get: x => x * 2, set: (_, x) => x / 2});
-    let r = d.reactor(x => console.log(x));
+var immutable = require('immutable');
 
-    assert(_.isAtom(a), "a is an atom");
-    assert(!_.isAtom(d), "d is not an atom");
-    assert(_.isAtom(l), "l is an atom");
-    assert(!_.isAtom(r), "r is not an atom");
+var derivable = require('../dist/derivable');
 
-    assert(!_.isDerivation(a), "a is not a derivation");
-    assert(_.isDerivation(d), "d is a derivation");
-    assert(_.isDerivation(l), "l is a derivation");
-    assert(!_.isDerivation(r), "r is not a derivation");
+var assert = require('assert');
 
-    assert(!_.isLensed(a), "a is not a lens");
-    assert(_.isLensed(l), "l is a lens");
-    assert(!_.isLensed(d), "d is not a lens");
-    assert(!_.isLensed(r), "r is not a lens");
+describe("the `is*` fns", function () {
+  it("just work, don't worry about it", function () {
+    var a = derivable.atom(0);
+    var d = a.derive(function (x) {
+      return x * 2;
+    });
+    var l = a.lens({ get: function get(x) {
+        return x * 2;
+      }, set: function set(_, x) {
+        return x / 2;
+      } });
 
-    assert(!_.isReactor(a), "a is a reactor");
-    assert(!_.isReactor(d), "d is a reactor");
-    assert(!_.isReactor(l), "l is a reactor");
-    assert(_.isReactor(r), "r is a reactor");
+    assert(derivable.isAtom(a), "a is an atom");
+    assert(!derivable.isAtom(d), "d is not an atom");
+    assert(derivable.isAtom(l), "l is an atom");
 
-    assert(_.isDerivable(a), "a is derivable");
-    assert(_.isDerivable(d), "d is derivable");
-    assert(_.isDerivable(l), "l is derivable");
-    assert(!_.isDerivable(r), "r is not derivable");
+    assert(!derivable.isDerivation(a), "a is not a derivation");
+    assert(derivable.isDerivation(d), "d is a derivation");
+    assert(derivable.isDerivation(l), "l is a derivation");
+
+    assert(!derivable.isLensed(a), "a is not a lens");
+    assert(derivable.isLensed(l), "l is a lens");
+    assert(!derivable.isLensed(d), "d is not a lens");
+
+    assert(derivable.isDerivable(a), "a is derivable");
+    assert(derivable.isDerivable(d), "d is derivable");
+    assert(derivable.isDerivable(l), "l is derivable");
   });
 });
 
-describe("the `struct` function", () => {
-  it ("does nothing to a deriveable", () => {
-    let a = atom(0);
-    let b = _.struct(a);
+describe("the `struct` function", function () {
+  it("expects a plain object or a plain array", function () {
+    assert.throws(function () {
+      derivable.struct();
+    });
+    assert.throws(function () {
+      derivable.struct(53);
+    });
+    assert.throws(function () {
+      derivable.struct(new Date());
+    });
+    assert.throws(function () {
+      derivable.struct(derivable.atom(4));
+    });
+    derivable.struct({});
+    derivable.struct([]);
+    assert.throws(function () {
+      derivable.struct(derivable.struct({}));
+    });
+  });
+  it("turns an array of derivables into a derivable", function () {
+    var fib1 = derivable.atom(0),
+        fib2 = derivable.atom(1),
+        fib = derivable.derivation(function () {
+      return fib1.get() + fib2.get();
+    });
 
-    assert.strictEqual(b.get(), 0);
-  })
-  it("turns an array of derivables into a derivable", () => {
-    let fib1 = atom(0),
-        fib2 = atom(1),
-        fib = derivation(() => fib1.get() + fib2.get());
-
-    let grouped = _.struct([fib1, fib2, fib]);
-    assert.deepEqual([0,1,1], grouped.get());
+    var grouped = derivable.struct([fib1, fib2, fib]);
+    assert.deepEqual([0, 1, 1], grouped.get());
 
     fib1.set(1);
-    assert.deepEqual([1,1,2], grouped.get());
+    assert.deepEqual([1, 1, 2], grouped.get());
   });
 
-  it("turns a map of derivables into a derivable", () => {
-    let name = atom("wilbur"),
-        telephone = atom("0987654321");
+  it("turns a map of derivables into a derivable", function () {
+    var name = derivable.atom("wilbur"),
+        telephone = derivable.atom("0987654321");
 
-    let grouped = _.struct({name, telephone});
+    var grouped = derivable.struct({ name: name, telephone: telephone });
 
-    assert.deepEqual({name: "wilbur", telephone: "0987654321"}, grouped.get());
+    assert.deepEqual({ name: "wilbur", telephone: "0987654321" }, grouped.get());
 
     name.set("Jemimah");
     telephone.set("n/a");
 
-    assert.deepEqual({name: "Jemimah", telephone: "n/a"}, grouped.get());
+    assert.deepEqual({ name: "Jemimah", telephone: "n/a" }, grouped.get());
   });
 
-  it("actually turns any arbitrarily nested structure of"
-     +" maybe-derivables into a derivable", () => {
-    let name = atom("wilbur"),
-        telephone = atom("0987654321"),
-        friend1Name = atom("Sylvester"),
-        friend1Telephone = atom("blub");
+  it("actually turns any arbitrarily nested structure of" + " maybe-derivables into a derivable", function () {
+    var name = derivable.atom("wilbur"),
+        telephone = derivable.atom("0987654321"),
+        friend1Name = derivable.atom("Sylvester"),
+        friend1Telephone = derivable.atom("blub");
 
-    let grouped = _.struct({
-      name, telephone,
+    var grouped = derivable.struct({
+      name: name, telephone: telephone,
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: friend1Name, telephone: friend1Telephone}, "others"]
+      friends: [{ name: friend1Name, telephone: friend1Telephone }, "others"]
     });
 
-    let expected1 = {
+    var expected1 = {
       name: "wilbur",
       telephone: "0987654321",
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: "Sylvester", telephone: "blub"}, "others"]
+      friends: [{ name: "Sylvester", telephone: "blub" }, "others"]
     };
 
     assert.deepEqual(expected1, grouped.get());
 
     friend1Name.set("Brittany");
 
-    let expected2 = {
+    var expected2 = {
       name: "wilbur",
       telephone: "0987654321",
       blood_type: "AB Negative",
       age: 75,
-      friends: [{name: "Brittany", telephone: "blub"}, "others"]
+      friends: [{ name: "Brittany", telephone: "blub" }, "others"]
     };
 
     assert.deepEqual(expected2, grouped.get());
   });
 
-  it("only accepts plain objects or arrays", () => {
-    assert.throws(() => _.struct(3));
-    assert.throws(() => _.struct("blah"));
-    assert.throws(() => _.struct(new Error()));
+  it("only accepts plain objects or arrays", function () {
+    assert.throws(function () {
+      return derivable.struct(3);
+    });
+    assert.throws(function () {
+      return derivable.struct("blah");
+    });
+    assert.throws(function () {
+      return derivable.struct(new Error());
+    });
     function A() {};
-    assert.throws(() => _.struct(new A()));
-    assert.throws(() => _.struct(/\d+/));
+    assert.throws(function () {
+      return derivable.struct(new A());
+    });
+    assert.throws(function () {
+      return derivable.struct(/\d+/);
+    });
   });
 });
 
-
-describe("boolean logic", () => {
-  it("is well understood", () => {
-    let a = atom(true),
-        b = atom(true),
-        aANDb = _.and(a, b),
-        aORb = _.or(a, b),
+describe("boolean logic", function () {
+  it("is well understood", function () {
+    var a = derivable.atom(true),
+        b = derivable.atom(true),
+        aANDb = derivable.and(a, b),
+        aORb = derivable.or(a, b),
         NOTa = a.not();
 
     assert.strictEqual(aANDb.get(), true, "true & true = true");
     assert.strictEqual(aORb.get(), true, "true | true = true");
-    assert.strictEqual(NOTa.get(), false, "!true = false")
+    assert.strictEqual(NOTa.get(), false, "!true = false");
 
     b.set(false);
 
@@ -141,11 +164,11 @@ describe("boolean logic", () => {
     assert.strictEqual(NOTa.get(), true, "!false = true");
   });
 
-  it("is mirrored for dealing with null/undefined", () => {
-    let a = atom(false),
-        b = atom(false),
-        aANDb = _.mAnd(a, b).mThen(true, false),
-        aORb = _.mOr(a, b).mThen(true, false);
+  it("is mirrored for dealing with null/undefined", function () {
+    var a = derivable.atom(false),
+        b = derivable.atom(false),
+        aANDb = derivable.mAnd(a, b).mThen(true, false),
+        aORb = derivable.mOr(a, b).mThen(true, false);
 
     assert.strictEqual(aANDb.get(), true, "false m& false m= true");
     assert.strictEqual(aORb.get(), true, "false m| false m= true");
@@ -159,17 +182,17 @@ describe("boolean logic", () => {
 
     assert.strictEqual(aANDb.get(), false, "null m& null m= false");
     assert.strictEqual(aORb.get(), false, "null m| null m= false");
-  })
+  });
 });
 
+describe("control flow", function () {
+  it("allows different paths to be taken depending on conditions", function () {
+    var number = derivable.atom(0);
+    var even = number.derive(function (n) {
+      return n % 2 === 0;
+    });
 
-
-describe("control flow", () => {
-  it ("allows different paths to be taken depending on conditions", () => {
-    let number = atom(0);
-    let even = number.derive(n => n % 2 === 0);
-
-    let message = even.then("even", "odd");
+    var message = even.then("even", "odd");
 
     assert.strictEqual(message.get(), "even");
 
@@ -178,21 +201,20 @@ describe("control flow", () => {
     assert.strictEqual(message.get(), "odd");
   });
 
-  it("doesn't evaluate untaken paths", () => {
-    let number = atom(0);
-    let even = number.derive(n => n % 2 === 0);
+  it("doesn't evaluate untaken paths", function () {
+    var number = derivable.atom(0);
+    var even = number.derive(function (n) {
+      return n % 2 === 0;
+    });
 
-    let dideven = false;
-    let didodd = false;
+    var dideven = false;
+    var didodd = false;
 
-    let chooseAPath = even.then(
-      derivation(() => {
-        dideven = true;
-      }),
-      derivation(() => {
-        didodd = true;
-      })
-    );
+    var chooseAPath = even.then(derivable.derivation(function () {
+      dideven = true;
+    }), derivable.derivation(function () {
+      didodd = true;
+    }));
 
     chooseAPath.get();
 
@@ -211,14 +233,10 @@ describe("control flow", () => {
     assert(!dideven && didodd, "didnt eval even path");
   });
 
-  it("same goes for the switch statement", () => {
-    let thing = atom("Tigran");
+  it("same goes for the switch statement", function () {
+    var thing = derivable.atom("Tigran");
 
-    let result = thing.switch(
-      "Banana", "YUMMY",
-      532,      "FiveThreeTwo",
-      "Tigran", "Hamasayan"
-    );
+    var result = thing.switch("Banana", "YUMMY", 532, "FiveThreeTwo", "Tigran", "Hamasayan");
 
     assert.strictEqual("Hamasayan", result.get());
 
@@ -234,24 +252,28 @@ describe("control flow", () => {
 
     assert(result.get() === void 0);
 
-    let switcheroo = atom("a");
+    var switcheroo = derivable.atom("a");
 
-    let dida = false,
+    var dida = false,
         didb = false,
         didc = false,
         didx = false;
 
-    let conda = atom("a"),
-        condb = atom("b"),
-        condc = atom("c");
+    var conda = derivable.atom("a"),
+        condb = derivable.atom("b"),
+        condc = derivable.atom("c");
 
-    let chooseAPath = switcheroo.switch(
-      conda, derivation(() => dida = true),
-      condb, derivation(() => didb = true),
-      condc, derivation(() => didc = true),
-      //else
-      derivation(() => didx = true)
-    );
+    var chooseAPath = switcheroo.switch(conda, derivable.derivation(function () {
+      return dida = true;
+    }), condb, derivable.derivation(function () {
+      return didb = true;
+    }), condc, derivable.derivation(function () {
+      return didc = true;
+    }),
+    //else
+    derivable.derivation(function () {
+      return didx = true;
+    }));
 
     assert(!dida && !didb && !didc && !didx, "did nothing yet 1");
 
@@ -281,50 +303,59 @@ describe("control flow", () => {
   });
 });
 
+describe("the lift function", function () {
+  it("lifts a function which operates on values to operate on derivables", function () {
+    var plus = function plus(a, b) {
+      return a + b;
+    };
+    var dPlus = derivable.lift(plus);
 
-describe("the lift function", () => {
-  it("lifts a function which operates on values to operate on derivables", () => {
-    let plus = (a, b) => a + b;
-    let dPlus = _.lift(plus);
-
-    let a = atom(5);
-    let b = atom(10);
-    let c = dPlus(a, b);
+    var a = derivable.atom(5);
+    var b = derivable.atom(10);
+    var c = dPlus(a, b);
 
     assert.equal(15, c.get());
   });
 
-  it("can be used in ordinary FP stuff", () => {
-    const cells = [0,1,2].map(atom);
+  it("can be used in ordinary FP stuff", function () {
+    var cells = [0, 1, 2].map(derivable.atom);
 
-    const add = _.lift((a, b) => a + b);
+    var add = derivable.lift(function (a, b) {
+      return a + b;
+    });
 
-    const sum = cells.reduce(add);
+    var sum = cells.reduce(add);
 
-    let expected = 3;
-    let equalsExpected = false;
-    sum.react(x => equalsExpected = x === expected);
+    var expected = 3;
+    var equalsExpected = false;
+    sum.react(function (x) {
+      return equalsExpected = x === expected;
+    });
     assert(equalsExpected);
 
     expected = 4;
     equalsExpected = false;
-    cells[0].swap(x => x+1);
+    cells[0].swap(function (x) {
+      return x + 1;
+    });
     assert(equalsExpected);
   });
 });
 
-describe("the `transact` function", () => {
-  it("executes a function in the context of a transaction", () => {
-    const a = atom("a"),
-          b = atom("b");
+describe("the `transact` function", function () {
+  it("executes a function in the context of a transaction", function () {
+    var a = derivable.atom("a"),
+        b = derivable.atom("b");
 
-    let timesChanged = 0;
+    var timesChanged = 0;
 
-    _.struct({a, b}).reactor(() => timesChanged++).start();
+    derivable.struct({ a: a, b: b }).react(function () {
+      return timesChanged++;
+    }, {skipFirst: true});
 
     assert.strictEqual(timesChanged, 0);
 
-    const setAAndB = (a_val, b_val) => {
+    var setAAndB = function setAAndB(a_val, b_val) {
       a.set(a_val);
       b.set(b_val);
     };
@@ -335,13 +366,17 @@ describe("the `transact` function", () => {
     assert.strictEqual(a.get(), "aye");
     assert.strictEqual(b.get(), "bee");
 
-    transact(() => setAAndB("a", "b"));
+    derivable.transact(function () {
+      return setAAndB("a", "b");
+    });
 
     assert.strictEqual(timesChanged, 3);
     assert.strictEqual(a.get(), "a");
     assert.strictEqual(b.get(), "b");
 
-    transact(() => setAAndB(5, 6));
+    derivable.transact(function () {
+      return setAAndB(5, 6);
+    });
 
     assert.strictEqual(timesChanged, 4);
     assert.strictEqual(a.get(), 5);
@@ -349,18 +384,20 @@ describe("the `transact` function", () => {
   });
 });
 
-describe("the `transaction` function", () => {
-  it("wraps a function such that its body is executed in a txn", () => {
-    const a = atom("a"),
-          b = atom("b");
+describe("the `transaction` function", function () {
+  it("wraps a function such that its body is executed in a txn", function () {
+    var a = derivable.atom("a"),
+        b = derivable.atom("b");
 
-    let timesChanged = 0;
+    var timesChanged = 0;
 
-    _.struct({a, b}).reactor(() => timesChanged++).start();
+    derivable.struct({ a: a, b: b }).react(function () {
+      return timesChanged++;
+    }, {skipFirst: true});
 
     assert.strictEqual(timesChanged, 0);
 
-    const setAAndB = (a_val, b_val) => {
+    var setAAndB = function setAAndB(a_val, b_val) {
       a.set(a_val);
       b.set(b_val);
       return a_val + b_val;
@@ -372,7 +409,7 @@ describe("the `transaction` function", () => {
     assert.strictEqual(a.get(), "aye");
     assert.strictEqual(b.get(), "bee");
 
-    const tSetAAndB = _.transaction(setAAndB);
+    var tSetAAndB = derivable.transaction(setAAndB);
 
     assert.strictEqual(tSetAAndB("a", "b"), "ab");
 
@@ -388,61 +425,67 @@ describe("the `transaction` function", () => {
   });
 });
 
-describe("defaultEquals", () => {
-  it("tests whether two values are strictly equal", () => {
-    assert(_.defaultEquals(5, 5));
-    assert(_.defaultEquals("buns", "buns"));
-    assert(!_.defaultEquals([1,2,3], [0,1,2].map(x => x+1)));
-    var x = {};
-    x['a'] = 'a';
-    x['b'] = 'b';
-    assert(!_.defaultEquals({a: "a", b: 'b'}, x));
+describe("debug mode", function () {
+  it("causes derivations and reactors to store the stacktraces of their" + " instantiation points", function () {
+    var d = derivable.derivation(function () {
+      return 0;
+    });
+    assert(!d.stack);
+    derivable.setDebugMode(true);
+    var e = derivable.derivation(function () {
+      throw Error();
+    });
+    assert(e.stack);
+    derivable.setDebugMode(false);
   });
-  it("delegates to a .equals method if present", () => {
-    var x = {equals: () => true};
-    var y = {equals: () => false};
-    assert(_.defaultEquals(x, y));
-    assert(!_.defaultEquals(y, x));
-  })
+
+  it("causes stack traces to be printed when things derivations and reactors throw errors", function () {
+    var d = derivable.derivation(function () {
+      return 0;
+    });
+    assert(!d.stack);
+    derivable.setDebugMode(true);
+    var e = derivable.derivation(function () {
+      throw "cheese";
+    });
+    try {
+      var err = console.error;
+      var stack = void 0;
+      console.error = function (_stack) {
+        stack = _stack;
+      };
+      e.get();
+      assert.strictEqual(stack, e.stack);
+      console.error = err;
+    } catch (e) {
+      assert.strictEqual(e, 'cheese');
+    };
+    derivable.setDebugMode(false);
+  });
 });
 
-
-describe("debug mode", () => {
-  it("causes derivations and reactors to store the stacktraces of their"
-     + " instantiation points", () =>{
-    const d = _.derivation(() => 0);
-    assert(!d._stack);
-    const b = d.reactor(() => {})._base;
-    assert(!b.stack);
-    _.setDebugMode(true);
-    const e = _.derivation(() => {throw Error()});
-    assert(e._stack);
-    const a = d.reactor(() => {})._base;
-    assert(a.stack);
-    _.setDebugMode(false);
-  })
-});
-
-describe('the atomically function', () => {
-  it('creates a transaction if not already in a transaction', () => {
-    const $A = atom('a');
-    let numReactions = 0;
-    $A.reactor(() => numReactions++).start();
+describe('the atomically function', function () {
+  it('creates a transaction if not already in a transaction', function () {
+    var $A = derivable.atom('a');
+    var numReactions = 0;
+    $A.react(function () {
+      return numReactions++;
+    }, {skipFirst: true});
     assert.strictEqual(numReactions, 0);
 
-    _.atomically(() => {
+    derivable.atomically(function () {
       $A.set('b');
       assert.strictEqual(numReactions, 0);
     });
     assert.strictEqual(numReactions, 1);
   });
 
-  it("doesn't create new transactions if already in a transaction", () => {
-    const $A = atom('a');
+  it("doesn't create new transactions if already in a transaction", function () {
+    var $A = derivable.atom('a');
 
-    _.transact(() => {
+    derivable.transact(function () {
       try {
-        _.atomically(() => {
+        derivable.atomically(function () {
           $A.set('b');
           assert.strictEqual($A.get(), 'b');
           throw new Error();
@@ -452,6 +495,105 @@ describe('the atomically function', () => {
       assert.strictEqual($A.get(), 'b');
     });
     assert.strictEqual($A.get(), 'b');
+  });
+});
 
+describe('the atomic function', function () {
+  it('creates a transaction if not already in a transaction', function () {
+    var $A = derivable.atom('a');
+    var numReactions = 0;
+    $A.react(function () {
+      return numReactions++;
+    }, {skipFirst: true});
+    assert.strictEqual(numReactions, 0);
+
+    var res = derivable.atomic(function () {
+      $A.set('b');
+      assert.strictEqual(numReactions, 0);
+      return 3;
+    })();
+
+    assert.strictEqual(numReactions, 1);
+
+    assert.strictEqual(res, 3);
+  });
+
+  it("doesn't create new transactions if already in a transaction", function () {
+    var $A = derivable.atom('a');
+
+    derivable.transact(function () {
+      try {
+        derivable.atomic(function () {
+          $A.set('b');
+          assert.strictEqual($A.get(), 'b');
+          throw new Error();
+        })();
+      } catch (ignored) {}
+      // no transaction created so change to $A persists
+      assert.strictEqual($A.get(), 'b');
+    });
+    assert.strictEqual($A.get(), 'b');
+  });
+});
+
+describe('the wrapPreviousState function', function () {
+  it('wraps a function of one argument, passing in previous arguments', function () {
+    var f = derivable.wrapPreviousState(function (a, b) { return a + b;} , 0);
+
+    assert.strictEqual(f(1), 1);
+    assert.strictEqual(f(2), 3);
+    assert.strictEqual(f(3), 5);
+    assert.strictEqual(f(4), 7);
+    assert.strictEqual(f(5), 9);
+    assert.strictEqual(f(6), 11);
+  });
+  it('the init arg is optional', function () {
+    var f = derivable.wrapPreviousState(function (a, b) { return a + (b || 10);});
+
+    assert.strictEqual(f(1), 11);
+    assert.strictEqual(f(2), 3);
+  });
+});
+
+describe('the captureDereferences function', function () {
+  it('executes the given function, returning an array of captured dereferences', function () {
+    var a = derivable.atom("a");
+    var b = derivable.atom("b");
+    var c = a.derive('length');
+
+    var _a = derivable.captureDereferences(function () {
+      a.get();
+    });
+    assert.deepEqual(_a, [a]);
+
+    var _ab = derivable.captureDereferences(function () {
+      a.get();
+      b.get();
+    });
+    assert.deepEqual(_ab, [a, b]);
+
+    var _ba = derivable.captureDereferences(function () {
+      b.get();
+      a.get();
+    });
+    assert.deepEqual(_ba, [b, a]);
+
+    var _c = derivable.captureDereferences(function () {
+      c.get();
+    });
+    assert.deepEqual(_c, [c]);
+
+    var _ca = derivable.captureDereferences(function () {
+      c.get();
+      a.get();
+    });
+    assert.deepEqual(_ca, [c, a]);
+
+    var _cab = derivable.captureDereferences(function () {
+      c.get();
+      a.get();
+      b.get();
+    });
+    assert.deepEqual(_cab, [c, a, b]);
   });
 });

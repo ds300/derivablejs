@@ -1,0 +1,138 @@
+/**
+ * @flow
+ */
+
+export interface Derivable<T> {
+
+  derive<E>(f: (value: T) => E): Derivable<E>;
+  derive(prop: (string | Derivable<string>)): Derivable<mixed>;
+  derive(index: (number | Derivable<number>)): Derivable<mixed>;
+  derive(re: (RegExp | Derivable<RegExp>)): Derivable<Array<string>>;
+  derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
+  derive(args: Array<mixed>): Array<Derivable<mixed>>;
+  derive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+  derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
+  derive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
+
+  mDerive<E>(f: (value: $NonMaybeType<T>) => E): Derivable<E>;
+  mDerive<A, E>(f: (value: $NonMaybeType<T>, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
+  mDerive<A, B, E>(f: (value: $NonMaybeType<T>, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
+  mDerive<E>(f: (value: $NonMaybeType<T>, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
+
+  react(f: (value: T) => void, options?: Lifecycle<T>): void;
+
+  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle<T>): void;
+
+  get(): T;
+
+  is(other: mixed): Derivable<boolean>;
+
+  and(other: mixed): Derivable<boolean>;
+
+  mAnd(other: mixed): Derivable<boolean>;
+
+  or(other: mixed): Derivable<boolean>;
+
+  mOr(other: mixed): Derivable<boolean>;
+
+  then<X, Y>(thenD: X, elseD: Y): Derivable<X | Y>;
+
+  mThen<X, Y>(thenD: mixed, elseD: mixed): Derivable<X | Y>;
+
+  not(): Derivable<boolean>;
+
+  switch(...args: Array<mixed>): Derivable<mixed>;
+
+  withEquality(equals: (a: mixed, b: mixed) => *): Derivable<T>;
+};
+
+export interface Atom<T> extends Derivable<T> {
+
+  set(value: T): void;
+
+  swap(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
+
+  lens<E>(lens: Lens<T, E>): Atom<E>;
+};
+
+export interface Lens<ParentType, ChildType> {
+
+  get(source: ParentType): ChildType;
+
+  set(source: ParentType, value: ChildType): ParentType;
+};
+
+export interface CompositeLens<T> {
+
+  get(): T;
+
+  set(value: T): void;
+};
+
+export interface Lifecycle<T> {
+
+  from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+
+  when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+
+  until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+
+  skipFirst?: boolean;
+
+  once?: boolean;
+};
+
+declare export function atom<T>(value: T): Atom<T>;
+
+declare export function derivation<T>(f: () => T): Derivable<T>;
+
+declare export function lens<T>(lens: CompositeLens<T>): Atom<T>;
+
+declare export function transact(f: () => void): void;
+
+declare export function transaction<F: Function>(f: F): F;
+
+declare export function atomically(f: () => void): void;
+
+declare export function atomic<F: Function>(f: F): F;
+
+declare export function struct(obj: mixed): Derivable<mixed>;
+
+declare export function unpack(obj: mixed): mixed;
+
+declare export function lift<A, B, C, D, E>(f: (a: A, b: B, c: C, d: D) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>), d: (D | Derivable<D>)) => Derivable<E>;
+
+declare export function lift(f: (...args: Array<mixed>) => mixed): (...args: Array<Derivable<mixed>>) => Derivable<mixed>;
+
+declare export function isAtom(obj: mixed): boolean;
+
+declare export function isDerivable(obj: mixed): boolean;
+
+declare export function isDerivation(obj: mixed): boolean;
+
+declare export function isLensed(obj: mixed): boolean;
+
+declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
+
+declare export function or(...conditions: Array<mixed>): Derivable<boolean>;
+
+declare export function mOr(...conditions: Array<mixed>): Derivable<boolean>;
+
+declare export function and(...conditions: Array<mixed>): Derivable<boolean>;
+
+declare export function mAnd(...conditions: Array<mixed>): Derivable<boolean>;
+
+declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
+
+declare export function captureDereferences(fn: () => void): Array<Derivable<mixed>>;
+
+declare export function setDebugMode(debugMode: boolean): void;
+
+declare type Ticker = {
+
+  tick(): void;
+
+  release(): void;
+}
+
+declare export function ticker(): Ticker;

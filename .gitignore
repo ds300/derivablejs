@@ -1,3 +1,15 @@
 .*
 !.gitignore
+!.flowconfig
+!.npmignore
+!.travis.yml
+!.eslintrc*
+!.babelrc*
+npm-debug.log
 node_modules/
+coverage/
+dist/
+lcov-report/
+html-report/
+lcov.info
+coverage-final.json

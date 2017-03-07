@@ -1,12 +1,16 @@
-import imut from 'immutable';
-import _, {atom, transact, Reactor} from '../dist/derivable';
-import assert from 'assert';
+'use strict';
 
-describe("anonymous reactors", () => {
-  it('are created with the .react method', () => {
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; });
+var derivable = require('../dist/derivable');
+
+var assert = require('assert');
+
+describe("anonymous reactors", function () {
+  it('are created with the .react method', function () {
+    var a = derivable.atom('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    });
 
     assert.strictEqual(val, 'a');
 
@@ -15,11 +19,13 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'b');
   });
 
-  it('can start when the `from` condition becomes truthy', () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {from: cond});
+  it('can start when the `from` condition becomes truthy', function () {
+    var cond = derivable.atom(false);
+    var a = derivable.atom('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { from: cond });
 
     assert.strictEqual(val, null);
 
@@ -32,11 +38,13 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'b');
   });
 
-  it('can stop (forever) when the `until` condition becomes truthy', () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {until: cond});
+  it('can stop (forever) when the `until` condition becomes truthy', function () {
+    var cond = derivable.atom(false);
+    var a = derivable.atom('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { until: cond });
 
     assert.strictEqual(val, 'a');
 
@@ -57,11 +65,13 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'b');
   });
 
-  it('can start and stop when the `when` condition becomes truthy and falsey respectively',  () => {
-    const cond = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {when: cond});
+  it('can start and stop when the `when` condition becomes truthy and falsey respectively', function () {
+    var cond = derivable.atom(false);
+    var a = derivable.atom('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { when: cond });
 
     assert.strictEqual(val, null);
 
@@ -84,16 +94,163 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'c');
   });
 
-  it('can have `from`, `when`, and `until` conditions all at once', () => {
+  it('can have `from`, `when`, and `until` specified as functions', function () {
+    {
+      (function () {
+        var cond = derivable.atom(false);
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: function when() {
+            return cond.get();
+          } });
+
+        assert.strictEqual(val, null);
+
+        cond.set('truthy value');
+
+        assert.strictEqual(val, 'a');
+      })();
+    }
+    {
+      (function () {
+        var cond = derivable.atom(false);
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { from: function from() {
+            return cond.get();
+          } });
+
+        assert.strictEqual(val, null);
+
+        cond.set('truthy value');
+
+        assert.strictEqual(val, 'a');
+      })();
+    }
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { until: function until() {
+            return a.is('b').get();
+          } });
+
+        assert.strictEqual(val, 'a');
+
+        a.set('c');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('b');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('a');
+
+        assert.strictEqual(val, 'c');
+      })();
+    }
+  });
+
+  it('can have `from`, `when`, and `until` specified as functions that use the derivable itself', function () {
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: function when(derivable) {
+            return derivable.get() > 'c';
+          } });
+
+        assert.strictEqual(val, null);
+
+        a.set('x');
+
+        assert.strictEqual(val, 'x');
+      })();
+    }
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { from: function from(derivable) {
+            return derivable.get() > 'c';
+          } });
+
+        assert.strictEqual(val, null);
+
+        a.set('x');
+
+        assert.strictEqual(val, 'x');
+      })();
+    }
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { until: function until(derivable) {
+            return derivable.is('b').get();
+          } });
+
+        assert.strictEqual(val, 'a');
+
+        a.set('c');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('b');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('a');
+
+        assert.strictEqual(val, 'c');
+      })();
+    }
+  });
+
+  it('doesnt like it when `from`, `when`, and `until` are other things', function () {
+    var a = derivable.atom('a');
+    assert.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { from: 'a string' });
+    });
+    assert.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { when: 3 });
+    });
+    assert.throws(function () {
+      return a.react(function () {
+        return null;
+      }, { until: new Date() });
+    });
+  });
+
+  it('can have `from`, `when`, and `until` conditions all at once', function () {
     {
       // normal usage
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(false);
+      var from = derivable.atom(false);
+      var when = derivable.atom(false);
+      var until = derivable.atom(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var a = derivable.atom('a');
+      var val = null;
+      a.react(function (a) {
+        val = a;
+      }, { from: from, when: when, until: until });
 
       assert.strictEqual(val, null);
 
@@ -115,116 +272,134 @@ describe("anonymous reactors", () => {
     }
     {
       // until already true
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(true);
+      var _from = derivable.atom(false);
+      var _when = derivable.atom(false);
+      var _until = derivable.atom(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a = derivable.atom('a');
+      var _val = null;
+      _a.react(function (a) {
+        _val = a;
+      }, { from: _from, when: _when, until: _until });
 
-      assert.strictEqual(val, null);
-      from.set(true);
+      assert.strictEqual(_val, null);
+      _from.set(true);
       // when is still false
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val, null);
+      _when.set(true);
+      assert.strictEqual(_val, null);
     }
     {
       // until already true
-      const from = atom(false);
-      const when = atom(false);
-      const until = atom(true);
+      var _from2 = derivable.atom(false);
+      var _when2 = derivable.atom(false);
+      var _until2 = derivable.atom(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a2 = derivable.atom('a');
+      var _val2 = null;
+      _a2.react(function (a) {
+        _val2 = a;
+      }, { from: _from2, when: _when2, until: _until2 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
+      assert.strictEqual(_val2, null);
+      _from2.set(true);
       // when is still false
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val2, null);
+      _when2.set(true);
+      assert.strictEqual(_val2, null);
     }
     {
       // when already true
-      const from = atom(false);
-      const when = atom(true);
-      const until = atom(false);
+      var _from3 = derivable.atom(false);
+      var _when3 = derivable.atom(true);
+      var _until3 = derivable.atom(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a3 = derivable.atom('a');
+      var _val3 = null;
+      _a3.react(function (a) {
+        _val3 = a;
+      }, { from: _from3, when: _when3, until: _until3 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
-      assert.strictEqual(val, 'a');
+      assert.strictEqual(_val3, null);
+      _from3.set(true);
+      assert.strictEqual(_val3, 'a');
     }
     {
       // from and when already true
-      const from = atom(true);
-      const when = atom(true);
-      const until = atom(false);
+      var _from4 = derivable.atom(true);
+      var _when4 = derivable.atom(true);
+      var _until4 = derivable.atom(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a4 = derivable.atom('a');
+      var _val4 = null;
+      _a4.react(function (a) {
+        _val4 = a;
+      }, { from: _from4, when: _when4, until: _until4 });
 
-      assert.strictEqual(val, 'a');
+      assert.strictEqual(_val4, 'a');
     }
     {
       // from and until already true
-      const from = atom(true);
-      const when = atom(false);
-      const until = atom(true);
+      var _from5 = derivable.atom(true);
+      var _when5 = derivable.atom(false);
+      var _until5 = derivable.atom(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a5 = derivable.atom('a');
+      var _val5 = null;
+      _a5.react(function (a) {
+        _val5 = a;
+      }, { from: _from5, when: _when5, until: _until5 });
 
-      assert.strictEqual(val, null);
-      when.set(true);
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val5, null);
+      _when5.set(true);
+      assert.strictEqual(_val5, null);
     }
     {
       // until and when already true
-      const from = atom(false);
-      const when = atom(true);
-      const until = atom(true);
+      var _from6 = derivable.atom(false);
+      var _when6 = derivable.atom(true);
+      var _until6 = derivable.atom(true);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {from, when, until});
+      var _a6 = derivable.atom('a');
+      var _val6 = null;
+      _a6.react(function (a) {
+        _val6 = a;
+      }, { from: _from6, when: _when6, until: _until6 });
 
-      assert.strictEqual(val, null);
-      from.set(true);
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val6, null);
+      _from6.set(true);
+      assert.strictEqual(_val6, null);
     }
     {
-      // when and until become true atomically
-      const when = atom(false);
-      const until = atom(false);
+      (function () {
+        // when and until become true atomically
+        var when = derivable.atom(false);
+        var until = derivable.atom(false);
 
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {when, until});
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: when, until: until });
 
-      assert.strictEqual(val, null);
-      _.atomically(() => {
-        when.set(true);
-        until.set(true);
-      });
+        assert.strictEqual(val, null);
+        derivable.atomically(function () {
+          when.set(true);
+          until.set(true);
+        });
 
-      assert.strictEqual(val, null);
+        assert.strictEqual(val, null);
+      })();
     }
   });
 
-  it('can specify that the first reaction should be skipped', () => {
-    const when = atom(false);
-    const a = atom('a');
-    let val = null;
-    a.react(a => { val = a; }, {skipFirst: true, when});
+  it('can specify that the first reaction should be skipped', function () {
+    var when = derivable.atom(false);
+    var a = derivable.atom('a');
+    var val = null;
+    a.react(function (a) {
+      val = a;
+    }, { skipFirst: true, when: when });
 
     assert.strictEqual(val, null);
     when.set(true);
@@ -233,12 +408,14 @@ describe("anonymous reactors", () => {
     assert.strictEqual(val, 'b');
   });
 
-  it('can specify that a reaction should only happen once', () => {
+  it('can specify that a reaction should only happen once', function () {
     {
       // without skipFirst
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {once: true});
+      var a = derivable.atom('a');
+      var val = null;
+      a.react(function (a) {
+        val = a;
+      }, { once: true });
 
       assert.strictEqual(val, 'a');
 
@@ -247,271 +424,70 @@ describe("anonymous reactors", () => {
     }
     {
       // with skipFirst
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {skipFirst: true, once: true});
+      var _a7 = derivable.atom('a');
+      var _val7 = null;
+      _a7.react(function (a) {
+        _val7 = a;
+      }, { skipFirst: true, once: true });
 
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val7, null);
 
-      a.set('b');
-      assert.strictEqual(val, 'b');
-      a.set('c');
-      assert.strictEqual(val, 'b');
+      _a7.set('b');
+      assert.strictEqual(_val7, 'b');
+      _a7.set('c');
+      assert.strictEqual(_val7, 'b');
     }
     {
       // with when
-      const when = atom(false);
-      const a = atom('a');
-      let val = null;
-      a.react(a => { val = a; }, {when, once: true});
+      var when = derivable.atom(false);
+      var _a8 = derivable.atom('a');
+      var _val8 = null;
+      _a8.react(function (a) {
+        _val8 = a;
+      }, { when: when, once: true });
 
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val8, null);
 
-      a.set('b');
+      _a8.set('b');
 
-      assert.strictEqual(val, null);
+      assert.strictEqual(_val8, null);
       when.set(true);
 
-      assert.strictEqual(val, 'b');
+      assert.strictEqual(_val8, 'b');
 
-      a.set('c');
-      assert.strictEqual(val, 'b');
+      _a8.set('c');
+      assert.strictEqual(_val8, 'b');
     }
   });
 
-  it('has .onStart and .onStop lifecycle hooks', () => {
-    const from = atom(false);
-    const when = atom(false);
-    const until = atom(false);
+});
 
-    const a = atom('a');
-    let starts = 0;
-    let stops = 0;
-
-    a.react(() => {}, {
-      from,
-      when,
-      until,
-      onStart: () => starts++,
-      onStop: () => stops++
+describe("the .react method", function () {
+  it("must have a function as the first argument", function () {
+    assert.throws(function () {
+      return derivable.atom(5).react();
     });
-
-    assert.strictEqual(starts, 0);
-    assert.strictEqual(stops, 0);
-
-    from.set(true);
-    assert.strictEqual(starts, 0);
-    assert.strictEqual(stops, 0);
-    when.set(true);
-    assert.strictEqual(starts, 1);
-    assert.strictEqual(stops, 0);
-    when.set(false);
-    assert.strictEqual(starts, 1);
-    assert.strictEqual(stops, 1);
-    when.set(true);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 1);
-    until.set(true);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 2);
-    when.set(false);
-    assert.strictEqual(starts, 2);
-    assert.strictEqual(stops, 2);
+    assert.throws(function () {
+      return derivable.atom(5).react(4);
+    });
+    assert.throws(function () {
+      return derivable.atom(5).react('');
+    });
+    assert.throws(function () {
+      return derivable.atom(5).react({});
+    });
   });
 });
 
-describe("a tangible reactor", () => {
-  let counter = atom(0);
-  let inc = n => n+1
-  let history = imut.List();
-  let action = null;
-  let reactor = counter.reactor(function (n) {
-    reactor && assert.strictEqual(this, reactor,
-                                   "`this` is bound to the reactor");
-    history = history.push(n);
-    action && action();
-  }).start().force();
+describe("setting the values of atoms in a reaction phase", function () {
+  it("is ok as long as no cycles are created", function () {
+    var a = derivable.atom("a");
 
-  function checkHistory(expected, msg) {
-    expected = imut.List(expected);
-    if (!history.equals(expected)) {
-      assert.fail(history.toString(), expected.toString(), msg);
-    }
-  }
+    var b = derivable.atom("b");
 
-  it("is like a derivation with no value, only reacting to changes", done => {
-    checkHistory([0], "it is evaluated at construction time");
-
-    action = () => {
-      if (history.size === 3) {
-        checkHistory(imut.List([0, 1, 2]), "history is generated sequentially");
-        done();
-      }
-    }
-
-    counter.swap(inc);
-    counter.swap(inc);
-  });
-
-  it("can be suspended via the .stop method", () => {
-    checkHistory(imut.List([0, 1, 2]), "history hasn't changed");
-    // make sure it still works
-    counter.swap(inc);
-    checkHistory(imut.List([0, 1, 2, 3]), "history has changed");
-    // now check it stops
-    reactor.stop();
-    counter.swap(inc); // now 4 but shouldn't get put in history
-
-    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changud again");
-  });
-
-  it("can be restarted again via the .start method", () => {
-    // check it hasn't changed
-    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again");
-    // check it still isn't changing
-    counter.swap(inc); // now 5 but shouldn't get put in history
-    checkHistory(imut.List([0, 1, 2, 3]), "history hasn't changed yet again 2");
-    reactor.start(); // restart but don't force
-    checkHistory(imut.List([0, 1, 2, 3]), "no history change 3");
-    counter.swap(inc); // now 6 but should get put in history
-    checkHistory(imut.List([0, 1, 2, 3, 6]), "history changed again!");
-  });
-
-  it("won't be evaluated in a transaction", () => {
-    checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 1");
-    transact(() => {
-      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 2");
-      counter.swap(inc); // now 7
-      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 3");
-      counter.swap(inc); // now 8
-      checkHistory(imut.List([0, 1, 2, 3, 6]), "no change 4");
+    a.react(function (a) {
+      return b.set(b.get() + a);
     });
-    // now transaction commits and 8 gets added
-    checkHistory(imut.List([0, 1, 2, 3, 6, 8]), "eight");
-  });
-
-  it("can be exteded via the Reactor class", () => {
-    class NTimesReactor extends Reactor {
-      constructor (n, f) {
-        super();
-        this.n = n;
-        this.f = f;
-        this.running = false;
-      }
-      reset (n) {
-        this.n = n;
-        this.start();
-      }
-      onStart() {
-        this.running = true;
-      }
-      onStop () {
-        this.running = false;
-      }
-      react (v) {
-        this.f(v)
-        this.n--;
-        if (this.n === 0) {
-          this.stop();
-        }
-      }
-    }
-
-    const thing = atom("one");
-    let things = imut.List();
-    const reactor = new NTimesReactor(5, x => things = things.push(x));
-
-    assert.strictEqual(false, reactor.running, "reactor should be stopped");
-    thing.reactor(reactor);
-    assert.strictEqual(false, reactor.running, "reactor should be stopped 2");
-    reactor.start();
-    assert.strictEqual(true, reactor.running, "reactor should be started");
-    assert(things.equals(imut.List()), "things is empty");
-
-    reactor.force();
-    assert(things.equals(imut.List(["one"])), "one");
-    thing.set("two");
-    assert(things.equals(imut.List(["one", "two"])), "two");
-    thing.set("three");
-    assert(things.equals(imut.List(["one", "two", "three"])), "three");
-    thing.set("four");
-    assert(things.equals(imut.List(["one", "two", "three", "four"])), "four");
-    thing.set("five");
-    assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
-          "five");
-    assert.strictEqual(reactor.running, false, "reactor should have stopped");
-    thing.set("six");
-    assert(things.equals(imut.List(["one", "two", "three", "four", "five"])),
-          "not six");
-
-    reactor.reset(1);
-
-    assert.strictEqual(reactor.running, true,
-                       "reactor should have restarted");
-
-    reactor.force();
-
-    assert(things.equals(imut.List(["one", "two", "three",
-                                    "four", "five", "six"])),
-          "yes six");
-
-    assert.strictEqual(reactor.running, false, "reactor should have stopped");
-  });
-
-  it(`can't be initialized twice`, () => {
-
-    let a = atom(0);
-    let reactor = a.reactor(n => console.log(n));
-    assert.throws(() => {
-      atom(0).reactor(reactor);
-    });
-    reactor = a.reactor(n => console.log(n));
-    assert.throws(() => {
-      a.reactor(reactor);
-    });
-  });
-
-  it(`can bre created by anonymous classes`, () => {
-    let a = atom(5);
-    let b = null;
-    let started = false;
-    let stopped = false;
-
-    let r = a.reactor({
-      onStart () {
-        started = true;
-      },
-      onStop () {
-        stopped = true;
-      },
-      react (val) {
-        b = val;
-      }
-    }).start().force();
-
-    assert(started, "it started");
-    assert(!stopped, "it didn't stopped yet");
-    assert.strictEqual(5, b, "b is 5");
-
-    a.set("blub");
-    assert.strictEqual("blub", b, "b is blub");
-
-    r.stop();
-
-    assert(stopped, "it stopped");
-    a.set("jesuit");
-
-    assert.strictEqual("blub", b, "b is still blub");
-  });
-});
-
-describe("setting the values of atoms in a reaction phase", () => {
-  it("is ok as long as no cycles are created", () => {
-    const a = atom("a");
-
-    const b = atom("b");
-
-    a.react(a => b.set(b.get() + a));
 
     assert.strictEqual(b.get(), "ba");
 
@@ -520,34 +496,48 @@ describe("setting the values of atoms in a reaction phase", () => {
     assert.strictEqual(b.get(), "baaa");
 
     // derivable disallows
-    assert.throws(() => b.react(b => a.set(b)));
+    assert.throws(function () {
+      return b.react(function (b) {
+        return a.set(b);
+      });
+    });
   });
 
-  it("is not allowed if the atom in question is upstream of the reactor", () => {
-    const n = atom(3);
+  it("is not allowed if the atom in question is upstream of the reactor", function () {
+    var n = derivable.atom(3);
 
     // currently 1
-    const nmod2 = n.derive(x => x % 2);
+    var nmod2 = n.derive(function (x) {
+      return x % 2;
+    });
 
-    const double = n => n * 2;
+    var double = function double(n) {
+      return n * 2;
+    };
 
-    const r = nmod2.reactor(_ => n.swap(double)).start();
+    var r = nmod2.react(function (_) {
+      return n.swap(double);
+    }, {skipFirst: true});
 
-    assert.throws(() => n.set(2));
+    assert.throws(function () {
+      return n.set(2);
+    });
     // nmod2 becomes 0, reactor triggers n being set to 4
     // reactor caught up in sweep again, identified as cycle
   });
 });
 
-describe("tickers", () => {
-  it("allow reacting at custom intervals", () => {
-    const a = atom("a");
+describe("tickers", function () {
+  it("allow reacting at custom intervals", function () {
+    var a = derivable.atom("a");
 
-    const ticker = _.ticker();
+    var ticker = derivable.ticker();
 
-    let b = "b";
+    var b = "b";
 
-    a.reactor(a => b = a).start();
+    a.react(function (a) {
+      return b = a;
+    }, {skipFirst: true});
 
     assert.strictEqual(b, "b");
 
@@ -578,19 +568,21 @@ describe("tickers", () => {
     ticker.release();
   });
 
-  it("can be used by more than one piece of the stack", () => {
-    const a = atom("a");
-    const ticker1 = _.ticker();
-    const ticker2 = _.ticker();
-    const ticker3 = _.ticker();
+  it("can be used by more than one piece of the stack", function () {
+    var a = derivable.atom("a");
+    var ticker1 = derivable.ticker();
+    var ticker2 = derivable.ticker();
+    var ticker3 = derivable.ticker();
 
     assert(ticker1 !== ticker2);
     assert(ticker1 !== ticker3);
     assert(ticker2 !== ticker3);
 
-    let b = "b";
+    var b = "b";
 
-    a.reactor(a => b = a).start();
+    a.react(function (a) {
+      return b = a;
+    }, {skipFirst: true});
     assert.strictEqual(b, "b");
     a.set("c");
     assert.strictEqual(b, "b");
@@ -613,19 +605,21 @@ describe("tickers", () => {
     ticker3.release();
   });
 
-  it("are reference counted", () => {
-    const a = atom(null);
-    let b = "b";
+  it("are reference counted", function () {
+    var a = derivable.atom(null);
+    var b = "b";
 
-    a.reactor(a => b = a).start();
+    a.react(function (a) {
+      return b = a;
+    }, {skipFirst: true});
 
     a.set("a");
 
     assert.strictEqual(b, "a");
 
-    const ticker1 = _.ticker();
-    const ticker2 = _.ticker();
-    const ticker3 = _.ticker();
+    var ticker1 = derivable.ticker();
+    var ticker2 = derivable.ticker();
+    var ticker3 = derivable.ticker();
 
     a.set("b");
 
@@ -641,30 +635,60 @@ describe("tickers", () => {
     a.set("c");
 
     assert.strictEqual(b, "c");
-
   });
 
-  it("cannot be used after being released", () => {
-    let t1 = _.ticker();
-    let t2 = _.ticker();
+  it('can reset the global state to the last tick', function () {
+    var a = derivable.atom('a');
+    var b = derivable.atom('b');
+
+    var t = derivable.ticker();
+
+    a.set('b');
+    b.set('a');
+
+    assert.strictEqual(a.get(), 'b');
+    assert.strictEqual(b.get(), 'a');
+
+    t.reset();
+
+    assert.strictEqual(a.get(), 'a');
+    assert.strictEqual(b.get(), 'b');
+
+    t.release();
+    assert.throws(function () {
+      return t.reset();
+    });
+  });
+
+  it("cannot be used after being released", function () {
+    var t1 = derivable.ticker();
+    var t2 = derivable.ticker();
 
     t1.release();
 
-    assert.throws(() => t1.release());
+    assert.throws(function () {
+      return t1.release();
+    });
 
     t2.release();
 
-    assert.throws(() => t2.tick());
+    assert.throws(function () {
+      return t2.tick();
+    });
   });
 
-  it("should not cause parents to be investigated in the wrong order", () => {
-    const a = atom(null);
-    const b = a.derive(a => a.toString());
-    const c = a.then(b, 'a is null');
+  it("should not cause parents to be investigated in the wrong order", function () {
+    var a = derivable.atom(null);
+    var b = a.derive(function (a) {
+      return a.toString();
+    });
+    var c = a.then(b, 'a is null');
 
-    let expecting = 'a is null';
+    var expecting = 'a is null';
 
-    c.react(c => assert.strictEqual(c, expecting));
+    c.react(function (c) {
+      return assert.strictEqual(c, expecting);
+    });
 
     expecting = 'some other string';
 
@@ -675,76 +699,31 @@ describe("tickers", () => {
     a.set(null);
   });
 
-  it("can be created in reactors", () => {
-    const a = atom('a');
+  it("can be created in reactors", function () {
+    var a = derivable.atom('a');
 
-    _.transact(() => {
+    derivable.transact(function () {
       a.set('b');
-      a.react(a => console.log(a));
+      a.react(function (a) {
+        return console.log(a);
+      });
     });
   });
 });
 
-describe("dependent reactors", () => {
-  it("are invoked after their parent reactors", () => {
-    const arr = atom([0, 1, 2]);
 
-    // set up reactor to print 3rd elem of arr, but don't start it
-    const A = arr.reactor(arr => assert.strictEqual('2', arr[2].toString()));
+describe('the `when` optons to the `react` method', function () {
+  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', function () {
+    var $Cond = derivable.atom(false);
+    var $N = derivable.atom(0);
+    var inc = function inc(x) {
+      return x + 1;
+    };
 
-    // instead control it by reacting to the length of the array
-    const B = arr.derive(a => a.length).reactor(len => {
-      if (len >= 3) {
-        if (!A.isActive()) A.start().force();
-      } else {
-        A.stop();
-      }
-    }).start().force();
-    // $> 2
-
-    // should not throw
-    arr.set([0,1]);
-  });
-
-  it("are not stopped before their parent reactors", () => {
-    const state = atom('a');
-    const A = state.reactor({
-      react: () => null,
-      onStop: () => stops.push('A')
-    });
-    const B = state.reactor(() => A.start()).start().force();
-
-    B.stop();
-
-    assert(A.isActive());
-  });
-
-  it("can't invole cyclical dependencies", () => {
-    const state = atom('a');
-
-    let A;
-    const B = state.reactor(state => {
-      A.stop();
-      A.start().force();
-    });
-
-    A = state.reactor(state => {
-      B.stop();
-      B.start().force();
-    });
-
-    assert.throws(() => B.start().force());
-  });
-});
-
-describe('the `when` optons to the `react` method', () => {
-  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
-    const $Cond = atom(false);
-    const $N = atom(0);
-    const inc = x => x + 1;
-
-    let i = 0;
-    $N.react(n => i++, {when: $Cond});
+    var i = 0;
+    $N.react(function (n) {
+      return i++;
+    }, { when: $Cond });
 
     assert.strictEqual(i, 0);
 
@@ -774,14 +753,18 @@ describe('the `when` optons to the `react` method', () => {
     assert.strictEqual(i, 4);
   });
 
-  it('casts the condition to a boolean', () => {
-    const $Cond = atom("blub");
-    const $N = atom(0);
-    const inc = x => x + 1;
+  it('casts the condition to a boolean', function () {
+    var $Cond = derivable.atom("blub");
+    var $N = derivable.atom(0);
+    var inc = function inc(x) {
+      return x + 1;
+    };
 
-    let i = 0;
+    var i = 0;
 
-    $N.react(n => i++, {when: $Cond});
+    $N.react(function (n) {
+      return i++;
+    }, { when: $Cond });
 
     assert.strictEqual(i, 1);
 
@@ -794,5 +777,102 @@ describe('the `when` optons to the `react` method', () => {
     $Cond.set("steve");
     // sould cause .force() if not casting to boolean, which would inc i
     assert.strictEqual(i, 5);
+  });
+});
+
+describe('the .mReact method', function () {
+  it('only reacts when the thing in the derivable is not null or undefined', function () {
+    var a = derivable.atom(null);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    });
+
+    assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    assert.strictEqual(_a, "House");
+  });
+
+  it('merges any given when condition', function () {
+    var a = derivable.atom(null);
+    var alive = derivable.atom(true);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    }, {when: alive});
+
+    assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    assert.strictEqual(_a, "House");
+
+    a.set("Tree");
+
+    assert.strictEqual(_a, "Tree");
+
+    alive.set(false);
+
+    a.set("House");
+
+    assert.strictEqual(_a, "Tree");
+  });
+
+  it("shouldn't touch any other conditions", function () {
+    var a = derivable.atom(null);
+    var alive = derivable.atom(true);
+    var from = derivable.atom(false);
+    var until = derivable.atom(false);
+
+    var _a = "Tree";
+
+    a.mReact(function (a) {
+      _a = a;
+    }, {when: alive, from: from, until: until});
+
+    assert.strictEqual(_a, "Tree");
+
+    a.set("House");
+
+    assert.strictEqual(_a, "Tree");
+
+    from.set(true);
+
+    assert.strictEqual(_a, "House");
+
+    a.set(void 0);
+
+    assert.strictEqual(_a, "House");
+
+    alive.set(false);
+
+    a.set("Tree");
+
+    assert.strictEqual(_a, "House");
+
+    alive.set(true);
+
+    assert.strictEqual(_a, "Tree");
+
+    until.set(true);
+
+    a.set("House");
+
+    assert.strictEqual(_a, "Tree");
+
   });
 });

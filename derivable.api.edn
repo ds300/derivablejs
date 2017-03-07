@@ -241,6 +241,10 @@
       ```
       ")
 
+    (mReact [f (=> [value T] void) options? Lifecycle] void
+      "As {{react}} but reactions only take place when the value held in this
+      derivable is not `null` or `undefined`.")
+
 
     (get [] T
       "Returns the current value of this derivable.
@@ -418,40 +422,6 @@
 
       $SomeState.set({blah: true});
       // no side effects occurred!
-      ```")
-
-    (reactor [r (Reactor T)] (Reactor T)
-      "Creates a link between {{r}} and this derivable. {{r}} should be a 'fresh'
-      reactor. i.e. it should not have been linked to any other derivable
-      in the past. For examples see {{Reactor}}.
-
-      Only use this if {{Lifecycle}} doesn't fit your needs.
-      ")
-
-    (reactor [f (=> [value T] void)] (Reactor T)
-      "Creates and returns a new {{Reactor}} based on {{f}} being applied to this derivable. e.g.
-
-      Only use this if {{Lifecycle}} doesn't fit your needs.
-
-      ```javascript
-      const x = atom(4);
-      const r = x.reactor(x => console.log(`x is`, x));
-
-      x.set(8);
-
-      // .reactor creats the reactor, but doesn't start it,
-      // so nothing gets printed yet
-
-      r.start();
-
-      // now that the reactor has started it will respond
-      // to changes in x
-
-      x.set(16);
-      // $> x is 16
-
-      x.set(32);
-      // $> x is 32
       ```"))
 
   (:interface (Atom T)
@@ -634,68 +604,13 @@
 
     (:property skipFirst? boolean
       "Causes the first invocation (and only the first invocation) of the reactor
-      to be ingored.")
+      to be ingored.
+
+      **It is normally a code smell to use this.**")
 
     (:property once? boolean
       "Causes the reactor to be killed immediately following its first invocation
-      (not counting the skipped invocation, if `skipFirst` is set to true).")
-
-    (:property onStart? (=> [] void)
-      "Invoked immediately after a reactor is started (e.g. as a result of
-      `when` becoming truthy) but before its first
-      invocation"
-      (:see-also Reactor::onStart))
-
-    (:property onStop? (=> [] void)
-      "Invoked immediately after a reactor is stopped (e.g. as a result of
-      `when` becoming falsey)."
-      (:see-also Reactor::onStop)))
-
-  (:class (Reactor T)
-    "A Reactor is a stateful object which can be attached to a particular
-    derivable. Changes in this derivable will cause a Reactor to be executed."
-    (:constructor [])
-    (start [] (Reactor T)
-      "Starts this reactor. After this is called, any changes in the derivable
-      to which the reactor is attached will cause the reactor's .{{react}}
-      method to be called.
-
-      Calls the {{onStart}} method if defined.
-
-      This method is a no-op if the reactor is already active"
-      (:see-also isActive))
-    (stop [] (Reactor T)
-      "Stops this reactor. Changes in the attached derivable will no longer
-      cause reaction.
-
-      Calls the {{onStop}} method if defined.
-
-      This method is a no-op if this reactor is already inactive"
-      (:see-also isActive))
-    (force [] (Reactor T)
-      "Forces reaction.")
-    (isActive [] boolean
-      "Returns true iff the reactor is actively listening to changes in a
-      derivable")
-    (orphan [] (Reactor T)
-      "Turns a dependent reactor into an independent reactor.
-
-      This method is a no-op if the reactor is already independent.")
-    (adopt [child (Reactor any)] (Reactor T)
-      "Makes the child transiently dependent on this reactor iff they are both
-      active. If the child is active but this reactor is not, the child is
-      stopped. If the child reactor is not active, adoption is a noop.")
-    (react [value T] void
-      (:note "*Abstract<br/>Required*")
-      "This method is responsible for carrying out reactive side-effects based
-      on {{value}}.")
-    (onStart [] void
-      (:note "*Abstract*")
-      "Called when the reactor is started. Use for acquiring resources.")
-    (onStop [] void
-      (:note "*Abstract*")
-      "Called when the reactor is stopped. Use for releasing resources."
-      (:see-also stop start)))
+      (not counting the skipped invocation, if `skipFirst` is set to true)."))
 
   ((atom T) [value T] (Atom T)
     "Returns a new {{Atom}} containing {{value}}.
@@ -876,9 +791,6 @@
     "Returns true iff {{obj}} is a *lensed* atom."
     (:see-also Lens Atom::lens))
 
-  (isReactor [obj any] boolean
-    "Returns true iff `obj` is a {{Reactor}}.")
-
   (derive [strings [string] &things [any]] (Derivable string)
     "Tagged template string version of derive. Returns a derivable which
     represents {{strings}} interploated with {{&things}}, which latter may
@@ -943,13 +855,29 @@
     all values are not null or undefined. Otherwise it returns null or
     undefined.")
 
-  (withEquality [equals (=> [a any b any] boolean)] any
-    "Returns a new instance of DerivableJS with a new notion of equality. Does not
-    affect the current instance.")
+  ((wrapPreviousState A B) [fn (=> [currentState A previousState A] B) init? A] (=> [currentState A] B)
+    "Takes a function of two arguments. Returns a function which takes one argument.
+    The returned function invokes the given function with the 'current' argument and
+    the 'previous' argument. For the first invocation, the {{init?}} argument is
+    passed as the 'previous' argument, or `undefined` if not given.
 
-  (defaultEquals [a any b any] boolean
-    "DerivableJS's inbuilt equality-checking function. Note that calling
-    {{withEquality}} will not affect the value of this property.")
+    Useful for doing 'diff'-based reactors. e.g. Facebook's React.
+
+    ```js
+    const adder = wrapPreviousState((a, b) => a + b, 0);
+
+    adder(1); // => 1
+    adder(1); // => 2
+    adder(2); // => 3
+    adder(2); // => 4
+    adder(3); // => 5
+    adder(3); // => 6
+    ```
+    ")
+
+  (captureDereferences [fn (=> [] void)] [(Derivable any)]
+    "Takes a function and executes it while capturing the set of derivables
+    which are dereferenced. Returns an array of those derivables.")
 
   (setDebugMode [debugMode boolean] void
     "Enable or disable debug mode.
@@ -976,5 +904,4 @@
       "Releases this ticker, rendering it useless")
     (:see-also ticker))
   (ticker [] Ticker
-    "Creates a new {{Ticker}}")
-  )
+    "Creates a new {{Ticker}}"))
