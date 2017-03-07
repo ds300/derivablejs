@@ -21,9 +21,9 @@ declare module derivable {
     mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
     mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
-    react(f: (value: T) => void, options?: Lifecycle): void;
+    react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
-    mReact(f: (value: T) => void, options?: Lifecycle): void;
+    mReact(f: (value: T) => void, options?: Lifecycle<T>): void;
 
     get(): T;
 
@@ -71,13 +71,13 @@ declare module derivable {
     set(value: T): void;
   }
 
-  export interface Lifecycle {
+  export interface Lifecycle<T> {
 
-    from?: ((() => boolean) | Derivable<boolean>);
+    from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-    when?: ((() => boolean) | Derivable<boolean>);
+    when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-    until?: ((() => boolean) | Derivable<boolean>);
+    until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
     skipFirst?: boolean;
 

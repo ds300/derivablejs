@@ -86,7 +86,7 @@ export function makeReactor (derivable, f, opts) {
   function condDerivable(fOrD, name) {
     if (!types.isDerivable(fOrD)) {
       if (typeof fOrD === 'function') {
-        return derivation(fOrD);
+        return derivation(function () { return fOrD(derivable); });
       } else if (typeof fOrD === 'boolean') {
         return derivation(function () { return fOrD; });
       } else {

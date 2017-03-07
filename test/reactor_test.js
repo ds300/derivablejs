@@ -158,6 +158,68 @@ describe("anonymous reactors", function () {
     }
   });
 
+  it('can have `from`, `when`, and `until` specified as functions that use the derivable itself', function () {
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { when: function when(derivable) {
+            return derivable.get() > 'c';
+          } });
+
+        assert.strictEqual(val, null);
+
+        a.set('x');
+
+        assert.strictEqual(val, 'x');
+      })();
+    }
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { from: function from(derivable) {
+            return derivable.get() > 'c';
+          } });
+
+        assert.strictEqual(val, null);
+
+        a.set('x');
+
+        assert.strictEqual(val, 'x');
+      })();
+    }
+    {
+      (function () {
+        var a = derivable.atom('a');
+        var val = null;
+        a.react(function (a) {
+          val = a;
+        }, { until: function until(derivable) {
+            return derivable.is('b').get();
+          } });
+
+        assert.strictEqual(val, 'a');
+
+        a.set('c');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('b');
+
+        assert.strictEqual(val, 'c');
+
+        a.set('a');
+
+        assert.strictEqual(val, 'c');
+      })();
+    }
+  });
+
   it('doesnt like it when `from`, `when`, and `until` are other things', function () {
     var a = derivable.atom('a');
     assert.throws(function () {
