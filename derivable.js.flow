@@ -19,9 +19,9 @@ export interface Derivable<T> {
   mDerive<A, B, E>(f: (value: $NonMaybeType<T>, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
   mDerive<E>(f: (value: $NonMaybeType<T>, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
-  react(f: (value: T) => void, options?: Lifecycle): void;
+  react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
-  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle): void;
+  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle<T>): void;
 
   get(): T;
 
@@ -69,13 +69,13 @@ export interface CompositeLens<T> {
   set(value: T): void;
 };
 
-export interface Lifecycle {
+export interface Lifecycle<T> {
 
-  from?: ((() => boolean) | Derivable<boolean>);
+  from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-  when?: ((() => boolean) | Derivable<boolean>);
+  when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-  until?: ((() => boolean) | Derivable<boolean>);
+  until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
   skipFirst?: boolean;
 
