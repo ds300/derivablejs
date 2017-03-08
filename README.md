@@ -4,9 +4,7 @@
 [![npm](https://img.shields.io/npm/v/derivable.svg?maxAge=2592000)](https://www.npmjs.com/package/derivable) [![Build Status](https://travis-ci.org/ds300/derivablejs.svg?branch=new-algo)](https://travis-ci.org/ds300/derivablejs)  [![Coverage Status](https://coveralls.io/repos/github/ds300/derivablejs/badge.svg?branch=new-algo)](https://coveralls.io/github/ds300/derivablejs?branch=new-algo) [![Join the chat at https://gitter.im/ds300/derivablejs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ds300/derivablejs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Empowered by Futurice's open source sponsorship program](https://img.shields.io/badge/sponsor-chilicorn-ff69b4.svg)](http://futurice.com/blog/sponsoring-free-time-open-source-activities?utm_source=github&utm_medium=spice&utm_campaign=derivablejs) [![.min.gz size](https://img.shields.io/badge/.min.gz%20size-3.4k-blue.svg)](http://github.com)
 ---
 
-Derivables are an Observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with two heaped spoonfuls of extra performance, a garnish of side effects innovation, and a healthy side-salad of immutability.
-
-**This README is work in progress. Please refer to the master branch's README for rationale etc.**
+Derivables are an Observable-like state container with superpowers. Think [MobX](https://github.com/mobxjs/mobx) distilled to a potent essence, served with two heaped tablespoons of extra performance, a garnish of declarative effects management, and a healthy side-salad of immutability.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -24,7 +22,6 @@ Derivables are an Observable-like state container with superpowers. Think [MobX]
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 ## Quick start
 
@@ -46,16 +43,20 @@ There are two types of Derivable:
   $Name.get(); // => 'William'
   ```
 
-  <em>N.B. The dollar-sign prefix is just a convention I personally use to create a syntactic distinction between ordinary values and derivable values.</em>
+  <em>N.B. The dollar-sign prefix is just a simple convention I use to create a visual distinction between ordinary values and derivable values.</em>
 
 - **Derivations**
 
-  Derivations represent pure (as in 'pure function') transformation of values held in atoms. You can create them with the `.derive` method, which is a bit like the `.map` method of Arrays and Observables.
+  Derivations are declarative transformations of values held in atoms. You can create them with the `derivation` function.
 
   ```javascript
+  import {derivation} from 'derivable';
+
   const cyber = word => word.toUpperCase().split('').join(' ');
 
-  const $cyberName = $Name.derive(cyber);
+  const $cyberName = derivation(() =>
+    cyber($Name.get())
+  );
 
   $cyberName.get(); // 'W I L L I A M'
 
@@ -64,11 +65,9 @@ There are two types of Derivable:
   $cyberName.get(); // 'S A R A H'
   ```
 
-  Derivations cannot be modified directly with `.set`, but change in accordance with their dependencies, of which there may be many. Here is an example with two dependencies which uses the fundamental `derivation` constructor function:
+  Unlike atoms, derivations cannot be modified in-place with a `.set` method. Their values change only when one or more of the values that they depend upon change. Here is an example with two dependencies.
 
   ```javascript
-  import {derivation} from 'derivable';
-
   const $Transformer = atom(cyber);
 
   const $transformedName = derivation(() =>
@@ -102,7 +101,7 @@ Let's have a look at a tiny example app which greets the user:
 import {atom, derivation, transact} from 'derivable'
 
 // global application state
-const $Name = atom("World");     // the name of the user  
+const $Name = atom("World");     // the name of the user
 const $CountryCode = atom("en"); // for i18n
 
 // static constants don't need to be wrapped
@@ -115,7 +114,9 @@ const greetings = {
 };
 
 // derive a greeting message based on the user's name and country.
-const $greeting = $CountryCode.derive(cc => greetings[cc]);
+const $greeting = derivation(() =>
+  greetings[$CountryCode.get()]
+);
 const $message = derivation(() =>
   `${$greeting.get()}, ${$name.get()}!`
 );
@@ -151,16 +152,56 @@ The structure of this example can be depicted as the following DAG:
 
 <img src="https://ds300.github.com/derivablejs/img/example.svg" align="center" width="89%"/>
 
+## Key differences with MobX
+
+- Smaller API surface area.
+
+   There are far fewer *kinds of thing* in DerivableJS, and therefore fewer
+   things to learn and fewer surprising exceptions and spooky corners. This
+   reduces noise and enhances one's ability to grok the concepts and wield the
+   tools on offer. It also shrinks the set of tools
+   on offer, but maybe that's not a bad thing:
+
+   > It seems that perfection is attained not when there is nothing more to add, but when there is nothing more to remove.
+
+   <em>- Antoie de Saint Exupéry</em>
+
+- No transparent dereferencing and assignment.
+
+   It is always necessary to call `.get` on derivables to find out what's inside, and you always have to call `.set` on atoms to change what's inside.
+   This provides a consistent semantic and visual
+   distinction between ordinary values and derivable values.
+
+- No observable map and array types.
+
+   So you probably have to use something extra like Immutable or [icepick](https://github.com/aearly/icepick) to deal with collections. Not great if you're just out to get
+   shit done fast, but the benefits of immutable
+   collections become more and more valuable as projects
+   mature and grow in scope.
+
+- More subtle control over reactors
+
+  DerivableJS has a tidy and flexible declarative system for defining when reactors should start and stop. This
+  is rather nice to use for managing many kinds of side effects.
+
+- Speed
+
+  DerivableJS is finely tuned, and propagates change
+  significantly faster than MobX. \[link to benchmark-results.html forthcoming\]
+
 ## Usage
 
-DerivableJS is becoming fairly mature, and has been used for serious stuff in production with very few issues. I think it is safe to consider it beta quality at this point.
-
-If your app is non-trivial, use [Immutable](https://facebook.github.io/immutable-js/).
+DerivableJS is fairly mature, and has been used enough in production by various people to be considered a solid beta-quality piece of kit.
 
 ### With React
 
 The fantastic project [react-derivable](https://github.com/andreypopp/react-derivable) lets you use
 derivables in your render method, providing seamless interop with component-local state and props.
+
+### With Immutable
+
+DerivableJS works spiffingly with [Immmutable](https://github.com/facebook/immutable), which
+is practically required if your app deals with medium-to-large collections.
 
 ### Debugging
 
@@ -168,7 +209,7 @@ Due to inversion of control, the stack traces you get when your derivations thro
 
 ### Examples
 
-Coming soon.
+[See here](https://github.com/ds300/derivablejs/tree/master/examples)
 
 ### Browser
 Either with browserify/webpack/common-js-bundler-du-jour, or clone the repo, run `npm install && npm run build`, then grab the UMD bundle from `dist/derivable.umd[.min].js` (source maps are also available).
