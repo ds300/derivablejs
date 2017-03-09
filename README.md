@@ -12,8 +12,11 @@ Derivables are an Observable-like state container with superpowers. Think [MobX]
 
 - [Quick start](#quick-start)
 - [Reactors](#reactors)
+- [Key differences with MobX](#key-differences-with-mobx)
+- [API / Documentation](#api--documentation)
 - [Usage](#usage)
   - [With React](#with-react)
+  - [With Immutable](#with-immutable)
   - [Debugging](#debugging)
   - [Examples](#examples)
   - [Browser](#browser)
@@ -188,6 +191,10 @@ The structure of this example can be depicted as the following DAG:
 
   DerivableJS is finely tuned, and propagates change
   significantly faster than MobX. \[link to benchmark-results.html forthcoming\]
+
+## API / Documentation
+
+[Over Here](https://ds300.github.io/derivablejs)
 
 ## Usage
 
