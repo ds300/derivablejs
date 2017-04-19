@@ -5,7 +5,7 @@ import * as reactors from './reactors';
 import * as parents from './parents';
 import * as types from './types';
 import {derivation as _derivation} from './derivation';
-import {lens as _lens} from './lens';
+import {proxy as _proxy} from './proxy';
 
 export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;
@@ -14,13 +14,13 @@ export var transaction = transactions.transaction;
 export var ticker = transactions.ticker;
 export var isDerivable = types.isDerivable;
 export var isAtom = types.isAtom;
-export var isLensed = types.isLensed;
+export var isProxied = types.isProxied;
 export var isDerivation = types.isDerivation;
 export var derivation = _derivation;
 export var atom = _atom;
 export var atomic = transactions.atomic;
 export var atomically = transactions.atomically;
-export var lens = _lens;
+export var proxy = _proxy;
 
 /**
  * Template string tag for derivable strings

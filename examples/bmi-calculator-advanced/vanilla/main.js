@@ -46,12 +46,12 @@ window.addEventListener('load', () => {
   // step 2.
   // derive some data
 
-  $Weight.kg = $Weight.lb.lens({
+  $Weight.kg = $Weight.lb.proxy({
     get: lb => Math.round(lb * 0.453592),
     set: (_, kg) => Math.round(kg / 0.453592),
   });
 
-  $Height.feetInches = $Height.cm.lens({
+  $Height.feetInches = $Height.cm.proxy({
     get: cm2feetInches,
     set: (_, feetInches) => feetInches2cm(feetInches),
   });

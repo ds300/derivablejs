@@ -12,7 +12,7 @@ describe("the `is*` fns", function () {
     var d = a.derive(function (x) {
       return x * 2;
     });
-    var l = a.lens({ get: function get(x) {
+    var p = a.proxy({ get: function get(x) {
         return x * 2;
       }, set: function set(_, x) {
         return x / 2;
@@ -20,19 +20,19 @@ describe("the `is*` fns", function () {
 
     assert(derivable.isAtom(a), "a is an atom");
     assert(!derivable.isAtom(d), "d is not an atom");
-    assert(derivable.isAtom(l), "l is an atom");
+    assert(derivable.isAtom(p), "p is an atom");
 
     assert(!derivable.isDerivation(a), "a is not a derivation");
     assert(derivable.isDerivation(d), "d is a derivation");
-    assert(derivable.isDerivation(l), "l is a derivation");
+    assert(derivable.isDerivation(p), "p is a derivation");
 
-    assert(!derivable.isLensed(a), "a is not a lens");
-    assert(derivable.isLensed(l), "l is a lens");
-    assert(!derivable.isLensed(d), "d is not a lens");
+    assert(!derivable.isProxied(a), "a is not a proxy");
+    assert(derivable.isProxied(p), "p is a proxy");
+    assert(!derivable.isProxied(d), "d is not a proxy");
 
     assert(derivable.isDerivable(a), "a is derivable");
     assert(derivable.isDerivable(d), "d is derivable");
-    assert(derivable.isDerivable(l), "l is derivable");
+    assert(derivable.isDerivable(p), "p is derivable");
   });
 });
 
