@@ -1,5 +1,5 @@
 import * as util from './util';
-import {DERIVATION, LENS, REACTOR} from './types';
+import {DERIVATION, PROXY, REACTOR} from './types';
 import {UNKNOWN, UNCHANGED, CHANGED} from './states';
 
 export function mark (node, reactors) {
@@ -7,7 +7,7 @@ export function mark (node, reactors) {
     var child = node._activeChildren[i];
     switch (child._type) {
       case DERIVATION:
-      case LENS:
+      case PROXY:
         if (child._state !== UNKNOWN) {
           child._state = UNKNOWN;
           mark(child, reactors);

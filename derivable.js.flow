@@ -52,17 +52,17 @@ export interface Atom<T> extends Derivable<T> {
 
   swap(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
 
-  lens<E>(lens: Lens<T, E>): Atom<E>;
+  proxy<E>(proxy: Proxy<T, E>): Atom<E>;
 };
 
-export interface Lens<ParentType, ChildType> {
+export interface Proxy<ParentType, ChildType> {
 
   get(source: ParentType): ChildType;
 
   set(source: ParentType, value: ChildType): ParentType;
 };
 
-export interface CompositeLens<T> {
+export interface CompositeProxy<T> {
 
   get(): T;
 
@@ -86,7 +86,7 @@ declare export function atom<T>(value: T): Atom<T>;
 
 declare export function derivation<T>(f: () => T): Derivable<T>;
 
-declare export function lens<T>(lens: CompositeLens<T>): Atom<T>;
+declare export function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
 declare export function transact(f: () => void): void;
 
@@ -110,7 +110,7 @@ declare export function isDerivable(obj: mixed): boolean;
 
 declare export function isDerivation(obj: mixed): boolean;
 
-declare export function isLensed(obj: mixed): boolean;
+declare export function isProxied(obj: mixed): boolean;
 
 declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
 

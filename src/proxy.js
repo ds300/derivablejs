@@ -3,26 +3,26 @@ import * as types from './types';
 import {Derivation} from './derivation';
 import {atomically} from './transactions';
 
-export function Lens (descriptor) {
+export function Proxy (descriptor) {
   Derivation.call(this, descriptor.get);
-  this._lensDescriptor = descriptor;
-  this._type = types.LENS;
+  this._proxyMapping = descriptor;
+  this._type = types.PROXY;
 }
 
-util.assign(Lens.prototype, Derivation.prototype, {
+util.assign(Proxy.prototype, Derivation.prototype, {
   _clone: function () {
-    return util.setEquals(new Lens(this._lensDescriptor), this._equals);
+    return util.setEquals(new Proxy(this._proxyMapping), this._equals);
   },
 
   set: function (value) {
     var that = this;
     atomically(function () {
-      that._lensDescriptor.set(value);
+      that._proxyMapping.set(value);
     });
     return this;
   },
 });
 
-export function lens (descriptor) {
-  return new Lens(descriptor);
+export function proxy (descriptor) {
+  return new Proxy(descriptor);
 }

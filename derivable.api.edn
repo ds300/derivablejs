@@ -439,18 +439,18 @@
       ```javascript
       this.set(f.apply(null, [this.get()].concat(args)));
       ```")
-    ((lens E) [lens (Lens T E)] (Atom E)
+    ((proxy E) [proxy (Proxy T E)] (Atom E)
       "Returns a new atom connected to this one via the logic encapsulated by
-      {{lens}}."
+      {{proxy}}."
 
-      (:see-also Lens)))
+      (:see-also Proxy)))
 
-  (:interface (Lens ParentType ChildType)
-    "The value returned from {{Atom::lens}} is a *lensed* atom. This is a kind
+  (:interface (Proxy ParentType ChildType)
+    "The value returned from {{Atom::proxy}} is a *proxied* atom. This is a kind
     of cross between an atom and a derivation.
     It acts as a mutable proxy for some base atom, which lets consumers modify
     the base atom without knowing precisely how. This knowledge is encoded in a
-    lens as {{get}} and {{set}} functions.
+    proxy as {{get}} and {{set}} functions.
 
     For example, you could (but probably shouldn't) store your entire
     application state as a json string, e.g.
@@ -462,11 +462,11 @@
     }));
     ```
 
-    and then use you could create a generic json lens to access and mutate properties
+    and then use you could create a generic json proxy to access and mutate properties
     within that string:
 
     ```javascript
-    function jsonLens (prop) {
+    function jsonProxy (prop) {
       return {
         get (json) {
           return JSON.parse(json)[prop];
@@ -479,7 +479,7 @@
       }
     }
 
-    const username = jsonState.lens(jsonLens(`username`));
+    const username = jsonState.proxy(jsonProxy(`username`));
 
     username.get();
     // => `Tigran`
@@ -495,9 +495,9 @@
 
     If someone has the `username` atom, they can be completely oblivious to the
     fact that it is an abstraction over a json string, treating it like a normal
-    atom. This is the power of lenses!
+    atom. This is the power of proxies!
 
-    But lenses also *compose*!
+    But proxies also *compose*!
 
     For example, if wanted to pass `username` to someone who can only read
     backwards, we could do the following:
@@ -510,12 +510,12 @@
       }
       return result;
     }
-    const reverseLens = {
+    const reverseProxy = {
       get: s => stringReverse(s),
       set: (_, s) => stringReverse(s)
     };
 
-    const emanresu = username.lens(reverseLens);
+    const emanresu = username.proxy(reverseProxy);
 
     emanresu.get();
     // => `ynnarF`
@@ -530,7 +530,7 @@
     about reversing strings ever again.
     "
     (get [source ParentType] ChildType
-      "Returns the lensed value extracted from {{source}}.
+      "Returns the proxied value extracted from {{source}}.
 
       Called with `this` set to `null`.")
     (set [source ParentType, value ChildType] ParentType
@@ -538,17 +538,17 @@
 
       Called with `this` set to `null`."))
 
-  (:interface (CompositeLens T)
-    "Respresents a lens over one or more atoms, using lexical closures to
+  (:interface (CompositeProxy T)
+    "Respresents a proxy over one or more atoms, using lexical closures to
     imperatively retrieve and set values from/to the atoms in question.
 
-    For use with the {{lens}} top level function.
+    For use with the {{proxy}} top level function.
 
     ```javascript
     const $FirstName = atom('John');
     const $LastName = atom('Steinbeck');
 
-    const $Name = lens({
+    const $Name = proxy({
       get: () => $FirstName.get() + ' ' + $LastName.get(),
       set: (val) => {
         const [first, last] = val.split(' ');
@@ -568,7 +568,7 @@
     (set [value T] void
       "Should propagate {{value}} back up to any relevant atoms.")
 
-    (:see-also lens))
+    (:see-also proxy))
 
   (:interface Lifecycle
     "This lets one configure the lifecycle of reactors. There are three core
@@ -641,9 +641,9 @@
 
     ```")
 
-  ((lens T) [lens (CompositeLens T)] (Atom T)
-    "Creates a new lensed atom using the given composite lens descriptor."
-    (:see-also CompositeLens))
+  ((proxy T) [proxy (CompositeProxy T)] (Atom T)
+    "Creates a new proxied atom using the given composite proxy descriptor."
+    (:see-also CompositeProxy))
 
   (transact [f (=> [] void)] void
     "Executes {{f}} in the context of a transaction.
@@ -787,9 +787,9 @@
     "Returns true iff {{obj}} is a derivation,
     i.e. a derivable which is not an atom.")
 
-  (isLensed [obj any] boolean
-    "Returns true iff {{obj}} is a *lensed* atom."
-    (:see-also Lens Atom::lens))
+  (isProxied [obj any] boolean
+    "Returns true iff {{obj}} is a *proxied* atom."
+    (:see-also Proxy Atom::proxy))
 
   (derive [strings [string] &things [any]] (Derivable string)
     "Tagged template string version of derive. Returns a derivable which

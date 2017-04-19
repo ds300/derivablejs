@@ -6,13 +6,13 @@ var derivable = require('../dist/derivable');
 
 var assert = require('assert');
 
-describe("lenses", function () {
-  var cursor = function cursor(lensable) {
+describe("proxies", function () {
+  var cursor = function cursor(proxyable) {
     for (var _len = arguments.length, path = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
       path[_key - 1] = arguments[_key];
     }
 
-    return lensable.lens({
+    return proxyable.proxy({
       get: function get(state) {
         return state.getIn(path);
       },
@@ -22,7 +22,7 @@ describe("lenses", function () {
     });
   };
 
-  it("makes a functional lens over an atom", function () {
+  it("makes a functional proxy over an atom", function () {
     var root = derivable.atom(immutable.fromJS({ things: ["zero", "one", "three"] }));
 
     var two = cursor(root, "things", 2);
@@ -56,7 +56,7 @@ describe("lenses", function () {
   it("works on numbers too", function () {
     var num = derivable.atom(3.14159);
 
-    var afterDecimalPoint = num.lens({
+    var afterDecimalPoint = num.proxy({
       get: function get(number) {
         return parseInt(number.toString().split(".")[1]) || 0;
       },
@@ -82,7 +82,7 @@ describe("lenses", function () {
   });
 
   it('can be re-instantiated with custom equality-checking', function () {
-    var lens = {
+    var proxy = {
       get: function get(a) {
         return { a: a % 2 };
       },
@@ -91,7 +91,7 @@ describe("lenses", function () {
       }
     };
     var a = derivable.atom(5);
-    var amod2map = a.lens(lens);
+    var amod2map = a.proxy(proxy);
 
     var numReactions = 0;
     amod2map.react(function () {
@@ -109,7 +109,7 @@ describe("lenses", function () {
     amod2map.set({ a: 1 });
     assert.strictEqual(numReactions, 4);
 
-    var amod2map2 = a.lens(lens).withEquality(function (_ref, _ref2) {
+    var amod2map2 = a.proxy(proxy).withEquality(function (_ref, _ref2) {
       var a = _ref.a;
       var b = _ref2.a;
       return a === b;
@@ -133,11 +133,11 @@ describe("lenses", function () {
   });
 });
 
-describe('composite lenses', function () {
-  it('allow multiple atoms to be lensed over', function () {
+describe('composite proxies', function () {
+  it('allow multiple atoms to be proxied over', function () {
     var $FirstName = derivable.atom('John');
     var $LastName = derivable.atom('Steinbeck');
-    var $Name = derivable.lens({
+    var $Name = derivable.proxy({
       get: function get() {
         return $FirstName.get() + ' ' + $LastName.get();
       },
@@ -172,7 +172,7 @@ describe('composite lenses', function () {
       return numReactions++;
     }, { skipFirst: true });
 
-    derivable.lens({
+    derivable.proxy({
       get: function get() {},
       set: function set() {
         $A.set('A');

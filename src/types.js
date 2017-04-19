@@ -1,23 +1,23 @@
 export var ATOM = "ATOM";
 export var DERIVATION = "DERIVATION";
-export var LENS = "LENS";
+export var PROXY = "PROXY";
 export var REACTOR = "REACTOR";
 
 export function isDerivable(x) {
   return x &&
          (x._type === DERIVATION ||
           x._type === ATOM ||
-          x._type === LENS);
+          x._type === PROXY);
 }
 
 export function isAtom (x) {
-  return x && (x._type === ATOM || x._type === LENS);
+  return x && (x._type === ATOM || x._type === PROXY);
 }
 
 export function isDerivation (x) {
-  return x && (x._type === DERIVATION || x._type === LENS);
+  return x && (x._type === DERIVATION || x._type === PROXY);
 }
 
-export function isLensed (x) {
-  return x && x._type === LENS;
+export function isProxied (x) {
+  return x && x._type === PROXY;
 }

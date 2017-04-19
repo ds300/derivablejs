@@ -1,5 +1,5 @@
 import * as util from './util';
-import {Lens} from './lens';
+import {Proxy} from './proxy';
 
 export var mutablePrototype = {
   swap: function (f) {
@@ -7,14 +7,14 @@ export var mutablePrototype = {
     args[0] = this.get();
     return this.set(f.apply(null, args));
   },
-  lens: function (monoLensDescriptor) {
+  proxy: function (monoProxyMapping) {
     var that = this;
-    return new Lens({
+    return new Proxy({
       get: function () {
-        return monoLensDescriptor.get(that.get());
+        return monoProxyMapping.get(that.get());
       },
       set: function (val) {
-        that.set(monoLensDescriptor.set(that.get(), val));
+        that.set(monoProxyMapping.set(that.get(), val));
       }
     });
   },

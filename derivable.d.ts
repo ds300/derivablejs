@@ -54,17 +54,17 @@ declare module derivable {
 
     swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
 
-    lens<E>(lens: Lens<T, E>): Atom<E>;
+    proxy<E>(proxy: Proxy<T, E>): Atom<E>;
   }
 
-  export interface Lens<ParentType, ChildType> {
+  export interface Proxy<ParentType, ChildType> {
 
     get(source: ParentType): ChildType;
 
     set(source: ParentType, value: ChildType): ParentType;
   }
 
-  export interface CompositeLens<T> {
+  export interface CompositeProxy<T> {
 
     get(): T;
 
@@ -88,7 +88,7 @@ declare module derivable {
 
   function derivation<T>(f: () => T): Derivable<T>;
 
-  function lens<T>(lens: CompositeLens<T>): Atom<T>;
+  function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
   function transact(f: () => void): void;
 
@@ -112,7 +112,7 @@ declare module derivable {
 
   function isDerivation(obj: any): boolean;
 
-  function isLensed(obj: any): boolean;
+  function isProxied(obj: any): boolean;
 
   function derive(strings: string[], ...things: any[]): Derivable<string>;
 

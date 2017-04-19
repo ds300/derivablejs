@@ -58,23 +58,23 @@ const BMICalculator = reactive(class extends React.Component {
     this.$WeightLB = atom(150);
     this.$HeightCM = atom(170);
 
-    // define metric weight lens
-    this.$WeightKG = this.$WeightLB.lens({
+    // define metric weight proxy
+    this.$WeightKG = this.$WeightLB.proxy({
       get: lb => Math.round(lb * 0.453592),
       set: (_, kg) => Math.round(kg / 0.453592),
     });
 
 
-    // define imperial height lenses
-    const $HeightFeetInches = this.$HeightCM.lens({
+    // define imperial height proxies
+    const $HeightFeetInches = this.$HeightCM.proxy({
       get: cm2feetInches,
       set: (_, fi) => feetInches2cm(fi),
     });
-    this.$Feet = $HeightFeetInches.lens({
+    this.$Feet = $HeightFeetInches.proxy({
       get: ({feet}) => feet,
       set: ({inches}, feet) => ({feet: parseInt(feet), inches}),
     });
-    this.$Inches = $HeightFeetInches.lens({
+    this.$Inches = $HeightFeetInches.proxy({
       get: ({inches}) => inches,
       set: ({feet}, inches) => ({feet, inches: parseInt(inches)})
     });
