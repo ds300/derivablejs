@@ -4,8 +4,8 @@ import {atom as _atom} from './atom';
 import * as reactors from './reactors';
 import * as parents from './parents';
 import * as types from './types';
-import {derivation as _derivation} from './derivation';
 import {proxy as _proxy} from './proxy';
+import {derive as _derive} from './derivation';
 
 export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;
@@ -16,28 +16,11 @@ export var isDerivable = types.isDerivable;
 export var isAtom = types.isAtom;
 export var isProxy = types.isProxy;
 export var isDerivation = types.isDerivation;
-export var derivation = _derivation;
+export var derive = _derive;
 export var atom = _atom;
 export var atomic = transactions.atomic;
 export var atomically = transactions.atomically;
 export var proxy = _proxy;
-
-/**
- * Template string tag for derivable strings
- */
-export function derive (parts) {
-  var args = util.slice(arguments, 1);
-  return derivation(function () {
-    var s = "";
-    for (var i=0; i < parts.length; i++) {
-      s += parts[i];
-      if (i < args.length) {
-        s += unpack(args[i]);
-      }
-    }
-    return s;
-  });
-};
 
 /**
  * dereferences a thing if it is dereferencable, otherwise just returns it.
@@ -48,19 +31,6 @@ export function unpack (thing) {
   } else {
     return thing;
   }
-};
-
-/**
- * lifts a non-monadic function to work on derivables
- */
-export function lift (f) {
-  return function () {
-    var args = arguments;
-    var that = this;
-    return derivation(function () {
-      return f.apply(that, Array.prototype.map.call(args, unpack));
-    });
-  };
 };
 
 function deepUnpack (thing) {
@@ -83,7 +53,7 @@ function deepUnpack (thing) {
 
 export function struct (arg) {
   if (arg.constructor === Object || arg instanceof Array) {
-    return derivation(function () {
+    return derive(function () {
       return deepUnpack(arg);
     });
   } else {
@@ -114,7 +84,7 @@ export function captureDereferences (f) {
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
-    return derivation(function () {
+    return derive(function () {
       var val;
       for (var i = 0; i < args.length; i++) {
         val = unpack(args[i]);
