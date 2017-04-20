@@ -2,6 +2,7 @@ import * as util from './util';
 import * as parents from './parents';
 import * as transactions from './transactions';
 import * as types from './types';
+import {unpack} from './module';
 import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
 
 export function Derivation (deriver) {
@@ -120,4 +121,53 @@ export function detach (parent, child) {
 
 export function derivation (deriver) {
   return new Derivation(deriver);
+}
+
+export function derive (f, a, b, c, d) {
+  if (f instanceof Array) {
+    // Template string tag for derivable strings
+    var args = util.slice(arguments, 1);
+    return derivation(function () {
+      var s = "";
+      for (var i=0; i < f.length; i++) {
+        s += f[i];
+        if (i < args.length) {
+          s += unpack(args[i]);
+        }
+      }
+      return s;
+    });
+
+  } else {
+    switch (arguments.length) {
+    case 0:
+      throw new Error('derive takes at least one argument');
+    case 1:
+      return derivation(f);
+    case 2:
+      return derivation(function () {
+        return f(unpack(a));
+      });
+    case 3:
+      return derivation(function () {
+        return f(unpack(a), unpack(b));
+      });
+    case 4:
+      return derivation(function () {
+        return f(unpack(a), unpack(b), unpack(c));
+      });
+    case 5:
+      return derivation(function () {
+        return f(unpack(a),
+                 unpack(b),
+                 unpack(c),
+                 unpack(d));
+      });
+    default:
+      var args = util.slice(arguments, 1);
+      return derivation(function () {
+        return f.apply(null, args.map(unpack));
+      });
+    }
+  }
 }

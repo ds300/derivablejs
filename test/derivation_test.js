@@ -30,7 +30,7 @@ describe("a derivation", function () {
   });
 
   it("can also be created via the derivation function in the derivable package", function () {
-    megaBytes = derivable.derivation(function () {
+    megaBytes = derivable.derive(function () {
       return orderUp(kiloBytes.get());
     });
     assert.strictEqual(megaBytes.get(), 1024);
