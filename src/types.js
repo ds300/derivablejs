@@ -18,6 +18,6 @@ export function isDerivation (x) {
   return x && (x._type === DERIVATION || x._type === PROXY);
 }
 
-export function isProxied (x) {
+export function isProxy (x) {
   return x && x._type === PROXY;
 }

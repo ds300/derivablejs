@@ -110,7 +110,7 @@ declare export function isDerivable(obj: mixed): boolean;
 
 declare export function isDerivation(obj: mixed): boolean;
 
-declare export function isProxied(obj: mixed): boolean;
+declare export function isProxy(obj: mixed): boolean;
 
 declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
 

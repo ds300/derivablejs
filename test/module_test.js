@@ -26,9 +26,9 @@ describe("the `is*` fns", function () {
     assert(derivable.isDerivation(d), "d is a derivation");
     assert(derivable.isDerivation(p), "p is a derivation");
 
-    assert(!derivable.isProxied(a), "a is not a proxy");
-    assert(derivable.isProxied(p), "p is a proxy");
-    assert(!derivable.isProxied(d), "d is not a proxy");
+    assert(!derivable.isProxy(a), "a is not a proxy");
+    assert(derivable.isProxy(p), "p is a proxy");
+    assert(!derivable.isProxy(d), "d is not a proxy");
 
     assert(derivable.isDerivable(a), "a is derivable");
     assert(derivable.isDerivable(d), "d is derivable");
