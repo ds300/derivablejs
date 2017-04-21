@@ -12,7 +12,7 @@ module.exports = function () {
 
   for (let i = 0; i < 100; i++) {
     atoms.push(djs.atom(i));
-    djs.derivation(() => {
+    djs.derive(() => {
       return atoms.reduce((total, a) => total + a.get(), 0);
     }).react(n => {
       sum += n;
