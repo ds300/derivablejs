@@ -2,7 +2,7 @@ import * as util from './util';
 import * as parents from './parents';
 import * as transactions from './transactions';
 import * as types from './types';
-import {unpack} from './module';
+import {unpack} from './unpack';
 import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
 
 export function Derivation (deriver) {

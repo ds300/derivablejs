@@ -1,7 +1,8 @@
 import * as util from './util';
 import {makeReactor} from './reactors';
 import * as types from './types';
-import {derive as _derive, unpack} from './module';
+import {derive as _derive} from './module';
+import {unpack} from './unpack';
 
 export var derivablePrototype = {
     /**

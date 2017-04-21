@@ -6,6 +6,7 @@ import * as parents from './parents';
 import * as types from './types';
 import {proxy as _proxy} from './proxy';
 import {derive as _derive} from './derivation';
+import {deepUnpack, unpack as _unpack} from './unpack';
 
 export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;
@@ -21,35 +22,7 @@ export var atom = _atom;
 export var atomic = transactions.atomic;
 export var atomically = transactions.atomically;
 export var proxy = _proxy;
-
-/**
- * dereferences a thing if it is dereferencable, otherwise just returns it.
- */
-export function unpack (thing) {
-  if (isDerivable(thing)) {
-    return thing.get();
-  } else {
-    return thing;
-  }
-};
-
-function deepUnpack (thing) {
-  if (isDerivable(thing)) {
-    return thing.get();
-  } else if (thing instanceof Array) {
-    return thing.map(deepUnpack);
-  } else if (thing.constructor === Object) {
-    var result = {};
-    var keys = util.keys(thing);
-    for (var i = keys.length; i--;) {
-      var prop = keys[i];
-      result[prop] = deepUnpack(thing[prop]);
-    }
-    return result;
-  } else {
-    return thing;
-  }
-}
+export var unpack = _unpack;
 
 export function struct (arg) {
   if (arg.constructor === Object || arg instanceof Array) {
