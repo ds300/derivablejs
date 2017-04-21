@@ -50,14 +50,14 @@ There are two types of Derivable:
 
 - **Derivations**
 
-  Derivations are declarative transformations of values held in atoms. You can create them with the `derivation` function.
+  Derivations are declarative transformations of values held in atoms. You can create them with the `derive` function.
 
   ```javascript
-  import {derivation} from 'derivable';
+  import {derive} from 'derivable';
 
   const cyber = word => word.toUpperCase().split('').join(' ');
 
-  const $cyberName = derivation(() =>
+  const $cyberName = derive(() =>
     cyber($Name.get())
   );
 
@@ -73,7 +73,7 @@ There are two types of Derivable:
   ```javascript
   const $Transformer = atom(cyber);
 
-  const $transformedName = derivation(() =>
+  const $transformedName = derive(() =>
     $Transformer.get()($Name.get())
   );
 
@@ -90,7 +90,7 @@ There are two types of Derivable:
   $transformedName.get(); // => 'naibaF'
   ```
 
-  `derivation` takes a function of zero arguments which should
+  `derive` takes a function of zero arguments which should
   dereference one or more Derivables to compute the new derived value. DerivableJS then sneakily monitors who
   is dereferencing who to infer the parent-child relationships.
 
@@ -101,7 +101,7 @@ Declarative state management is nice in and of itself, but the real benefits com
 Let's have a look at a tiny example app which greets the user:
 
 ```javascript
-import {atom, derivation, transact} from 'derivable'
+import {atom, derive, transact} from 'derivable'
 
 // global application state
 const $Name = atom("World");     // the name of the user
@@ -117,10 +117,10 @@ const greetings = {
 };
 
 // derive a greeting message based on the user's name and country.
-const $greeting = derivation(() =>
+const $greeting = derive(() =>
   greetings[$CountryCode.get()]
 );
-const $message = derivation(() =>
+const $message = derive(() =>
   `${$greeting.get()}, ${$name.get()}!`
 );
 
