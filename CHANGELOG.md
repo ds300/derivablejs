@@ -1,3 +1,7 @@
+## 1.0.0
+
+- Renamed lens to proxy, and isLensed to isProxy
+
 ## 0.12.1
 
 - Removed stray const declarations (thanks, @liron00)
