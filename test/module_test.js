@@ -303,12 +303,17 @@ describe("control flow", function () {
   });
 });
 
-describe("the lift function", function () {
+describe("lifting by using derive", function () {
+
+  var lift = function(f) {
+    return derivable.derive.bind(null, f);
+  }
+
   it("lifts a function which operates on values to operate on derivables", function () {
     var plus = function plus(a, b) {
       return a + b;
     };
-    var dPlus = derivable.lift(plus);
+    var dPlus = lift(plus);
 
     var a = derivable.atom(5);
     var b = derivable.atom(10);
@@ -320,7 +325,7 @@ describe("the lift function", function () {
   it("can be used in ordinary FP stuff", function () {
     var cells = [0, 1, 2].map(derivable.atom);
 
-    var add = derivable.lift(function (a, b) {
+    var add = lift(function (a, b) {
       return a + b;
     });
 

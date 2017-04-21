@@ -29,7 +29,7 @@ describe("a derivation", function () {
     assert.strictEqual(kiloBytes.get(), 1024 * 1024);
   });
 
-  it("can also be created via the derivation function in the derivable package", function () {
+  it("can also be created via the derive function in the derivable package", function () {
     megaBytes = derivable.derive(function () {
       return orderUp(kiloBytes.get());
     });
