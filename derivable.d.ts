@@ -112,7 +112,7 @@ declare module derivable {
 
   function isDerivation(obj: any): boolean;
 
-  function isProxied(obj: any): boolean;
+  function isProxy(obj: any): boolean;
 
   function derive(strings: string[], ...things: any[]): Derivable<string>;
 
