@@ -1,7 +1,7 @@
 import * as types from './types';
 import * as util from './util';
 import {DISCONNECTED, UNKNOWN, UNCHANGED, CHANGED} from './states';
-import {detach, derivation} from './derivation';
+import {detach, derive} from './derivation';
 
 export function Reactor(parent, react, governor) {
   this._parent = parent;
@@ -86,9 +86,9 @@ export function makeReactor (derivable, f, opts) {
   function condDerivable(fOrD, name) {
     if (!types.isDerivable(fOrD)) {
       if (typeof fOrD === 'function') {
-        return derivation(function () { return fOrD(derivable); });
+        return derive(function () { return fOrD(derivable); });
       } else if (typeof fOrD === 'boolean') {
-        return derivation(function () { return fOrD; });
+        return derive(function () { return fOrD; });
       } else {
         throw Error('react ' + name + ' condition must be derivable, got: ' + JSON.stringify(fOrD));
       }
@@ -116,7 +116,7 @@ export function makeReactor (derivable, f, opts) {
   var $until = condDerivable(opts.until, 'until');
   var $when = condDerivable(opts.when, 'when');
 
-  var $whenUntil = derivation(function () {
+  var $whenUntil = derive(function () {
     return {
       until: $until.get(),
       when: $when.get(),
