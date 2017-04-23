@@ -21,7 +21,7 @@ export function Derivation (deriver) {
 
 util.assign(Derivation.prototype, {
   _clone: function () {
-    return util.setEquals(derivation(this._deriver), this._equals);
+    return util.setEquals(derive(this._deriver), this._equals);
   },
 
   _forceEval: function () {
@@ -119,15 +119,11 @@ export function detach (parent, child) {
   }
 }
 
-export function derivation (deriver) {
-  return new Derivation(deriver);
-}
-
 export function derive (f, a, b, c, d) {
   if (f instanceof Array) {
     // Template string tag for derivable strings
     var args = util.slice(arguments, 1);
-    return derivation(function () {
+    return derive(function () {
       var s = "";
       for (var i=0; i < f.length; i++) {
         s += f[i];
@@ -143,21 +139,21 @@ export function derive (f, a, b, c, d) {
     case 0:
       throw new Error('derive takes at least one argument');
     case 1:
-      return derivation(f);
+      return new Derivation(f);
     case 2:
-      return derivation(function () {
+      return new Derivation(function () {
         return f(unpack(a));
       });
     case 3:
-      return derivation(function () {
+      return new Derivation(function () {
         return f(unpack(a), unpack(b));
       });
     case 4:
-      return derivation(function () {
+      return new Derivation(function () {
         return f(unpack(a), unpack(b), unpack(c));
       });
     case 5:
-      return derivation(function () {
+      return new Derivation(function () {
         return f(unpack(a),
                  unpack(b),
                  unpack(c),
@@ -165,7 +161,7 @@ export function derive (f, a, b, c, d) {
       });
     default:
       var args = util.slice(arguments, 1);
-      return derivation(function () {
+      return new Derivation(function () {
         return f.apply(null, args.map(unpack));
       });
     }
