@@ -43,6 +43,10 @@ describe("a derivation", function () {
       }, 0);
     }
 
+    it('needs one argument', function () {
+      assert.throws(function () { derivable.derive(); });
+    });
+
     it('using one arg', function () {
       assert.strictEqual(derivable.derive(function() {return 0;}).get(), 0);
     });
