@@ -1,4 +1,8 @@
-import {atom, lift} from 'derivable';
+import {atom, derive} from 'derivable';
+
+function lift(f) {
+  return derive.bind(null, f);
+};
 
 window.addEventListener('load', () => {
   // step 1.

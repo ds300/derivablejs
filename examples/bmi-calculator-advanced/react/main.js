@@ -1,7 +1,14 @@
-import {atom, lift, transaction} from 'derivable';
+import {atom, derive, transaction} from 'derivable';
 import React from 'react';
 import {render} from 'react-dom';
 import {reactive} from 'react-derivable';
+
+/**
+ * Define lift as a function of derive
+ */
+function lift (fn) {
+  return derive.bind(null, fn);
+}
 
 /**
  * calculate a body mass index from a weight (in kilograms) and a

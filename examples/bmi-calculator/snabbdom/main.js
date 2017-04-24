@@ -1,8 +1,9 @@
 /** @jsx html */
-import {atom, derive, lift, wrapPreviousState} from 'derivable';
+import {atom, derive, wrapPreviousState} from 'derivable';
 import snabbdom from 'snabbdom';
 import {html} from 'snabbdom-jsx';
 
+const lift = (f) => derive.bind(null, f);
 // step 1.
 // define atomic state & logic
 
