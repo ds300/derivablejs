@@ -1,4 +1,11 @@
-import {atom, lift, transaction, derive} from 'derivable';
+import {atom, transaction, derive} from 'derivable';
+
+/**
+ * Define lift as a function of derive
+ */
+function lift (fn) {
+  return derive.bind(null, fn);
+}
 
 /**
  * calculate a body mass index from a weight (in kilograms) and a
