@@ -1,9 +1,5 @@
 import {atom, derive} from 'derivable';
 
-function lift(f) {
-  return derive.bind(null, f);
-};
-
 window.addEventListener('load', () => {
   // step 1.
   // define atomic state & logic
@@ -17,7 +13,7 @@ window.addEventListener('load', () => {
 
   // step 2.
   // derive some data
-  const $bmi = lift(bmi)($WeightKG, $HeightCM);
+  const $bmi = derive(bmi, $WeightKG, $HeightCM);
 
   const $bodyType = $bmi.derive(bmi =>
     bmi < 18.5 ? "underweight"

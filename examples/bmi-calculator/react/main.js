@@ -4,13 +4,6 @@ import {render} from 'react-dom';
 import {reactive} from 'react-derivable';
 
 /**
- * Define lift as a function of derive
- */
-function lift (fn) {
-  return derive.bind(null, fn);
-}
-
-/**
  * calculate a body mass index from a weight (in kilograms) and a
  * height (in centimeters)
  */
@@ -31,7 +24,7 @@ const BMICalculator = reactive(class extends React.Component {
     this.$HeightCM = atom(175);
 
     // derive BMI and body type
-    this.$bmi = lift(bmi)(this.$WeightKG, this.$HeightCM);
+    this.$bmi = derive(bmi, this.$WeightKG, this.$HeightCM);
 
     this.$bodyType = this.$bmi.derive(bmi =>
       bmi < 18.5 ? "underweight"
