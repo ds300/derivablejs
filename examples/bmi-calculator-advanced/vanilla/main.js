@@ -101,12 +101,12 @@ window.addEventListener('load', () => {
     $Height.cm.set(e.target.value);
   });
   $('height-feet').addEventListener('input', e => {
-    $Height.feetInches.swap(({inches}) => ({
+    $Height.feetInches.update(({inches}) => ({
       inches, feet: parseInt(e.target.value)
     }));
   });
   $('height-inches').addEventListener('input', e => {
-    $Height.feetInches.swap(({feet}) => ({
+    $Height.feetInches.update(({feet}) => ({
       feet, inches: parseInt(e.target.value)
     }));
   });

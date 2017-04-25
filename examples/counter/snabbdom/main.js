@@ -11,8 +11,8 @@ const $Count = atom(0);
 const $dom = derivation(() =>
   <div>
     <p>The count is currently {$Count.get()}.</p>
-    <button on-click={() => $Count.swap(increment)}> increment </button>
-    <button on-click={() => $Count.swap(decrement)}> decrement </button>
+    <button on-click={() => $Count.update(increment)}> increment </button>
+    <button on-click={() => $Count.update(decrement)}> decrement </button>
   </div>
 );
 

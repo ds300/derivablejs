@@ -2,7 +2,7 @@ import * as util from './util';
 import {Proxy} from './proxy';
 
 export var mutablePrototype = {
-  swap: function (f) {
+  update: function (f) {
     var args = util.slice(arguments, 0);
     args[0] = this.get();
     return this.set(f.apply(null, args));

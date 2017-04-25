@@ -1,6 +1,7 @@
 ## 1.0.0
 
-- Renamed lens to proxy, and isLensed to isProxy
+- Renamed `lens` to `proxy`, and `isLensed` to `isProxy`
+- Renamed `swap` to `update`
 
 ## 0.12.1
 

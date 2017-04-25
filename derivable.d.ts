@@ -52,7 +52,7 @@ declare module derivable {
 
     set<E>(value: E): Atom<E>;
 
-    swap<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
+    update<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
 
     proxy<E>(proxy: Proxy<T, E>): Atom<E>;
   }

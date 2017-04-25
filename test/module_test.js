@@ -335,7 +335,7 @@ describe("the lift function", function () {
 
     expected = 4;
     equalsExpected = false;
-    cells[0].swap(function (x) {
+    cells[0].update(function (x) {
       return x + 1;
     });
     assert(equalsExpected);
