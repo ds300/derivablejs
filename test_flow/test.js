@@ -3,7 +3,7 @@
   */
 
 import type {Atom, Derivable} from 'derivable';
-import {atom, transaction, atomic, lift} from 'derivable';
+import {atom, transaction, atomic, derive} from 'derivable';
 
 function testDerivations() {
 
@@ -91,31 +91,29 @@ function testTransaction() {
 
 }
 
-function testLift() {
+function testDerive() {
 
   let plusOne = (a: number) => a + 1;
   let add = (a: number, b: number) => a + b;
 
-  let dPlusOne = lift(plusOne);
-  let dTwentyTwo: Derivable<number> = dPlusOne(atom(21));
-  let dTwentyThree: Derivable<number> = dPlusOne(22);
+  let dTwentyTwo: Derivable<number> = derive(plusOne, atom(21));
+  let dTwentyThree: Derivable<number> = derive(plusOne, 22);
 
   // $ExpectError: expected a number or Derivable<number>
-  dPlusOne('oops');
+  derive(plusOne, 'oops');
 
   // $ExpectError: expected a number or Derivable<number>
-  dPlusOne(atom('oops'));
+  derive(plusOne, atom('oops'));
 
-  let dAdd = lift(add);
-  let dFour: Derivable<number> = dAdd(atom(2), atom(2));
-  let dFive: Derivable<number> = dAdd(2, 3);
-  let dSix: Derivable<number> = dAdd(3, atom(3));
-
-  // $ExpectError: expected a number or Derivable<number>
-  dAdd(false, 21);
+  let dFour: Derivable<number> = derive(add, atom(2), atom(2));
+  let dFive: Derivable<number> = derive(add, 2, 3);
+  let dSix: Derivable<number> = derive(add, 3, atom(3));
 
   // $ExpectError: expected a number or Derivable<number>
-  dAdd(atom(false), 21);
+  derive(add, false, 21);
+
+  // $ExpectError: expected a number or Derivable<number>
+  derive(add, atom(false), 21);
 
 }
 

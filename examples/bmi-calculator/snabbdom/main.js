@@ -1,5 +1,5 @@
 /** @jsx html */
-import {atom, derivation, lift, wrapPreviousState} from 'derivable';
+import {atom, derive, wrapPreviousState} from 'derivable';
 import snabbdom from 'snabbdom';
 import {html} from 'snabbdom-jsx';
 
@@ -15,7 +15,7 @@ function bmi (kg, cm) {
 
 // step 2.
 // derive some data
-const $bmi = lift(bmi)($WeightKG, $HeightCM);
+const $bmi = derive(bmi, $WeightKG, $HeightCM);
 
 const $bodyType = $bmi.derive(bmi =>
   bmi < 18.5 ? "underweight"
@@ -24,7 +24,7 @@ const $bodyType = $bmi.derive(bmi =>
   : "obese"
 );
 
-const $dom = derivation(() =>
+const $dom = derive(() =>
   <div>
     <div>
       <input

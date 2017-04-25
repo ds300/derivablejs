@@ -1,6 +1,9 @@
 ## 1.0.0
 
 - Renamed `lens` to `proxy`, and `isLensed` to `isProxy`
+- `derivation` was renamed to `derive`.
+- `derive` has a more flexible call signature, where all extra arguments will be unpacked and used as arguments to the function.
+- Removed the `lift` method. Instead of `lift(f)`, you can instead do `derive.bind(null, f)`.
 - Renamed `swap` to `update`
 
 ## 0.12.1

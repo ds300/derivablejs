@@ -17,7 +17,7 @@
     "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
-    "derivable": "^1.0.0-beta10",
+    "derivable": "file:../../../",
     "snabbdom": "^0.5.0",
     "snabbdom-jsx": "^0.3.0"
   }

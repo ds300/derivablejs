@@ -86,7 +86,22 @@ declare module derivable {
 
   function atom<T>(value: T): Atom<T>;
 
-  function derivation<T>(f: () => T): Derivable<T>;
+  function derive<T>(f: () => T): Derivable<T>;
+
+  function derive<T, A>(f: (a: A) => T, a: A | Derivable<A>): Derivable<T>;
+
+  function derive<T, A, B>(f: (a: A, b: B) => T, a: A | Derivable<A>, b: B | Derivable<B>): Derivable<T>;
+
+  function derive<T, A, B, C>(f: (a: A, b: B, c: C) => T, a: A | Derivable<A>,
+    b: B | Derivable<B>, c: C | Derivable<C>): Derivable<T>;
+
+  function derive<T, A, B, C, D>(f: (a: A, b: B, c: C, d: D) => T, a: A | Derivable<A>,
+    b: B | Derivable<B>, c: C | Derivable<C>, d: D | Derivable<D>): Derivable<T>;
+  
+  function derive<T>(f: (...args: any[])=> T, ...args: any[]): Derivable<T>
+
+  function derive(sections: string[], ...values: any[]): Derivable<string>
+
 
   function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
@@ -101,10 +116,6 @@ declare module derivable {
   function struct(obj: any): Derivable<any>;
 
   function unpack(obj: any): any;
-
-  function lift(f: (...args: any[]) => any): (...args: Derivable<any>[]) => Derivable<any>;
-  function lift<A, B, E>(f: (a: A, b: B) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>)) => Derivable<E>;
-  function lift<A, B, C, E>(f: (a: A, b: B, c: C) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>)) => Derivable<E>;
 
   function isAtom(obj: any): boolean;
 

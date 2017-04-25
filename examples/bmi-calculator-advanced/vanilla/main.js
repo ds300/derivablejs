@@ -1,4 +1,4 @@
-import {atom, lift, transaction, derive} from 'derivable';
+import {atom, transaction, derive} from 'derivable';
 
 /**
  * calculate a body mass index from a weight (in kilograms) and a
@@ -58,7 +58,7 @@ window.addEventListener('load', () => {
 
   const [$feet, $inches] = $Height.feetInches.derive(['feet', 'inches']);
 
-  const $bmi = lift(bmi)($Weight.kg, $Height.cm);
+  const $bmi = derive(bmi, $Weight.kg, $Height.cm);
 
   const $bodyType = $bmi.derive(bmi =>
     bmi < 18.5 ? "underweight"

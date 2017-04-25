@@ -14,7 +14,7 @@ module.exports = function () {
 
   let sum = 0;
 
-  const $combined = djs.derivation(() => {
+  const $combined = djs.derive(() => {
     return atoms.reduce((total, a) => total + a.get(), 0);
   });
 
