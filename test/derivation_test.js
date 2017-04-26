@@ -29,12 +29,70 @@ describe("a derivation", function () {
     assert.strictEqual(kiloBytes.get(), 1024 * 1024);
   });
 
-  it("can also be created via the derivation function in the derivable package", function () {
-    megaBytes = derivable.derivation(function () {
+  it("can also be created via the derive function in the derivable package", function () {
+    megaBytes = derivable.derive(function () {
       return orderUp(kiloBytes.get());
     });
     assert.strictEqual(megaBytes.get(), 1024);
   });
+
+  describe("can be created using the 'derive' function", function () {
+    function add() {
+      return Array.prototype.reduce.call(arguments, function (a, b) {
+        return a + b;
+      }, 0);
+    }
+
+    it('needs one argument', function () {
+      assert.throws(function () { derivable.derive(); });
+    });
+
+    it('using one arg', function () {
+      assert.strictEqual(derivable.derive(function() {return 0;}).get(), 0);
+    });
+
+    it('using two args', function () {
+      assert.strictEqual(derivable.derive(add, 1).get(), 1);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1)).get(), 1);
+    });
+
+    it('using three args', function () {
+      assert.strictEqual(derivable.derive(add, 1, 2).get(), 3);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1), derivable.atom(2)).get(), 3);
+    });
+
+    it('using four args', function () {
+      assert.strictEqual(derivable.derive(add, 1, 2, 3).get(), 6);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1), derivable.atom(2), derivable.atom(3)).get(), 6);
+    });
+
+    it('using five args', function () {
+      assert.strictEqual(derivable.derive(add, 1, 2, 3, 4).get(), 10);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1),  derivable.atom(2), derivable.atom(3), 4).get(), 10);
+    });
+
+    it('using six args', function () {
+      assert.strictEqual(derivable.derive(add, 1, 2, 3, 4, 5).get(), 15);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1), derivable.atom(2), derivable.atom(3), 4, 5).get(), 15);
+    });
+
+    it('using seven args', function () {
+      assert.strictEqual(derivable.derive(add, 1, 2, 3, 4, 5, 6).get(), 21);
+      assert.strictEqual(derivable.derive(add, derivable.atom(1), derivable.atom(2),
+        derivable.atom(3), 4, 5, derivable.atom(6)).get(), 21);
+    });
+
+    it('with a template string', function () {
+      var a = derivable.atom('a');
+      var b = 'b';
+      var fakeTemplateString = ['a: ', ', b: '];
+      // Same as `a: ${a} b: ${b}` in ES6
+      var derivation = derivable.derive(fakeTemplateString, a, b);
+
+      assert.strictEqual(derivation.get(), 'a: a, b: b');
+    });
+
+  })
 
   it("can derive from more than one atom", function () {
     var order = util.label(derivable.atom(0), "O");

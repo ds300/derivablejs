@@ -1,4 +1,4 @@
-import {atom, lift, transaction} from 'derivable';
+import {atom, derive, transaction} from 'derivable';
 import React from 'react';
 import {render} from 'react-dom';
 import {reactive} from 'react-derivable';
@@ -80,7 +80,7 @@ const BMICalculator = reactive(class extends React.Component {
     });
 
     // derive BMI and body type classification
-    this.$bmi = lift(bmi)(this.$WeightKG, this.$HeightCM);
+    this.$bmi = derive(bmi, this.$WeightKG, this.$HeightCM);
 
     this.$classification = this.$bmi.derive(bmi => {
       if (bmi < 18.5) {

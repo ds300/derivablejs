@@ -1,5 +1,5 @@
 /** @jsx html */
-import {atom, derivation, wrapPreviousState} from 'derivable';
+import {atom, derive, wrapPreviousState} from 'derivable';
 import snabbdom from 'snabbdom';
 import {html} from 'snabbdom-jsx';
 
@@ -8,11 +8,11 @@ const decrement = x => x - 1;
 
 const $Count = atom(0);
 
-const $dom = derivation(() =>
+const $dom = derive(() =>
   <div>
     <p>The count is currently {$Count.get()}.</p>
-    <button on-click={() => $Count.swap(increment)}> increment </button>
-    <button on-click={() => $Count.swap(decrement)}> decrement </button>
+    <button on-click={() => $Count.update(increment)}> increment </button>
+    <button on-click={() => $Count.update(decrement)}> decrement </button>
   </div>
 );
 

@@ -50,7 +50,7 @@ export interface Atom<T> extends Derivable<T> {
 
   set(value: T): void;
 
-  swap(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
+  update(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
 
   proxy<E>(proxy: Proxy<T, E>): Atom<E>;
 };
@@ -84,7 +84,21 @@ export interface Lifecycle<T> {
 
 declare export function atom<T>(value: T): Atom<T>;
 
-declare export function derivation<T>(f: () => T): Derivable<T>;
+declare export function derive<T>(f: () => T): Derivable<T>;
+
+declare export function derive<T, A>(f: (a: A) => T, a: A | Derivable<A>): Derivable<T>;
+
+declare export function derive<T, A, B>(f: (a: A, b: B) => T, a: A | Derivable<A>, b: B | Derivable<B>): Derivable<T>;
+
+declare export function derive<T, A, B, C>(f: (a: A, b: B, c: C) => T, a: A | Derivable<A>,
+    b: B | Derivable<B>, c: C | Derivable<C>): Derivable<T>;
+
+declare export function derive<T, A, B, C, D>(f: (a: A, b: B, c: C, d: D) => T, a: A | Derivable<A>,
+    b: B | Derivable<B>, c: C | Derivable<C>, d: D | Derivable<D>): Derivable<T>;
+  
+declare export function derive<T>(f: (...args: Array<mixed>)=> T, ...args: Array<mixed>): Derivable<T>
+
+declare export function derive(sections: Array<string>, ...values: Array<mixed>): Derivable<string>
 
 declare export function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
@@ -99,10 +113,6 @@ declare export function atomic<F: Function>(f: F): F;
 declare export function struct(obj: mixed): Derivable<mixed>;
 
 declare export function unpack(obj: mixed): mixed;
-
-declare export function lift<A, B, C, D, E>(f: (a: A, b: B, c: C, d: D) => E): (a: (A | Derivable<A>), b: (B | Derivable<B>), c: (C | Derivable<C>), d: (D | Derivable<D>)) => Derivable<E>;
-
-declare export function lift(f: (...args: Array<mixed>) => mixed): (...args: Array<Derivable<mixed>>) => Derivable<mixed>;
 
 declare export function isAtom(obj: mixed): boolean;
 

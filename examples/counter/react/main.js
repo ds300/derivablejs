@@ -15,8 +15,8 @@ const Counter = reactive(class extends React.Component {
     return (
       <div>
         <p>The count is currently {this.$Count.get()}.</p>
-        <button onClick={() => this.$Count.swap(increment)}> increment </button>
-        <button onClick={() => this.$Count.swap(decrement)}> decrement </button>
+        <button onClick={() => this.$Count.update(increment)}> increment </button>
+        <button onClick={() => this.$Count.update(decrement)}> decrement </button>
       </div>
     );
   }

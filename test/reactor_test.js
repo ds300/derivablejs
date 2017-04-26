@@ -516,7 +516,7 @@ describe("setting the values of atoms in a reaction phase", function () {
     };
 
     var r = nmod2.react(function (_) {
-      return n.swap(double);
+      return n.update(double);
     }, {skipFirst: true});
 
     assert.throws(function () {
@@ -727,7 +727,7 @@ describe('the `when` optons to the `react` method', function () {
 
     assert.strictEqual(i, 0);
 
-    $N.swap(inc);
+    $N.update(inc);
 
     assert.strictEqual(i, 0);
 
@@ -735,20 +735,20 @@ describe('the `when` optons to the `react` method', function () {
 
     assert.strictEqual(i, 1);
 
-    $N.swap(inc);
+    $N.update(inc);
 
     assert.strictEqual(i, 2);
 
-    $N.swap(inc);
-    $N.swap(inc);
+    $N.update(inc);
+    $N.update(inc);
 
     assert.strictEqual(i, 4);
 
     // it uses truthy/falsiness
     $Cond.set(0);
 
-    $N.swap(inc);
-    $N.swap(inc);
+    $N.update(inc);
+    $N.update(inc);
 
     assert.strictEqual(i, 4);
   });
@@ -768,11 +768,11 @@ describe('the `when` optons to the `react` method', function () {
 
     assert.strictEqual(i, 1);
 
-    $N.swap(inc);
+    $N.update(inc);
     assert.strictEqual(i, 2);
-    $N.swap(inc);
-    $N.swap(inc);
-    $N.swap(inc);
+    $N.update(inc);
+    $N.update(inc);
+    $N.update(inc);
     assert.strictEqual(i, 5);
     $Cond.set("steve");
     // sould cause .force() if not casting to boolean, which would inc i

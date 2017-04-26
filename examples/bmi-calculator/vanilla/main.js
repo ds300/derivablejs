@@ -1,4 +1,4 @@
-import {atom, lift} from 'derivable';
+import {atom, derive} from 'derivable';
 
 window.addEventListener('load', () => {
   // step 1.
@@ -13,7 +13,7 @@ window.addEventListener('load', () => {
 
   // step 2.
   // derive some data
-  const $bmi = lift(bmi)($WeightKG, $HeightCM);
+  const $bmi = derive(bmi, $WeightKG, $HeightCM);
 
   const $bodyType = $bmi.derive(bmi =>
     bmi < 18.5 ? "underweight"

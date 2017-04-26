@@ -72,7 +72,7 @@ describe("proxies", function () {
 
     assert.strictEqual(3.4567, num.get());
 
-    afterDecimalPoint.swap(function (x) {
+    afterDecimalPoint.update(function (x) {
       return x * 2;
     });
 

@@ -20,14 +20,14 @@ describe("the humble atom", function () {
     assert.strictEqual(n.get(), 1);
   });
 
-  it("can be .swap-ped a la clojure", function () {
+  it("can .update (a la swap in clojure)", function () {
     n.set(1);
     var double = function double(x) {
       return x * 2;
     };
-    n.swap(double);
+    n.update(double);
     assert.strictEqual(n.get(), 2);
-    n.swap(double);
+    n.update(double);
     assert.strictEqual(n.get(), 4);
   });
 

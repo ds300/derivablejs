@@ -1,7 +1,8 @@
 import * as util from './util';
 import {makeReactor} from './reactors';
 import * as types from './types';
-import {derivation, unpack, lift} from './module';
+import {derive as _derive} from './module';
+import {unpack} from './unpack';
 
 export var derivablePrototype = {
     /**
@@ -16,13 +17,11 @@ export var derivablePrototype = {
     case 1:
       switch (typeof f) {
         case 'function':
-          return derivation(function () {
-            return f(that.get());
-          });
+          return _derive(f, that);
         case 'string':
         case 'number':
-          return derivation(function () {
-            return that.get()[unpack(f)];
+          return _derive(function () {
+            return that.get()[f];
           });
         default:
           if (f instanceof Array) {
@@ -30,11 +29,11 @@ export var derivablePrototype = {
               return that.derive(x);
             });
           } else if (f instanceof RegExp) {
-            return derivation(function () {
+            return _derive(function () {
               return that.get().match(f);
             });
           } else if (types.isDerivable(f)) {
-            return derivation(function () {
+            return _derive(function () {
               var deriver = f.get();
               var thing = that.get();
               switch (typeof deriver) {
@@ -54,35 +53,18 @@ export var derivablePrototype = {
           } else {
             throw Error('type error');
           }
-      }
+        }
     case 2:
-      return derivation(function () {
-        return f(that.get(), unpack(a));
-      });
+      return _derive(f, that, a);
     case 3:
-      return derivation(function () {
-        return f(that.get(), unpack(a), unpack(b));
-      });
+      return _derive(f, that, a, b);
     case 4:
-      return derivation(function () {
-        return f(that.get(),
-                 unpack(a),
-                 unpack(b),
-                 unpack(c));
-      });
+      return _derive(f, that, a, b, c);
     case 5:
-      return derivation(function () {
-        return f(that.get(),
-                 unpack(a),
-                 unpack(b),
-                 unpack(c),
-                 unpack(d));
-      });
+      return _derive(f, that, a, b, c, d);
     default:
-      var args = ([that]).concat(util.slice(arguments, 1));
-      return derivation(function () {
-        return f.apply(null, args.map(unpack));
-      });
+      var args = ([f, that]).concat(util.slice(arguments, 1));
+      return _derive.apply(null, args);
     }
   },
 
@@ -95,7 +77,7 @@ export var derivablePrototype = {
     if (opts && 'when' in opts && opts.when !== true) {
       var when = opts.when;
       if (typeof when === 'function' || when === false) {
-        when = derivation(when);
+        when = _derive(when);
       } else if (!types.isDerivable(when)) {
         throw new Error('when condition must be bool, function, or derivable');
       }

@@ -59,7 +59,7 @@ describe("the `struct` function", function () {
   it("turns an array of derivables into a derivable", function () {
     var fib1 = derivable.atom(0),
         fib2 = derivable.atom(1),
-        fib = derivable.derivation(function () {
+        fib = derivable.derive(function () {
       return fib1.get() + fib2.get();
     });
 
@@ -210,9 +210,9 @@ describe("control flow", function () {
     var dideven = false;
     var didodd = false;
 
-    var chooseAPath = even.then(derivable.derivation(function () {
+    var chooseAPath = even.then(derivable.derive(function () {
       dideven = true;
-    }), derivable.derivation(function () {
+    }), derivable.derive(function () {
       didodd = true;
     }));
 
@@ -263,15 +263,15 @@ describe("control flow", function () {
         condb = derivable.atom("b"),
         condc = derivable.atom("c");
 
-    var chooseAPath = switcheroo.switch(conda, derivable.derivation(function () {
+    var chooseAPath = switcheroo.switch(conda, derivable.derive(function () {
       return dida = true;
-    }), condb, derivable.derivation(function () {
+    }), condb, derivable.derive(function () {
       return didb = true;
-    }), condc, derivable.derivation(function () {
+    }), condc, derivable.derive(function () {
       return didc = true;
     }),
     //else
-    derivable.derivation(function () {
+    derivable.derive(function () {
       return didx = true;
     }));
 
@@ -303,12 +303,17 @@ describe("control flow", function () {
   });
 });
 
-describe("the lift function", function () {
+describe("lifting by using derive", function () {
+
+  var lift = function(f) {
+    return derivable.derive.bind(null, f);
+  }
+
   it("lifts a function which operates on values to operate on derivables", function () {
     var plus = function plus(a, b) {
       return a + b;
     };
-    var dPlus = derivable.lift(plus);
+    var dPlus = lift(plus);
 
     var a = derivable.atom(5);
     var b = derivable.atom(10);
@@ -320,7 +325,7 @@ describe("the lift function", function () {
   it("can be used in ordinary FP stuff", function () {
     var cells = [0, 1, 2].map(derivable.atom);
 
-    var add = derivable.lift(function (a, b) {
+    var add = lift(function (a, b) {
       return a + b;
     });
 
@@ -335,7 +340,7 @@ describe("the lift function", function () {
 
     expected = 4;
     equalsExpected = false;
-    cells[0].swap(function (x) {
+    cells[0].update(function (x) {
       return x + 1;
     });
     assert(equalsExpected);
@@ -427,12 +432,12 @@ describe("the `transaction` function", function () {
 
 describe("debug mode", function () {
   it("causes derivations and reactors to store the stacktraces of their" + " instantiation points", function () {
-    var d = derivable.derivation(function () {
+    var d = derivable.derive(function () {
       return 0;
     });
     assert(!d.stack);
     derivable.setDebugMode(true);
-    var e = derivable.derivation(function () {
+    var e = derivable.derive(function () {
       throw Error();
     });
     assert(e.stack);
@@ -440,12 +445,12 @@ describe("debug mode", function () {
   });
 
   it("causes stack traces to be printed when things derivations and reactors throw errors", function () {
-    var d = derivable.derivation(function () {
+    var d = derivable.derive(function () {
       return 0;
     });
     assert(!d.stack);
     derivable.setDebugMode(true);
-    var e = derivable.derivation(function () {
+    var e = derivable.derive(function () {
       throw "cheese";
     });
     try {
