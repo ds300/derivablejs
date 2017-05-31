@@ -1,9 +1,0 @@
-build/
-node_modules/
-npm-debug.log
-*.sublime-project
-*.sublime-workspace
-.env
-.DS_Store
-!.env.tmpl
-!.gitignore
