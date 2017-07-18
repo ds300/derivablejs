@@ -1,6 +1,6 @@
 {
   "name": "derivable",
-  "version": "1.0.0-beta.12",
+  "version": "1.0.0-beta.13",
   "description": "Functional Reactive State for JavaScript & TypeScript",
   "author": "David Sheldrick",
   "files": [
@@ -51,6 +51,7 @@
     "immutable": "^3.7.4",
     "jest": "^19.0.2",
     "mobx": "^2.3.3",
+    "np": "^2.16.0",
     "promise": "^7.1.1",
     "rollup": "^0.26.1",
     "source-map": "^0.5.6",
