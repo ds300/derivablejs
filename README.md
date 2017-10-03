@@ -207,7 +207,7 @@ derivables in your render method, providing seamless interop with component-loca
 
 ### With Immutable
 
-DerivableJS works spiffingly with [Immmutable](https://github.com/facebook/immutable), which
+DerivableJS works spiffingly with [Immutable](https://github.com/facebook/immutable), which
 is practically required if your app deals with medium-to-large collections.
 
 ### Debugging
