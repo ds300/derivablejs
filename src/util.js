@@ -1,30 +1,9 @@
 export var keys = Object.keys;
 
-export var assign = Object.assign || function (obj) {
-  for (var i = 1; i < arguments.length; i++) {
-    var other = arguments[i];
-    var ks = keys(other || {});
-    for (var j = ks.length; j--;) {
-      var prop = ks[j];
-      obj[prop] = other[prop];
-    }
-  }
-  return obj;
-}
-
-var _is = Object.is || function (a, b) {
-  // SameValue algorithm
-  if (a === b) { // Steps 1-5, 7-10
-    // Steps 6.b-6.e: +0 != -0
-    return a !== 0 || 1 / a === 1 / b;
-  } else {
-    // Step 6.a: NaN == NaN
-    return a !== a && b !== b;
-  }
-}
+export var assign = Object.assign;
 
 export function equals (a, b) {
-  return _is(a, b) || (a && typeof a.equals === 'function' && a.equals(b));
+  return Object.is(a, b) || (a && typeof a.equals === 'function' && a.equals(b));
 };
 
 export function addToArray (a, b) {
