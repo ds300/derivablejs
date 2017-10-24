@@ -3,6 +3,7 @@ import {makeReactor} from './reactors';
 import * as types from './types';
 import {derive as _derive} from './module';
 import {unpack} from './unpack';
+import {or, mOr, and, mAnd} from './combinators.js';
 
 export var derivablePrototype = {
     /**
@@ -87,34 +88,40 @@ export var derivablePrototype = {
   },
 
   is: function (other) {
-    var that = this;
-    return this.derive(function (x) {
-      return that.__equals(x, unpack(other));
+    var x = this;
+    return _derive(function () {
+      return x.__equals(x.get(), unpack(other));
     });
   },
 
-  and: function (other) {
-    return this.derive(function (x) {return x && unpack(other);});
-  },
-
-  or: function (other) {
-    return this.derive(function (x) {return x || unpack(other);});
-  },
-
   then: function (thenClause, elseClause) {
-    return this.derive(function (x) {
-      return unpack(x ? thenClause : elseClause);
+    var x = this;
+    return _derive(function () {
+      return unpack(x.get() ? thenClause : elseClause);
     });
   },
 
   mThen: function (thenClause, elseClause) {
-    return this.derive(function (x) {
-      return unpack(util.some(x) ? thenClause : elseClause);
+    var x = this;
+    return _derive(function () {
+      return unpack(util.some(x.get()) ? thenClause : elseClause);
     });
   },
 
+  or: function (other) {
+    return or(this, other);
+  },
+
   mOr: function (other) {
-    return this.mThen(this, other);
+    return mOr(this, other);
+  },
+
+  and: function (other) {
+    return and(this, other);
+  },
+
+  mAnd: function (other) {
+    return mAnd(this, other);
   },
 
   mDerive: function (arg) {
@@ -126,12 +133,9 @@ export var derivablePrototype = {
     }
   },
 
-  mAnd: function (other) {
-    return this.mThen(other, this);
-  },
-
   not: function () {
-    return this.derive(function (x) { return !x; });
+    const x = this;
+    return _derive(function () { return !x.get(); });
   },
 
   withEquality: function (equals) {

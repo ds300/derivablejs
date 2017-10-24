@@ -8,6 +8,8 @@ import {proxy as _proxy} from './proxy';
 import {derive as _derive} from './derivation';
 import {deepUnpack, unpack as _unpack} from './unpack';
 
+export {or, mOr, and, mAnd} from './combinators.js';
+
 export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;
 export var setDebugMode = util.setDebugMode;
@@ -53,25 +55,3 @@ export function captureDereferences (f) {
   }
   return captured;
 }
-
-function andOrFn (breakOn) {
-  return function () {
-    var args = arguments;
-    return derive(function () {
-      var val;
-      for (var i = 0; i < args.length; i++) {
-        val = unpack(args[i]);
-        if (breakOn(val)) {
-          break;
-        }
-      }
-      return val;
-    });
-  };
-}
-function identity (x) { return x; }
-function complement (f) { return function (x) { return !f(x); }; }
-export var or = andOrFn(identity);
-export var mOr = andOrFn(util.some);
-export var and = andOrFn(complement(identity));
-export var mAnd = andOrFn(complement(util.some));
