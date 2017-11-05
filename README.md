@@ -44,6 +44,9 @@ There are two types of Derivable:
   $Name.set('William');
 
   $Name.get(); // => 'William'
+
+  // Or use value property
+  $Name.value = $Name.value + " Shakespeare"; 
   ```
 
   <em>N.B. The dollar-sign prefix is just a simple convention I use to create a visual distinction between ordinary values and derivable values.</em>
