@@ -50,6 +50,8 @@ export interface Atom<T> extends Derivable<T> {
 
   set(value: T): void;
 
+  value: T;
+
   update(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
 
   proxy<E>(proxy: Proxy<T, E>): Atom<E>;

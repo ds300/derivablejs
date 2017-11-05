@@ -20,6 +20,15 @@ describe("the humble atom", function () {
     assert.strictEqual(n.get(), 1);
   });
 
+  it("can be dereferenced via .value to obtain its current state", function () {
+    assert.strictEqual(n.value, n.get());
+  });
+
+  it("can be set via .value to change its current state", function () {
+    n.value = 1;
+    assert.strictEqual(n.get(), 1);
+  });
+
   it("can .update (a la swap in clojure)", function () {
     n.set(1);
     var double = function double(x) {
