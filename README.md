@@ -44,6 +44,9 @@ There are two types of Derivable:
   $Name.set('William');
 
   $Name.get(); // => 'William'
+
+  // Or use value property
+  $Name.value = $Name.value + " Shakespeare"; 
   ```
 
   <em>N.B. The dollar-sign prefix is just a simple convention I use to create a visual distinction between ordinary values and derivable values.</em>
@@ -177,7 +180,7 @@ The structure of this example can be depicted as the following DAG:
 
 - No observable map and array types.
 
-   So you probably have to use something extra like Immutable or [icepick](https://github.com/aearly/icepick) to deal with collections. Not great if you're just out to get
+   So you probably have to use something extra like Immutable, [icepick](https://github.com/aearly/icepick) or [pure javascript immutable arrays](https://vincent.billey.me/pure-javascript-immutable-array/) to deal with collections. Not great if you're just out to get
    shit done fast, but the benefits of immutable
    collections become more and more valuable as projects
    mature and grow in scope.
