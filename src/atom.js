@@ -45,6 +45,13 @@ util.assign(Atom.prototype, {
   },
 });
 
+Object.defineProperty(Atom.prototype, "value", {
+  get: function() { return this.get(); },
+  set: function(val) { this.set(val); },
+  enumerable: true,
+  configurable: true
+});
+
 export function atom (value) {
   return new Atom(value);
 }
