@@ -4,6 +4,7 @@ import {Derivation} from './derivation';
 import {Proxy} from './proxy';
 import {Atom} from './atom';
 import {assign} from './util';
+import global from './global';
 
 import * as derivable from './module';
 
@@ -11,6 +12,10 @@ assign(Derivation.prototype, derivablePrototype);
 assign(Proxy.prototype, derivablePrototype, mutablePrototype);
 assign(Atom.prototype, derivablePrototype, mutablePrototype);
 
+if (global.__DERIVABLE_INIT_FLAG__) {
+  console.warn('Multiple instances of derivable have been initialized on the same page');
+}
+global.__DERIVABLE_INIT_FLAG__ = true;
 
 export var __Reactor = derivable.__Reactor;
 export var transact = derivable.transact;
@@ -26,7 +31,6 @@ export var atom = derivable.atom;
 export var atomic = derivable.atomic;
 export var atomically = derivable.atomically;
 export var proxy = derivable.proxy;
-export var derive = derivable.derive;
 export var unpack = derivable.unpack;
 export var struct = derivable.struct;
 export var wrapPreviousState = derivable.wrapPreviousState;
