@@ -1,4 +1,3 @@
-var Promise = require('promise');
 var execp = require('./execp');
 require('colors');
 

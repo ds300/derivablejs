@@ -195,15 +195,13 @@ describe("a derivation", function () {
       return (0, assert)(true, "smithy starts with s");
     }).get()();
 
-    it("allows a default value", function (done) {
-      firstLetter.switch("a", function () {
-        return (0, assert)(false, "smithy doesn't start with a");
-      }, "b", function () {
-        return (0, assert)(false, "smithy doesn't start with b");
-      }, "x", "blah", function () {
-        return (0, assert)(true, "yay");
-      }).get()();
-    });
+    firstLetter.switch("a", function () {
+      return (0, assert)(false, "allows a default value smithy doesn't start with a");
+    }, "b", function () {
+      return (0, assert)(false, "allows a default value smithy doesn't start with b");
+    }, "x", "blah", function () {
+      return (0, assert)(true, "allows a default value yay");
+    }).get()();
 
     var nonexistent = derivable.atom(null);
     (0, assert)(nonexistent.mThen(false, true).get(), "null doesn't exist");
