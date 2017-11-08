@@ -37,7 +37,14 @@
   ],
   "babel": {
     "presets": [
-      "env"
+      [
+        "env",
+        {
+          "targets": {
+            "node": 4
+          }
+        }
+      ]
     ]
   },
   "jest": {
