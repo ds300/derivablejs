@@ -1,4 +1,3 @@
-var Promise = require('promise');
 var exec = require('child_process').exec;
 
 module.exports = function execp(cmd, cwd) {

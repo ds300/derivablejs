@@ -26,7 +26,6 @@ export var atom = derivable.atom;
 export var atomic = derivable.atomic;
 export var atomically = derivable.atomically;
 export var proxy = derivable.proxy;
-export var derive = derivable.derive;
 export var unpack = derivable.unpack;
 export var struct = derivable.struct;
 export var wrapPreviousState = derivable.wrapPreviousState;

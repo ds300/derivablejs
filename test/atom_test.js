@@ -81,9 +81,7 @@ describe("the humble atom", function () {
     var b = a.withEquality(function () {
       return false;
     });
-    it('creates a brand new atom', function () {
-      assert(a !== b);
-    });
+    assert(a !== b, 'creates a brand new atom');
 
     var numReactions = 0;
     a.react(function () {

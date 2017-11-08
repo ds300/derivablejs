@@ -1,8 +1,9 @@
 language: node_js
 node_js:
-  - "6.3"
-  - "5.1"
+  - 9
+  - 8
+  - 6
+  - 4
 script:
-- npm run build
 - npm run ci:test
 after_success: npm run report-coverage
