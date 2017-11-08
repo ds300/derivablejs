@@ -134,7 +134,7 @@ export var derivablePrototype = {
   },
 
   not: function () {
-    const x = this;
+    var x = this;
     return _derive(function () { return !x.get(); });
   },
 
