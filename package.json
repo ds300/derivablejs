@@ -37,22 +37,19 @@
     "dynamic"
   ],
   "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": 4
-          }
-        }
-      ]
-    ]
+    "env": {
+      "test": {
+        "plugins": [
+          "transform-es2015-modules-commonjs"
+        ]
+      }
+    }
   },
   "jest": {
     "testRegex": ".*_test.js$"
   },
   "devDependencies": {
-    "babel-preset-env": "^1.6.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-register": "^6.7.2",
     "benchmark": "^2.1.0",
     "bluebird": "^2.9.34",
