@@ -9,7 +9,8 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "rollup -c && cross-env MINIFY=true rollup -c && cp derivable.d.ts derivable.js.flow dist/",
-    "test": "npm run build && jest",
+    "test": "npm run build && jest && npm run lint",
+    "lint": "eslint src test",
     "ci:test": "npm run test && (cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",
     "coverage": "jest --coverage",
@@ -60,6 +61,8 @@
     "coveralls": "^2.11.9",
     "cross-env": "^5.1.1",
     "doctoc": "^1.0.0",
+    "eslint": "^4.10.0",
+    "eslint-plugin-es5": "^1.1.0",
     "immutable": "^3.7.4",
     "jest": "^21.2.1",
     "mobx": "^2.3.3",
