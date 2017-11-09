@@ -71,15 +71,15 @@ export interface CompositeProxy<T> {
 
 export interface Lifecycle<T> {
 
-  from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+  +from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-  when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+  +when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-  until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
+  +until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
-  skipFirst?: boolean;
+  +skipFirst?: boolean;
 
-  once?: boolean;
+  +once?: boolean;
 };
 
 declare export function atom<T>(value: T): Atom<T>;

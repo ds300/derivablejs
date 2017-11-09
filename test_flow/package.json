@@ -9,6 +9,6 @@
     "derivable": "../"
   },
   "devDependencies": {
-    "flow-bin": "^0.31.1"
+    "flow-bin": "^0.59.0"
   }
 }
