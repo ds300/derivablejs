@@ -28,8 +28,46 @@ function testDerivations() {
 
   // $ExpectError: value might be null
   maybeA.derive(value => value * 2);
+}
 
-  let maybeAx2: Derivable<?number> = maybeA.mDerive(value => value * 2);
+function testMaybeDerivations() {
+
+  const maybeA: Atom<?number> = atom(null);
+
+  const maybeB: Derivable<number> = maybeA.mDerive(value => value * 2);
+
+  const maybeC: Derivable<[number]> = maybeA.mDerive([
+    value => value * 1
+  ]);
+
+  const maybeD: Derivable<[number, boolean]> = maybeA.mDerive([
+    value => value * 1,
+    value => Boolean(value)
+  ]);
+
+  const maybeE: Derivable<[number, boolean, string]> = maybeA.mDerive([
+    value => value * 1,
+    value => Boolean(value),
+    value => String(value)
+  ]);
+
+  const maybeF: Derivable<[number, boolean, string, number]> = maybeA.mDerive([
+    value => value * 1,
+    value => Boolean(value),
+    value => String(value),
+    value => value * 2
+  ]);
+
+  const maybeG: Derivable<[number, boolean, string, number, number]> = maybeA.mDerive([
+    value => value * 1,
+    value => Boolean(value),
+    value => String(value),
+    value => value * 2,
+    value => value * 3
+  ]);
+
+  // $ExpectError: value is a number
+  const maybeH: Derivable<number> = maybeA.mDerive(value => value + '');
 }
 
 function testReactions() {

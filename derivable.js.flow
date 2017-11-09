@@ -1,6 +1,4 @@
-/**
- * @flow
- */
+// @flow
 
 export interface Derivable<T> {
 
@@ -14,10 +12,12 @@ export interface Derivable<T> {
   derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
   derive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
-  mDerive<E>(f: (value: $NonMaybeType<T>) => E): Derivable<E>;
-  mDerive<A, E>(f: (value: $NonMaybeType<T>, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
-  mDerive<A, B, E>(f: (value: $NonMaybeType<T>, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
-  mDerive<E>(f: (value: $NonMaybeType<T>, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
+  mDerive<E>(f: $NonMaybeType<T> => E): Derivable<E>;
+  mDerive<A>([$NonMaybeType<T> => A]): Derivable<[A]>;
+  mDerive<A, B>([$NonMaybeType<T> => A, $NonMaybeType<T> => B]): Derivable<[A, B]>;
+  mDerive<A, B, C>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C]): Derivable<[A, B, C]>;
+  mDerive<A, B, C, D>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C, $NonMaybeType<T> => D]): Derivable<[A, B, C, D]>;
+  mDerive<A, B, C, D, E>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C, $NonMaybeType<T> => D, $NonMaybeType<T> => E]): Derivable<[A, B, C, D, E]>;
 
   react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
