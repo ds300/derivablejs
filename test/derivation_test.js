@@ -92,7 +92,7 @@ describe("a derivation", function () {
       assert.strictEqual(derivation.get(), 'a: a, b: b');
     });
 
-  })
+  });
 
   it("can derive from more than one atom", function () {
     var order = util.label(derivable.atom(0), "O");

@@ -307,7 +307,7 @@ describe("lifting by using derive", function () {
 
   var lift = function(f) {
     return derivable.derive.bind(null, f);
-  }
+  };
 
   it("lifts a function which operates on values to operate on derivables", function () {
     var plus = function plus(a, b) {
