@@ -5,26 +5,6 @@ require('babel-register');
 var util = require('../../src/util');
 var chai = require('chai');
 
-describe('the assign function polyfill', function () {
-  it('merges objects together', function () {
-    var caps = { a: "A", b: "B" };
-    var lower = { a: "a", b: "b", c: "c" };
-    var init = {};
-    chai.expect(util.assign(init, lower, caps)).to.equal(init);
-    chai.expect(init).to.deep.equal({
-      a: "A", b: "B", c: "c"
-    });
-  });
-  it('doesn\'t care about nulls', function () {
-    var caps = { a: "A", b: "B" };
-    chai.expect(util.assign({}, caps, null)).to.deep.equal(caps);
-    chai.expect(util.assign({}, caps, null)).to.not.equal(caps);
-
-    chai.expect(util.assign({}, null, caps, null)).to.deep.equal(caps);
-    chai.expect(util.assign({}, null, caps, null)).to.not.equal(caps);
-  });
-});
-
 describe('the equals function', function () {
   it('checks equality for primitives', function () {
     chai.expect(util.equals(NaN, NaN)).to.be.true;
