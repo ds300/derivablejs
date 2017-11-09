@@ -35,15 +35,45 @@ function testDerivations() {
 function testReactions() {
 
   let c: Atom<?{x: number}> = atom(null);
+  const condition = atom(true);
 
   c.react(v => {
     // $ExpectError: v might be null
     console.log(v.x);
   });
 
+  c.react(v => {}, {
+    from: d => {
+      const v = d.get();
+      // $ExpectError: v might be null
+      return Boolean(v.x);
+    },
+    when: d => {
+      const v = d.get();
+      // $ExpectError: v might be null
+      return Boolean(v.x);
+    },
+    until: d => {
+      const v = d.get();
+      // $ExpectError: v might be null
+      return Boolean(v.x);
+    },
+    skipFirst: true,
+    once: false,
+  });
+
   c.mReact(v => {
     console.log(v.x);
   });
+
+  c.mReact(v => {}, {
+    from: condition,
+    when: condition,
+    until: condition,
+    skipFirst: true,
+    once: false,
+  });
+
 }
 
 function testLogicComb() {
