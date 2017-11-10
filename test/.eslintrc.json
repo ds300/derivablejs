@@ -8,6 +8,7 @@
     "no-shadow": "error",
     "es5/no-block-scoping": 0,
     "es5/no-arrow-functions": 0,
-    "es5/no-template-literals": 0
+    "es5/no-template-literals": 0,
+    "es5/no-rest-parameters": 0
   }
 }

@@ -1,186 +1,168 @@
 'use strict';
 
-var immutable = require('immutable');
+const immutable = require('immutable');
 
-var derivable = require('../dist/derivable');
+const derivable = require('../dist/derivable');
 
-var assert = require('assert');
-
-describe("proxies", function () {
-  var cursor = function cursor(proxyable) {
-    for (var _len = arguments.length, path = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      path[_key - 1] = arguments[_key];
+describe("proxies", () => {
+  const cursor = (proxyable, ...args) => {
+    const _len = args.length;
+    const path = Array(_len - 1);
+    for (let _key = 0; _key < _len; _key++) {
+      path[_key] = args[_key];
     }
 
     return proxyable.proxy({
-      get: function get(state) {
-        return state.getIn(path);
-      },
-      set: function set(state, val) {
-        return state.setIn(path, val);
-      }
+      get: state => state.getIn(path),
+      set: (state, val) => state.setIn(path, val)
     });
   };
 
-  it("makes a functional proxy over an atom", function () {
-    var root = derivable.atom(immutable.fromJS({ things: ["zero", "one", "three"] }));
+  it("makes a functional proxy over an atom", () => {
+    const root = derivable.atom(immutable.fromJS({ things: ["zero", "one", "three"] }));
 
-    var two = cursor(root, "things", 2);
-    assert.equal("three", two.get());
+    const two = cursor(root, "things", 2);
+    expect("three").toEqual(two.get());
 
     two.set("two");
 
-    assert(immutable.fromJS({ things: ["zero", "one", "two"] }).equals(root.get()));
+    expect(immutable.fromJS({ things: ["zero", "one", "two"] }).equals(root.get())).toBeTruthy();
 
-    var things = cursor(root, "things");
+    const things = cursor(root, "things");
 
-    assert(immutable.fromJS(["zero", "one", "two"]).equals(things.get()));
+    expect(immutable.fromJS(["zero", "one", "two"]).equals(things.get())).toBeTruthy();
 
-    var one = cursor(things, 1);
+    const one = cursor(things, 1);
 
-    assert.equal("one", one.get());
+    expect("one").toEqual(one.get());
 
-    var reactors = 0;
+    let reactors = 0;
 
-    one.react(function () {
-      return reactors++;
+    one.react(() => {
+      reactors++;
     });
 
-    assert.equal(1, reactors);
+    expect(1).toEqual(reactors);
     one.set("five");
-    assert.equal(2, reactors);
+    expect(2).toEqual(reactors);
 
-    assert(immutable.fromJS(["zero", "five", "two"]).equals(things.get()));
+    expect(immutable.fromJS(["zero", "five", "two"]).equals(things.get())).toBeTruthy();
   });
 
-  it("works on numbers too", function () {
-    var num = derivable.atom(3.14159);
+  it("works on numbers too", () => {
+    const num = derivable.atom(3.14159);
 
-    var afterDecimalPoint = num.proxy({
-      get: function get(number) {
-        return parseInt(number.toString().split(".")[1]) || 0;
-      },
-      set: function set(number, newVal) {
-        var beforeDecimalPoint = number.toString().split(".")[0];
+    const afterDecimalPoint = num.proxy({
+      get: number => parseInt(number.toString().split(".")[1]) || 0,
+      set: (number, newVal) => {
+        const beforeDecimalPoint = number.toString().split(".")[0];
         return parseFloat(beforeDecimalPoint + '.' + newVal);
       }
     });
 
-    assert.strictEqual(14159, afterDecimalPoint.get());
+    expect(14159).toBe(afterDecimalPoint.get());
 
     afterDecimalPoint.set(4567);
 
-    assert.strictEqual(3.4567, num.get());
+    expect(3.4567).toBe(num.get());
 
-    afterDecimalPoint.update(function (x) {
-      return x * 2;
-    });
+    afterDecimalPoint.update(x => x * 2);
 
-    assert.strictEqual(9134, afterDecimalPoint.get());
+    expect(9134).toBe(afterDecimalPoint.get());
 
-    assert.strictEqual(3.9134, num.get());
+    expect(3.9134).toBe(num.get());
   });
 
-  it('can be re-instantiated with custom equality-checking', function () {
-    var proxy = {
-      get: function get(a) {
-        return { a: a % 2 };
-      },
-      set: function set(a, v) {
-        return v.a;
-      }
+  it('can be re-instantiated with custom equality-checking', () => {
+    const proxy = {
+      get: a => ({ a: a % 2 }),
+      set: (a, v) => v.a
     };
-    var a = derivable.atom(5);
-    var amod2map = a.proxy(proxy);
+    const a = derivable.atom(5);
+    const amod2map = a.proxy(proxy);
 
-    var numReactions = 0;
-    amod2map.react(function () {
-      return numReactions++;
+    let numReactions = 0;
+    amod2map.react(() => {
+      numReactions++;
     }, { skipFirst: true });
 
-    assert.strictEqual(numReactions, 0);
+    expect(numReactions).toBe(0);
     a.set(7);
-    assert.strictEqual(numReactions, 1);
+    expect(numReactions).toBe(1);
     a.set(9);
-    assert.strictEqual(numReactions, 2);
+    expect(numReactions).toBe(2);
     a.set(11);
-    assert.strictEqual(numReactions, 3);
+    expect(numReactions).toBe(3);
 
     amod2map.set({ a: 1 });
-    assert.strictEqual(numReactions, 4);
+    expect(numReactions).toBe(4);
 
-    var amod2map2 = a.proxy(proxy).withEquality(function (_ref, _ref2) {
-      var a = _ref.a;
-      var b = _ref2.a;
-      return a === b;
-    });
+    const amod2map2 = a.proxy(proxy).withEquality((_ref, _ref2) => _ref.a === _ref2.a);
 
-    var numReactions2 = 0;
-    amod2map2.react(function () {
-      return numReactions2++;
+    let numReactions2 = 0;
+    amod2map2.react(() => {
+      numReactions2++;
     }, { skipFirst: true });
 
-    assert.strictEqual(numReactions2, 0);
+    expect(numReactions2).toBe(0);
     a.set(7);
-    assert.strictEqual(numReactions2, 0);
+    expect(numReactions2).toBe(0);
     a.set(9);
-    assert.strictEqual(numReactions2, 0);
+    expect(numReactions2).toBe(0);
     a.set(11);
-    assert.strictEqual(numReactions2, 0);
+    expect(numReactions2).toBe(0);
 
     amod2map2.set({ a: 1 });
-    assert.strictEqual(numReactions2, 0);
+    expect(numReactions2).toBe(0);
   });
 });
 
-describe('composite proxies', function () {
-  it('allow multiple atoms to be proxied over', function () {
-    var $FirstName = derivable.atom('John');
-    var $LastName = derivable.atom('Steinbeck');
-    var $Name = derivable.proxy({
-      get: function get() {
-        return $FirstName.get() + ' ' + $LastName.get();
-      },
-      set: function set(val) {
-        var _val$split = val.split(' ');
+describe('composite proxies', () => {
+  it('allow multiple atoms to be proxied over', () => {
+    const $FirstName = derivable.atom('John');
+    const $LastName = derivable.atom('Steinbeck');
+    const $Name = derivable.proxy({
+      get: () => $FirstName.get() + ' ' + $LastName.get(),
+      set: val => {
+        const _val$split = val.split(' ');
 
-        var first = _val$split[0];
-        var last = _val$split[1];
+        const first = _val$split[0];
+        const last = _val$split[1];
 
         $FirstName.set(first);
         $LastName.set(last);
       }
     });
 
-    assert.strictEqual($Name.get(), 'John Steinbeck');
+    expect($Name.get()).toBe('John Steinbeck');
 
     $Name.set('James Joyce');
-    assert.strictEqual($Name.get(), 'James Joyce');
-    assert.strictEqual($FirstName.get(), 'James');
-    assert.strictEqual($LastName.get(), 'Joyce');
+    expect($Name.get()).toBe('James Joyce');
+    expect($FirstName.get()).toBe('James');
+    expect($LastName.get()).toBe('Joyce');
   });
 
-  it('runs `set` opeartions atomically', function () {
-    var $A = derivable.atom('a');
-    var $B = derivable.atom('b');
+  it('runs `set` opeartions atomically', () => {
+    const $A = derivable.atom('a');
+    const $B = derivable.atom('b');
 
-    var numReactions = 0;
-    $A.react(function () {
-      return numReactions++;
+    let numReactions = 0;
+    $A.react(() => {
+      numReactions++;
     }, { skipFirst: true });
-    $B.react(function () {
-      return numReactions++;
+    $B.react(() => {
+      numReactions++;
     }, { skipFirst: true });
 
     derivable.proxy({
-      get: function get() {},
-      set: function set() {
+      get: () => {},
+      set: () => {
         $A.set('A');
-        assert.strictEqual(numReactions, 0);
+        expect(numReactions).toBe(0);
         $B.set('B');
-        assert.strictEqual(numReactions, 0);
+        expect(numReactions).toBe(0);
       }
     }).set();
-    assert.strictEqual(numReactions, 2);
+    expect(numReactions).toBe(2);
   });
 });
