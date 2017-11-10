@@ -26,6 +26,9 @@
   "typescript": {
     "definition": "dist/derivable.d.ts"
   },
+  "jest": {
+    "testRegex": ".*_test.js$"
+  },
   "keywords": [
     "immutable",
     "cursor",
@@ -45,15 +48,11 @@
       }
     }
   },
-  "jest": {
-    "testRegex": ".*_test.js$"
-  },
   "devDependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-register": "^6.7.2",
     "benchmark": "^2.1.0",
     "bluebird": "^2.9.34",
-    "chai": "^3.5.0",
     "colors": "^1.1.2",
     "coveralls": "^2.11.9",
     "cross-env": "^5.1.1",
