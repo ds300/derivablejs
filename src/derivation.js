@@ -1,6 +1,5 @@
 import * as util from './util';
 import * as parents from './parents';
-import * as transactions from './transactions';
 import * as types from './types';
 import {unpack} from './unpack';
 import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
@@ -17,7 +16,7 @@ export function Derivation (deriver) {
   if (util.isDebug()) {
     this.stack = Error().stack;
   }
-};
+}
 
 util.assign(Derivation.prototype, {
   _clone: function () {
@@ -122,13 +121,13 @@ export function detach (parent, child) {
 export function derive (f, a, b, c, d) {
   if (f instanceof Array) {
     // Template string tag for derivable strings
-    var args = util.slice(arguments, 1);
+    var tplArgs = util.slice(arguments, 1);
     return derive(function () {
       var s = "";
       for (var i=0; i < f.length; i++) {
         s += f[i];
-        if (i < args.length) {
-          s += unpack(args[i]);
+        if (i < tplArgs.length) {
+          s += unpack(tplArgs[i]);
         }
       }
       return s;

@@ -34,7 +34,7 @@ export function struct (arg) {
   } else {
     throw new Error("`struct` expects plain Object or Array");
   }
-};
+}
 
 export function wrapPreviousState (f, init) {
   var lastState = init;

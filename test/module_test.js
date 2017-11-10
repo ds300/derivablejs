@@ -1,7 +1,5 @@
 'use strict';
 
-var immutable = require('immutable');
-
 var derivable = require('../dist/derivable');
 
 var assert = require('assert');
@@ -130,7 +128,7 @@ describe("the `struct` function", function () {
     assert.throws(function () {
       return derivable.struct(new Error());
     });
-    function A() {};
+    function A() {}
     assert.throws(function () {
       return derivable.struct(new A());
     });
@@ -464,7 +462,7 @@ describe("debug mode", function () {
       console.error = err;
     } catch (e) {
       assert.strictEqual(e, 'cheese');
-    };
+    }
     derivable.setDebugMode(false);
   });
 });
