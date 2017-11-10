@@ -81,8 +81,6 @@ describe("a derivation", function () {
     it('with a template string', function () {
       var a = derivable.atom('a');
       var b = 'b';
-      var fakeTemplateString = ['a: ', ', b: '];
-      // Same as `a: ${a} b: ${b}` in ES6
       var derivation = derivable.derive`a: ${a}, b: ${b}`;
 
       assert.strictEqual(derivation.get(), 'a: a, b: b');
