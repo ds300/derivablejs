@@ -1,7 +1,5 @@
 'use strict';
 
-var _templateObject = _taggedTemplateLiteral(['', ' ', ''], ['', ' ', '']);
-
 var derivable = require('../dist/derivable');
 
 var assert = require('assert');
@@ -9,8 +7,6 @@ var assert = require('assert');
 var immutable = require('immutable');
 
 var util = require('./util');
-
-function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
 
 describe("a derivation", function () {
   var oneGigabyte = 1024 * 1024 * 1024;
@@ -85,9 +81,7 @@ describe("a derivation", function () {
     it('with a template string', function () {
       var a = derivable.atom('a');
       var b = 'b';
-      var fakeTemplateString = ['a: ', ', b: '];
-      // Same as `a: ${a} b: ${b}` in ES6
-      var derivation = derivable.derive(fakeTemplateString, a, b);
+      var derivation = derivable.derive`a: ${a}, b: ${b}`;
 
       assert.strictEqual(derivation.get(), 'a: a, b: b');
     });
@@ -100,7 +94,7 @@ describe("a derivation", function () {
       return ["bytes", "kilobytes", "megabytes", "gigabytes"][order];
     }), "ON");
     var size = util.label(bytes.derive(orderUp, order), "!size!");
-    var sizeString = derivable.derive(_templateObject, size, orderName);
+    var sizeString = derivable.derive`${size} ${orderName}`;
 
     assert.strictEqual(size.get(), bytes.get(), "size is in bytes when order is 0");
     assert.strictEqual(sizeString.get(), bytes.get() + " bytes");
