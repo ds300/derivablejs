@@ -1,7 +1,6 @@
 'use strict';
 
-require('source-map-support');
-require('babel-register');
+require = require('@std/esm')(module);
 const util = require('../../src/util');
 
 test('the equals function checks equality for primitives', () => {
@@ -102,27 +101,27 @@ test('the some function checks whether something is not (null or undefined)', fu
   expect(util.some(false)).toEqual(true);
 });
 
-test('the DEBUG_MODE flag should be false by default', function () {
-  expect(util.DEBUG_MODE).toEqual(false);
+test('the debug flag should be false by default', function () {
+  expect(util.isDebug()).toEqual(false);
 });
 
-test('the setDebugMode function sets the DEBUG_MODE flag', function () {
+test('the setDebugMode function sets the debug flag', function () {
   util.setDebugMode(true);
-  expect(util.DEBUG_MODE).toEqual(true);
+  expect(util.isDebug()).toEqual(true);
 });
 
 test('the setDebugMode function casts its argument to boolean', function () {
   util.setDebugMode("haha");
-  expect(util.DEBUG_MODE).toEqual(true);
+  expect(util.isDebug()).toEqual(true);
 
   util.setDebugMode(null);
-  expect(util.DEBUG_MODE).toEqual(false);
+  expect(util.isDebug()).toEqual(false);
 
   util.setDebugMode(3);
-  expect(util.DEBUG_MODE).toEqual(true);
+  expect(util.isDebug()).toEqual(true);
 
   util.setDebugMode(0);
-  expect(util.DEBUG_MODE).toEqual(false);
+  expect(util.isDebug()).toEqual(false);
 });
 
 test('the setEquals function sets the _equals property of an object and returns the object', function () {

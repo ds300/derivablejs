@@ -9,22 +9,25 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "rollup -c && cross-env MINIFY=true rollup -c && cp derivable.d.ts derivable.js.flow dist/",
+    "lint": "eslint src test",
     "test": "npm run build && jest && npm run lint",
-    "lint": "eslint src",
-    "ci:test": "npm run test && (cd test_flow && npm install && npm test)",
+    "test-types": "(cd test_flow && npm install && npm test)",
     "bench": "node scripts/bench.js",
     "coverage": "jest --coverage",
     "report-coverage": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "stats": "node scripts/stats.js",
     "toc": "doctoc README.md",
     "clean": "rm -rf dist",
-    "all": "npm run clean && npm run build && npm run test && npm run coverage && npm run stats && npm run bench && npm run toc"
+    "all": "npm run clean && npm run build && npm run coverage && npm run stats && npm run bench && npm run toc"
   },
   "main": "dist/derivable.js",
   "module": "dist/derivable.es.js",
   "typings": "dist/derivable.d.ts",
   "typescript": {
     "definition": "dist/derivable.d.ts"
+  },
+  "@std/esm": {
+    "esm": "js"
   },
   "jest": {
     "testRegex": ".*_test.js$"
@@ -39,20 +42,9 @@
     "reactive",
     "dynamic"
   ],
-  "babel": {
-    "env": {
-      "test": {
-        "plugins": [
-          "transform-es2015-modules-commonjs"
-        ]
-      }
-    }
-  },
   "devDependencies": {
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-    "babel-register": "^6.7.2",
+    "@std/esm": "^0.13.0",
     "benchmark": "^2.1.0",
-    "bluebird": "^2.9.34",
     "colors": "^1.1.2",
     "coveralls": "^2.11.9",
     "cross-env": "^5.1.1",
@@ -64,8 +56,7 @@
     "mobx": "^2.3.3",
     "np": "^2.16.0",
     "rollup": "^0.51.1",
-    "rollup-plugin-uglify": "^2.0.1",
-    "source-map-support": "^0.3.2"
+    "rollup-plugin-uglify": "^2.0.1"
   },
   "repository": {
     "type": "git",

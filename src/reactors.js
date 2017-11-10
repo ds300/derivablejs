@@ -11,7 +11,7 @@ export function Reactor(parent, react, governor) {
   this._reacting = false;
   this._type = types.REACTOR;
 
-  if (util.DEBUG_MODE) {
+  if (util.isDebug()) {
     this.stack = Error().stack;
   }
 }
@@ -31,7 +31,7 @@ util.assign(Reactor.prototype, {
       this._reacting = true;
       this.react(nextValue);
     } catch (e) {
-      if (util.DEBUG_MODE) {
+      if (util.isDebug()) {
         console.error(this.stack);
       }
       throw e;

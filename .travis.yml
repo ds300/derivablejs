@@ -4,5 +4,6 @@ node_js:
   - 8
   - 6
 script:
-- npm run ci:test
+- npm run test
+- npm run test-types
 after_success: npm run report-coverage

@@ -14,7 +14,7 @@ export function Derivation (deriver) {
   this._activeChildren = [];
   this._state = DISCONNECTED;
 
-  if (util.DEBUG_MODE) {
+  if (util.isDebug()) {
     this.stack = Error().stack;
   }
 };
@@ -34,7 +34,7 @@ util.assign(Derivation.prototype, {
         this._parents = [];
       }
       parents.startCapturingParents(this, this._parents);
-      if (!util.DEBUG_MODE) {
+      if (!util.isDebug()) {
         newVal = that._deriver();
       } else {
         try {
