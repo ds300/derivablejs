@@ -5,6 +5,7 @@
   "rules": {
     "no-global-assign": 0,
     "no-empty": ["error", { "allowEmptyCatch": true }],
+    "no-shadow": "error",
     "es5/no-block-scoping": 0,
     "es5/no-arrow-functions": 0,
     "es5/no-template-literals": 0
