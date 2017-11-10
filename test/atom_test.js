@@ -126,7 +126,7 @@ describe('the concurrent modification of _reactors bug', function () {
     var A_success = false;
     var C_success = false;
 
-    $A.react(function (A) {
+    $A.react(function () {
       A_success = true;
     }, {
       from: $A
@@ -134,7 +134,7 @@ describe('the concurrent modification of _reactors bug', function () {
 
     var $C = $A.and($B);
 
-    $C.react(function (ready) {
+    $C.react(function () {
       C_success = true;
     }, {
       from: $C

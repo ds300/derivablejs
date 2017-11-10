@@ -165,7 +165,7 @@ describe("a derivation", function () {
     assert.strictEqual(name.derive('length').get(), 6);
     assert.strictEqual(name.derive(0).get(), "s");
 
-    var x = startsWithS.then(function () {
+    startsWithS.then(function () {
       return (0, assert)(true, "smithy starts with s");
     }, function () {
       return (0, assert)(false, "smithy what?");

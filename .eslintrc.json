@@ -11,11 +11,12 @@
     "es5"
   ],
   "extends": [
+    "eslint:recommended",
     "plugin:es5/no-es2015"
   ],
   "rules": {
+    "no-console": 0,
     "semi": 2,
-    "no-undef": 2,
     "comma-dangle": [2, "only-multiline"],
     "es5/no-modules": 0
   }

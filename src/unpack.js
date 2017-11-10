@@ -11,7 +11,7 @@ export function unpack (thing) {
   } else {
     return thing;
   }
-};
+}
 
 export function deepUnpack (thing) {
   if (isDerivable(thing)) {
@@ -29,4 +29,4 @@ export function deepUnpack (thing) {
   } else {
     return thing;
   }
-};
+}

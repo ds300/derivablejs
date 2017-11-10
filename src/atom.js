@@ -15,7 +15,7 @@ export function Atom (value) {
   this._type = ATOM;
   this._equals = null;
   return this;
-};
+}
 
 util.assign(Atom.prototype, {
   _clone: function () {

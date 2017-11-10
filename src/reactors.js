@@ -1,6 +1,6 @@
 import * as types from './types';
 import * as util from './util';
-import {DISCONNECTED, UNKNOWN, UNCHANGED, CHANGED} from './states';
+import {CHANGED} from './states';
 import {detach, derive} from './derivation';
 
 export function Reactor(parent, react, governor) {

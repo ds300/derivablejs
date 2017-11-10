@@ -515,7 +515,7 @@ describe("setting the values of atoms in a reaction phase", function () {
       return n * 2;
     };
 
-    var r = nmod2.react(function (_) {
+    nmod2.react(function () {
       return n.update(double);
     }, {skipFirst: true});
 
@@ -721,7 +721,7 @@ describe('the `when` optons to the `react` method', function () {
     };
 
     var i = 0;
-    $N.react(function (n) {
+    $N.react(function () {
       return i++;
     }, { when: $Cond });
 
@@ -762,7 +762,7 @@ describe('the `when` optons to the `react` method', function () {
 
     var i = 0;
 
-    $N.react(function (n) {
+    $N.react(function () {
       return i++;
     }, { when: $Cond });
 

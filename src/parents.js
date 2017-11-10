@@ -54,4 +54,4 @@ export function maybeCaptureParent (p) {
       }
     }
   }
-};
+}

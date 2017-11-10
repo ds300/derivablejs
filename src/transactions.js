@@ -56,7 +56,7 @@ export var currentCtx = null;
 
 export function inTransaction () {
   return currentCtx !== null;
-};
+}
 
 export function transact (f) {
   beginTransaction();
@@ -71,7 +71,7 @@ export function transact (f) {
     return;
   }
   commitTransaction();
-};
+}
 
 export function atomically (f) {
   if (!inTransaction()) {
@@ -91,7 +91,7 @@ export function transaction (f) {
     });
     return result;
   };
-};
+}
 
 export function atomic (f) {
   return function () {
@@ -168,4 +168,4 @@ export function ticker () {
       }
     },
   };
-};
+}
