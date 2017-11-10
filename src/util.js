@@ -35,10 +35,15 @@ export function some (x) {
   return (x !== null) && (x !== void 0);
 };
 
-export var DEBUG_MODE = false;
+var DEBUG_MODE = false;
+
 export function setDebugMode (val) {
   DEBUG_MODE = !!val;
 };
+
+export function isDebug() {
+  return DEBUG_MODE;
+}
 
 export function setEquals (derivable, equals) {
   derivable._equals = equals;
