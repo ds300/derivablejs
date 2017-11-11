@@ -9,16 +9,16 @@ describe("the `is*` fns", () => {
     const p = a.proxy({ get: x => x * 2, set: (_, x) => x / 2 });
 
     expect(derivable.isAtom(a)).toBeTruthy();
-    expect(!derivable.isAtom(d)).toBeTruthy();
+    expect(derivable.isAtom(d)).toBeFalsy();
     expect(derivable.isAtom(p)).toBeTruthy();
 
-    expect(!derivable.isDerivation(a)).toBeTruthy();
+    expect(derivable.isDerivation(a)).toBeFalsy();
     expect(derivable.isDerivation(d)).toBeTruthy();
     expect(derivable.isDerivation(p)).toBeTruthy();
 
-    expect(!derivable.isProxy(a)).toBeTruthy();
+    expect(derivable.isProxy(a)).toBeFalsy();
     expect(derivable.isProxy(p)).toBeTruthy();
-    expect(!derivable.isProxy(d)).toBeTruthy();
+    expect(derivable.isProxy(d)).toBeFalsy();
 
     expect(derivable.isDerivable(a)).toBeTruthy();
     expect(derivable.isDerivable(d)).toBeTruthy();
@@ -249,7 +249,7 @@ describe("control flow", () => {
 
     thing.set("nonsense");
 
-    expect(result.get() === void 0).toBeTruthy();
+    expect(result.get()).toBe(undefined);
 
     const switcheroo = derivable.atom("a");
 
