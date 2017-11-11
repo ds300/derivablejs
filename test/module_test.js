@@ -258,9 +258,9 @@ describe("control flow", () => {
     let didc = false;
     let didx = false;
 
-    let conda = derivable.atom("a");
-    let condb = derivable.atom("b");
-    let condc = derivable.atom("c");
+    const conda = derivable.atom("a");
+    const condb = derivable.atom("b");
+    const condc = derivable.atom("c");
 
     const chooseAPath = switcheroo.switch(
       conda,
