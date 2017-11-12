@@ -1,154 +1,148 @@
 'use strict';
 
-var derivable = require('../dist/derivable');
-var assert = require('assert');
+const derivable = require('../dist/derivable');
 
-describe("the humble atom", function () {
+describe("the humble atom", () => {
 
-  var n;
+  let n;
 
-  beforeEach(function() {
+  beforeEach(() => {
     n = derivable.atom(0);
   });
 
-  it("can be dereferenced via .get to obtain its current state", function () {
-    assert.strictEqual(n.get(), 0);
+  it("can be dereferenced via .get to obtain its current state", () => {
+    expect(n.get()).toBe(0);
   });
 
-  it("can be .set to change its current state", function () {
+  it("can be .set to change its current state", () => {
     n.set(1);
-    assert.strictEqual(n.get(), 1);
+    expect(n.get()).toBe(1);
   });
 
-  it("can .update (a la swap in clojure)", function () {
+  it("can .update (a la swap in clojure)", () => {
     n.set(1);
-    var double = function double(x) {
-      return x * 2;
-    };
+    const double = x => x * 2;
     n.update(double);
-    assert.strictEqual(n.get(), 2);
+    expect(n.get()).toBe(2);
     n.update(double);
-    assert.strictEqual(n.get(), 4);
+    expect(n.get()).toBe(4);
   });
 
-  it('can take on temporary values inside a transaction', function () {
-    var a = derivable.atom("a");
-    derivable.transact(function (abort) {
+  it('can take on temporary values inside a transaction', () => {
+    const a = derivable.atom("a");
+    derivable.transact(abort1 => {
       a.set("b");
-      assert.strictEqual(a.get(), "b", "blah and junk");
-      derivable.transact(function (abort) {
+      expect(a.get()).toBe("b");
+      derivable.transact(abort2 => {
         a.set("c");
-        assert.strictEqual(a.get(), "c");
-        abort();
+        expect(a.get()).toBe("c");
+        abort2();
       });
-      assert.strictEqual(a.get(), "b");
-      abort();
+      expect(a.get()).toBe("b");
+      abort1();
     });
-    assert.strictEqual(a.get(), "a");
+    expect(a.get()).toBe("a");
   });
 
-  it('should be able to go back to its original value with no ill effects', function () {
-    var a = derivable.atom("a");
-    var reacted = false;
-    a.react(function () {
+  it('should be able to go back to its original value with no ill effects', () => {
+    const a = derivable.atom("a");
+    let reacted = false;
+    a.react(() => {
       reacted = true;
-    }, {skipFirst: true});
+    }, { skipFirst: true });
 
-    assert.strictEqual(reacted, false, "no reaction to begin with");
+    // no reaction to begin with
+    expect(reacted).toBe(false);
 
-    derivable.transact(function () {
+    derivable.transact(() => {
       a.set("b");
       a.set("a");
     });
 
-    assert.strictEqual(reacted, false, "no reaction should take place");
+    // no reaction should take place
+    expect(reacted).toBe(false);
   });
 
-  it('can keep transaction values if they are\'t aborted', function () {
-    var a = derivable.atom("a");
-    derivable.transact(function () {
+  it('can keep transaction values if they are\'t aborted', () => {
+    const a = derivable.atom("a");
+    derivable.transact(() => {
       a.set("b");
-      derivable.transact(function () {
+      derivable.transact(() => {
         a.set("c");
       });
-      assert.strictEqual(a.get(), "c");
+      expect(a.get()).toBe("c");
     });
-    assert.strictEqual(a.get(), "c");
+    expect(a.get()).toBe("c");
   });
 
-  it('can include an equality-checking function', function () {
-    var a = derivable.atom(0);
-    var b = a.withEquality(function () {
-      return false;
-    });
-    assert(a !== b, 'creates a brand new atom');
+  it('can include an equality-checking function', () => {
+    const a = derivable.atom(0);
+    const b = a.withEquality(() => false);
+    // creates a brand new atom
+    expect(a).not.toBe(b);
 
-    var numReactions = 0;
-    a.react(function () {
-      return numReactions++;
+    let numReactions = 0;
+    a.react(() => {
+      numReactions++;
     }, { skipFirst: true });
-    b.react(function () {
-      return numReactions++;
+    b.react(() => {
+      numReactions++;
     }, { skipFirst: true });
 
-    assert.strictEqual(numReactions, 0, "0 a");
+    expect(numReactions).toBe(0);
     a.set(0);
-    assert.strictEqual(numReactions, 0, "0 b");
+    expect(numReactions).toBe(0);
     a.set(0);
-    assert.strictEqual(numReactions, 0, "0 c");
+    expect(numReactions).toBe(0);
 
     b.set(0);
-    assert.strictEqual(numReactions, 1, "0 d");
+    expect(numReactions).toBe(1);
     b.set(0);
-    assert.strictEqual(numReactions, 2, "0 e");
+    expect(numReactions).toBe(2);
   });
 
-  it('only likes functions or falsey things for equality functions', function () {
+  it('only likes functions or falsey things for equality functions', () => {
     derivable.atom(4).withEquality('');
-    assert.throws(function () {
+    expect(() => {
       derivable.atom(4).withEquality('yo');
-    });
+    }).toThrow();
     derivable.atom(4).withEquality(0);
-    assert.throws(function () {
+    expect(() => {
       derivable.atom(4).withEquality(7);
-    });
+    }).toThrow();
     derivable.atom(4).withEquality(null);
     derivable.atom(4).withEquality(void 0);
   });
 
 });
 
-describe('the concurrent modification of _reactors bug', function () {
-  it('doesnt happen any more', function () {
-    var $A = derivable.atom(false);
-    var $B = derivable.atom(false);
+describe('the concurrent modification of _reactors bug', () => {
+  it('doesnt happen any more', () => {
+    const $A = derivable.atom(false);
+    const $B = derivable.atom(false);
 
-    var A_success = false;
-    var C_success = false;
+    let A_success = false;
+    let C_success = false;
 
-    $A.react(function () {
+    $A.react(() => {
       A_success = true;
-    }, {
-      from: $A
-    });
+    }, { from: $A });
 
-    var $C = $A.and($B);
+    const $C = $A.and($B);
 
-    $C.react(function () {
+    $C.react(() => {
       C_success = true;
-    }, {
-      from: $C
-    });
+    }, { from: $C });
 
-    assert.strictEqual(A_success, false);
-    assert.strictEqual(C_success, false);
+    expect(A_success).toBe(false);
+    expect(C_success).toBe(false);
     // used to be that this would cause the 'from' controller on C to be ignored
     // during the ._maybeReact iteration in .set
     $A.set(true);
-    assert.strictEqual(A_success, true);
-    assert.strictEqual(C_success, false);
+    expect(A_success).toBe(true);
+    expect(C_success).toBe(false);
     $B.set(true);
 
-    assert.strictEqual(C_success, true, "expecting c success");
+    expect(C_success).toBe(true);
   });
 });

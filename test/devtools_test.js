@@ -4,7 +4,7 @@ const hook = jest.fn();
 global.__DERIVABLE_DEVTOOLS_HOOK__ = hook;
 const atom = require('../').atom;
 
-test('capture every atom get and pass to devtools hook', function () {
+test('capture every atom get and pass to devtools hook', () => {
   const a = atom(1);
   a.react(() => {});
 

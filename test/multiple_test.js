@@ -7,7 +7,7 @@ global.__DERIVABLE_INIT_FLAG__ = true;
 require('../');
 console.warn = originalWarn;
 
-test('warn about multiple instances', function () {
+test('warn about multiple instances', () => {
   expect(warn.mock.calls.length).toEqual(1);
   expect(warn.mock.calls[0][0].toLowerCase()).toEqual(
     expect.stringContaining('multiple instances')

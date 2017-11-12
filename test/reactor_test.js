@@ -1,693 +1,671 @@
 'use strict';
 
-var derivable = require('../dist/derivable');
+const derivable = require('../dist/derivable');
 
-var assert = require('assert');
-
-describe("anonymous reactors", function () {
-  it('are created with the .react method', function () {
-    var a = derivable.atom('a');
-    var val = null;
-    a.react(function (a) {
-      val = a;
+describe("anonymous reactors", () => {
+  it('are created with the .react method', () => {
+    const a = derivable.atom('a');
+    let val = null;
+    a.react(d => {
+      val = d;
     });
 
-    assert.strictEqual(val, 'a');
+    expect(val).toBe('a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
   });
 
-  it('can start when the `from` condition becomes truthy', function () {
-    var cond = derivable.atom(false);
-    var a = derivable.atom('a');
-    var val = null;
-    a.react(function (a) {
-      val = a;
-    }, { from: cond });
+  it('can start when the `from` condition becomes truthy', () => {
+    const from = derivable.atom(false);
+    const a = derivable.atom('a');
+    let val = null;
+    a.react(d => {
+      val = d;
+    }, { from });
 
-    assert.strictEqual(val, null);
+    expect(val).toBe(null);
 
-    cond.set('truthy value');
+    from.set('truthy value');
 
-    assert.strictEqual(val, 'a');
+    expect(val).toBe('a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
   });
 
-  it('can stop (forever) when the `until` condition becomes truthy', function () {
-    var cond = derivable.atom(false);
-    var a = derivable.atom('a');
-    var val = null;
-    a.react(function (a) {
-      val = a;
-    }, { until: cond });
+  it('can stop (forever) when the `until` condition becomes truthy', () => {
+    const until = derivable.atom(false);
+    const a = derivable.atom('a');
+    let val = null;
+    a.react(d => {
+      val = d;
+    }, { until });
 
-    assert.strictEqual(val, 'a');
+    expect(val).toBe('a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
 
-    cond.set('truthy value');
+    until.set('truthy value');
 
     a.set('c');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
 
-    cond.set(false);
+    until.set(false);
 
     a.set('d');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
   });
 
-  it('can start and stop when the `when` condition becomes truthy and falsey respectively', function () {
-    var cond = derivable.atom(false);
-    var a = derivable.atom('a');
-    var val = null;
-    a.react(function (a) {
-      val = a;
-    }, { when: cond });
+  it('can start and stop when the `when` condition becomes truthy and falsey respectively', () => {
+    const when = derivable.atom(false);
+    const a = derivable.atom('a');
+    let val = null;
+    a.react(d => {
+      val = d;
+    }, { when });
 
-    assert.strictEqual(val, null);
+    expect(val).toBe(null);
 
-    cond.set('truthy value');
+    when.set('truthy value');
 
-    assert.strictEqual(val, 'a');
+    expect(val).toBe('a');
 
     a.set('b');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
 
-    cond.set(0); //falsey value
+    when.set(0); //falsey value
 
     a.set('c');
 
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
 
-    cond.set(1); //truthy value
+    when.set(1); //truthy value
 
-    assert.strictEqual(val, 'c');
+    expect(val).toBe('c');
   });
 
-  it('can have `from`, `when`, and `until` specified as functions', function () {
+  it('can have `from`, `when`, and `until` specified as functions', () => {
     {
-      (function () {
-        var cond = derivable.atom(false);
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { when: function when() {
-            return cond.get();
-          } });
+      const cond = derivable.atom(false);
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { when: () => cond.get() });
 
-        assert.strictEqual(val, null);
+      expect(val).toBe(null);
 
-        cond.set('truthy value');
+      cond.set('truthy value');
 
-        assert.strictEqual(val, 'a');
-      })();
+      expect(val).toBe('a');
     }
+
     {
-      (function () {
-        var cond = derivable.atom(false);
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { from: function from() {
-            return cond.get();
-          } });
+      const cond = derivable.atom(false);
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from: () => cond.get() });
 
-        assert.strictEqual(val, null);
+      expect(val).toBe(null);
 
-        cond.set('truthy value');
+      cond.set('truthy value');
 
-        assert.strictEqual(val, 'a');
-      })();
+      expect(val).toBe('a');
     }
+
     {
-      (function () {
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { until: function until() {
-            return a.is('b').get();
-          } });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { until: () => a.is('b').get() });
 
-        assert.strictEqual(val, 'a');
+      expect(val).toBe('a');
 
-        a.set('c');
+      a.set('c');
 
-        assert.strictEqual(val, 'c');
+      expect(val).toBe('c');
 
-        a.set('b');
+      a.set('b');
 
-        assert.strictEqual(val, 'c');
+      expect(val).toBe('c');
 
-        a.set('a');
+      a.set('a');
 
-        assert.strictEqual(val, 'c');
-      })();
+      expect(val).toBe('c');
     }
   });
 
-  it('can have `from`, `when`, and `until` specified as functions that use the derivable itself', function () {
+  it('can have `from`, `when`, and `until` specified as functions that use the derivable itself', () => {
     {
-      (function () {
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { when: function when(derivable) {
-            return derivable.get() > 'c';
-          } });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { when: d => d.get() > 'c' });
 
-        assert.strictEqual(val, null);
+      expect(val).toBe(null);
 
-        a.set('x');
+      a.set('x');
 
-        assert.strictEqual(val, 'x');
-      })();
+      expect(val).toBe('x');
+    }
+
+    {
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from: d => d.get() > 'c' });
+
+      expect(val).toBe(null);
+
+      a.set('x');
+
+      expect(val).toBe('x');
     }
     {
-      (function () {
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { from: function from(derivable) {
-            return derivable.get() > 'c';
-          } });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { until: d => d.is('b').get() });
 
-        assert.strictEqual(val, null);
+      expect(val).toBe('a');
 
-        a.set('x');
+      a.set('c');
 
-        assert.strictEqual(val, 'x');
-      })();
-    }
-    {
-      (function () {
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { until: function until(derivable) {
-            return derivable.is('b').get();
-          } });
+      expect(val).toBe('c');
 
-        assert.strictEqual(val, 'a');
+      a.set('b');
 
-        a.set('c');
+      expect(val).toBe('c');
 
-        assert.strictEqual(val, 'c');
+      a.set('a');
 
-        a.set('b');
-
-        assert.strictEqual(val, 'c');
-
-        a.set('a');
-
-        assert.strictEqual(val, 'c');
-      })();
+      expect(val).toBe('c');
     }
   });
 
-  it('doesnt like it when `from`, `when`, and `until` are other things', function () {
-    var a = derivable.atom('a');
-    assert.throws(function () {
-      return a.react(function () {
+  it('doesnt like it when `from`, `when`, and `until` are other things', () => {
+    const a = derivable.atom('a');
+    expect(() => {
+      a.react(() => {
         return null;
       }, { from: 'a string' });
-    });
-    assert.throws(function () {
-      return a.react(function () {
+    }).toThrow();
+    expect(() => {
+      a.react(() => {
         return null;
       }, { when: 3 });
-    });
-    assert.throws(function () {
-      return a.react(function () {
+    }).toThrow();
+    expect(() => {
+      a.react(() => {
         return null;
       }, { until: new Date() });
-    });
+    }).toThrow();
   });
 
-  it('can have `from`, `when`, and `until` conditions all at once', function () {
+  it('can have `from`, `when`, and `until` conditions all at once', () => {
     {
       // normal usage
-      var from = derivable.atom(false);
-      var when = derivable.atom(false);
-      var until = derivable.atom(false);
+      const from = derivable.atom(false);
+      const when = derivable.atom(false);
+      const until = derivable.atom(false);
 
-      var a = derivable.atom('a');
-      var val = null;
-      a.react(function (a) {
-        val = a;
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
       }, { from: from, when: when, until: until });
 
-      assert.strictEqual(val, null);
+      expect(val).toBe(null);
 
       from.set(true);
       // when is still false
-      assert.strictEqual(val, null);
+      expect(val).toBe(null);
       when.set(true);
-      assert.strictEqual(val, 'a');
+      expect(val).toBe('a');
       a.set('b');
-      assert.strictEqual(val, 'b');
+      expect(val).toBe('b');
       when.set(false);
       a.set('c');
-      assert.strictEqual(val, 'b');
+      expect(val).toBe('b');
       when.set(true);
-      assert.strictEqual(val, 'c');
+      expect(val).toBe('c');
       until.set(true);
       a.set('d');
-      assert.strictEqual(val, 'c');
+      expect(val).toBe('c');
     }
+
     {
       // until already true
-      var _from = derivable.atom(false);
-      var _when = derivable.atom(false);
-      var _until = derivable.atom(true);
+      const from = derivable.atom(false);
+      const when = derivable.atom(false);
+      const until = derivable.atom(true);
 
-      var _a = derivable.atom('a');
-      var _val = null;
-      _a.react(function (a) {
-        _val = a;
-      }, { from: _from, when: _when, until: _until });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val, null);
-      _from.set(true);
+      expect(val).toBe(null);
+      from.set(true);
       // when is still false
-      assert.strictEqual(_val, null);
-      _when.set(true);
-      assert.strictEqual(_val, null);
+      expect(val).toBe(null);
+      when.set(true);
+      expect(val).toBe(null);
     }
+
     {
       // until already true
-      var _from2 = derivable.atom(false);
-      var _when2 = derivable.atom(false);
-      var _until2 = derivable.atom(true);
+      const from = derivable.atom(false);
+      const when = derivable.atom(false);
+      const until = derivable.atom(true);
 
-      var _a2 = derivable.atom('a');
-      var _val2 = null;
-      _a2.react(function (a) {
-        _val2 = a;
-      }, { from: _from2, when: _when2, until: _until2 });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val2, null);
-      _from2.set(true);
+      expect(val).toBe(null);
+      from.set(true);
       // when is still false
-      assert.strictEqual(_val2, null);
-      _when2.set(true);
-      assert.strictEqual(_val2, null);
+      expect(val).toBe(null);
+      when.set(true);
+      expect(val).toBe(null);
     }
+
     {
       // when already true
-      var _from3 = derivable.atom(false);
-      var _when3 = derivable.atom(true);
-      var _until3 = derivable.atom(false);
+      const from = derivable.atom(false);
+      const when = derivable.atom(true);
+      const until = derivable.atom(false);
 
-      var _a3 = derivable.atom('a');
-      var _val3 = null;
-      _a3.react(function (a) {
-        _val3 = a;
-      }, { from: _from3, when: _when3, until: _until3 });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val3, null);
-      _from3.set(true);
-      assert.strictEqual(_val3, 'a');
+      expect(val).toBe(null);
+      from.set(true);
+      expect(val).toBe('a');
     }
+
     {
       // from and when already true
-      var _from4 = derivable.atom(true);
-      var _when4 = derivable.atom(true);
-      var _until4 = derivable.atom(false);
+      const from = derivable.atom(true);
+      const when = derivable.atom(true);
+      const until = derivable.atom(false);
 
-      var _a4 = derivable.atom('a');
-      var _val4 = null;
-      _a4.react(function (a) {
-        _val4 = a;
-      }, { from: _from4, when: _when4, until: _until4 });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val4, 'a');
+      expect(val).toBe('a');
     }
+
     {
       // from and until already true
-      var _from5 = derivable.atom(true);
-      var _when5 = derivable.atom(false);
-      var _until5 = derivable.atom(true);
+      const from = derivable.atom(true);
+      const when = derivable.atom(false);
+      const until = derivable.atom(true);
 
-      var _a5 = derivable.atom('a');
-      var _val5 = null;
-      _a5.react(function (a) {
-        _val5 = a;
-      }, { from: _from5, when: _when5, until: _until5 });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val5, null);
-      _when5.set(true);
-      assert.strictEqual(_val5, null);
+      expect(val).toBe(null);
+      when.set(true);
+      expect(val).toBe(null);
     }
+
     {
       // until and when already true
-      var _from6 = derivable.atom(false);
-      var _when6 = derivable.atom(true);
-      var _until6 = derivable.atom(true);
+      const from = derivable.atom(false);
+      const when = derivable.atom(true);
+      const until = derivable.atom(true);
 
-      var _a6 = derivable.atom('a');
-      var _val6 = null;
-      _a6.react(function (a) {
-        _val6 = a;
-      }, { from: _from6, when: _when6, until: _until6 });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { from, when, until });
 
-      assert.strictEqual(_val6, null);
-      _from6.set(true);
-      assert.strictEqual(_val6, null);
+      expect(val).toBe(null);
+      from.set(true);
+      expect(val).toBe(null);
     }
+
     {
-      (function () {
-        // when and until become true atomically
-        var when = derivable.atom(false);
-        var until = derivable.atom(false);
+      // when and until become true atomically
+      const when = derivable.atom(false);
+      const until = derivable.atom(false);
 
-        var a = derivable.atom('a');
-        var val = null;
-        a.react(function (a) {
-          val = a;
-        }, { when: when, until: until });
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { when, until });
 
-        assert.strictEqual(val, null);
-        derivable.atomically(function () {
-          when.set(true);
-          until.set(true);
-        });
+      expect(val).toBe(null);
+      derivable.atomically(() => {
+        when.set(true);
+        until.set(true);
+      });
 
-        assert.strictEqual(val, null);
-      })();
+      expect(val).toBe(null);
     }
   });
 
-  it('can specify that the first reaction should be skipped', function () {
-    var when = derivable.atom(false);
-    var a = derivable.atom('a');
-    var val = null;
-    a.react(function (a) {
-      val = a;
-    }, { skipFirst: true, when: when });
+  it('can specify that the first reaction should be skipped', () => {
+    const when = derivable.atom(false);
+    const a = derivable.atom('a');
+    let val = null;
+    a.react(d => {
+      val = d;
+    }, { skipFirst: true, when });
 
-    assert.strictEqual(val, null);
+    expect(val).toBe(null);
     when.set(true);
-    assert.strictEqual(val, null);
+    expect(val).toBe(null);
     a.set('b');
-    assert.strictEqual(val, 'b');
+    expect(val).toBe('b');
   });
 
-  it('can specify that a reaction should only happen once', function () {
+  it('can specify that a reaction should only happen once', () => {
     {
       // without skipFirst
-      var a = derivable.atom('a');
-      var val = null;
-      a.react(function (a) {
-        val = a;
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
       }, { once: true });
 
-      assert.strictEqual(val, 'a');
+      expect(val).toBe('a');
 
       a.set('b');
-      assert.strictEqual(val, 'a');
+      expect(val).toBe('a');
     }
+
     {
       // with skipFirst
-      var _a7 = derivable.atom('a');
-      var _val7 = null;
-      _a7.react(function (a) {
-        _val7 = a;
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
       }, { skipFirst: true, once: true });
 
-      assert.strictEqual(_val7, null);
+      expect(val).toBe(null);
 
-      _a7.set('b');
-      assert.strictEqual(_val7, 'b');
-      _a7.set('c');
-      assert.strictEqual(_val7, 'b');
+      a.set('b');
+      expect(val).toBe('b');
+      a.set('c');
+      expect(val).toBe('b');
     }
+
     {
       // with when
-      var when = derivable.atom(false);
-      var _a8 = derivable.atom('a');
-      var _val8 = null;
-      _a8.react(function (a) {
-        _val8 = a;
-      }, { when: when, once: true });
+      const when = derivable.atom(false);
+      const a = derivable.atom('a');
+      let val = null;
+      a.react(d => {
+        val = d;
+      }, { when, once: true });
 
-      assert.strictEqual(_val8, null);
+      expect(val).toBe(null);
 
-      _a8.set('b');
+      a.set('b');
 
-      assert.strictEqual(_val8, null);
+      expect(val).toBe(null);
       when.set(true);
 
-      assert.strictEqual(_val8, 'b');
+      expect(val).toBe('b');
 
-      _a8.set('c');
-      assert.strictEqual(_val8, 'b');
+      a.set('c');
+      expect(val).toBe('b');
     }
   });
 
 });
 
-describe("the .react method", function () {
-  it("must have a function as the first argument", function () {
-    assert.throws(function () {
-      return derivable.atom(5).react();
-    });
-    assert.throws(function () {
-      return derivable.atom(5).react(4);
-    });
-    assert.throws(function () {
-      return derivable.atom(5).react('');
-    });
-    assert.throws(function () {
-      return derivable.atom(5).react({});
-    });
+describe("the .react method", () => {
+  it("must have a function as the first argument", () => {
+    expect(() => {
+      derivable.atom(5).react();
+    }).toThrow();
+    expect(() => {
+      derivable.atom(5).react(4);
+    }).toThrow();
+    expect(() => {
+      derivable.atom(5).react('');
+    }).toThrow();
+    expect(() => {
+      derivable.atom(5).react({});
+    }).toThrow();
   });
 });
 
-describe("setting the values of atoms in a reaction phase", function () {
-  it("is ok as long as no cycles are created", function () {
-    var a = derivable.atom("a");
+describe("setting the values of atoms in a reaction phase", () => {
+  it("is ok as long as no cycles are created", () => {
+    const a = derivable.atom("a");
 
-    var b = derivable.atom("b");
+    const b = derivable.atom("b");
 
-    a.react(function (a) {
-      return b.set(b.get() + a);
+    a.react(d => {
+      b.set(b.get() + d);
     });
 
-    assert.strictEqual(b.get(), "ba");
+    expect(b.get()).toBe("ba");
 
     a.set("aa");
 
-    assert.strictEqual(b.get(), "baaa");
+    expect(b.get()).toBe("baaa");
 
     // derivable disallows
-    assert.throws(function () {
-      return b.react(function (b) {
-        return a.set(b);
+    expect(() => {
+      b.react(d => {
+        a.set(d);
       });
-    });
+    }).toThrow();
   });
 
-  it("is not allowed if the atom in question is upstream of the reactor", function () {
-    var n = derivable.atom(3);
+  it("is not allowed if the atom in question is upstream of the reactor", () => {
+    const n = derivable.atom(3);
 
     // currently 1
-    var nmod2 = n.derive(function (x) {
-      return x % 2;
-    });
+    const nmod2 = n.derive(x => x % 2);
 
-    var double = function double(n) {
-      return n * 2;
-    };
+    const double = d => d * 2;
 
-    nmod2.react(function () {
-      return n.update(double);
-    }, {skipFirst: true});
+    nmod2.react(() => {
+      n.update(double);
+    }, { skipFirst: true });
 
-    assert.throws(function () {
-      return n.set(2);
-    });
+    expect(() => {
+      n.set(2);
+    }).toThrow();
     // nmod2 becomes 0, reactor triggers n being set to 4
     // reactor caught up in sweep again, identified as cycle
   });
 });
 
-describe("tickers", function () {
-  it("allow reacting at custom intervals", function () {
-    var a = derivable.atom("a");
+describe("tickers", () => {
+  it("allow reacting at custom intervals", () => {
+    const a = derivable.atom("a");
 
-    var ticker = derivable.ticker();
+    const ticker = derivable.ticker();
 
-    var b = "b";
+    let b = "b";
 
-    a.react(function (a) {
-      return b = a;
-    }, {skipFirst: true});
+    a.react(d => {
+      b = d;
+    }, { skipFirst: true });
 
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
 
     a.set("c");
 
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
 
     a.set("d");
 
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
 
     ticker.tick();
 
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
 
     a.set("e");
 
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
 
     a.set("f");
 
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
 
     ticker.tick();
 
-    assert.strictEqual(b, "f");
+    expect(b).toBe("f");
 
     ticker.release();
   });
 
-  it("can be used by more than one piece of the stack", function () {
-    var a = derivable.atom("a");
-    var ticker1 = derivable.ticker();
-    var ticker2 = derivable.ticker();
-    var ticker3 = derivable.ticker();
+  it("can be used by more than one piece of the stack", () => {
+    const a = derivable.atom("a");
+    const ticker1 = derivable.ticker();
+    const ticker2 = derivable.ticker();
+    const ticker3 = derivable.ticker();
 
-    assert(ticker1 !== ticker2);
-    assert(ticker1 !== ticker3);
-    assert(ticker2 !== ticker3);
+    expect(ticker1).not.toBe(ticker2);
+    expect(ticker1).not.toBe(ticker3);
+    expect(ticker2).not.toBe(ticker3);
 
-    var b = "b";
+    let b = "b";
 
-    a.react(function (a) {
-      return b = a;
-    }, {skipFirst: true});
-    assert.strictEqual(b, "b");
+    a.react(d => {
+      b = d;
+    }, { skipFirst: true });
+    expect(b).toBe("b");
     a.set("c");
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
     a.set("d");
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
     ticker1.tick();
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
     a.set("e");
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
     a.set("f");
-    assert.strictEqual(b, "d");
+    expect(b).toBe("d");
     ticker2.tick();
-    assert.strictEqual(b, "f");
+    expect(b).toBe("f");
     a.set("g");
     ticker3.tick();
-    assert.strictEqual(b, "g");
+    expect(b).toBe("g");
 
     ticker1.release();
     ticker2.release();
     ticker3.release();
   });
 
-  it("are reference counted", function () {
-    var a = derivable.atom(null);
-    var b = "b";
+  it("are reference counted", () => {
+    const a = derivable.atom(null);
+    let b = "b";
 
-    a.react(function (a) {
-      return b = a;
-    }, {skipFirst: true});
+    a.react(d => {
+      b = d;
+    }, { skipFirst: true });
 
     a.set("a");
 
-    assert.strictEqual(b, "a");
+    expect(b).toBe("a");
 
-    var ticker1 = derivable.ticker();
-    var ticker2 = derivable.ticker();
-    var ticker3 = derivable.ticker();
+    const ticker1 = derivable.ticker();
+    const ticker2 = derivable.ticker();
+    const ticker3 = derivable.ticker();
 
     a.set("b");
 
-    assert.strictEqual(b, "a");
+    expect(b).toBe("a");
 
     ticker1.release();
-    assert.strictEqual(b, "a");
+    expect(b).toBe("a");
     ticker2.release();
-    assert.strictEqual(b, "a");
+    expect(b).toBe("a");
     ticker3.release();
-    assert.strictEqual(b, "b");
+    expect(b).toBe("b");
 
     a.set("c");
 
-    assert.strictEqual(b, "c");
+    expect(b).toBe("c");
   });
 
-  it('can reset the global state to the last tick', function () {
-    var a = derivable.atom('a');
-    var b = derivable.atom('b');
+  it('can reset the global state to the last tick', () => {
+    const a = derivable.atom('a');
+    const b = derivable.atom('b');
 
-    var t = derivable.ticker();
+    const t = derivable.ticker();
 
     a.set('b');
     b.set('a');
 
-    assert.strictEqual(a.get(), 'b');
-    assert.strictEqual(b.get(), 'a');
+    expect(a.get()).toBe('b');
+    expect(b.get()).toBe('a');
 
     t.reset();
 
-    assert.strictEqual(a.get(), 'a');
-    assert.strictEqual(b.get(), 'b');
+    expect(a.get()).toBe('a');
+    expect(b.get()).toBe('b');
 
     t.release();
-    assert.throws(function () {
-      return t.reset();
-    });
+    expect(() => {
+      t.reset();
+    }).toThrow();
   });
 
-  it("cannot be used after being released", function () {
-    var t1 = derivable.ticker();
-    var t2 = derivable.ticker();
+  it("cannot be used after being released", () => {
+    const t1 = derivable.ticker();
+    const t2 = derivable.ticker();
 
     t1.release();
 
-    assert.throws(function () {
-      return t1.release();
-    });
+    expect(() => {
+      t1.release();
+    }).toThrow();
 
     t2.release();
 
-    assert.throws(function () {
-      return t2.tick();
-    });
+    expect(() => {
+      t2.tick();
+    }).toThrow();
   });
 
-  it("should not cause parents to be investigated in the wrong order", function () {
-    var a = derivable.atom(null);
-    var b = a.derive(function (a) {
-      return a.toString();
-    });
-    var c = a.then(b, 'a is null');
+  it("should not cause parents to be investigated in the wrong order", () => {
+    const a = derivable.atom(null);
+    const b = a.derive(d => d.toString());
+    const c = a.then(b, 'a is null');
 
-    var expecting = 'a is null';
+    let expecting = 'a is null';
 
-    c.react(function (c) {
-      return assert.strictEqual(c, expecting);
+    c.react(d => {
+      expect(d).toBe(expecting);
     });
 
     expecting = 'some other string';
@@ -699,50 +677,48 @@ describe("tickers", function () {
     a.set(null);
   });
 
-  it("can be created in reactors", function () {
-    var a = derivable.atom('a');
+  it("can be created in reactors", () => {
+    const a = derivable.atom('a');
 
-    derivable.transact(function () {
+    derivable.transact(() => {
       a.set('b');
-      a.react(function (a) {
-        return console.log(a);
+      a.react(d => {
+        console.log(d);
       });
     });
   });
 });
 
 
-describe('the `when` optons to the `react` method', function () {
-  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', function () {
-    var $Cond = derivable.atom(false);
-    var $N = derivable.atom(0);
-    var inc = function inc(x) {
-      return x + 1;
-    };
+describe('the `when` optons to the `react` method', () => {
+  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
+    const $Cond = derivable.atom(false);
+    const $N = derivable.atom(0);
+    const inc = x => x + 1;
 
-    var i = 0;
-    $N.react(function () {
-      return i++;
+    let i = 0;
+    $N.react(() => {
+      i++;
     }, { when: $Cond });
 
-    assert.strictEqual(i, 0);
+    expect(i).toBe(0);
 
     $N.update(inc);
 
-    assert.strictEqual(i, 0);
+    expect(i).toBe(0);
 
     $Cond.set(true);
 
-    assert.strictEqual(i, 1);
+    expect(i).toBe(1);
 
     $N.update(inc);
 
-    assert.strictEqual(i, 2);
+    expect(i).toBe(2);
 
     $N.update(inc);
     $N.update(inc);
 
-    assert.strictEqual(i, 4);
+    expect(i).toBe(4);
 
     // it uses truthy/falsiness
     $Cond.set(0);
@@ -750,129 +726,127 @@ describe('the `when` optons to the `react` method', function () {
     $N.update(inc);
     $N.update(inc);
 
-    assert.strictEqual(i, 4);
+    expect(i).toBe(4);
   });
 
-  it('casts the condition to a boolean', function () {
-    var $Cond = derivable.atom("blub");
-    var $N = derivable.atom(0);
-    var inc = function inc(x) {
-      return x + 1;
-    };
+  it('casts the condition to a boolean', () => {
+    const $Cond = derivable.atom("blub");
+    const $N = derivable.atom(0);
+    const inc = x => x + 1;
 
-    var i = 0;
+    let i = 0;
 
-    $N.react(function () {
-      return i++;
+    $N.react(() => {
+      i++;
     }, { when: $Cond });
 
-    assert.strictEqual(i, 1);
+    expect(i).toBe(1);
 
     $N.update(inc);
-    assert.strictEqual(i, 2);
+    expect(i).toBe(2);
     $N.update(inc);
     $N.update(inc);
     $N.update(inc);
-    assert.strictEqual(i, 5);
+    expect(i).toBe(5);
     $Cond.set("steve");
     // sould cause .force() if not casting to boolean, which would inc i
-    assert.strictEqual(i, 5);
+    expect(i).toBe(5);
   });
 });
 
-describe('the .mReact method', function () {
-  it('only reacts when the thing in the derivable is not null or undefined', function () {
-    var a = derivable.atom(null);
+describe('the .mReact method', () => {
+  it('only reacts when the thing in the derivable is not null or undefined', () => {
+    const a = derivable.atom(null);
 
-    var _a = "Tree";
+    let _a = "Tree";
 
-    a.mReact(function (a) {
-      _a = a;
+    a.mReact(d => {
+      _a = d;
     });
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
     a.set("House");
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
     a.set(void 0);
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
   });
 
-  it('merges any given when condition', function () {
-    var a = derivable.atom(null);
-    var alive = derivable.atom(true);
+  it('merges any given when condition', () => {
+    const a = derivable.atom(null);
+    const when = derivable.atom(true);
 
-    var _a = "Tree";
+    let _a = "Tree";
 
-    a.mReact(function (a) {
-      _a = a;
-    }, {when: alive});
+    a.mReact(d => {
+      _a = d;
+    }, { when });
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
     a.set("House");
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
     a.set(void 0);
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
     a.set("Tree");
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
-    alive.set(false);
+    when.set(false);
 
     a.set("House");
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
   });
 
-  it("shouldn't touch any other conditions", function () {
-    var a = derivable.atom(null);
-    var alive = derivable.atom(true);
-    var from = derivable.atom(false);
-    var until = derivable.atom(false);
+  it("shouldn't touch any other conditions", () => {
+    const a = derivable.atom(null);
+    const when = derivable.atom(true);
+    const from = derivable.atom(false);
+    const until = derivable.atom(false);
 
-    var _a = "Tree";
+    let _a = "Tree";
 
-    a.mReact(function (a) {
-      _a = a;
-    }, {when: alive, from: from, until: until});
+    a.mReact(d => {
+      _a = d;
+    }, { when , from, until });
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
     a.set("House");
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
     from.set(true);
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
     a.set(void 0);
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
-    alive.set(false);
+    when .set(false);
 
     a.set("Tree");
 
-    assert.strictEqual(_a, "House");
+    expect(_a).toBe("House");
 
-    alive.set(true);
+    when .set(true);
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
     until.set(true);
 
     a.set("House");
 
-    assert.strictEqual(_a, "Tree");
+    expect(_a).toBe("Tree");
 
   });
 });
