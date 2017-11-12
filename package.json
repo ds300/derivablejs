@@ -26,9 +26,7 @@
   "typescript": {
     "definition": "dist/derivable.d.ts"
   },
-  "@std/esm": {
-    "esm": "js"
-  },
+  "@std/esm": "cjs",
   "jest": {
     "testRegex": ".*_test.js$"
   },
@@ -43,19 +41,19 @@
     "dynamic"
   ],
   "devDependencies": {
-    "@std/esm": "^0.13.0",
+    "@std/esm": "^0.14.0",
     "benchmark": "^2.1.0",
     "colors": "^1.1.2",
     "coveralls": "^2.11.9",
     "cross-env": "^5.1.1",
     "doctoc": "^1.0.0",
-    "eslint": "^4.10.0",
+    "eslint": "^4.11.0",
     "eslint-plugin-es5": "^1.1.0",
     "immutable": "^3.7.4",
     "jest": "^21.2.1",
     "mobx": "^2.3.3",
     "np": "^2.16.0",
-    "rollup": "^0.51.1",
+    "rollup": "^0.51.5",
     "rollup-plugin-uglify": "^2.0.1"
   },
   "repository": {
