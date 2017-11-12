@@ -120,107 +120,18 @@ describe("a derivation", () => {
     expect(startsWithS.get()).toBe(true);
     expect(endsWithE.get()).toBe(true);
 
-    const isSmithe = name.is(derivable.atom("smithe"));
-
-    expect(isSmithe.get()).toBe(true);
-
-    const size6orE = size6.or(endsWithE);
-    const size6andE = size6.and(endsWithE);
-    const sOrE = startsWithS.or(endsWithE);
-    const sAndE = startsWithS.and(endsWithE);
-
-    expect(size6orE.get()).toBe(true);
-    expect(size6andE.get()).toBe(true);
-    expect(sOrE.get()).toBe(true);
-    expect(sAndE.get()).toBe(true);
-
     name.set("smithy");
 
     expect(size6.get()).toBe(true);
     expect(startsWithS.get()).toBe(true);
     expect(endsWithE.get()).toBe(false);
 
-    expect(isSmithe.get()).toBe(false);
-
-    expect(size6orE.get()).toBe(true);
-    expect(size6andE.get()).toBe(false);
-    expect(sOrE.get()).toBe(true);
-    expect(sAndE.get()).toBe(false);
-
-    expect(size6orE.not().get()).toBe(false);
-    expect(size6andE.not().get()).toBe(true);
-    expect(sOrE.not().get()).toBe(false);
-    expect(sAndE.not().get()).toBe(true);
-
-    expect(size6orE.not().not().get()).toBe(true);
-    expect(size6andE.not().not().get()).toBe(false);
-    expect(sOrE.not().not().get()).toBe(true);
-    expect(sAndE.not().not().get()).toBe(false);
-
     expect(name.derive('length').get()).toBe(6);
     expect(name.derive(0).get()).toBe("s");
 
-    expect(() => {
-      startsWithS.then(
-        () => "smithy starts with s",
-        () => { throw Error("smithy what?"); }
-      ).get()();
-    }).not.toThrow();
-
-    expect(() => {
-      endsWithE.then(
-        () => { throw Error("smithy doesn't end in e?!"); },
-        () => "smithy ends in y yo"
-      ).get()();
-    }).not.toThrow();
-
-    const firstLetter = name.derive(x => x[0]);
-
-    expect(() => {
-      firstLetter.switch(
-        "a",
-        () => { throw Error("smithy doesn't start with a"); },
-        "b",
-        () => { throw Error("smithy doesn't start with b"); },
-        "s", () => "smithy starts with s"
-      ).get()();
-    }).not.toThrow();
-
-    expect(() => {
-      firstLetter.switch(
-        "a",
-        () => { throw Error("allows a default value smithy doesn't start with a"); },
-        "b",
-        () => { throw Error("allows a default value smithy doesn't start with b"); },
-        "x",
-        "blah",
-        () => "allows a default value yay"
-      ).get()();
-    }).not.toThrow();
-
-    const nonexistent = derivable.atom(null);
-    // null doesn't exist
-    expect(nonexistent.mThen(false, true).get()).toBeTruthy();
-
-    nonexistent.set(false);
-    // false exists
-    expect(nonexistent.mThen(true, false).get()).toBeTruthy();
-
-    nonexistent.set(void 0);
-    // undefined doesn't exist
-    expect(nonexistent.mThen(false, true).get()).toBeTruthy();
-
-    nonexistent.set("");
-    // the empty string exists
-    expect(nonexistent.mThen(true, false).get()).toBeTruthy();
-
-    nonexistent.set(0);
-    // zero exists
-    expect(nonexistent.mThen(true, false).get()).toBeTruthy();
-
     const nestedStuff = derivable.atom(immutable.fromJS({ a: { b: { c: false } } }));
     const get = (x, y) => x.get(y);
-    const innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').mOr('not found');
+    const innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').derive(d => d == null ? 'not found' : d);
 
     expect(innermost.get()).toBe(false);
 
@@ -243,20 +154,6 @@ describe("a derivation", () => {
     nestedStuff.set(null);
 
     expect(innermost.get()).toBe('not found');
-
-    const thingOr = nestedStuff.mOr('not there');
-    expect(thingOr.get()).toBe('not there');
-
-    nestedStuff.set(false);
-    expect(thingOr.get()).toBe(false);
-
-    const thingAnd = nestedStuff.mAnd('yes there');
-
-    expect(thingAnd.get()).toBe('yes there');
-
-    nestedStuff.set(null);
-
-    expect(thingAnd.get()).toBe(null);
   });
 
   it('can be re-instantiated with custom equality-checking', () => {
