@@ -20,6 +20,25 @@ export const mMap = (f, derivable) => {
   });
 };
 
+const propMaybe = (key, obj) => util.some(obj) ? obj[key] : null;
+
+export const prop = (key, derivable) => {
+  if (typeof key === 'string' || typeof key === 'number') {
+    return derive(() => propMaybe(key, derivable.get()));
+  } else if (isDerivable(key)) {
+    return derive(() => {
+      const k = key.get();
+      if (typeof k === 'string' || typeof k === 'number') {
+        return propMaybe(k, derivable.get());
+      } else {
+        throw Error('type error');
+      }
+    });
+  } {
+    throw Error('type error');
+  }
+};
+
 export const match = (pattern, derivable) => {
   if (pattern instanceof RegExp) {
     return derive(() => derivable.get().match(pattern));

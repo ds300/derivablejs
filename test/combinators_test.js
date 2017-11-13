@@ -78,6 +78,76 @@ test('maybe map derivable (non-null) value with function', () => {
   }
 });
 
+test('prop function derive keys', () => {
+  const a = derivable.atom('something');
+  const fst = derivable.prop('length', a);
+  const snd = derivable.prop(0, a);
+  expect(fst.get()).toBe(9);
+  expect(snd.get()).toBe('s');
+  
+  a.set('any');
+  expect(fst.get()).toBe(3);
+  expect(snd.get()).toBe('a');
+
+  expect(derivable.prop('any', derivable.prop('any', derivable.atom('any'))).get()).toBe(null);
+
+  expect(() => {
+    derivable.prop({}, derivable.atom({})).get();
+  }).toThrow();
+});
+
+test('prop function can derive with derivable keys', () => {
+  const a = derivable.atom('something');
+  const b = derivable.atom('length');
+  const result = derivable.prop(b, a);
+  expect(result.get()).toBe(9);
+  
+  b.set(0);
+  expect(result.get()).toBe('s');
+
+  const c = derivable.atom('any');
+  expect(derivable.prop(c, derivable.prop(c, c)).get()).toBe(null);
+
+  expect(() => {
+    derivable.prop(derivable.atom({}), derivable.atom({})).get();
+  }).toThrow();
+});
+
+test('prop method derive keys', () => {
+  const a = derivable.atom('something');
+  const fst = a.prop('length');
+  const snd = a.prop(0);
+  expect(fst.get()).toBe(9);
+  expect(snd.get()).toBe('s');
+
+  a.set('any');
+  expect(fst.get()).toBe(3);
+  expect(snd.get()).toBe('a');
+
+  expect(derivable.atom('any').prop('any').prop('any').get()).toBe(null);
+
+  expect(() => {
+    derivable.atom({}).prop({}).get();
+  }).toThrow();
+});
+
+test('prop method can derive with derivable keys', () => {
+  const a = derivable.atom('something');
+  const b = derivable.atom('length');
+  const result = a.prop(b);
+  expect(result.get()).toBe(9);
+
+  b.set(0);
+  expect(result.get()).toBe('s');
+
+  const c = derivable.atom('any');
+  expect(c.prop(c).prop(c).get()).toBe(null);
+
+  expect(() => {
+    derivable.atom({}).prop(derivable.atom({})).get();
+  }).toThrow();
+});
+
 test('match', () => {
   {
     const string = derivable.atom("this is a lovely string");
