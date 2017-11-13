@@ -78,6 +78,78 @@ test('maybe map derivable (non-null) value with function', () => {
   }
 });
 
+test('match', () => {
+  {
+    const string = derivable.atom("this is a lovely string");
+    const words = derivable.match(/\w+/g, string);
+    expect(words.get()).toEqual(['this', 'is', 'a', 'lovely', 'string']);
+
+    const firstLetters = derivable.match(/\b\w/g, string);
+    expect(firstLetters.get()).toEqual(['t', 'i', 'a', 'l', 's']);
+
+    string.set("you are so kind");
+    expect(firstLetters.get()).toEqual(['y', 'a', 's', 'k']);
+
+    expect(() => {
+      derivable.match();
+    }).toThrow();
+  }
+
+  {
+    const string = derivable.atom("this is a lovely string");
+    const words = string.match(/\w+/g);
+    expect(words.get()).toEqual(['this', 'is', 'a', 'lovely', 'string']);
+
+    const firstLetters = string.match(/\b\w/g);
+    expect(firstLetters.get()).toEqual(['t', 'i', 'a', 'l', 's']);
+
+    string.set("you are so kind");
+    expect(firstLetters.get()).toEqual(['y', 'a', 's', 'k']);
+
+    expect(() => {
+      string.match();
+    }).toThrow();
+  }
+});
+
+test('match can derive with derivable regexps', () => {
+  {
+    const deriver = derivable.atom(/[a-z]+/);
+
+    const a = derivable.atom("29892funtimes232");
+
+    const b = derivable.match(deriver, a);
+
+    expect(b.get()[0]).toBe("funtimes");
+
+    deriver.set(/\d+/);
+
+    expect(b.get()[0]).toBe("29892");
+
+    expect(() => {
+      derivable.match(derivable.atom(''), derivable.atom('')).get();
+    }).toThrow();
+  }
+
+  {
+    const deriver = derivable.atom(/[a-z]+/);
+
+    const a = derivable.atom("29892funtimes232");
+
+    const b = a.match(deriver);
+
+    expect(b.get()[0]).toBe("funtimes");
+
+    deriver.set(/\d+/);
+
+    expect(b.get()[0]).toBe("29892");
+
+    expect(() => {
+      derivable.atom('').match(derivable.atom('')).get();
+    }).toThrow();
+  }
+});
+
 test('template function', () => {
   const a = derivable.atom('a');
   const b = 'b';

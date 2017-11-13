@@ -1,4 +1,5 @@
 import * as util from './util';
+import {isDerivable} from './types';
 import {deriveFactory as derive} from './derivation';
 import {unpack} from './unpack';
 
@@ -17,6 +18,23 @@ export const mMap = (f, derivable) => {
     const arg = unpack(derivable);
     return util.some(arg) ? f(arg) : null;
   });
+};
+
+export const match = (pattern, derivable) => {
+  if (pattern instanceof RegExp) {
+    return derive(() => derivable.get().match(pattern));
+  } else if(isDerivable(pattern)) {
+    return derive(() => {
+      const p = pattern.get();
+      if (p instanceof RegExp) {
+        return derivable.get().match(p);
+      } else {
+        throw Error('type error');
+      }
+    });
+  } else {
+    throw Error('type error');
+  }
 };
 
 export const template = (chunks, ...args) => {
