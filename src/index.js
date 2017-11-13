@@ -9,7 +9,7 @@ import * as parents from './parents';
 import {deepUnpack, unpack} from './unpack';
 
 export {isDerivable, isAtom, isProxy, isDerivation} from './types';
-export {map, mMap, or, mOr, and, mAnd} from './combinators.js';
+export {map, mMap, template, or, mOr, and, mAnd} from './combinators.js';
 export {transact, transaction, ticker, atomic, atomically} from './transactions';
 export {Reactor as __Reactor} from './reactors';
 

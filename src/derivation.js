@@ -134,6 +134,7 @@ const warnDeriveFn = (() => {
 
 export function derive (f, a, b, c, d) {
   if (f instanceof Array) {
+    console.warn('derive as template literal tag (derive`text ${atom()}`) is deprecated. Use template function');
     // Template string tag for derivable strings
     var tplArgs = util.slice(arguments, 1);
     return deriveFactory(function () {
@@ -146,7 +147,6 @@ export function derive (f, a, b, c, d) {
       }
       return s;
     });
-
   } else {
     switch (arguments.length) {
     case 0:

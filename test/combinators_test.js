@@ -78,6 +78,18 @@ test('maybe map derivable (non-null) value with function', () => {
   }
 });
 
+test('template function', () => {
+  const a = derivable.atom('a');
+  const b = 'b';
+  const derivation = derivable.template`a: ${a}, b: ${b}`;
+
+  expect(derivation.get()).toBe('a: a, b: b');
+
+  expect(() => {
+    derivable.template('');
+  }).toThrow();
+});
+
 test('or function', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(2);

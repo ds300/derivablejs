@@ -19,6 +19,24 @@ export const mMap = (f, derivable) => {
   });
 };
 
+export const template = (chunks, ...args) => {
+  if (Array.isArray(chunks)) {
+    // Template string tag for derivable strings
+    return derive(() => {
+      let s = "";
+      for (let i = 0; i < chunks.length; i++) {
+        s += chunks[i];
+        if (i < args.length) {
+          s += unpack(args[i]);
+        }
+      }
+      return s;
+    });
+  } else {
+    throw Error('type error');
+  }
+};
+
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
