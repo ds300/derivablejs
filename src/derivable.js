@@ -19,11 +19,7 @@ export var derivablePrototype = {
       if (typeof f === 'function') {
           return _derive(f, that);
       } else {
-        if (f instanceof Array) {
-          return f.map(function (x) {
-            return that.derive(x);
-          });
-        } else if (types.isDerivable(f)) {
+        if (types.isDerivable(f)) {
           return _derive(function () {
             var deriver = f.get();
             var thing = that.get();
