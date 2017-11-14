@@ -190,47 +190,10 @@ describe("a derivation", () => {
 });
 
 describe("the derive method", () => {
-  it("uses RegExp objects to do string matching", () => {
-    const string = derivable.atom("this is a lovely string");
-    const words = string.derive(/\w+/g);
-
-    expect(words.get()).toEqual(['this', 'is', 'a', 'lovely', 'string']);
-
-    const firstLetters = string.derive(/\b\w/g);
-    expect(firstLetters.get()).toEqual(['t', 'i', 'a', 'l', 's']);
-
-    string.set("you are so kind");
-    expect(firstLetters.get()).toEqual(['y', 'a', 's', 'k']);
-  });
-
   it("throws when given no aguments", () => {
     expect(() => {
       derivable.atom(null).derive();
     }).toThrow();
-  });
-
-  it('can also do destructuring with regexps etc', () => {
-    const string = derivable.atom("you are so kind");
-
-    const _string$derive = string.derive([/\b\w/g, d => d.length, s => s.split(' ').pop(), d => d[0]]);
-
-    const firstLetters = _string$derive[0];
-    const len = _string$derive[1];
-    const lastWord = _string$derive[2];
-    const firstChar = _string$derive[3];
-
-
-    expect(firstLetters.get()).toEqual(['y', 'a', 's', 'k']);
-    expect(len.get()).toBe(15);
-    expect(lastWord.get()).toBe('kind');
-    expect(firstChar.get()).toBe('y');
-
-    string.set('thank you');
-
-    expect(firstLetters.get()).toEqual(['t', 'y']);
-    expect(len.get()).toBe(9);
-    expect(lastWord.get()).toBe('you');
-    expect(firstChar.get()).toBe('t');
   });
 
   it('can derive with derivable functions', () => {
@@ -245,20 +208,6 @@ describe("the derive method", () => {
     $Deriver.set(n => n / 2);
 
     expect($b.get()).toBe(2);
-  });
-
-  it('can derive with derivable regexps', () => {
-    const $Deriver = derivable.atom(/[a-z]+/);
-
-    const $A = derivable.atom("29892funtimes232");
-
-    const $b = $A.derive($Deriver);
-
-    expect($b.get()[0]).toBe("funtimes");
-
-    $Deriver.set(/\d+/);
-
-    expect($b.get()[0]).toBe("29892");
   });
 
   it('can\'t derive with some kinds of things', () => {

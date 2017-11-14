@@ -16,37 +16,27 @@ export var derivablePrototype = {
     case 0:
       throw new Error('.derive takes at least one argument');
     case 1:
-      switch (typeof f) {
-        case 'function':
+      if (typeof f === 'function') {
           return _derive(f, that);
-        default:
-          if (f instanceof Array) {
-            return f.map(function (x) {
-              return that.derive(x);
-            });
-          } else if (f instanceof RegExp) {
-            return _derive(function () {
-              return that.get().match(f);
-            });
-          } else if (types.isDerivable(f)) {
-            return _derive(function () {
-              var deriver = f.get();
-              var thing = that.get();
-              switch (typeof deriver) {
-                case 'function':
-                  return deriver(thing);
-                default:
-                  if (deriver instanceof RegExp) {
-                    return thing.match(deriver);
-                  } else {
-                    throw Error('type error');
-                  }
-              }
-            });
-          } else {
-            throw Error('type error');
-          }
+      } else {
+        if (f instanceof Array) {
+          return f.map(function (x) {
+            return that.derive(x);
+          });
+        } else if (types.isDerivable(f)) {
+          return _derive(function () {
+            var deriver = f.get();
+            var thing = that.get();
+            if (typeof deriver === 'function') {
+              return deriver(thing);
+            } else {
+                throw Error('type error');
+            }
+          });
+        } else {
+          throw Error('type error');
         }
+      }
     case 2:
       return _derive(f, that, a);
     case 3:
