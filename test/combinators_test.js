@@ -78,6 +78,16 @@ test('maybe map derivable (non-null) value with function', () => {
   }
 });
 
+test('alt', () => {
+  const a = derivable.atom(null);
+  const b = derivable.atom(2);
+  const result = a.alt(b);
+  expect(result.get()).toBe(2);
+
+  a.set(1);
+  expect(result.get()).toBe(1);
+});
+
 test('or function', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(2);
