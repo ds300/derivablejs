@@ -1,4 +1,5 @@
 import * as util from './util';
+import {isDerivable} from './types';
 import {deriveFactory as derive} from './derivation';
 import {unpack} from './unpack';
 
@@ -17,6 +18,60 @@ export const mMap = (f, derivable) => {
     const arg = unpack(derivable);
     return util.some(arg) ? f(arg) : null;
   });
+};
+
+const propMaybe = (key, obj) => util.some(obj) ? obj[key] : null;
+
+export const prop = (key, derivable) => {
+  if (typeof key === 'string' || typeof key === 'number') {
+    return derive(() => propMaybe(key, derivable.get()));
+  } else if (isDerivable(key)) {
+    return derive(() => {
+      const k = key.get();
+      if (typeof k === 'string' || typeof k === 'number') {
+        return propMaybe(k, derivable.get());
+      } else {
+        throw Error('type error');
+      }
+    });
+  } {
+    throw Error('type error');
+  }
+};
+
+export const match = (pattern, derivable) => {
+  if (pattern instanceof RegExp) {
+    return derive(() => derivable.get().match(pattern));
+  } else if(isDerivable(pattern)) {
+    return derive(() => {
+      const p = pattern.get();
+      if (p instanceof RegExp) {
+        return derivable.get().match(p);
+      } else {
+        throw Error('type error');
+      }
+    });
+  } else {
+    throw Error('type error');
+  }
+};
+
+export const template = (chunks, ...args) => {
+  if (Array.isArray(chunks)) {
+    // Template string tag for derivable strings
+    return derive(() => {
+      let s = "";
+      for (let i = 0; i < chunks.length; i++) {
+        s += chunks[i];
+        if (i < args.length) {
+          s += unpack(args[i]);
+        }
+      }
+      return s;
+    });
+  } else {
+    throw Error('type error');
+  }
 };
 
 function andOrFn (breakOn) {

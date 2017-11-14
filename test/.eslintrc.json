@@ -11,6 +11,7 @@
     "es5/no-arrow-functions": 0,
     "es5/no-template-literals": 0,
     "es5/no-rest-parameters": 0,
-    "es5/no-shorthand-properties": 0
+    "es5/no-shorthand-properties": 0,
+    "es5/no-destructuring": 0
   }
 }
