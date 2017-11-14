@@ -82,7 +82,7 @@ export var derivablePrototype = {
   },
 
   mReact: function (f, opts) {
-    var mWhen = this.mThen(true, false);
+    var mWhen = _derive(() => Boolean(this.get()));
     if (opts && 'when' in opts && opts.when !== true) {
       var when = opts.when;
       if (typeof when === 'function' || when === false) {
@@ -99,20 +99,6 @@ export var derivablePrototype = {
     var x = this;
     return _derive(function () {
       return x.__equals(x.get(), unpack(other));
-    });
-  },
-
-  then: function (thenClause, elseClause) {
-    var x = this;
-    return _derive(function () {
-      return unpack(x.get() ? thenClause : elseClause);
-    });
-  },
-
-  mThen: function (thenClause, elseClause) {
-    var x = this;
-    return _derive(function () {
-      return unpack(util.some(x.get()) ? thenClause : elseClause);
     });
   },
 
@@ -137,7 +123,8 @@ export var derivablePrototype = {
       var that = this;
       return arg.map(function (a) { return that.mDerive(a); });
     } else {
-      return this.mThen(this.derive.apply(this, arguments));
+      const thenClause = this.derive.apply(this, arguments);
+      return this.derive(() => this.get() ? thenClause.get() : undefined);
     }
   },
 

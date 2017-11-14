@@ -192,44 +192,6 @@ test('not method', () => {
   expect(snd.get()).toBe(true);
 });
 
-test('then method', () => {
-  expect(() => {
-    derivable.atom(true).then(
-      () => "smithy starts with s",
-      () => { throw Error("smithy what?"); }
-    ).get()();
-  }).not.toThrow();
-
-  expect(() => {
-    derivable.atom(false).then(
-      () => { throw Error("smithy doesn't end in e?!"); },
-      () => "smithy ends in y yo"
-    ).get()();
-  }).not.toThrow();
-});
-
-test('mThen method', () => {
-  const a = derivable.atom(null);
-  // null doesn't exist
-  expect(a.mThen(false, true).get()).toBeTruthy();
-
-  a.set(false);
-  // false exists
-  expect(a.mThen(true, false).get()).toBeTruthy();
-
-  a.set(void 0);
-  // undefined doesn't exist
-  expect(a.mThen(false, true).get()).toBeTruthy();
-
-  a.set("");
-  // the empty string exists
-  expect(a.mThen(true, false).get()).toBeTruthy();
-
-  a.set(0);
-  // zero exists
-  expect(a.mThen(true, false).get()).toBeTruthy();
-});
-
 test('is method', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(1);
