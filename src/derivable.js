@@ -128,11 +128,6 @@ export var derivablePrototype = {
     }
   },
 
-  not: function () {
-    var x = this;
-    return _derive(function () { return !x.get(); });
-  },
-
   withEquality: function (equals) {
     if (equals) {
       if (typeof equals !== 'function') {

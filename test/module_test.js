@@ -132,14 +132,11 @@ describe("boolean logic", () => {
     const b = derivable.atom(true);
     const aANDb = derivable.and(a, b);
     const aORb = derivable.or(a, b);
-    const NOTa = a.not();
 
     // true & true = true
     expect(aANDb.get()).toBe(true);
     // true | true = true
     expect(aORb.get()).toBe(true);
-    // !true = false
-    expect(NOTa.get()).toBe(false);
 
     b.set(false);
 
@@ -154,8 +151,6 @@ describe("boolean logic", () => {
     expect(aANDb.get()).toBe(false);
     // false | false = false
     expect(aORb.get()).toBe(false);
-    // !false = true
-    expect(NOTa.get()).toBe(true);
   });
 });
 

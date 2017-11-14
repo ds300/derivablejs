@@ -176,22 +176,6 @@ test('mAnd method', () => {
   expect(a.mAnd(b).get()).toBe(null);
 });
 
-test('not method', () => {
-  const a = derivable.atom(true);
-  const fst = a.not();
-  const snd = a.not().not();
-  expect(fst.get()).toBe(false);
-  expect(snd.get()).toBe(true);
-
-  a.set(false);
-  expect(fst.get()).toBe(true);
-  expect(snd.get()).toBe(false);
-
-  a.set(10);
-  expect(fst.get()).toBe(false);
-  expect(snd.get()).toBe(true);
-});
-
 test('is method', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(1);
