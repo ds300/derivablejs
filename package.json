@@ -41,7 +41,7 @@
     "dynamic"
   ],
   "devDependencies": {
-    "@std/esm": "^0.14.0",
+    "@std/esm": "^0.15.0",
     "benchmark": "^2.1.0",
     "colors": "^1.1.2",
     "coveralls": "^2.11.9",
