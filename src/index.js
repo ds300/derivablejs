@@ -1,12 +1,25 @@
 import {derivablePrototype} from './derivable';
 import {mutablePrototype} from './mutable';
-import {Derivation} from './derivation';
-import {Proxy} from './proxy';
-import {Atom} from './atom';
-import {assign} from './util';
+import {Atom, atom} from './atom';
+import {Proxy, proxy} from './proxy';
+import {Derivation, derive} from './derivation';
 import global from './global';
+import {assign, setDebugMode} from './util';
+import * as parents from './parents';
+import {deepUnpack, unpack} from './unpack';
 
-import * as derivable from './module';
+export {isDerivable, isAtom, isProxy, isDerivation} from './types';
+export {map, mMap, or, mOr, and, mAnd} from './combinators.js';
+export {transact, transaction, ticker, atomic, atomically} from './transactions';
+export {Reactor as __Reactor} from './reactors';
+
+export {
+  atom,
+  proxy,
+  derive,
+  unpack,
+  setDebugMode
+};
 
 assign(Derivation.prototype, derivablePrototype);
 assign(Proxy.prototype, derivablePrototype, mutablePrototype);
@@ -17,29 +30,32 @@ if (global.__DERIVABLE_INIT_FLAG__) {
 }
 global.__DERIVABLE_INIT_FLAG__ = true;
 
-export var __Reactor = derivable.__Reactor;
-export var transact = derivable.transact;
-export var setDebugMode = derivable.setDebugMode;
-export var transaction = derivable.transaction;
-export var ticker = derivable.ticker;
-export var isDerivable = derivable.isDerivable;
-export var isAtom = derivable.isAtom;
-export var isProxy = derivable.isProxy;
-export var isDerivation = derivable.isDerivation;
-export var derive = derivable.derive;
-export var atom = derivable.atom;
-export var atomic = derivable.atomic;
-export var atomically = derivable.atomically;
-export var proxy = derivable.proxy;
-export var unpack = derivable.unpack;
-export var struct = derivable.struct;
-export var wrapPreviousState = derivable.wrapPreviousState;
-export var captureDereferences = derivable.captureDereferences;
-export var map = derivable.map;
-export var mMap = derivable.mMap;
-export var or = derivable.or;
-export var mOr = derivable.mOr;
-export var and = derivable.and;
-export var mAnd = derivable.mAnd;
+export function struct (arg) {
+  if (arg.constructor === Object || arg instanceof Array) {
+    return derive(function () {
+      return deepUnpack(arg);
+    });
+  } else {
+    throw new Error("`struct` expects plain Object or Array");
+  }
+}
 
-export default derivable;
+export function wrapPreviousState (f, init) {
+  var lastState = init;
+  return function (newState) {
+    var result = f.call(this, newState, lastState);
+    lastState = newState;
+    return result;
+  };
+}
+
+export function captureDereferences (f) {
+  var captured = [];
+  parents.startCapturingParents(void 0, captured);
+  try {
+    f();
+  } finally {
+    parents.stopCapturingParents();
+  }
+  return captured;
+}
