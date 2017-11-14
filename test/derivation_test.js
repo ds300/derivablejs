@@ -76,22 +76,13 @@ describe("a derivation", () => {
       expect(derivable.derive(add, derivable.atom(1), derivable.atom(2),
         derivable.atom(3), 4, 5, derivable.atom(6)).get()).toBe(21);
     });
-
-    it('with a template string', () => {
-      const a = derivable.atom('a');
-      const b = 'b';
-      const derivation = derivable.derive`a: ${a}, b: ${b}`;
-
-      expect(derivation.get()).toBe('a: a, b: b');
-    });
-
   });
 
   it("can derive from more than one atom", () => {
     const order = util.label(derivable.atom(0), "O");
     const orderName = util.label(order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]), "ON");
     const size = util.label(bytes.derive(orderUp, order), "!size!");
-    const sizeString = derivable.derive`${size} ${orderName}`;
+    const sizeString = derivable.derive(() => `${size.get()} ${orderName.get()}`);
 
     // size is in bytes when order is 0
     expect(size.get()).toBe(bytes.get());
