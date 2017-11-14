@@ -5,6 +5,38 @@
 import type {Atom, Derivable} from 'derivable';
 import {atom, transaction, atomic, derive} from 'derivable';
 
+function testMap() {
+  const a: Atom<number> = atom(21);
+  const b: Atom<?number> = atom(21);
+
+  const c = a.map(v => v * 2);
+  // $ExpectError
+  const d = b.map(v => v * 2);
+
+  const e: number = c.get();
+
+  // $ExpectError
+  const f: string = c.get();
+}
+
+function testMaybeMap() {
+  const a: Atom<number> = atom(21);
+  const b: Atom<?number> = atom(21);
+
+  const c = a.mMap(v => v * 2);
+  const d = b.mMap(v => v * 2);
+
+  const e: number = c.get();
+
+  // $ExpectError
+  const f: string = c.get();
+
+  const g: ?number = d.get();
+
+  // $ExpectError
+  const h: number = d.get();
+}
+
 function testDerivations() {
 
   let a: Atom<number> = atom(21);

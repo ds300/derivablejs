@@ -1,9 +1,9 @@
 import * as util from './util';
 import {makeReactor} from './reactors';
 import * as types from './types';
-import {derive as _derive} from './module';
+import {derive as _derive} from './derivation.js';
 import {unpack} from './unpack';
-import {or, mOr, and, mAnd} from './combinators.js';
+import {map, mMap, or, mOr, and, mAnd} from './combinators.js';
 
 export var derivablePrototype = {
     /**
@@ -67,6 +67,14 @@ export var derivablePrototype = {
       var args = ([f, that]).concat(util.slice(arguments, 1));
       return _derive.apply(null, args);
     }
+  },
+
+  map(f) {
+    return map(f, this);
+  },
+
+  mMap(f) {
+    return mMap(f, this);
   },
 
   react: function (f, opts) {

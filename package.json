@@ -11,7 +11,7 @@
     "build": "rollup -c && cross-env MINIFY=true rollup -c && cp derivable.d.ts derivable.js.flow dist/",
     "lint": "eslint src test",
     "test": "npm run build && jest && npm run lint",
-    "test-types": "cd test_flow && npm install && npm test",
+    "test-types": "cd test_flow && yarn && npm test",
     "bench": "node scripts/bench.js",
     "coverage": "npm run build && jest --coverage",
     "report-coverage": "jest --coverage && cat ./coverage/lcov.info | coveralls",
@@ -54,6 +54,7 @@
     "mobx": "^2.3.3",
     "np": "^2.16.0",
     "rollup": "^0.51.5",
+    "rollup-plugin-buble": "^0.17.0",
     "rollup-plugin-uglify": "^2.0.1"
   },
   "repository": {

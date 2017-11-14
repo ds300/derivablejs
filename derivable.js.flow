@@ -25,6 +25,10 @@ export interface Derivable<T> {
 
   get(): T;
 
+  map<E>(f: T => E): Derivable<E>;
+
+  mMap<E>(f: $NonMaybeType<T> => E): Derivable<E>;
+
   is(other: mixed): Derivable<boolean>;
 
   and(other: mixed): Derivable<boolean>;

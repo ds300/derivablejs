@@ -1,7 +1,11 @@
+import buble from 'rollup-plugin-buble';
 import uglify from 'rollup-plugin-uglify';
 
 var config = {
   input: 'src/index.js',
+  plugins: [
+    buble()
+  ],
   output: [
     {
       format: 'cjs',
@@ -27,6 +31,7 @@ var config = {
 
 if (process.env.MINIFY) {
   config.plugins = [
+    buble(),
     uglify({
       mangle: {
         toplevel: true
