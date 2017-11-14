@@ -126,9 +126,6 @@ describe("a derivation", () => {
     expect(startsWithS.get()).toBe(true);
     expect(endsWithE.get()).toBe(false);
 
-    expect(name.derive('length').get()).toBe(6);
-    expect(name.derive(0).get()).toBe("s");
-
     const nestedStuff = derivable.atom(immutable.fromJS({ a: { b: { c: false } } }));
     const get = (x, y) => x.get(y);
     const innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').derive(d => d == null ? 'not found' : d);
@@ -193,35 +190,6 @@ describe("a derivation", () => {
 });
 
 describe("the derive method", () => {
-  it("'pluck's when given a string or derivable string", () => {
-    const obj = derivable.atom({ nested: 'nested!', other: 'also nested!' });
-
-    const nested = obj.derive('nested');
-    expect(nested.get()).toBe('nested!');
-
-    const prop = derivable.atom('nested');
-    const item = obj.derive(prop);
-    expect(item.get()).toBe('nested!');
-    prop.set('other');
-    expect(item.get()).toBe('also nested!');
-  });
-
-  it("also 'pluck's when given a number or derivable number", () => {
-    const arr = derivable.atom([1, 2, 3]);
-
-    const middle = arr.derive(1);
-    expect(middle.get()).toBe(2);
-
-    const cursor = derivable.atom(0);
-    const item = arr.derive(cursor);
-
-    expect(item.get()).toBe(1);
-    cursor.set(1);
-    expect(item.get()).toBe(2);
-    cursor.set(2);
-    expect(item.get()).toBe(3);
-  });
-
   it("uses RegExp objects to do string matching", () => {
     const string = derivable.atom("this is a lovely string");
     const words = string.derive(/\w+/g);
@@ -241,67 +209,10 @@ describe("the derive method", () => {
     }).toThrow();
   });
 
-  it("destructures derivables", () => {
-    const s = derivable.atom({ a: "aye", b: "bee", c: "cee" });
-
-    const _s$derive = s.derive(['a', 'b', 'c']);
-
-    let a = _s$derive[0];
-    let b = _s$derive[1];
-    let c = _s$derive[2];
-
-
-    expect(a.get()).toBe("aye");
-    expect(b.get()).toBe("bee");
-    expect(c.get()).toBe("cee");
-
-    // swap a and c over
-
-    const aKey = derivable.atom('c');
-    const cKey = derivable.atom('a');
-
-    const _s$derive3 = s.derive([aKey, 'b', cKey]);
-
-    a = _s$derive3[0];
-    b = _s$derive3[1];
-    c = _s$derive3[2];
-
-
-    expect(a.get()).toBe("cee");
-    expect(b.get()).toBe("bee");
-    expect(c.get()).toBe("aye");
-
-    aKey.set('a');
-    cKey.set('c');
-
-    expect(a.get()).toBe("aye");
-    expect(b.get()).toBe("bee");
-    expect(c.get()).toBe("cee");
-
-    const arr = derivable.atom(['naught', 'one', 'two']);
-
-    const _arr$derive = arr.derive([0, 1, derivable.atom(2)]);
-
-    const naught = _arr$derive[0];
-    const one = _arr$derive[1];
-    const two = _arr$derive[2];
-
-
-    expect(naught.get()).toBe("naught");
-    expect(one.get()).toBe("one");
-    expect(two.get()).toBe("two");
-
-    arr.set(['love', 'fifteen', 'thirty']);
-
-    expect(naught.get()).toBe("love");
-    expect(one.get()).toBe("fifteen");
-    expect(two.get()).toBe("thirty");
-  });
-
   it('can also do destructuring with regexps etc', () => {
     const string = derivable.atom("you are so kind");
 
-    const _string$derive = string.derive([/\b\w/g, 'length', s => s.split(' ').pop(), 0]);
+    const _string$derive = string.derive([/\b\w/g, d => d.length, s => s.split(' ').pop(), d => d[0]]);
 
     const firstLetters = _string$derive[0];
     const len = _string$derive[1];
@@ -405,13 +316,13 @@ describe("the derive method", () => {
 describe("mDerive", () => {
   it('is like derive, but propagates nulls', () => {
     const thing = derivable.atom({ prop: 'val' });
-    const val = thing.mDerive('prop');
+    const val = thing.mDerive(d => d.prop);
 
     expect(val.get()).toBe('val');
     thing.set(null);
     expect(val.get() == null).toBeTruthy();
 
-    const _thing$mDerive = thing.mDerive(['foo', 'bar']);
+    const _thing$mDerive = thing.mDerive([d => d.foo, d => d.bar]);
 
     const foo = _thing$mDerive[0];
     const bar = _thing$mDerive[1];

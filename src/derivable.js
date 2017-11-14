@@ -19,11 +19,6 @@ export var derivablePrototype = {
       switch (typeof f) {
         case 'function':
           return _derive(f, that);
-        case 'string':
-        case 'number':
-          return _derive(function () {
-            return that.get()[f];
-          });
         default:
           if (f instanceof Array) {
             return f.map(function (x) {
@@ -40,9 +35,6 @@ export var derivablePrototype = {
               switch (typeof deriver) {
                 case 'function':
                   return deriver(thing);
-                case 'string':
-                case 'number':
-                  return thing[deriver];
                 default:
                   if (deriver instanceof RegExp) {
                     return thing.match(deriver);

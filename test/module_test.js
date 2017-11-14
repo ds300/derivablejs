@@ -404,7 +404,7 @@ describe('the captureDereferences function', () => {
   it('executes the given function, returning an array of captured dereferences', () => {
     const a = derivable.atom("a");
     const b = derivable.atom("b");
-    const c = a.derive('length');
+    const c = a.derive(d => d.length);
 
     const _a = derivable.captureDereferences(() => {
       a.get();
