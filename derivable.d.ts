@@ -27,6 +27,10 @@ declare module derivable {
 
     get(): T;
 
+    map<E>(f: (value: T) => E): Derivable<E>;
+
+    mMap<E>(f: (value: T) => E): Derivable<E>;
+
     is(other: any): Derivable<boolean>;
 
     and(other: any): Derivable<any>;
