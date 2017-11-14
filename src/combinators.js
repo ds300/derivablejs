@@ -4,14 +4,14 @@ import {unpack} from './unpack';
 
 export const map = (f, derivable) => {
   if (typeof f !== 'function') {
-    throw new Error('map takes at least one argument');
+    throw new Error('map requires function');
   }
   return derive(() => f(unpack(derivable)));
 };
 
 export const mMap = (f, derivable) => {
   if (typeof f !== 'function') {
-    throw new Error('mMap takes at least one argument');
+    throw new Error('mMap requires function');
   }
   return derive(() => {
     const arg = unpack(derivable);

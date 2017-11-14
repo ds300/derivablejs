@@ -15,6 +15,10 @@ test('map derivable value with function', () => {
 
     a.set(null);
     expect([b.get(), c.get()]).toEqual([20, 400]);
+
+    expect(() => {
+      derivable.atom().map();
+    }).toThrow();
   }
 
   {
@@ -29,6 +33,10 @@ test('map derivable value with function', () => {
 
     a.set(null);
     expect([b.get(), c.get()]).toEqual([20, 400]);
+
+    expect(() => {
+      derivable.map();
+    }).toThrow();
   }
 });
 
@@ -45,6 +53,10 @@ test('maybe map derivable (non-null) value with function', () => {
 
     a.set(null);
     expect([b.get(), c.get()]).toEqual([null, null]);
+
+    expect(() => {
+      derivable.atom().map();
+    }).toThrow();
   }
 
   {
@@ -59,6 +71,10 @@ test('maybe map derivable (non-null) value with function', () => {
 
     a.set(null);
     expect([b.get(), c.get()]).toEqual([null, null]);
+
+    expect(() => {
+      derivable.map();
+    }).toThrow();
   }
 });
 
