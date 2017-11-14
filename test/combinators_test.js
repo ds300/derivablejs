@@ -243,30 +243,3 @@ test('is method', () => {
   expect(fst.get()).toBeTruthy();
   expect(snd.get()).toBeFalsy();
 });
-
-test('switch method', () => {
-  const firstLetter = derivable.atom('s');
-
-  expect(() => {
-    firstLetter.switch(
-      "a",
-      () => { throw Error("smithy doesn't start with a"); },
-      "b",
-      () => { throw Error("smithy doesn't start with b"); },
-      "s",
-      () => "smithy starts with s"
-    ).get()();
-  }).not.toThrow();
-
-  expect(() => {
-    firstLetter.switch(
-      "a",
-      () => { throw Error("allows a default value smithy doesn't start with a"); },
-      "b",
-      () => { throw Error("allows a default value smithy doesn't start with b"); },
-      "x",
-      "blah",
-      () => "allows a default value yay"
-    ).get()();
-  }).not.toThrow();
-});
