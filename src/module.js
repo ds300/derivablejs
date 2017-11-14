@@ -8,7 +8,7 @@ import {proxy as _proxy} from './proxy';
 import {derive as _derive} from './derivation';
 import {deepUnpack, unpack as _unpack} from './unpack';
 
-export {or, mOr, and, mAnd} from './combinators.js';
+export {map, mMap, or, mOr, and, mAnd} from './combinators.js';
 
 export var __Reactor = reactors.Reactor;
 export var transact = transactions.transact;

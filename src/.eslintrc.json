@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "es5/no-block-scoping": 0,
+    "es5/no-arrow-functions": 0,
+    "es5/no-shorthand-properties": 0
+  }
+}

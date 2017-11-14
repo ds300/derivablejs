@@ -118,11 +118,25 @@ export function detach (parent, child) {
   }
 }
 
+export function deriveFactory(f) {
+  return new Derivation(f);
+}
+
+const warnDeriveFn = (() => {
+  let called = false;
+  return () => {
+    if (!called) {
+      called = true;
+      console.warn('derive with arguments injection (derive((a) => {}, da) is deprecated. Use map method instead');
+    }
+  };
+})();
+
 export function derive (f, a, b, c, d) {
   if (f instanceof Array) {
     // Template string tag for derivable strings
     var tplArgs = util.slice(arguments, 1);
-    return derive(function () {
+    return deriveFactory(function () {
       var s = "";
       for (var i=0; i < f.length; i++) {
         s += f[i];
@@ -138,29 +152,34 @@ export function derive (f, a, b, c, d) {
     case 0:
       throw new Error('derive takes at least one argument');
     case 1:
-      return new Derivation(f);
+      return deriveFactory(f);
     case 2:
-      return new Derivation(function () {
+      warnDeriveFn();
+      return deriveFactory(function () {
         return f(unpack(a));
       });
     case 3:
-      return new Derivation(function () {
+      warnDeriveFn();
+      return deriveFactory(function () {
         return f(unpack(a), unpack(b));
       });
     case 4:
-      return new Derivation(function () {
+      warnDeriveFn();
+      return deriveFactory(function () {
         return f(unpack(a), unpack(b), unpack(c));
       });
     case 5:
-      return new Derivation(function () {
+      warnDeriveFn();
+      return deriveFactory(function () {
         return f(unpack(a),
                  unpack(b),
                  unpack(c),
                  unpack(d));
       });
     default:
+      warnDeriveFn();
       var args = util.slice(arguments, 1);
-      return new Derivation(function () {
+      return deriveFactory(function () {
         return f.apply(null, args.map(unpack));
       });
     }
