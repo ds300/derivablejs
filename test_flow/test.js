@@ -68,38 +68,8 @@ function testMaybeDerivations() {
 
   const maybeB: Derivable<number> = maybeA.mDerive(value => value * 2);
 
-  const maybeC: Derivable<[number]> = maybeA.mDerive([
-    value => value * 1
-  ]);
-
-  const maybeD: Derivable<[number, boolean]> = maybeA.mDerive([
-    value => value * 1,
-    value => Boolean(value)
-  ]);
-
-  const maybeE: Derivable<[number, boolean, string]> = maybeA.mDerive([
-    value => value * 1,
-    value => Boolean(value),
-    value => String(value)
-  ]);
-
-  const maybeF: Derivable<[number, boolean, string, number]> = maybeA.mDerive([
-    value => value * 1,
-    value => Boolean(value),
-    value => String(value),
-    value => value * 2
-  ]);
-
-  const maybeG: Derivable<[number, boolean, string, number, number]> = maybeA.mDerive([
-    value => value * 1,
-    value => Boolean(value),
-    value => String(value),
-    value => value * 2,
-    value => value * 3
-  ]);
-
   // $ExpectError: value is a number
-  const maybeH: Derivable<number> = maybeA.mDerive(value => value + '');
+  const maybeC: Derivable<number> = maybeA.mDerive(value => value + '');
 }
 
 function testReactions() {
@@ -144,24 +114,6 @@ function testReactions() {
     once: false,
   });
 
-}
-
-function testLogicComb() {
-
-  let a = atom(true);
-  let and: Derivable<boolean> = a.and(atom(false));
-  let mAnd: Derivable<boolean> = a.mAnd(atom(false));
-  let or: Derivable<boolean> = a.or(atom(false));
-  let mOr: Derivable<boolean> = a.mOr(atom(false));
-  let not: Derivable<boolean> = a.not();
-
-}
-
-function testThen() {
-
-  let a = atom(42);
-  let b: Derivable<string | boolean> = a.then('ok', false);
-  let c: Derivable<string | boolean> = a.mThen('ok', false);
 }
 
 function testTransaction() {
