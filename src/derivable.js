@@ -26,7 +26,7 @@ export var derivablePrototype = {
     if (!util.some(def)) {
       throw Error('maybeDefault requires non-null value');
     }
-    return this.derive(value => util.some(value) ? value : unpack(def));
+    return this.derive(value => util.some(value) ? value : def);
   },
 
   react: function (f, opts) {

@@ -1,17 +1,15 @@
- /**
-  * @flow
-  */
+// @flow
 
-import type {Atom, Derivable} from 'derivable';
-import {atom, transaction, atomic, derive} from 'derivable';
+import type {Atom, Derivable} from '../derivable.js';
+import {atom, transaction, atomic, derive} from '../derivable.js';
 
-function testMap() {
+function testDeriveMethod() {
   const a: Atom<number> = atom(21);
   const b: Atom<?number> = atom(21);
 
-  const c = a.map(v => v * 2);
+  const c = a.derive(v => v * 2);
   // $ExpectError
-  const d = b.map(v => v * 2);
+  const d = b.derive(v => v * 2);
 
   const e: number = c.get();
 
@@ -19,12 +17,12 @@ function testMap() {
   const f: string = c.get();
 }
 
-function testMaybeMap() {
+function testMaybeDeriveMethod() {
   const a: Atom<number> = atom(21);
   const b: Atom<?number> = atom(21);
 
-  const c = a.mMap(v => v * 2);
-  const d = b.mMap(v => v * 2);
+  const c = a.maybeDerive(v => v * 2);
+  const d = b.maybeDerive(v => v * 2);
 
   const e: number = c.get();
 
@@ -37,39 +35,43 @@ function testMaybeMap() {
   const h: number = d.get();
 }
 
-function testDerivations() {
+function testMaybeDefaultMethod() {
+  const a: Atom<?number> = atom(1);
+  const b: Derivable<number> = a.maybeDefault(2);
+  // $ExpectError
+  const c: Derivable<number> = a.maybeDefault('2');
+  // $ExpectError
+  const d: Derivable<number> = a.maybeDefault(atom(2));
+  // $ExpectError
+  const e: Derivable<?number> = a.maybeDefault(null);
+}
 
-  let a: Atom<number> = atom(21);
+function testDerive() {
+
+  const a: Atom<number> = atom(21);
 
   // $ExpectError
   a.set('ok');
 
+  const b: Atom<?number> = atom(null);
+
   // $ExpectError
-  let c: string = a.get();
+  const c: string = a.get();
 
   a.set(42);
 
-  let b = a.derive(v => v * 2);
+  const d = derive(() => a.get() * 2);
 
   // $ExpectError
-  let d: string = b.get();
+  const e = derive(() => a * 2);
 
-  let e: number = b.get();
+  // $ExpectError
+  const f = derive(() => b.get() * 2);
 
-  let maybeA: Atom<?number> = atom(null);
+  // $ExpectError
+  const d: string = d.get();
 
-  // $ExpectError: value might be null
-  maybeA.derive(value => value * 2);
-}
-
-function testMaybeDerivations() {
-
-  const maybeA: Atom<?number> = atom(null);
-
-  const maybeB: Derivable<number> = maybeA.mDerive(value => value * 2);
-
-  // $ExpectError: value is a number
-  const maybeC: Derivable<number> = maybeA.mDerive(value => value + '');
+  const e: number = d.get();
 }
 
 function testReactions() {
@@ -140,32 +142,6 @@ function testTransaction() {
 
   // $ExpectError: arg should be a function
   atomic('oops');
-
-}
-
-function testDerive() {
-
-  let plusOne = (a: number) => a + 1;
-  let add = (a: number, b: number) => a + b;
-
-  let dTwentyTwo: Derivable<number> = derive(plusOne, atom(21));
-  let dTwentyThree: Derivable<number> = derive(plusOne, 22);
-
-  // $ExpectError: expected a number or Derivable<number>
-  derive(plusOne, 'oops');
-
-  // $ExpectError: expected a number or Derivable<number>
-  derive(plusOne, atom('oops'));
-
-  let dFour: Derivable<number> = derive(add, atom(2), atom(2));
-  let dFive: Derivable<number> = derive(add, 2, 3);
-  let dSix: Derivable<number> = derive(add, 3, atom(3));
-
-  // $ExpectError: expected a number or Derivable<number>
-  derive(add, false, 21);
-
-  // $ExpectError: expected a number or Derivable<number>
-  derive(add, atom(false), 21);
 
 }
 
