@@ -1,10 +1,9 @@
-import * as util from './util';
 import {DERIVATION, PROXY, REACTOR} from './types';
 import {UNKNOWN, UNCHANGED, CHANGED} from './states';
 
 export function mark (node, reactors) {
-  for (var i = 0, len = node._activeChildren.length; i < len; i++) {
-    var child = node._activeChildren[i];
+  for (let i = 0, len = node._activeChildren.length; i < len; i++) {
+    const child = node._activeChildren[i];
     switch (child._type) {
       case DERIVATION:
       case PROXY:
@@ -21,8 +20,8 @@ export function mark (node, reactors) {
 }
 
 export function processReactors (reactors) {
-  for (var i = 0, len = reactors.length; i < len; i++) {
-    var r = reactors[i];
+  for (let i = 0, len = reactors.length; i < len; i++) {
+    const r = reactors[i];
     if (r._reacting) {
       throw new Error("Synchronous cyclical reactions disallowed. " +
                       "Use setImmediate.");
@@ -31,7 +30,7 @@ export function processReactors (reactors) {
   }
 }
 
-var TransactionAbortion = {};
+const TransactionAbortion = {};
 
 function initiateAbortion() {
   throw TransactionAbortion;
@@ -52,7 +51,7 @@ export function maybeTrack (atom) {
   }
 }
 
-export var currentCtx = null;
+export let currentCtx = null;
 
 export function inTransaction () {
   return currentCtx !== null;
@@ -82,24 +81,20 @@ export function atomically (f) {
 }
 
 export function transaction (f) {
-  return function () {
-    var args = util.slice(arguments, 0);
-    var that = this;
-    var result;
-    transact(function () {
-      result = f.apply(that, args);
+  return function (...args) {
+    let result;
+    transact(() => {
+      result = f.apply(this, args);
     });
     return result;
   };
 }
 
 export function atomic (f) {
-  return function () {
-    var args = util.slice(arguments, 0);
-    var that = this;
-    var result;
-    atomically(function () {
-      result = f.apply(that, args);
+  return function (...args) {
+    let result;
+    atomically(() => {
+      result = f.apply(this, args);
     });
     return result;
   };
@@ -110,12 +105,12 @@ function beginTransaction() {
 }
 
 function commitTransaction() {
-  var ctx = currentCtx;
+  const ctx = currentCtx;
   currentCtx = ctx.parent;
 
   if (currentCtx === null) {
-    var reactors = [];
-    ctx.modifiedAtoms.forEach(function (a) {
+    const reactors = [];
+    ctx.modifiedAtoms.forEach(a => {
       if (a.__equals(a._value, ctx.id2originalValue[a._id])) {
         a._state = UNCHANGED;
       } else {
@@ -124,42 +119,42 @@ function commitTransaction() {
       }
     });
     processReactors(reactors);
-    ctx.modifiedAtoms.forEach(function (a) {
+    ctx.modifiedAtoms.forEach(a => {
       a._state = UNCHANGED;
     });
   }
 }
 
 function abortTransaction() {
-  var ctx = currentCtx;
+  const ctx = currentCtx;
   currentCtx = ctx.parent;
-  ctx.modifiedAtoms.forEach(function (atom) {
+  ctx.modifiedAtoms.forEach(atom => {
     atom._value = ctx.id2originalValue[atom._id];
     atom._state = UNCHANGED;
     mark(atom, []);
   });
 }
 
-var _tickerRefCount = 0;
+let _tickerRefCount = 0;
 
 export function ticker () {
   if (_tickerRefCount === 0) {
     beginTransaction();
   }
   _tickerRefCount++;
-  var done = false;
+  let done = false;
   return {
-    tick: function () {
+    tick() {
       if (done) throw new Error('trying to use ticker after release');
       commitTransaction();
       beginTransaction();
     },
-    reset: function () {
+    reset() {
       if (done) throw new Error('trying to use ticker after release');
       abortTransaction();
       beginTransaction();
     },
-    release: function () {
+    release() {
       if (done) throw new Error('ticker already released');
       _tickerRefCount--;
       done = true;

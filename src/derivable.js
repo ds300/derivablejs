@@ -4,7 +4,7 @@ import * as types from './types';
 import {derive} from './derivation.js';
 import {unpack} from './unpack';
 
-export var derivablePrototype = {
+export const derivablePrototype = {
   derive(f) {
     if (typeof f !== 'function') {
       throw Error('derive requires function');
@@ -47,14 +47,11 @@ export var derivablePrototype = {
     makeReactor(this, f, util.assign({}, opts, { when: maybeWhen }));
   },
 
-  is: function (other) {
-    var x = this;
-    return derive(function () {
-      return x.__equals(x.get(), unpack(other));
-    });
+  is(other) {
+    return derive(() => this.__equals(this.get(), unpack(other)));
   },
 
-  withEquality: function (equals) {
+  withEquality(equals) {
     if (equals) {
       if (typeof equals !== 'function') {
         throw new Error('equals must be function');
@@ -66,7 +63,7 @@ export var derivablePrototype = {
     return util.setEquals(this._clone(), equals);
   },
 
-  __equals: function (a, b) {
+  __equals(a, b) {
     return (this._equals || util.equals)(a, b);
   }
 };

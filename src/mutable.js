@@ -1,20 +1,17 @@
-import * as util from './util';
 import {Proxy} from './proxy';
 
-export var mutablePrototype = {
-  update: function (f) {
-    var args = util.slice(arguments, 0);
-    args[0] = this.get();
-    return this.set(f.apply(null, args));
+export const mutablePrototype = {
+  update(f, ...args) {
+    return this.set(f(this.get(), ...args));
   },
-  proxy: function (monoProxyMapping) {
-    var that = this;
+
+  proxy(monoProxyMapping) {
     return new Proxy({
-      get: function () {
-        return monoProxyMapping.get(that.get());
+      get: () => {
+        return monoProxyMapping.get(this.get());
       },
-      set: function (val) {
-        that.set(monoProxyMapping.set(that.get(), val));
+      set: val => {
+        this.set(monoProxyMapping.set(this.get(), val));
       }
     });
   },

@@ -18,6 +18,19 @@
     "no-console": 0,
     "semi": 2,
     "comma-dangle": [2, "only-multiline"],
-    "es5/no-modules": 0
+    "no-var": "error",
+    "no-shadow": "error",
+    "prefer-const": "error",
+    "prefer-arrow-callback": "error",
+    "prefer-rest-params": "error",
+    "object-shorthand": ["error", "always"],
+    "no-useless-rename": "error",
+    "es5/no-modules": 0,
+    "es5/no-block-scoping": 0,
+    "es5/no-arrow-functions": 0,
+    "es5/no-shorthand-properties": 0,
+    "es5/no-rest-parameters": 0,
+    "es5/no-template-literals": 0,
+    "es5/no-spread": 0
   }
 }

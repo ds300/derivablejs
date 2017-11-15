@@ -31,25 +31,23 @@ global.__DERIVABLE_INIT_FLAG__ = true;
 
 export function struct (arg) {
   if (arg.constructor === Object || arg instanceof Array) {
-    return derive(function () {
-      return deepUnpack(arg);
-    });
+    return derive(() => deepUnpack(arg));
   } else {
     throw new Error("`struct` expects plain Object or Array");
   }
 }
 
 export function wrapPreviousState (f, init) {
-  var lastState = init;
+  let lastState = init;
   return function (newState) {
-    var result = f.call(this, newState, lastState);
+    const result = f.call(this, newState, lastState);
     lastState = newState;
     return result;
   };
 }
 
 export function captureDereferences (f) {
-  var captured = [];
+  const captured = [];
   parents.startCapturingParents(void 0, captured);
   try {
     f();

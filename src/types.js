@@ -1,7 +1,7 @@
-export var ATOM = "ATOM";
-export var DERIVATION = "DERIVATION";
-export var PROXY = "PROXY";
-export var REACTOR = "REACTOR";
+export const ATOM = "ATOM";
+export const DERIVATION = "DERIVATION";
+export const PROXY = "PROXY";
+export const REACTOR = "REACTOR";
 
 export function isDerivable(x) {
   return x &&
