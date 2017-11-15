@@ -3,7 +3,7 @@ import {makeReactor} from './reactors';
 import * as types from './types';
 import {derive as _derive} from './derivation.js';
 import {unpack} from './unpack';
-import {map, mMap, or, mOr, and, mAnd} from './combinators.js';
+import {map, mMap, alt, or, mOr, and, mAnd} from './combinators.js';
 
 export var derivablePrototype = {
     /**
@@ -53,6 +53,10 @@ export var derivablePrototype = {
 
   mMap(f) {
     return mMap(f, this);
+  },
+
+  alt(next) {
+    return alt(this, next);
   },
 
   react: function (f, opts) {

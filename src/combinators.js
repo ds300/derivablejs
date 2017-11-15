@@ -19,6 +19,9 @@ export const mMap = (f, derivable) => {
   });
 };
 
+export const alt = (fst, snd) =>
+  derive(() => util.some(fst.get()) ? fst.get() : snd.get());
+
 function andOrFn (breakOn) {
   return function () {
     var args = arguments;
