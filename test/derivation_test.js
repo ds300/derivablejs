@@ -392,7 +392,7 @@ test('is method', () => {
 
 test('maybe default prefers passed value or derivable over null or undefined', () => {
   const a = derivable.atom(null);
-  const r = a.maybeDefault(2);
+  const r = a.orDefault(2);
   expect(r.get()).toBe(2);
 
   a.set(1);

@@ -35,15 +35,15 @@ function testMaybeDeriveMethod() {
   const h: number = d.get();
 }
 
-function testMaybeDefaultMethod() {
+function testOrDefaultMethod() {
   const a: Atom<?number> = atom(1);
-  const b: Derivable<number> = a.maybeDefault(2);
+  const b: Derivable<number> = a.orDefault(2);
   // $ExpectError
-  const c: Derivable<number> = a.maybeDefault('2');
+  const c: Derivable<number> = a.orDefault('2');
   // $ExpectError
-  const d: Derivable<number> = a.maybeDefault(atom(2));
+  const d: Derivable<number> = a.orDefault(atom(2));
   // $ExpectError
-  const e: Derivable<?number> = a.maybeDefault(null);
+  const e: Derivable<?number> = a.orDefault(null);
 }
 
 function testDerive() {

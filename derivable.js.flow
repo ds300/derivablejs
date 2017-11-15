@@ -6,7 +6,7 @@ export type Derivable<T> = {
 
   maybeDerive<E>(f: $NonMaybeType<T> => E): Derivable<E>;
 
-  maybeDefault<E>(value: $NonMaybeType<E>): Derivable<$NonMaybeType<T> | E>;
+  orDefault<E>(value: $NonMaybeType<E>): Derivable<$NonMaybeType<T> | E>;
 
   react(f: (value: T) => void, options?: Lifecycle<T>): void;
 

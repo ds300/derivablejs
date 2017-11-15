@@ -10,7 +10,7 @@ declare module derivable {
 
     maybeDerive<E>(f: (value: T) => E): Derivable<E>;
 
-    maybeDefault<E>(E): Derivable<T | E>
+    orDefault<E>(E): Derivable<T | E>
 
     react(f: (value: T) => void, options?: Lifecycle<T>): void;
 

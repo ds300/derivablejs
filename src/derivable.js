@@ -22,9 +22,9 @@ export var derivablePrototype = {
     });
   },
 
-  maybeDefault(def) {
+  orDefault(def) {
     if (!util.some(def)) {
-      throw Error('maybeDefault requires non-null value');
+      throw Error('orDefault requires non-null value');
     }
     return this.derive(value => util.some(value) ? value : def);
   },
