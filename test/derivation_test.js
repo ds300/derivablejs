@@ -6,23 +6,21 @@ const util = require('./util');
 
 describe("a derivation", () => {
   const oneGigabyte = 1024 * 1024 * 1024;
-  const bytes = derivable.atom(oneGigabyte);
-  let kiloBytes = void 0;
-  let megaBytes = void 0;
 
   const orderUp = (n, ...args) => {
     const order = args.length === 0 || args[0] === undefined ? 1 : args[0];
     return order > 0 ? orderUp(n / 1024, order - 1) : n;
   };
+  const bytes = derivable.atom(oneGigabyte);
+  const kiloBytes = bytes.derive(orderUp);
+  const megaBytes = derivable.derive(() => orderUp(kiloBytes.get()));
 
-  it("can be created via the Atom.derive(f) method", () => {
-    kiloBytes = bytes.derive(orderUp);
-    expect(kiloBytes.get()).toBe(1024 * 1024);
-  });
-
-  it("can also be created via the derive function in the derivable package", () => {
-    megaBytes = derivable.derive(() => orderUp(kiloBytes.get()));
+  it("can be created via the derive function in the derivable package", () => {
     expect(megaBytes.get()).toBe(1024);
+
+    expect(() => {
+      derivable.derive();
+    }).toThrow();
   });
 
   it("can derive from more than one atom", () => {
@@ -84,42 +82,6 @@ describe("a derivation", () => {
   });
 });
 
-describe("the derive method", () => {
-  it("throws when given no aguments", () => {
-    expect(() => {
-      derivable.atom(null).derive();
-    }).toThrow();
-  });
-
-  it('can\'t derive with some kinds of things', () => {
-    expect(() => {
-      derivable.atom("blah").derive(new Date());
-    }).toThrow();
-  });
-});
-
-describe("maybeDerive", () => {
-  it('is like derive, but propagates nulls', () => {
-    const thing = derivable.atom({ prop: 'val' });
-    const val = thing.maybeDerive(d => d.prop);
-
-    expect(val.get()).toBe('val');
-    thing.set(null);
-    expect(val.get() == null).toBeTruthy();
-
-    const foo = thing.maybeDerive(d => d.foo);
-    const bar = thing.maybeDerive(d => d.bar);
-
-    expect(foo.get()).toBe(null);
-    expect(bar.get()).toBe(null);
-
-    thing.set({ foo: 'FOO!', bar: 'BAR!' });
-
-    expect(foo.get()).toBe('FOO!');
-    expect(bar.get()).toBe('BAR!');
-  });
-});
-
 describe("derivations inside a transaction", () => {
   it("can take on temporary values", () => {
     const a = derivable.atom(0);
@@ -149,6 +111,7 @@ describe("derivations inside a transaction", () => {
     expect(thrown).toBe("death");
     expect(plusOne.get()).toBe(1);
   });
+
   it('can take on temporary values even in nested transactions', () => {
     const a = derivable.atom(0);
     const plusOne = a.derive(d => d + 1);
@@ -338,63 +301,4 @@ describe("nested derivables", () => {
 
     expect(running).toBeTruthy();
   });
-});
-
-test('derive derivable value with function', () => {
-  const a = derivable.atom(1);
-  const q = derivable.atom(10);
-  const b = a.derive(d => d + q.get());
-  const c = b.derive(d => d * q.get());
-  expect([b.get(), c.get()]).toEqual([11, 110]);
-
-  q.set(20);
-  expect([b.get(), c.get()]).toEqual([21, 420]);
-
-  a.set(null);
-  expect([b.get(), c.get()]).toEqual([20, 400]);
-
-  expect(() => {
-    derivable.map();
-  }).toThrow();
-});
-
-test('maybe derive derivable (non-null) value with function', () => {
-  const a = derivable.atom(1);
-  const q = derivable.atom(10);
-  const b = a.maybeDerive(d => d + q.get());
-  const c = b.maybeDerive(d => d * q.get());
-  expect([b.get(), c.get()]).toEqual([11, 110]);
-
-  q.set(20);
-  expect([b.get(), c.get()]).toEqual([21, 420]);
-
-  a.set(null);
-  expect([b.get(), c.get()]).toEqual([null, null]);
-
-  expect(() => {
-    derivable.map();
-  }).toThrow();
-});
-
-test('is method', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(1);
-  const fst = a.is(b);
-  const snd = b.is(a);
-  expect(fst.get()).toBeTruthy();
-  expect(snd.get()).toBeTruthy();
-
-  a.set({ equals: () => true });
-  b.set({ equals: () => false });
-  expect(fst.get()).toBeTruthy();
-  expect(snd.get()).toBeFalsy();
-});
-
-test('maybe default prefers passed value or derivable over null or undefined', () => {
-  const a = derivable.atom(null);
-  const r = a.orDefault(2);
-  expect(r.get()).toBe(2);
-
-  a.set(1);
-  expect(r.get()).toBe(1);
 });

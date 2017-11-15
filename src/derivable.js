@@ -68,5 +68,5 @@ export var derivablePrototype = {
 
   __equals: function (a, b) {
     return (this._equals || util.equals)(a, b);
-  },
+  }
 };
