@@ -7,11 +7,6 @@ declare module derivable {
   export interface Derivable<T> {
 
     derive<E>(f: (value: T) => E): Derivable<E>;
-    derive(prop: (string | Derivable<string>)): Derivable<any>;
-    derive(index: (number | Derivable<number>)): Derivable<any>;
-    derive(re: (RegExp | Derivable<RegExp>)): Derivable<string[]>;
-    derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
-    derive(args: any[]): Derivable<any>[];
     derive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
     derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
     derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
@@ -32,22 +27,6 @@ declare module derivable {
     mMap<E>(f: (value: T) => E): Derivable<E>;
 
     is(other: any): Derivable<boolean>;
-
-    and(other: any): Derivable<any>;
-
-    mAnd(other: any): Derivable<any>;
-
-    or(other: any): Derivable<any>;
-
-    mOr(other: any): Derivable<any>;
-
-    then(thenD: any, elseD: any): Derivable<any>;
-
-    mThen(thenD: any, elseD: any): Derivable<any>;
-
-    not(): Derivable<boolean>;
-
-    switch(...args: any[]): Derivable<any>;
 
     withEquality(equals: (a: any, b: any) => boolean): this;
   }
@@ -130,14 +109,6 @@ declare module derivable {
   function isProxy(obj: any): boolean;
 
   function derive(strings: string[], ...things: any[]): Derivable<string>;
-
-  function or(...conditions: any[]): Derivable<any>;
-
-  function mOr(...conditions: any[]): Derivable<any>;
-
-  function and(...conditions: any[]): Derivable<any>;
-
-  function mAnd(...conditions: any[]): Derivable<any>;
 
   function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 
