@@ -3,21 +3,11 @@
 export interface Derivable<T> {
 
   derive<E>(f: (value: T) => E): Derivable<E>;
-  derive(prop: (string | Derivable<string>)): Derivable<mixed>;
-  derive(index: (number | Derivable<number>)): Derivable<mixed>;
-  derive(re: (RegExp | Derivable<RegExp>)): Derivable<Array<string>>;
-  derive<E>(f: Derivable<(value: T) => E>): Derivable<E>;
-  derive(args: Array<mixed>): Array<Derivable<mixed>>;
   derive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
   derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
   derive<E>(f: (value: T, ...args: Array<mixed>) => E, ...args: Array<mixed>): Derivable<E>;
 
   mDerive<E>(f: $NonMaybeType<T> => E): Derivable<E>;
-  mDerive<A>([$NonMaybeType<T> => A]): Derivable<[A]>;
-  mDerive<A, B>([$NonMaybeType<T> => A, $NonMaybeType<T> => B]): Derivable<[A, B]>;
-  mDerive<A, B, C>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C]): Derivable<[A, B, C]>;
-  mDerive<A, B, C, D>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C, $NonMaybeType<T> => D]): Derivable<[A, B, C, D]>;
-  mDerive<A, B, C, D, E>([$NonMaybeType<T> => A, $NonMaybeType<T> => B, $NonMaybeType<T> => C, $NonMaybeType<T> => D, $NonMaybeType<T> => E]): Derivable<[A, B, C, D, E]>;
 
   react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
@@ -30,22 +20,6 @@ export interface Derivable<T> {
   mMap<E>(f: $NonMaybeType<T> => E): Derivable<E>;
 
   is(other: mixed): Derivable<boolean>;
-
-  and(other: mixed): Derivable<boolean>;
-
-  mAnd(other: mixed): Derivable<boolean>;
-
-  or(other: mixed): Derivable<boolean>;
-
-  mOr(other: mixed): Derivable<boolean>;
-
-  then<X, Y>(thenD: X, elseD: Y): Derivable<X | Y>;
-
-  mThen<X, Y>(thenD: mixed, elseD: mixed): Derivable<X | Y>;
-
-  not(): Derivable<boolean>;
-
-  switch(...args: Array<mixed>): Derivable<mixed>;
 
   withEquality(equals: (a: T, b: T) => *): Derivable<T>;
 };
@@ -102,8 +76,6 @@ declare export function derive<T, A, B, C, D>(f: (a: A, b: B, c: C, d: D) => T, 
   
 declare export function derive<T>(f: (...args: Array<mixed>)=> T, ...args: Array<mixed>): Derivable<T>
 
-declare export function derive(sections: Array<string>, ...values: Array<mixed>): Derivable<string>
-
 declare export function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
 declare export function transact(f: () => void): void;
@@ -127,14 +99,6 @@ declare export function isDerivation(obj: mixed): boolean;
 declare export function isProxy(obj: mixed): boolean;
 
 declare export function derive(strings: Array<string>, ...things: Array<mixed>): Derivable<string>;
-
-declare export function or(...conditions: Array<mixed>): Derivable<boolean>;
-
-declare export function mOr(...conditions: Array<mixed>): Derivable<boolean>;
-
-declare export function and(...conditions: Array<mixed>): Derivable<boolean>;
-
-declare export function mAnd(...conditions: Array<mixed>): Derivable<boolean>;
 
 declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 

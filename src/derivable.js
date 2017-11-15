@@ -3,47 +3,18 @@ import {makeReactor} from './reactors';
 import * as types from './types';
 import {derive as _derive} from './derivation.js';
 import {unpack} from './unpack';
-import {map, mMap, or, mOr, and, mAnd} from './combinators.js';
+import {map, mMap} from './combinators.js';
 
 export var derivablePrototype = {
     /**
      * Creates a derived value whose state will always be f applied to this
      * value
      */
-  derive: function (f, a, b, c, d) {
-    var that = this;
-    switch (arguments.length) {
-    case 0:
-      throw new Error('.derive takes at least one argument');
-    case 1:
-      if (typeof f === 'function') {
-          return _derive(f, that);
-      } else {
-        if (types.isDerivable(f)) {
-          return _derive(function () {
-            var deriver = f.get();
-            var thing = that.get();
-            if (typeof deriver === 'function') {
-              return deriver(thing);
-            } else {
-                throw Error('type error');
-            }
-          });
-        } else {
-          throw Error('type error');
-        }
-      }
-    case 2:
-      return _derive(f, that, a);
-    case 3:
-      return _derive(f, that, a, b);
-    case 4:
-      return _derive(f, that, a, b, c);
-    case 5:
-      return _derive(f, that, a, b, c, d);
-    default:
-      var args = ([f, that]).concat(util.slice(arguments, 1));
-      return _derive.apply(null, args);
+  derive: function (f, ...args) {
+    if (typeof f === 'function') {
+      return _derive(f, this, ...args);
+    } else {
+      throw Error('type error');
     }
   },
 
@@ -68,7 +39,7 @@ export var derivablePrototype = {
       } else if (!types.isDerivable(when)) {
         throw new Error('when condition must be bool, function, or derivable');
       }
-      mWhen = when.and(mWhen);
+      mWhen = mWhen.map(d => d && when.get());
     }
     return this.react(f, util.assign({}, opts, {when: mWhen}));
   },
@@ -80,30 +51,8 @@ export var derivablePrototype = {
     });
   },
 
-  or: function (other) {
-    return or(this, other);
-  },
-
-  mOr: function (other) {
-    return mOr(this, other);
-  },
-
-  and: function (other) {
-    return and(this, other);
-  },
-
-  mAnd: function (other) {
-    return mAnd(this, other);
-  },
-
-  mDerive: function (arg) {
-    if (arguments.length === 1 && arg instanceof Array) {
-      var that = this;
-      return arg.map(function (a) { return that.mDerive(a); });
-    } else {
-      const thenClause = this.derive.apply(this, arguments);
-      return this.derive(() => this.get() ? thenClause.get() : undefined);
-    }
+  mDerive: function (...args) {
+    return _derive(() => util.some(this.get()) ? this.derive(...args).get() : null);
   },
 
   withEquality: function (equals) {

@@ -126,34 +126,6 @@ describe("the `struct` function", () => {
   });
 });
 
-describe("boolean logic", () => {
-  it("is well understood", () => {
-    const a = derivable.atom(true);
-    const b = derivable.atom(true);
-    const aANDb = derivable.and(a, b);
-    const aORb = derivable.or(a, b);
-
-    // true & true = true
-    expect(aANDb.get()).toBe(true);
-    // true | true = true
-    expect(aORb.get()).toBe(true);
-
-    b.set(false);
-
-    // true & false = false
-    expect(aANDb.get()).toBe(false);
-    // true | false = true
-    expect(aORb.get()).toBe(true);
-
-    a.set(false);
-
-    // false & false = false
-    expect(aANDb.get()).toBe(false);
-    // false | false = false
-    expect(aORb.get()).toBe(false);
-  });
-});
-
 describe("lifting by using derive", () => {
 
   const lift = f => derivable.derive.bind(null, f);

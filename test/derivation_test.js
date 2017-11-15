@@ -187,35 +187,9 @@ describe("the derive method", () => {
     }).toThrow();
   });
 
-  it('can derive with derivable functions', () => {
-    const $Deriver = derivable.atom(n => n * 2);
-
-    const $A = derivable.atom(4);
-
-    const $b = $A.derive($Deriver);
-
-    expect($b.get()).toBe(8);
-
-    $Deriver.set(n => n / 2);
-
-    expect($b.get()).toBe(2);
-  });
-
   it('can\'t derive with some kinds of things', () => {
     expect(() => {
       derivable.atom("blah").derive(new Date());
-    }).toThrow();
-  });
-
-  it('can\'t derive with some kinds of derivable things', () => {
-    const $Deriver = derivable.atom(new Date());
-
-    const $A = derivable.atom("29892funtimes232");
-
-    const $b = $A.derive($Deriver);
-
-    expect(() => {
-      $b.get();
     }).toThrow();
   });
 
@@ -262,13 +236,11 @@ describe("mDerive", () => {
     thing.set(null);
     expect(val.get() == null).toBeTruthy();
 
-    const _thing$mDerive = thing.mDerive([d => d.foo, d => d.bar]);
+    const foo = thing.mDerive(d => d.foo);
+    const bar = thing.mDerive(d => d.bar);
 
-    const foo = _thing$mDerive[0];
-    const bar = _thing$mDerive[1];
-
-    expect(foo.get() == null).toBeTruthy();
-    expect(bar.get() == null).toBeTruthy();
+    expect(foo.get()).toBe(null);
+    expect(bar.get()).toBe(null);
 
     thing.set({ foo: 'FOO!', bar: 'BAR!' });
 
