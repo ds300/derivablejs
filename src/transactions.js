@@ -1,3 +1,4 @@
+import * as util from "./util.js";
 import { DERIVATION, PROXY, REACTOR } from "./types";
 import { UNKNOWN, UNCHANGED, CHANGED } from "./states";
 
@@ -61,7 +62,7 @@ export function inTransaction() {
 export function transact(f) {
   beginTransaction();
   try {
-    f.call(null, initiateAbortion);
+    f(initiateAbortion);
   } catch (e) {
     abortTransaction();
     if (e !== TransactionAbortion) {
@@ -81,20 +82,20 @@ export function atomically(f) {
 }
 
 export function transaction(f) {
-  return function(...args) {
+  return (...args) => {
     let result;
     transact(() => {
-      result = f.apply(this, args);
+      result = f(...args);
     });
     return result;
   };
 }
 
 export function atomic(f) {
-  return function(...args) {
+  return (...args) => {
     let result;
     atomically(() => {
-      result = f.apply(this, args);
+      result = f(...args);
     });
     return result;
   };
@@ -111,7 +112,7 @@ function commitTransaction() {
   if (currentCtx === null) {
     const reactors = [];
     ctx.modifiedAtoms.forEach(a => {
-      if (a.__equals(a._value, ctx.id2originalValue[a._id])) {
+      if (util.equals(a, a._value, ctx.id2originalValue[a._id])) {
         a._state = UNCHANGED;
       } else {
         a._state = CHANGED;

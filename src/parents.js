@@ -56,3 +56,14 @@ export function maybeCaptureParent(p) {
     }
   }
 }
+
+export function captureDereferences(f) {
+  const captured = [];
+  startCapturingParents(void 0, captured);
+  try {
+    f();
+  } finally {
+    stopCapturingParents();
+  }
+  return captured;
+}

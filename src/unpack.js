@@ -15,7 +15,7 @@ export function unpack(thing) {
 export function deepUnpack(thing) {
   if (isDerivable(thing)) {
     return thing.get();
-  } else if (thing instanceof Array) {
+  } else if (Array.isArray(thing)) {
     return thing.map(deepUnpack);
   } else if (thing.constructor === Object) {
     const result = {};

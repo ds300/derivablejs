@@ -29,7 +29,7 @@ util.assign(Atom.prototype, {
     this._value = value;
 
     if (!transactions.inTransaction()) {
-      if (!this.__equals(value, oldValue)) {
+      if (!util.equals(this, value, oldValue)) {
         try {
           this._state = CHANGED;
           const reactors = [];
