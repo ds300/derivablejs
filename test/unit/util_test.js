@@ -13,8 +13,8 @@ test('the equals function checks equality for primitives', () => {
 test('the equals function checks identity but not equality for objects', () => {
   expect(util.equals({}, {})).toEqual(false);
   expect(util.equals([], [])).toEqual(false);
-  var arr = [];
-  var obj = {};
+  const arr = [];
+  const obj = {};
   expect(util.equals(arr, arr)).toEqual(true);
   expect(util.equals(obj, obj)).toEqual(true);
 });
@@ -45,7 +45,7 @@ test('the addToArray function adds elements to arrays if they aren\'t already in
   expect(arr).toEqual([4, 5]);
 });
 
-test('the removeFromArray function removes elements from arrays if they are in there', function () {
+test('the removeFromArray function removes elements from arrays if they are in there', () => {
   const arr = [4, 5, 6];
 
   util.removeFromArray(arr, 5);
@@ -64,34 +64,22 @@ test('the removeFromArray function removes elements from arrays if they are in t
   expect(arr).toEqual([]);
 });
 
-test('the nextId function returns a succession of integers', function () {
+test('the nextId function returns a succession of integers', () => {
   let last = util.nextId();
   expect(typeof last).toEqual('number');
-  for (var i = 0; i < 1000; i++) {
-    var next = util.nextId();
+  for (let i = 0; i < 1000; i++) {
+    const next = util.nextId();
     expect(typeof next).toEqual('number');
     expect(next).toBeGreaterThan(last);
     last = next;
   }
 });
 
-test('slice function is an alias for Array.prototype.slice', function () {
-  expect(util.slice([0, 1, 2], 0)).toEqual([0, 1, 2]);
-  expect(util.slice([0, 1, 2], 1)).toEqual([1, 2]);
-  expect(util.slice([0, 1, 2], 2)).toEqual([2]);
-  expect(util.slice([0, 1, 2], 3)).toEqual([]);
-  expect(util.slice([0, 1, 2], 4)).toEqual([]);
-  expect(util.slice([0, 1, 2], -1)).toEqual([2]);
-  expect(util.slice([0, 1, 2], -2)).toEqual([1, 2]);
-  expect(util.slice([0, 1, 2], -3)).toEqual([0, 1, 2]);
-  expect(util.slice([0, 1, 2], -4)).toEqual([0, 1, 2]);
-});
-
-test('the unique object is not equal to anything according to its .equals method', function () {
+test('the unique object is not equal to anything according to its .equals method', () => {
   expect(util.unique.equals(util.unique)).toEqual(false);
 });
 
-test('the some function checks whether something is not (null or undefined)', function () {
+test('the some function checks whether something is not (null or undefined)', () => {
   expect(util.some(null)).toEqual(false);
   expect(util.some(void 0)).toEqual(false);
 
@@ -101,16 +89,16 @@ test('the some function checks whether something is not (null or undefined)', fu
   expect(util.some(false)).toEqual(true);
 });
 
-test('the debug flag should be false by default', function () {
+test('the debug flag should be false by default', () => {
   expect(util.isDebug()).toEqual(false);
 });
 
-test('the setDebugMode function sets the debug flag', function () {
+test('the setDebugMode function sets the debug flag', () => {
   util.setDebugMode(true);
   expect(util.isDebug()).toEqual(true);
 });
 
-test('the setDebugMode function casts its argument to boolean', function () {
+test('the setDebugMode function casts its argument to boolean', () => {
   util.setDebugMode("haha");
   expect(util.isDebug()).toEqual(true);
 
@@ -124,7 +112,7 @@ test('the setDebugMode function casts its argument to boolean', function () {
   expect(util.isDebug()).toEqual(false);
 });
 
-test('the setEquals function sets the _equals property of an object and returns the object', function () {
+test('the setEquals function sets the _equals property of an object and returns the object', () => {
   const obj = {};
 
   const res = util.setEquals(obj, () => "hey!");

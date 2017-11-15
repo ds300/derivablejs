@@ -5,7 +5,7 @@ import {ATOM} from './types';
 import {UNCHANGED, CHANGED} from './states';
 import global from './global';
 
-var devtoolsHook = global.__DERIVABLE_DEVTOOLS_HOOK__;
+const devtoolsHook = global.__DERIVABLE_DEVTOOLS_HOOK__;
 
 export function Atom (value) {
   this._id = util.nextId();
@@ -18,21 +18,21 @@ export function Atom (value) {
 }
 
 util.assign(Atom.prototype, {
-  _clone: function () {
+  _clone() {
     return util.setEquals(atom(this._value), this._equals);
   },
 
-  set: function (value) {
+  set(value) {
     transactions.maybeTrack(this);
 
-    var oldValue = this._value;
+    const oldValue = this._value;
     this._value = value;
 
     if (!transactions.inTransaction()) {
       if (!this.__equals(value, oldValue)) {
         try {
           this._state = CHANGED;
-          var reactors = [];
+          const reactors = [];
           transactions.mark(this, reactors);
           transactions.processReactors(reactors);
         } finally {
@@ -42,7 +42,7 @@ util.assign(Atom.prototype, {
     }
   },
 
-  get: function () {
+  get() {
     if (typeof devtoolsHook === 'function') {
       devtoolsHook('captureAtom', this);
     }

@@ -10,16 +10,14 @@ export function Proxy (descriptor) {
 }
 
 util.assign(Proxy.prototype, Derivation.prototype, {
-  _clone: function () {
+  _clone() {
     return util.setEquals(new Proxy(this._proxyMapping), this._equals);
   },
 
-  set: function (value) {
-    var that = this;
-    atomically(function () {
-      that._proxyMapping.set(value);
+  set(value) {
+    atomically(() => {
+      this._proxyMapping.set(value);
     });
-    return this;
   },
 });
 

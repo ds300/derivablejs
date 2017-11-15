@@ -227,7 +227,7 @@ describe("anonymous reactors", () => {
       let val = null;
       a.react(d => {
         val = d;
-      }, { from: from, when: when, until: until });
+      }, { from, when, until });
 
       expect(val).toBe(null);
 

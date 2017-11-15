@@ -18,14 +18,13 @@ export function Derivation (deriver) {
 }
 
 util.assign(Derivation.prototype, {
-  _clone: function () {
+  _clone() {
     return util.setEquals(derive(this._deriver), this._equals);
   },
 
-  _forceEval: function () {
-    var that = this;
-    var newVal = null;
-    var newNumParents;
+  _forceEval() {
+    let newVal = null;
+    let newNumParents;
 
     try {
       if (this._parents === null) {
@@ -33,12 +32,12 @@ util.assign(Derivation.prototype, {
       }
       parents.startCapturingParents(this, this._parents);
       if (!util.isDebug()) {
-        newVal = that._deriver();
+        newVal = this._deriver();
       } else {
         try {
-          newVal = that._deriver();
+          newVal = this._deriver();
         } catch (e) {
-          console.error(that.stack);
+          console.error(this.stack);
           throw e;
         }
       }
@@ -53,8 +52,8 @@ util.assign(Derivation.prototype, {
       this._state = UNCHANGED;
     }
 
-    for (var i = newNumParents, len = this._parents.length; i < len; i++) {
-      var oldParent = this._parents[i];
+    for (let i = newNumParents, len = this._parents.length; i < len; i++) {
+      const oldParent = this._parents[i];
       detach(oldParent, this);
       this._parents[i] = null;
     }
@@ -64,15 +63,15 @@ util.assign(Derivation.prototype, {
     this._value = newVal;
   },
 
-  _update: function () {
+  _update() {
     if (this._parents === null) {
       // this._state === DISCONNECTED
       this._forceEval();
       // this._state === CHANGED ?
     } else if (this._state === UNKNOWN) {
-      var len = this._parents.length;
-      for (var i = 0; i < len; i++) {
-        var parent = this._parents[i];
+      const len = this._parents.length;
+      for (let i = 0; i < len; i++) {
+        const parent = this._parents[i];
 
         if (parent._state === UNKNOWN) {
           parent._update();
@@ -89,7 +88,7 @@ util.assign(Derivation.prototype, {
     }
   },
 
-  get: function () {
+  get() {
     parents.maybeCaptureParent(this);
     if (this._activeChildren.length > 0) {
       this._update();
@@ -108,8 +107,8 @@ util.assign(Derivation.prototype, {
 export function detach (parent, child) {
   util.removeFromArray(parent._activeChildren, child);
   if (parent._activeChildren.length === 0 && parent._parents != null) {
-    var len = parent._parents.length;
-    for (var i = 0; i < len; i++) {
+    const len = parent._parents.length;
+    for (let i = 0; i < len; i++) {
       detach(parent._parents[i], parent);
     }
     parent._parents = null;
