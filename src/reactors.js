@@ -1,7 +1,7 @@
-import * as types from './types';
-import * as util from './util';
-import {CHANGED} from './states';
-import {detach, derive} from './derivation';
+import * as types from "./types";
+import * as util from "./util";
+import { CHANGED } from "./states";
+import { detach, derive } from "./derivation";
 
 export function Reactor(parent, react, governor) {
   this._parent = parent;
@@ -68,30 +68,36 @@ util.assign(Reactor.prototype, {
   }
 });
 
-export function makeReactor (derivable, f, opts) {
-  if (typeof f !== 'function') {
-    throw Error('the first argument to .react must be a function');
+export function makeReactor(derivable, f, opts) {
+  if (typeof f !== "function") {
+    throw Error("the first argument to .react must be a function");
   }
 
-  opts = util.assign({
-    once: false,
-    from: true,
-    until: false,
-    when: true,
-    skipFirst: false,
-  }, opts);
+  opts = util.assign(
+    {
+      once: false,
+      from: true,
+      until: false,
+      when: true,
+      skipFirst: false
+    },
+    opts
+  );
 
   let skipFirst = opts.skipFirst;
 
   // coerce fn or bool to derivable<bool>
   function condDerivable(fOrD, name) {
     if (!types.isDerivable(fOrD)) {
-      if (typeof fOrD === 'function') {
+      if (typeof fOrD === "function") {
         return derive(() => fOrD(derivable));
-      } else if (typeof fOrD === 'boolean') {
+      } else if (typeof fOrD === "boolean") {
         return derive(() => fOrD);
       } else {
-        throw Error('react ' + name + ' condition must be derivable, got: ' + JSON.stringify(fOrD));
+        throw Error(
+          `react ${name} condition must be derivable, got: ` +
+            JSON.stringify(fOrD)
+        );
       }
     }
     return fOrD;
@@ -99,7 +105,7 @@ export function makeReactor (derivable, f, opts) {
 
   // wrap reactor so f doesn't get a .this context, and to allow
   // stopping after one reaction if desired.
-  const reactor = new Reactor(derivable, function (val) {
+  const reactor = new Reactor(derivable, function(val) {
     if (skipFirst) {
       skipFirst = false;
     } else {
@@ -114,17 +120,17 @@ export function makeReactor (derivable, f, opts) {
   // listen to when and until conditions, starting and stopping the
   // reactor as appropriate, and stopping this controller when until
   // condition becomes true
-  const $until = condDerivable(opts.until, 'until');
-  const $when = condDerivable(opts.when, 'when');
+  const $until = condDerivable(opts.until, "until");
+  const $when = condDerivable(opts.when, "when");
 
-  const $whenUntil = derive(() =>{
+  const $whenUntil = derive(() => {
     return {
       until: $until.get(),
-      when: $when.get(),
+      when: $when.get()
     };
   });
 
-  const controller = new Reactor($whenUntil, function (conds) {
+  const controller = new Reactor($whenUntil, function(conds) {
     if (conds.until) {
       reactor.stop();
       this.stop();
@@ -141,8 +147,8 @@ export function makeReactor (derivable, f, opts) {
 
   // listen to from condition, starting the reactor controller
   // when appropriate
-  const $from = condDerivable(opts.from, 'from');
-  const initiator = new Reactor($from, function (from) {
+  const $from = condDerivable(opts.from, "from");
+  const initiator = new Reactor($from, function(from) {
     if (from) {
       controller.start().force();
       this.stop();

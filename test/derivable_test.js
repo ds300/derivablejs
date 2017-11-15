@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
-test('derive derivable value with function', () => {
+test("derive derivable value with function", () => {
   const a = derivable.atom(1);
   const q = derivable.atom(10);
   const b = a.derive(d => d + q.get());
@@ -24,7 +24,7 @@ test('derive derivable value with function', () => {
   }).toThrow();
 });
 
-test('maybe derive derivable (non-null) value with function', () => {
+test("maybe derive derivable (non-null) value with function", () => {
   const a = derivable.atom(1);
   const q = derivable.atom(10);
   const b = a.maybeDerive(d => d + q.get());
@@ -42,7 +42,7 @@ test('maybe derive derivable (non-null) value with function', () => {
   }).toThrow();
 });
 
-test('is method', () => {
+test("is method", () => {
   const a = derivable.atom(1);
   const b = derivable.atom(1);
   const fst = a.is(b);
@@ -56,7 +56,7 @@ test('is method', () => {
   expect(snd.get()).toBeFalsy();
 });
 
-test('maybe default prefers passed value or derivable over null or undefined', () => {
+test("maybe default prefers passed value or derivable over null or undefined", () => {
   const a = derivable.atom(null);
   const r = a.orDefault(2);
   expect(r.get()).toBe(2);

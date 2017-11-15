@@ -1,7 +1,7 @@
-import {DERIVATION, PROXY, REACTOR} from './types';
-import {UNKNOWN, UNCHANGED, CHANGED} from './states';
+import { DERIVATION, PROXY, REACTOR } from "./types";
+import { UNKNOWN, UNCHANGED, CHANGED } from "./states";
 
-export function mark (node, reactors) {
+export function mark(node, reactors) {
   for (let i = 0, len = node._activeChildren.length; i < len; i++) {
     const child = node._activeChildren[i];
     switch (child._type) {
@@ -19,12 +19,13 @@ export function mark (node, reactors) {
   }
 }
 
-export function processReactors (reactors) {
+export function processReactors(reactors) {
   for (let i = 0, len = reactors.length; i < len; i++) {
     const r = reactors[i];
     if (r._reacting) {
-      throw new Error("Synchronous cyclical reactions disallowed. " +
-                      "Use setImmediate.");
+      throw Error(
+        "Synchronous cyclical reactions disallowed. " + "Use setImmediate."
+      );
     }
     r._maybeReact();
   }
@@ -42,7 +43,7 @@ function TransactionContext(parent) {
   this.modifiedAtoms = [];
 }
 
-export function maybeTrack (atom) {
+export function maybeTrack(atom) {
   if (currentCtx !== null) {
     if (!(atom._id in currentCtx.id2originalValue)) {
       currentCtx.modifiedAtoms.push(atom);
@@ -53,16 +54,15 @@ export function maybeTrack (atom) {
 
 export let currentCtx = null;
 
-export function inTransaction () {
+export function inTransaction() {
   return currentCtx !== null;
 }
 
-export function transact (f) {
+export function transact(f) {
   beginTransaction();
   try {
     f.call(null, initiateAbortion);
-  }
-  catch (e) {
+  } catch (e) {
     abortTransaction();
     if (e !== TransactionAbortion) {
       throw e;
@@ -72,7 +72,7 @@ export function transact (f) {
   commitTransaction();
 }
 
-export function atomically (f) {
+export function atomically(f) {
   if (!inTransaction()) {
     transact(f);
   } else {
@@ -80,8 +80,8 @@ export function atomically (f) {
   }
 }
 
-export function transaction (f) {
-  return function (...args) {
+export function transaction(f) {
+  return function(...args) {
     let result;
     transact(() => {
       result = f.apply(this, args);
@@ -90,8 +90,8 @@ export function transaction (f) {
   };
 }
 
-export function atomic (f) {
-  return function (...args) {
+export function atomic(f) {
+  return function(...args) {
     let result;
     atomically(() => {
       result = f.apply(this, args);
@@ -137,7 +137,7 @@ function abortTransaction() {
 
 let _tickerRefCount = 0;
 
-export function ticker () {
+export function ticker() {
   if (_tickerRefCount === 0) {
     beginTransaction();
   }
@@ -145,22 +145,22 @@ export function ticker () {
   let done = false;
   return {
     tick() {
-      if (done) throw new Error('trying to use ticker after release');
+      if (done) throw new Error("trying to use ticker after release");
       commitTransaction();
       beginTransaction();
     },
     reset() {
-      if (done) throw new Error('trying to use ticker after release');
+      if (done) throw new Error("trying to use ticker after release");
       abortTransaction();
       beginTransaction();
     },
     release() {
-      if (done) throw new Error('ticker already released');
+      if (done) throw new Error("ticker already released");
       _tickerRefCount--;
       done = true;
       if (_tickerRefCount === 0) {
         commitTransaction();
       }
-    },
+    }
   };
 }

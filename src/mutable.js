@@ -1,4 +1,4 @@
-import {Proxy} from './proxy';
+import { Proxy } from "./proxy";
 
 export const mutablePrototype = {
   update(f, ...args) {
@@ -14,5 +14,5 @@ export const mutablePrototype = {
         this.set(monoProxyMapping.set(this.get(), val));
       }
     });
-  },
+  }
 };

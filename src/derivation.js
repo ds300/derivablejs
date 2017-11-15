@@ -1,9 +1,9 @@
-import * as util from './util';
-import * as parents from './parents';
-import * as types from './types';
-import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
+import * as util from "./util";
+import * as parents from "./parents";
+import * as types from "./types";
+import { CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED } from "./states";
 
-export function Derivation (deriver) {
+export function Derivation(deriver) {
   this._deriver = deriver;
   this._parents = null;
   this._type = types.DERIVATION;
@@ -101,10 +101,10 @@ util.assign(Derivation.prototype, {
       }
     }
     return this._value;
-  },
+  }
 });
 
-export function detach (parent, child) {
+export function detach(parent, child) {
   util.removeFromArray(parent._activeChildren, child);
   if (parent._activeChildren.length === 0 && parent._parents != null) {
     const len = parent._parents.length;
@@ -117,8 +117,8 @@ export function detach (parent, child) {
 }
 
 export function derive(f) {
-  if (typeof f !== 'function') {
-    throw Error('derive requires function');
+  if (typeof f !== "function") {
+    throw Error("derive requires function");
   }
   return new Derivation(f);
 }
