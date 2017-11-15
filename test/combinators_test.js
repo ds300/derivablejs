@@ -78,59 +78,6 @@ test('maybe map derivable (non-null) value with function', () => {
   }
 });
 
-test('or function', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(2);
-  const c = derivable.atom(3);
-  const result = derivable.or(a, b, c);
-  expect(result.get()).toBe(1);
-
-  a.set(1);
-  b.set(0);
-  c.set(0);
-  expect(result.get()).toBe(1);
-
-  a.set(0);
-  b.set(2);
-  c.set(0);
-  expect(result.get()).toBe(2);
-
-  a.set(0);
-  b.set(0);
-  c.set(3);
-  expect(result.get()).toBe(3);
-
-  a.set(null);
-  b.set(0);
-  c.set(false);
-  expect(result.get()).toBe(false);
-});
-
-test('or method', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(2);
-  expect(a.or(b).get()).toBe(1);
-});
-
-test('mOr function', () => {
-  const a = derivable.atom(null);
-  const b = derivable.atom(0);
-  const c = derivable.atom(false);
-  const result = derivable.mOr(a, b, c);
-  expect(result.get()).toBe(0);
-
-  c.set(false);
-  a.set(null);
-  b.set(null);
-  expect(result.get()).toBe(false);
-});
-
-test('mOr method', () => {
-  const a = derivable.atom(null);
-  const b = derivable.atom(0);
-  expect(a.mOr(b).get()).toBe(0);
-});
-
 test('is method', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(1);

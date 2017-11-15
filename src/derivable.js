@@ -3,7 +3,7 @@ import {makeReactor} from './reactors';
 import * as types from './types';
 import {derive as _derive} from './derivation.js';
 import {unpack} from './unpack';
-import {map, mMap, or, mOr} from './combinators.js';
+import {map, mMap} from './combinators.js';
 
 export var derivablePrototype = {
     /**
@@ -49,14 +49,6 @@ export var derivablePrototype = {
     return _derive(function () {
       return x.__equals(x.get(), unpack(other));
     });
-  },
-
-  or: function (other) {
-    return or(this, other);
-  },
-
-  mOr: function (other) {
-    return mOr(this, other);
   },
 
   mDerive: function (...args) {
