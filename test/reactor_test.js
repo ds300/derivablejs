@@ -1,233 +1,272 @@
-'use strict';
+"use strict";
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
 describe("anonymous reactors", () => {
-  it('are created with the .react method', () => {
-    const a = derivable.atom('a');
+  it("are created with the .react method", () => {
+    const a = derivable.atom("a");
     let val = null;
     a.react(d => {
       val = d;
     });
 
-    expect(val).toBe('a');
+    expect(val).toBe("a");
 
-    a.set('b');
+    a.set("b");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
   });
 
-  it('can start when the `from` condition becomes truthy', () => {
+  it("can start when the `from` condition becomes truthy", () => {
     const from = derivable.atom(false);
-    const a = derivable.atom('a');
+    const a = derivable.atom("a");
     let val = null;
-    a.react(d => {
-      val = d;
-    }, { from });
+    a.react(
+      d => {
+        val = d;
+      },
+      { from }
+    );
 
     expect(val).toBe(null);
 
-    from.set('truthy value');
+    from.set("truthy value");
 
-    expect(val).toBe('a');
+    expect(val).toBe("a");
 
-    a.set('b');
+    a.set("b");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
   });
 
-  it('can stop (forever) when the `until` condition becomes truthy', () => {
+  it("can stop (forever) when the `until` condition becomes truthy", () => {
     const until = derivable.atom(false);
-    const a = derivable.atom('a');
+    const a = derivable.atom("a");
     let val = null;
-    a.react(d => {
-      val = d;
-    }, { until });
+    a.react(
+      d => {
+        val = d;
+      },
+      { until }
+    );
 
-    expect(val).toBe('a');
+    expect(val).toBe("a");
 
-    a.set('b');
+    a.set("b");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
 
-    until.set('truthy value');
+    until.set("truthy value");
 
-    a.set('c');
+    a.set("c");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
 
     until.set(false);
 
-    a.set('d');
+    a.set("d");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
   });
 
-  it('can start and stop when the `when` condition becomes truthy and falsey respectively', () => {
+  it("can start and stop when the `when` condition becomes truthy and falsey respectively", () => {
     const when = derivable.atom(false);
-    const a = derivable.atom('a');
+    const a = derivable.atom("a");
     let val = null;
-    a.react(d => {
-      val = d;
-    }, { when });
+    a.react(
+      d => {
+        val = d;
+      },
+      { when }
+    );
 
     expect(val).toBe(null);
 
-    when.set('truthy value');
+    when.set("truthy value");
 
-    expect(val).toBe('a');
+    expect(val).toBe("a");
 
-    a.set('b');
+    a.set("b");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
 
     when.set(0); //falsey value
 
-    a.set('c');
+    a.set("c");
 
-    expect(val).toBe('b');
+    expect(val).toBe("b");
 
     when.set(1); //truthy value
 
-    expect(val).toBe('c');
+    expect(val).toBe("c");
   });
 
-  it('can have `from`, `when`, and `until` specified as functions', () => {
+  it("can have `from`, `when`, and `until` specified as functions", () => {
     {
       const cond = derivable.atom(false);
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { when: () => cond.get() });
+      a.react(
+        d => {
+          val = d;
+        },
+        { when: () => cond.get() }
+      );
 
       expect(val).toBe(null);
 
-      cond.set('truthy value');
+      cond.set("truthy value");
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
     }
 
     {
       const cond = derivable.atom(false);
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from: () => cond.get() });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from: () => cond.get() }
+      );
 
       expect(val).toBe(null);
 
-      cond.set('truthy value');
+      cond.set("truthy value");
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
     }
 
     {
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { until: () => a.is('b').get() });
+      a.react(
+        d => {
+          val = d;
+        },
+        { until: () => a.is("b").get() }
+      );
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
 
-      a.set('c');
+      a.set("c");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
 
-      a.set('b');
+      a.set("b");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
 
-      a.set('a');
+      a.set("a");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
     }
   });
 
-  it('can have `from`, `when`, and `until` specified as functions that use the derivable itself', () => {
+  it("can have `from`, `when`, and `until` specified as functions that use the derivable itself", () => {
     {
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { when: d => d.get() > 'c' });
+      a.react(
+        d => {
+          val = d;
+        },
+        { when: d => d.get() > "c" }
+      );
 
       expect(val).toBe(null);
 
-      a.set('x');
+      a.set("x");
 
-      expect(val).toBe('x');
+      expect(val).toBe("x");
     }
 
     {
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from: d => d.get() > 'c' });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from: d => d.get() > "c" }
+      );
 
       expect(val).toBe(null);
 
-      a.set('x');
+      a.set("x");
 
-      expect(val).toBe('x');
+      expect(val).toBe("x");
     }
     {
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { until: d => d.is('b').get() });
+      a.react(
+        d => {
+          val = d;
+        },
+        { until: d => d.is("b").get() }
+      );
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
 
-      a.set('c');
+      a.set("c");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
 
-      a.set('b');
+      a.set("b");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
 
-      a.set('a');
+      a.set("a");
 
-      expect(val).toBe('c');
+      expect(val).toBe("c");
     }
   });
 
-  it('doesnt like it when `from`, `when`, and `until` are other things', () => {
-    const a = derivable.atom('a');
+  it("doesnt like it when `from`, `when`, and `until` are other things", () => {
+    const a = derivable.atom("a");
     expect(() => {
-      a.react(() => {
-        return null;
-      }, { from: 'a string' });
+      a.react(
+        () => {
+          return null;
+        },
+        { from: "a string" }
+      );
     }).toThrow();
     expect(() => {
-      a.react(() => {
-        return null;
-      }, { when: 3 });
+      a.react(
+        () => {
+          return null;
+        },
+        { when: 3 }
+      );
     }).toThrow();
     expect(() => {
-      a.react(() => {
-        return null;
-      }, { until: new Date() });
+      a.react(
+        () => {
+          return null;
+        },
+        { until: new Date() }
+      );
     }).toThrow();
   });
 
-  it('can have `from`, `when`, and `until` conditions all at once', () => {
+  it("can have `from`, `when`, and `until` conditions all at once", () => {
     {
       // normal usage
       const from = derivable.atom(false);
       const when = derivable.atom(false);
       const until = derivable.atom(false);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
 
@@ -235,17 +274,17 @@ describe("anonymous reactors", () => {
       // when is still false
       expect(val).toBe(null);
       when.set(true);
-      expect(val).toBe('a');
-      a.set('b');
-      expect(val).toBe('b');
+      expect(val).toBe("a");
+      a.set("b");
+      expect(val).toBe("b");
       when.set(false);
-      a.set('c');
-      expect(val).toBe('b');
+      a.set("c");
+      expect(val).toBe("b");
       when.set(true);
-      expect(val).toBe('c');
+      expect(val).toBe("c");
       until.set(true);
-      a.set('d');
-      expect(val).toBe('c');
+      a.set("d");
+      expect(val).toBe("c");
     }
 
     {
@@ -254,11 +293,14 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(false);
       const until = derivable.atom(true);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
       from.set(true);
@@ -274,11 +316,14 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(false);
       const until = derivable.atom(true);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
       from.set(true);
@@ -294,15 +339,18 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(true);
       const until = derivable.atom(false);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
       from.set(true);
-      expect(val).toBe('a');
+      expect(val).toBe("a");
     }
 
     {
@@ -311,13 +359,16 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(true);
       const until = derivable.atom(false);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
     }
 
     {
@@ -326,11 +377,14 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(false);
       const until = derivable.atom(true);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
       when.set(true);
@@ -343,11 +397,14 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(true);
       const until = derivable.atom(true);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { from, when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { from, when, until }
+      );
 
       expect(val).toBe(null);
       from.set(true);
@@ -359,11 +416,14 @@ describe("anonymous reactors", () => {
       const when = derivable.atom(false);
       const until = derivable.atom(false);
 
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { when, until });
+      a.react(
+        d => {
+          val = d;
+        },
+        { when, until }
+      );
 
       expect(val).toBe(null);
       derivable.atomically(() => {
@@ -375,75 +435,86 @@ describe("anonymous reactors", () => {
     }
   });
 
-  it('can specify that the first reaction should be skipped', () => {
+  it("can specify that the first reaction should be skipped", () => {
     const when = derivable.atom(false);
-    const a = derivable.atom('a');
+    const a = derivable.atom("a");
     let val = null;
-    a.react(d => {
-      val = d;
-    }, { skipFirst: true, when });
+    a.react(
+      d => {
+        val = d;
+      },
+      { skipFirst: true, when }
+    );
 
     expect(val).toBe(null);
     when.set(true);
     expect(val).toBe(null);
-    a.set('b');
-    expect(val).toBe('b');
+    a.set("b");
+    expect(val).toBe("b");
   });
 
-  it('can specify that a reaction should only happen once', () => {
+  it("can specify that a reaction should only happen once", () => {
     {
       // without skipFirst
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { once: true });
+      a.react(
+        d => {
+          val = d;
+        },
+        { once: true }
+      );
 
-      expect(val).toBe('a');
+      expect(val).toBe("a");
 
-      a.set('b');
-      expect(val).toBe('a');
+      a.set("b");
+      expect(val).toBe("a");
     }
 
     {
       // with skipFirst
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { skipFirst: true, once: true });
+      a.react(
+        d => {
+          val = d;
+        },
+        { skipFirst: true, once: true }
+      );
 
       expect(val).toBe(null);
 
-      a.set('b');
-      expect(val).toBe('b');
-      a.set('c');
-      expect(val).toBe('b');
+      a.set("b");
+      expect(val).toBe("b");
+      a.set("c");
+      expect(val).toBe("b");
     }
 
     {
       // with when
       const when = derivable.atom(false);
-      const a = derivable.atom('a');
+      const a = derivable.atom("a");
       let val = null;
-      a.react(d => {
-        val = d;
-      }, { when, once: true });
+      a.react(
+        d => {
+          val = d;
+        },
+        { when, once: true }
+      );
 
       expect(val).toBe(null);
 
-      a.set('b');
+      a.set("b");
 
       expect(val).toBe(null);
       when.set(true);
 
-      expect(val).toBe('b');
+      expect(val).toBe("b");
 
-      a.set('c');
-      expect(val).toBe('b');
+      a.set("c");
+      expect(val).toBe("b");
     }
   });
-
 });
 
 describe("the .react method", () => {
@@ -455,7 +526,7 @@ describe("the .react method", () => {
       derivable.atom(5).react(4);
     }).toThrow();
     expect(() => {
-      derivable.atom(5).react('');
+      derivable.atom(5).react("");
     }).toThrow();
     expect(() => {
       derivable.atom(5).react({});
@@ -495,9 +566,12 @@ describe("setting the values of atoms in a reaction phase", () => {
 
     const double = d => d * 2;
 
-    nmod2.react(() => {
-      n.update(double);
-    }, { skipFirst: true });
+    nmod2.react(
+      () => {
+        n.update(double);
+      },
+      { skipFirst: true }
+    );
 
     expect(() => {
       n.set(2);
@@ -515,9 +589,12 @@ describe("tickers", () => {
 
     let b = "b";
 
-    a.react(d => {
-      b = d;
-    }, { skipFirst: true });
+    a.react(
+      d => {
+        b = d;
+      },
+      { skipFirst: true }
+    );
 
     expect(b).toBe("b");
 
@@ -560,9 +637,12 @@ describe("tickers", () => {
 
     let b = "b";
 
-    a.react(d => {
-      b = d;
-    }, { skipFirst: true });
+    a.react(
+      d => {
+        b = d;
+      },
+      { skipFirst: true }
+    );
     expect(b).toBe("b");
     a.set("c");
     expect(b).toBe("b");
@@ -589,9 +669,12 @@ describe("tickers", () => {
     const a = derivable.atom(null);
     let b = "b";
 
-    a.react(d => {
-      b = d;
-    }, { skipFirst: true });
+    a.react(
+      d => {
+        b = d;
+      },
+      { skipFirst: true }
+    );
 
     a.set("a");
 
@@ -617,22 +700,22 @@ describe("tickers", () => {
     expect(b).toBe("c");
   });
 
-  it('can reset the global state to the last tick', () => {
-    const a = derivable.atom('a');
-    const b = derivable.atom('b');
+  it("can reset the global state to the last tick", () => {
+    const a = derivable.atom("a");
+    const b = derivable.atom("b");
 
     const t = derivable.ticker();
 
-    a.set('b');
-    b.set('a');
+    a.set("b");
+    b.set("a");
 
-    expect(a.get()).toBe('b');
-    expect(b.get()).toBe('a');
+    expect(a.get()).toBe("b");
+    expect(b.get()).toBe("a");
 
     t.reset();
 
-    expect(a.get()).toBe('a');
-    expect(b.get()).toBe('b');
+    expect(a.get()).toBe("a");
+    expect(b.get()).toBe("b");
 
     t.release();
     expect(() => {
@@ -660,44 +743,46 @@ describe("tickers", () => {
   it("should not cause parents to be investigated in the wrong order", () => {
     const a = derivable.atom(null);
     const b = a.derive(d => d.toString());
-    const c = a.derive(_c => _c ? b.get() :  'a is null');
+    const c = a.derive(_c => (_c ? b.get() : "a is null"));
 
-    let expecting = 'a is null';
+    let expecting = "a is null";
 
     c.react(d => {
       expect(d).toBe(expecting);
     });
 
-    expecting = 'some other string';
+    expecting = "some other string";
 
-    a.set('some other string');
+    a.set("some other string");
 
-    expecting = 'a is null';
+    expecting = "a is null";
     // this would throw if subject to wrong-order bug
     a.set(null);
   });
 
   it("can be created in reactors", () => {
-    const a = derivable.atom('a');
+    const a = derivable.atom("a");
 
     derivable.transact(() => {
-      a.set('b');
+      a.set("b");
       a.react(() => {});
     });
   });
 });
 
-
-describe('the `when` optons to the `react` method', () => {
-  it('allows one to tie the lifecycle of a reactor to some piece of state anonymously', () => {
+describe("the `when` optons to the `react` method", () => {
+  it("allows one to tie the lifecycle of a reactor to some piece of state anonymously", () => {
     const $Cond = derivable.atom(false);
     const $N = derivable.atom(0);
     const inc = x => x + 1;
 
     let i = 0;
-    $N.react(() => {
-      i++;
-    }, { when: $Cond });
+    $N.react(
+      () => {
+        i++;
+      },
+      { when: $Cond }
+    );
 
     expect(i).toBe(0);
 
@@ -727,16 +812,19 @@ describe('the `when` optons to the `react` method', () => {
     expect(i).toBe(4);
   });
 
-  it('casts the condition to a boolean', () => {
+  it("casts the condition to a boolean", () => {
     const $Cond = derivable.atom("blub");
     const $N = derivable.atom(0);
     const inc = x => x + 1;
 
     let i = 0;
 
-    $N.react(() => {
-      i++;
-    }, { when: $Cond });
+    $N.react(
+      () => {
+        i++;
+      },
+      { when: $Cond }
+    );
 
     expect(i).toBe(1);
 
@@ -752,8 +840,8 @@ describe('the `when` optons to the `react` method', () => {
   });
 });
 
-describe('the .maybeReact method', () => {
-  it('only reacts when the thing in the derivable is not null or undefined', () => {
+describe("the .maybeReact method", () => {
+  it("only reacts when the thing in the derivable is not null or undefined", () => {
     const a = derivable.atom(null);
 
     let _a = "Tree";
@@ -773,15 +861,18 @@ describe('the .maybeReact method', () => {
     expect(_a).toBe("House");
   });
 
-  it('merges any given when condition', () => {
+  it("merges any given when condition", () => {
     const a = derivable.atom(null);
     const when = derivable.atom(true);
 
     let _a = "Tree";
 
-    a.maybeReact(d => {
-      _a = d;
-    }, { when });
+    a.maybeReact(
+      d => {
+        _a = d;
+      },
+      { when }
+    );
 
     expect(_a).toBe("Tree");
 
@@ -812,9 +903,12 @@ describe('the .maybeReact method', () => {
 
     let _a = "Tree";
 
-    a.maybeReact(d => {
-      _a = d;
-    }, { when , from, until });
+    a.maybeReact(
+      d => {
+        _a = d;
+      },
+      { when, from, until }
+    );
 
     expect(_a).toBe("Tree");
 
@@ -830,13 +924,13 @@ describe('the .maybeReact method', () => {
 
     expect(_a).toBe("House");
 
-    when .set(false);
+    when.set(false);
 
     a.set("Tree");
 
     expect(_a).toBe("House");
 
-    when .set(true);
+    when.set(true);
 
     expect(_a).toBe("Tree");
 
@@ -845,6 +939,5 @@ describe('the .maybeReact method', () => {
     a.set("House");
 
     expect(_a).toBe("Tree");
-
   });
 });

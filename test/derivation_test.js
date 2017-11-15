@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
-const util = require('./util');
+const util = require("./util");
 
 describe("a derivation", () => {
   const oneGigabyte = 1024 * 1024 * 1024;
@@ -25,9 +25,17 @@ describe("a derivation", () => {
 
   it("can derive from more than one atom", () => {
     const order = util.label(derivable.atom(0), "O");
-    const orderName = util.label(order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]), "ON");
-    const size = util.label(bytes.derive(d => orderUp(d, order.get())), "!size!");
-    const sizeString = derivable.derive(() => `${size.get()} ${orderName.get()}`);
+    const orderName = util.label(
+      order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]),
+      "ON"
+    );
+    const size = util.label(
+      bytes.derive(d => orderUp(d, order.get())),
+      "!size!"
+    );
+    const sizeString = derivable.derive(
+      () => `${size.get()} ${orderName.get()}`
+    );
 
     // size is in bytes when order is 0
     expect(size.get()).toBe(bytes.get());
@@ -46,14 +54,17 @@ describe("a derivation", () => {
     expect(sizeString.get()).toBe("1 gigabytes");
   });
 
-  it('can be re-instantiated with custom equality-checking', () => {
+  it("can be re-instantiated with custom equality-checking", () => {
     const a = derivable.atom(5);
     const amod2map = a.derive(d => ({ a: d % 2 }));
 
     let numReactions = 0;
-    amod2map.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
+    amod2map.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
 
     expect(numReactions).toBe(0);
     a.set(7);
@@ -68,9 +79,12 @@ describe("a derivation", () => {
       .withEquality((_ref, _ref2) => _ref.a === _ref2.a);
 
     let numReactions2 = 0;
-    amod2map2.react(() => {
-      numReactions2++;
-    }, { skipFirst: true });
+    amod2map2.react(
+      () => {
+        numReactions2++;
+      },
+      { skipFirst: true }
+    );
 
     expect(numReactions2).toBe(0);
     a.set(7);
@@ -112,7 +126,7 @@ describe("derivations inside a transaction", () => {
     expect(plusOne.get()).toBe(1);
   });
 
-  it('can take on temporary values even in nested transactions', () => {
+  it("can take on temporary values even in nested transactions", () => {
     const a = derivable.atom(0);
     const plusOne = a.derive(d => d + 1);
 
@@ -138,7 +152,7 @@ describe("derivations inside a transaction", () => {
     expect(plusOne.get()).toBe(1);
   });
 
-  it('can be dereferenced in nested transactions', () => {
+  it("can be dereferenced in nested transactions", () => {
     const a = derivable.atom(0);
     const plusOne = a.derive(d => d + 1);
 
@@ -164,7 +178,7 @@ describe("derivations inside a transaction", () => {
     });
   });
 
-  it('can be mutated indirectly in nested transactions', () => {
+  it("can be mutated indirectly in nested transactions", () => {
     const a = derivable.atom(0);
     const plusOne = a.derive(d => d + 1);
 
@@ -214,9 +228,12 @@ describe("nested derivables", () => {
     expect($a.get()).toBe(5);
 
     let reaction_b = null;
-    $a.react(b => {
-      reaction_b = b;
-    }, { skipFirst: true });
+    $a.react(
+      b => {
+        reaction_b = b;
+      },
+      { skipFirst: true }
+    );
 
     expect(reaction_b).toBe(null);
 
@@ -235,9 +252,9 @@ describe("nested derivables", () => {
     const $$A = derivable.atom(null);
     const $a = $$A.maybeDerive(d => d.get());
 
-    const $B = derivable.atom('junk');
+    const $B = derivable.atom("junk");
 
-    const $isJunk = $B.is('junk');
+    const $isJunk = $B.is("junk");
 
     let isJunk = null;
 
@@ -251,7 +268,7 @@ describe("nested derivables", () => {
 
     expect(isJunk).toBe(true);
 
-    $B.set('not junk');
+    $B.set("not junk");
     expect(isJunk).toBe(false);
   });
 
@@ -259,15 +276,18 @@ describe("nested derivables", () => {
     const $$A = derivable.atom(null);
     const $a = $$A.maybeDerive(d => d.get());
 
-    const $B = derivable.atom('junk');
+    const $B = derivable.atom("junk");
 
-    const $isJunk = $B.is('junk');
+    const $isJunk = $B.is("junk");
 
     let isJunk = null;
 
-    $a.react(a => {
-      isJunk = a;
-    }, { when: $a });
+    $a.react(
+      a => {
+        isJunk = a;
+      },
+      { when: $a }
+    );
 
     expect(isJunk == null).toBeTruthy();
 
@@ -275,7 +295,7 @@ describe("nested derivables", () => {
 
     expect(isJunk).toBe(true);
 
-    $B.set('not junk');
+    $B.set("not junk");
     // still junk
     expect(isJunk).toBe(true);
   });

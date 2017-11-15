@@ -1,23 +1,24 @@
-import * as util from './util';
+import * as util from "./util";
 
 const parentsStack = [];
 let child = null;
 
-export function startCapturingParents (_child, parents) {
-  parentsStack.push({parents, offset: 0, child: _child});
+export function startCapturingParents(_child, parents) {
+  parentsStack.push({ parents, offset: 0, child: _child });
   child = _child;
 }
-export function retrieveParentsFrame () {
+export function retrieveParentsFrame() {
   return parentsStack[parentsStack.length - 1];
 }
-export function stopCapturingParents () {
+export function stopCapturingParents() {
   parentsStack.pop();
-  child = parentsStack.length === 0
-          ? null
-          : parentsStack[parentsStack.length - 1].child;
+  child =
+    parentsStack.length === 0
+      ? null
+      : parentsStack[parentsStack.length - 1].child;
 }
 
-export function maybeCaptureParent (p) {
+export function maybeCaptureParent(p) {
   if (child !== null) {
     const frame = parentsStack[parentsStack.length - 1];
     if (frame.parents[frame.offset] === p) {

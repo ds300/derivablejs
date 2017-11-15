@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const immutable = require('immutable');
+const immutable = require("immutable");
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
 describe("proxies", () => {
   const cursor = (proxyable, ...args) => {
@@ -19,18 +19,24 @@ describe("proxies", () => {
   };
 
   it("makes a functional proxy over an atom", () => {
-    const root = derivable.atom(immutable.fromJS({ things: ["zero", "one", "three"] }));
+    const root = derivable.atom(
+      immutable.fromJS({ things: ["zero", "one", "three"] })
+    );
 
     const two = cursor(root, "things", 2);
     expect("three").toEqual(two.get());
 
     two.set("two");
 
-    expect(immutable.fromJS({ things: ["zero", "one", "two"] }).equals(root.get())).toBeTruthy();
+    expect(
+      immutable.fromJS({ things: ["zero", "one", "two"] }).equals(root.get())
+    ).toBeTruthy();
 
     const things = cursor(root, "things");
 
-    expect(immutable.fromJS(["zero", "one", "two"]).equals(things.get())).toBeTruthy();
+    expect(
+      immutable.fromJS(["zero", "one", "two"]).equals(things.get())
+    ).toBeTruthy();
 
     const one = cursor(things, 1);
 
@@ -46,7 +52,9 @@ describe("proxies", () => {
     one.set("five");
     expect(2).toEqual(reactors);
 
-    expect(immutable.fromJS(["zero", "five", "two"]).equals(things.get())).toBeTruthy();
+    expect(
+      immutable.fromJS(["zero", "five", "two"]).equals(things.get())
+    ).toBeTruthy();
   });
 
   it("works on numbers too", () => {
@@ -56,7 +64,7 @@ describe("proxies", () => {
       get: number => parseInt(number.toString().split(".")[1]) || 0,
       set: (number, newVal) => {
         const beforeDecimalPoint = number.toString().split(".")[0];
-        return parseFloat(beforeDecimalPoint + '.' + newVal);
+        return parseFloat(beforeDecimalPoint + "." + newVal);
       }
     });
 
@@ -73,7 +81,7 @@ describe("proxies", () => {
     expect(3.9134).toBe(num.get());
   });
 
-  it('can be re-instantiated with custom equality-checking', () => {
+  it("can be re-instantiated with custom equality-checking", () => {
     const proxy = {
       get: a => ({ a: a % 2 }),
       set: (a, v) => v.a
@@ -82,9 +90,12 @@ describe("proxies", () => {
     const amod2map = a.proxy(proxy);
 
     let numReactions = 0;
-    amod2map.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
+    amod2map.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
 
     expect(numReactions).toBe(0);
     a.set(7);
@@ -97,12 +108,17 @@ describe("proxies", () => {
     amod2map.set({ a: 1 });
     expect(numReactions).toBe(4);
 
-    const amod2map2 = a.proxy(proxy).withEquality((_ref, _ref2) => _ref.a === _ref2.a);
+    const amod2map2 = a
+      .proxy(proxy)
+      .withEquality((_ref, _ref2) => _ref.a === _ref2.a);
 
     let numReactions2 = 0;
-    amod2map2.react(() => {
-      numReactions2++;
-    }, { skipFirst: true });
+    amod2map2.react(
+      () => {
+        numReactions2++;
+      },
+      { skipFirst: true }
+    );
 
     expect(numReactions2).toBe(0);
     a.set(7);
@@ -117,14 +133,14 @@ describe("proxies", () => {
   });
 });
 
-describe('composite proxies', () => {
-  it('allow multiple atoms to be proxied over', () => {
-    const $FirstName = derivable.atom('John');
-    const $LastName = derivable.atom('Steinbeck');
+describe("composite proxies", () => {
+  it("allow multiple atoms to be proxied over", () => {
+    const $FirstName = derivable.atom("John");
+    const $LastName = derivable.atom("Steinbeck");
     const $Name = derivable.proxy({
-      get: () => $FirstName.get() + ' ' + $LastName.get(),
+      get: () => $FirstName.get() + " " + $LastName.get(),
       set: val => {
-        const _val$split = val.split(' ');
+        const _val$split = val.split(" ");
 
         const first = _val$split[0];
         const last = _val$split[1];
@@ -134,35 +150,43 @@ describe('composite proxies', () => {
       }
     });
 
-    expect($Name.get()).toBe('John Steinbeck');
+    expect($Name.get()).toBe("John Steinbeck");
 
-    $Name.set('James Joyce');
-    expect($Name.get()).toBe('James Joyce');
-    expect($FirstName.get()).toBe('James');
-    expect($LastName.get()).toBe('Joyce');
+    $Name.set("James Joyce");
+    expect($Name.get()).toBe("James Joyce");
+    expect($FirstName.get()).toBe("James");
+    expect($LastName.get()).toBe("Joyce");
   });
 
-  it('runs `set` opeartions atomically', () => {
-    const $A = derivable.atom('a');
-    const $B = derivable.atom('b');
+  it("runs `set` opeartions atomically", () => {
+    const $A = derivable.atom("a");
+    const $B = derivable.atom("b");
 
     let numReactions = 0;
-    $A.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
-    $B.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
+    $A.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
+    $B.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
 
-    derivable.proxy({
-      get: () => {},
-      set: () => {
-        $A.set('A');
-        expect(numReactions).toBe(0);
-        $B.set('B');
-        expect(numReactions).toBe(0);
-      }
-    }).set();
+    derivable
+      .proxy({
+        get: () => {},
+        set: () => {
+          $A.set("A");
+          expect(numReactions).toBe(0);
+          $B.set("B");
+          expect(numReactions).toBe(0);
+        }
+      })
+      .set();
     expect(numReactions).toBe(2);
   });
 });

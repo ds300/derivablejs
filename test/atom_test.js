@@ -1,9 +1,8 @@
-'use strict';
+"use strict";
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
 describe("the humble atom", () => {
-
   let n;
 
   beforeEach(() => {
@@ -28,7 +27,7 @@ describe("the humble atom", () => {
     expect(n.get()).toBe(4);
   });
 
-  it('can take on temporary values inside a transaction', () => {
+  it("can take on temporary values inside a transaction", () => {
     const a = derivable.atom("a");
     derivable.transact(abort1 => {
       a.set("b");
@@ -44,12 +43,15 @@ describe("the humble atom", () => {
     expect(a.get()).toBe("a");
   });
 
-  it('should be able to go back to its original value with no ill effects', () => {
+  it("should be able to go back to its original value with no ill effects", () => {
     const a = derivable.atom("a");
     let reacted = false;
-    a.react(() => {
-      reacted = true;
-    }, { skipFirst: true });
+    a.react(
+      () => {
+        reacted = true;
+      },
+      { skipFirst: true }
+    );
 
     // no reaction to begin with
     expect(reacted).toBe(false);
@@ -63,7 +65,7 @@ describe("the humble atom", () => {
     expect(reacted).toBe(false);
   });
 
-  it('can keep transaction values if they are\'t aborted', () => {
+  it("can keep transaction values if they are't aborted", () => {
     const a = derivable.atom("a");
     derivable.transact(() => {
       a.set("b");
@@ -75,19 +77,25 @@ describe("the humble atom", () => {
     expect(a.get()).toBe("c");
   });
 
-  it('can include an equality-checking function', () => {
+  it("can include an equality-checking function", () => {
     const a = derivable.atom(0);
     const b = a.withEquality(() => false);
     // creates a brand new atom
     expect(a).not.toBe(b);
 
     let numReactions = 0;
-    a.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
-    b.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
+    a.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
+    b.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
 
     expect(numReactions).toBe(0);
     a.set(0);
@@ -101,10 +109,10 @@ describe("the humble atom", () => {
     expect(numReactions).toBe(2);
   });
 
-  it('only likes functions or falsey things for equality functions', () => {
-    derivable.atom(4).withEquality('');
+  it("only likes functions or falsey things for equality functions", () => {
+    derivable.atom(4).withEquality("");
     expect(() => {
-      derivable.atom(4).withEquality('yo');
+      derivable.atom(4).withEquality("yo");
     }).toThrow();
     derivable.atom(4).withEquality(0);
     expect(() => {
@@ -113,26 +121,31 @@ describe("the humble atom", () => {
     derivable.atom(4).withEquality(null);
     derivable.atom(4).withEquality(void 0);
   });
-
 });
 
-describe('the concurrent modification of _reactors bug', () => {
-  it('doesnt happen any more', () => {
+describe("the concurrent modification of _reactors bug", () => {
+  it("doesnt happen any more", () => {
     const $A = derivable.atom(false);
     const $B = derivable.atom(false);
 
     let A_success = false;
     let C_success = false;
 
-    $A.react(() => {
-      A_success = true;
-    }, { from: $A });
+    $A.react(
+      () => {
+        A_success = true;
+      },
+      { from: $A }
+    );
 
     const $C = $A.derive(a => a && $B.get());
 
-    $C.react(() => {
-      C_success = true;
-    }, { from: $C });
+    $C.react(
+      () => {
+        C_success = true;
+      },
+      { from: $C }
+    );
 
     expect(A_success).toBe(false);
     expect(C_success).toBe(false);

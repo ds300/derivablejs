@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const derivable = require('../dist/derivable');
+const derivable = require("../dist/derivable");
 
 describe("the `is*` fns", () => {
   it("just work, don't worry about it", () => {
@@ -73,38 +73,42 @@ describe("the `struct` function", () => {
     expect({ name: "Jemimah", telephone: "n/a" }).toEqual(grouped.get());
   });
 
-  it("actually turns any arbitrarily nested structure of" + " maybe-derivables into a derivable", () => {
-    const name = derivable.atom("wilbur");
-    const telephone = derivable.atom("0987654321");
-    const friend1Name = derivable.atom("Sylvester");
-    const friend1Telephone = derivable.atom("blub");
+  it(
+    "actually turns any arbitrarily nested structure of" +
+      " maybe-derivables into a derivable",
+    () => {
+      const name = derivable.atom("wilbur");
+      const telephone = derivable.atom("0987654321");
+      const friend1Name = derivable.atom("Sylvester");
+      const friend1Telephone = derivable.atom("blub");
 
-    const grouped = derivable.struct({
-      name,
-      telephone,
-      blood_type: "AB Negative",
-      age: 75,
-      friends: [{ name: friend1Name, telephone: friend1Telephone }, "others"]
-    });
+      const grouped = derivable.struct({
+        name,
+        telephone,
+        blood_type: "AB Negative",
+        age: 75,
+        friends: [{ name: friend1Name, telephone: friend1Telephone }, "others"]
+      });
 
-    expect({
-      name: "wilbur",
-      telephone: "0987654321",
-      blood_type: "AB Negative",
-      age: 75,
-      friends: [{ name: "Sylvester", telephone: "blub" }, "others"]
-    }).toEqual(grouped.get());
+      expect({
+        name: "wilbur",
+        telephone: "0987654321",
+        blood_type: "AB Negative",
+        age: 75,
+        friends: [{ name: "Sylvester", telephone: "blub" }, "others"]
+      }).toEqual(grouped.get());
 
-    friend1Name.set("Brittany");
+      friend1Name.set("Brittany");
 
-    expect({
-      name: "wilbur",
-      telephone: "0987654321",
-      blood_type: "AB Negative",
-      age: 75,
-      friends: [{ name: "Brittany", telephone: "blub" }, "others"]
-    }).toEqual(grouped.get());
-  });
+      expect({
+        name: "wilbur",
+        telephone: "0987654321",
+        blood_type: "AB Negative",
+        age: 75,
+        friends: [{ name: "Brittany", telephone: "blub" }, "others"]
+      }).toEqual(grouped.get());
+    }
+  );
 
   it("only accepts plain objects or arrays", () => {
     expect(() => {
@@ -133,9 +137,12 @@ describe("the `transact` function", () => {
 
     let timesChanged = 0;
 
-    derivable.struct({ a, b }).react(() => {
-      timesChanged++;
-    }, { skipFirst: true });
+    derivable.struct({ a, b }).react(
+      () => {
+        timesChanged++;
+      },
+      { skipFirst: true }
+    );
 
     expect(timesChanged).toBe(0);
 
@@ -175,9 +182,12 @@ describe("the `transaction` function", () => {
 
     let timesChanged = 0;
 
-    derivable.struct({ a, b }).react(() => {
-      timesChanged++;
-    }, { skipFirst: true });
+    derivable.struct({ a, b }).react(
+      () => {
+        timesChanged++;
+      },
+      { skipFirst: true }
+    );
 
     expect(timesChanged).toBe(0);
 
@@ -210,16 +220,20 @@ describe("the `transaction` function", () => {
 });
 
 describe("debug mode", () => {
-  it("causes derivations and reactors to store the stacktraces of their" + " instantiation points", () => {
-    const d = derivable.derive(() => 0);
-    expect(!d.stack).toBeTruthy();
-    derivable.setDebugMode(true);
-    const e = derivable.derive(() => {
-      throw Error();
-    });
-    expect(e.stack).toBeTruthy();
-    derivable.setDebugMode(false);
-  });
+  it(
+    "causes derivations and reactors to store the stacktraces of their" +
+      " instantiation points",
+    () => {
+      const d = derivable.derive(() => 0);
+      expect(!d.stack).toBeTruthy();
+      derivable.setDebugMode(true);
+      const e = derivable.derive(() => {
+        throw Error();
+      });
+      expect(e.stack).toBeTruthy();
+      derivable.setDebugMode(false);
+    }
+  );
 
   it("causes stack traces to be printed when things derivations and reactors throw errors", () => {
     const d = derivable.derive(() => 0);
@@ -238,57 +252,63 @@ describe("debug mode", () => {
       expect(stack).toBe(error.stack);
       console.error = err;
     } catch (e) {
-      expect(e).toBe('cheese');
+      expect(e).toBe("cheese");
     }
     derivable.setDebugMode(false);
   });
 });
 
-describe('the atomically function', () => {
-  it('creates a transaction if not already in a transaction', () => {
-    const $A = derivable.atom('a');
+describe("the atomically function", () => {
+  it("creates a transaction if not already in a transaction", () => {
+    const $A = derivable.atom("a");
     let numReactions = 0;
-    $A.react(() => {
-      numReactions++;
-    }, { skipFirst: true });
+    $A.react(
+      () => {
+        numReactions++;
+      },
+      { skipFirst: true }
+    );
     expect(numReactions).toBe(0);
 
     derivable.atomically(() => {
-      $A.set('b');
+      $A.set("b");
       expect(numReactions).toBe(0);
     });
     expect(numReactions).toBe(1);
   });
 
   it("doesn't create new transactions if already in a transaction", () => {
-    const $A = derivable.atom('a');
+    const $A = derivable.atom("a");
 
     derivable.transact(() => {
       try {
         derivable.atomically(() => {
-          $A.set('b');
-          expect($A.get()).toBe('b');
+          $A.set("b");
+          expect($A.get()).toBe("b");
           throw new Error();
         });
       } catch (ignored) {}
       // no transaction created so change to $A persists
-      expect($A.get()).toBe('b');
+      expect($A.get()).toBe("b");
     });
-    expect($A.get()).toBe('b');
+    expect($A.get()).toBe("b");
   });
 });
 
-describe('the atomic function', () => {
-  it('creates a transaction if not already in a transaction', () => {
-    const $A = derivable.atom('a');
+describe("the atomic function", () => {
+  it("creates a transaction if not already in a transaction", () => {
+    const $A = derivable.atom("a");
     let numReactions = 0;
-    $A.react(() => {
-      return numReactions++;
-    }, { skipFirst: true });
+    $A.react(
+      () => {
+        return numReactions++;
+      },
+      { skipFirst: true }
+    );
     expect(numReactions).toBe(0);
 
     const res = derivable.atomic(() => {
-      $A.set('b');
+      $A.set("b");
       expect(numReactions).toBe(0);
       return 3;
     })();
@@ -299,26 +319,26 @@ describe('the atomic function', () => {
   });
 
   it("doesn't create new transactions if already in a transaction", () => {
-    const $A = derivable.atom('a');
+    const $A = derivable.atom("a");
 
     derivable.transact(() => {
       try {
         derivable.atomic(() => {
-          $A.set('b');
-          expect($A.get()).toBe('b');
+          $A.set("b");
+          expect($A.get()).toBe("b");
           throw new Error();
         })();
       } catch (ignored) {}
       // no transaction created so change to $A persists
-      expect($A.get()).toBe('b');
+      expect($A.get()).toBe("b");
     });
-    expect($A.get()).toBe('b');
+    expect($A.get()).toBe("b");
   });
 });
 
-describe('the wrapPreviousState function', () => {
-  it('wraps a function of one argument, passing in previous arguments', () => {
-    const f = derivable.wrapPreviousState((a, b) => a + b , 0);
+describe("the wrapPreviousState function", () => {
+  it("wraps a function of one argument, passing in previous arguments", () => {
+    const f = derivable.wrapPreviousState((a, b) => a + b, 0);
 
     expect(f(1)).toBe(1);
     expect(f(2)).toBe(3);
@@ -328,7 +348,7 @@ describe('the wrapPreviousState function', () => {
     expect(f(6)).toBe(11);
   });
 
-  it('the init arg is optional', () => {
+  it("the init arg is optional", () => {
     const f = derivable.wrapPreviousState((a, b) => a + (b || 10));
 
     expect(f(1)).toBe(11);
@@ -336,8 +356,8 @@ describe('the wrapPreviousState function', () => {
   });
 });
 
-describe('the captureDereferences function', () => {
-  it('executes the given function, returning an array of captured dereferences', () => {
+describe("the captureDereferences function", () => {
+  it("executes the given function, returning an array of captured dereferences", () => {
     const a = derivable.atom("a");
     const b = derivable.atom("b");
     const c = a.derive(d => d.length);

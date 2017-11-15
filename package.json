@@ -3,6 +3,12 @@
   "version": "2.0.0-beta.1",
   "description": "Functional Reactive State for JavaScript & TypeScript",
   "author": "David Sheldrick",
+  "main": "dist/derivable.js",
+  "module": "dist/derivable.es.js",
+  "typings": "dist/derivable.d.ts",
+  "typescript": {
+    "definition": "dist/derivable.d.ts"
+  },
   "files": [
     "dist"
   ],
@@ -17,13 +23,14 @@
     "stats": "node scripts/stats.js",
     "toc": "doctoc README.md",
     "clean": "rm -rf dist",
-    "all": "npm run clean && npm run test && npm run stats && npm run bench && npm run toc"
+    "all": "npm run clean && npm run test && npm run stats && npm run bench && npm run toc",
+    "precommit": "lint-staged"
   },
-  "main": "dist/derivable.js",
-  "module": "dist/derivable.es.js",
-  "typings": "dist/derivable.d.ts",
-  "typescript": {
-    "definition": "dist/derivable.d.ts"
+  "lint-staged": {
+    "*.js": [
+      "prettier --quotes=single --write",
+      "git add"
+    ]
   },
   "@std/esm": "cjs",
   "jest": {
@@ -48,10 +55,13 @@
     "doctoc": "^1.0.0",
     "eslint": "^4.11.0",
     "eslint-plugin-es5": "^1.1.0",
+    "husky": "^0.14.3",
     "immutable": "^3.7.4",
     "jest": "^21.2.1",
+    "lint-staged": "^5.0.0",
     "mobx": "^2.3.3",
     "np": "^2.16.0",
+    "prettier": "^1.8.2",
     "rollup": "^0.51.5",
     "rollup-plugin-buble": "^0.17.0",
     "rollup-plugin-uglify": "^2.0.1"

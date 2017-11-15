@@ -1,10 +1,10 @@
-import {isDerivable} from './types';
+import { isDerivable } from "./types";
 
 /**
  * dereferences a thing if it is dereferencable, otherwise just returns it.
  */
 
-export function unpack (thing) {
+export function unpack(thing) {
   if (isDerivable(thing)) {
     return thing.get();
   } else {
@@ -12,7 +12,7 @@ export function unpack (thing) {
   }
 }
 
-export function deepUnpack (thing) {
+export function deepUnpack(thing) {
   if (isDerivable(thing)) {
     return thing.get();
   } else if (thing instanceof Array) {
@@ -20,7 +20,7 @@ export function deepUnpack (thing) {
   } else if (thing.constructor === Object) {
     const result = {};
     const keys = Object.keys(thing);
-    for (let i = keys.length; i--;) {
+    for (let i = keys.length; i--; ) {
       const prop = keys[i];
       result[prop] = deepUnpack(thing[prop]);
     }
