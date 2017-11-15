@@ -132,14 +132,11 @@ describe("boolean logic", () => {
     const b = derivable.atom(true);
     const aANDb = derivable.and(a, b);
     const aORb = derivable.or(a, b);
-    const NOTa = a.not();
 
     // true & true = true
     expect(aANDb.get()).toBe(true);
     // true | true = true
     expect(aORb.get()).toBe(true);
-    // !true = false
-    expect(NOTa.get()).toBe(false);
 
     b.set(false);
 
@@ -154,150 +151,6 @@ describe("boolean logic", () => {
     expect(aANDb.get()).toBe(false);
     // false | false = false
     expect(aORb.get()).toBe(false);
-    // !false = true
-    expect(NOTa.get()).toBe(true);
-  });
-
-  it("is mirrored for dealing with null/undefined", () => {
-    const a = derivable.atom(false);
-    const b = derivable.atom(false);
-    const aANDb = derivable.mAnd(a, b).mThen(true, false);
-    const aORb = derivable.mOr(a, b).mThen(true, false);
-
-    // false m& false m= true
-    expect(aANDb.get()).toBe(true);
-    // false m| false m= true
-    expect(aORb.get()).toBe(true);
-
-    a.set(null);
-
-    // null m& false m= false
-    expect(aANDb.get()).toBe(false);
-    // null m| false m= true
-    expect(aORb.get()).toBe(true);
-
-    b.set(null);
-
-    // null m& null m= false
-    expect(aANDb.get()).toBe(false);
-    // null m| null m= false
-    expect(aORb.get()).toBe(false);
-  });
-});
-
-describe("control flow", () => {
-  it("allows different paths to be taken depending on conditions", () => {
-    const number = derivable.atom(0);
-    const even = number.derive(n => n % 2 === 0);
-
-    const message = even.then("even", "odd");
-
-    expect(message.get()).toBe("even");
-
-    number.set(1);
-
-    expect(message.get()).toBe("odd");
-  });
-
-  it("doesn't evaluate untaken paths", () => {
-    const number = derivable.atom(0);
-    const even = number.derive(n => n % 2 === 0);
-
-    let dideven = false;
-    let didodd = false;
-
-    const chooseAPath = even.then(
-      derivable.derive(() => {
-        dideven = true;
-      }),
-      derivable.derive(() => {
-        didodd = true;
-      })
-    );
-
-    chooseAPath.get();
-
-    expect(dideven && !didodd).toBeTruthy();
-
-    dideven = false;
-
-    expect(!dideven && !didodd).toBeTruthy();
-
-    number.set(1);
-
-    expect(!dideven && !didodd).toBeTruthy();
-
-    chooseAPath.get();
-
-    expect(!dideven && didodd).toBeTruthy();
-  });
-
-  it("same goes for the switch statement", () => {
-    const thing = derivable.atom("Tigran");
-
-    const result = thing.switch("Banana", "YUMMY", 532, "FiveThreeTwo", "Tigran", "Hamasayan");
-
-    expect("Hamasayan").toBe(result.get());
-
-    thing.set("Banana");
-
-    expect("YUMMY").toBe(result.get());
-
-    thing.set(532);
-
-    expect("FiveThreeTwo").toBe(result.get());
-
-    thing.set("nonsense");
-
-    expect(result.get()).toBe(undefined);
-
-    const switcheroo = derivable.atom("a");
-
-    let dida = false;
-    let didb = false;
-    let didc = false;
-    let didx = false;
-
-    const conda = derivable.atom("a");
-    const condb = derivable.atom("b");
-    const condc = derivable.atom("c");
-
-    const chooseAPath = switcheroo.switch(
-      conda,
-      derivable.derive(() => dida = true),
-      condb,
-      derivable.derive(() => didb = true),
-      condc,
-      derivable.derive(() => didc = true),
-      //else
-      derivable.derive(() => didx = true)
-    );
-
-    expect(!dida && !didb && !didc && !didx).toBeTruthy();
-
-    chooseAPath.get();
-    expect(dida && !didb && !didc && !didx).toBeTruthy();
-
-    dida = false;
-    switcheroo.set("b");
-    expect(!dida && !didb && !didc && !didx).toBeTruthy();
-
-    chooseAPath.get();
-    expect(!dida && didb && !didc && !didx).toBeTruthy();
-
-    didb = false;
-    switcheroo.set("c");
-    expect(!dida && !didb && !didc && !didx).toBeTruthy();
-
-    chooseAPath.get();
-    expect(!dida && !didb && didc && !didx).toBeTruthy();
-
-    didc = false;
-    switcheroo.set("blubr");
-    expect(!dida && !didb && !didc && !didx).toBeTruthy();
-
-    chooseAPath.get();
-    expect(!dida && !didb && !didc && didx).toBeTruthy();
   });
 });
 
@@ -551,7 +404,7 @@ describe('the captureDereferences function', () => {
   it('executes the given function, returning an array of captured dereferences', () => {
     const a = derivable.atom("a");
     const b = derivable.atom("b");
-    const c = a.derive('length');
+    const c = a.derive(d => d.length);
 
     const _a = derivable.captureDereferences(() => {
       a.get();

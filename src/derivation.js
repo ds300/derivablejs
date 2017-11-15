@@ -133,22 +133,7 @@ const warnDeriveFn = (() => {
 })();
 
 export function derive (f, a, b, c, d) {
-  if (f instanceof Array) {
-    // Template string tag for derivable strings
-    var tplArgs = util.slice(arguments, 1);
-    return deriveFactory(function () {
-      var s = "";
-      for (var i=0; i < f.length; i++) {
-        s += f[i];
-        if (i < tplArgs.length) {
-          s += unpack(tplArgs[i]);
-        }
-      }
-      return s;
-    });
-
-  } else {
-    switch (arguments.length) {
+  switch (arguments.length) {
     case 0:
       throw new Error('derive takes at least one argument');
     case 1:
@@ -182,6 +167,5 @@ export function derive (f, a, b, c, d) {
       return deriveFactory(function () {
         return f.apply(null, args.map(unpack));
       });
-    }
   }
 }
