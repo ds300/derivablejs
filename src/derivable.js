@@ -29,22 +29,22 @@ export var derivablePrototype = {
     return this.derive(value => util.some(value) ? value : def);
   },
 
-  react: function (f, opts) {
+  react(f, opts) {
     makeReactor(this, f, opts);
   },
 
-  mReact: function (f, opts) {
-    var mWhen = this.derive(Boolean);
+  maybeReact(f, opts) {
+    let maybeWhen = this.derive(Boolean);
     if (opts && 'when' in opts && opts.when !== true) {
-      var when = opts.when;
+      let when = opts.when;
       if (typeof when === 'function' || when === false) {
         when = derive(when);
       } else if (!types.isDerivable(when)) {
         throw new Error('when condition must be bool, function, or derivable');
       }
-      mWhen = mWhen.derive(d => d && when.get());
+      maybeWhen = maybeWhen.derive(d => d && when.get());
     }
-    makeReactor(this, f, util.assign({}, opts, {when: mWhen}));
+    makeReactor(this, f, util.assign({}, opts, { when: maybeWhen }));
   },
 
   is: function (other) {

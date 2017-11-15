@@ -104,11 +104,11 @@ function testReactions() {
     once: false,
   });
 
-  c.mReact(v => {
+  c.maybeReact(v => {
     console.log(v.x);
   });
 
-  c.mReact(v => {}, {
+  c.maybeReact(v => {}, {
     from: condition,
     when: condition,
     until: condition,

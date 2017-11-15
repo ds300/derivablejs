@@ -14,13 +14,9 @@ declare module derivable {
 
     react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
-    mReact(f: (value: T) => void, options?: Lifecycle<T>): void;
+    maybeReact(f: (value: T) => void, options?: Lifecycle<T>): void;
 
     get(): T;
-
-    map<E>(f: (value: T) => E): Derivable<E>;
-
-    mMap<E>(f: (value: T) => E): Derivable<E>;
 
     is(other: any): Derivable<boolean>;
 

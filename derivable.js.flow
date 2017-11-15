@@ -10,7 +10,7 @@ export type Derivable<T> = {
 
   react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
-  mReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle<T>): void;
+  maybeReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle<T>): void;
 
   get(): T;
 

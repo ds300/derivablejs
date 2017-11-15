@@ -752,13 +752,13 @@ describe('the `when` optons to the `react` method', () => {
   });
 });
 
-describe('the .mReact method', () => {
+describe('the .maybeReact method', () => {
   it('only reacts when the thing in the derivable is not null or undefined', () => {
     const a = derivable.atom(null);
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     });
 
@@ -779,7 +779,7 @@ describe('the .mReact method', () => {
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     }, { when });
 
@@ -812,7 +812,7 @@ describe('the .mReact method', () => {
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     }, { when , from, until });
 
