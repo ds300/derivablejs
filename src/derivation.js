@@ -1,7 +1,6 @@
 import * as util from './util';
 import * as parents from './parents';
 import * as types from './types';
-import {unpack} from './unpack';
 import {CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED} from './states';
 
 export function Derivation (deriver) {
@@ -118,54 +117,9 @@ export function detach (parent, child) {
   }
 }
 
-export function deriveFactory(f) {
-  return new Derivation(f);
-}
-
-const warnDeriveFn = (() => {
-  let called = false;
-  return () => {
-    if (!called) {
-      called = true;
-      console.warn('derive with arguments injection (derive((a) => {}, da) is deprecated. Use map method instead');
-    }
-  };
-})();
-
-export function derive (f, a, b, c, d) {
-  switch (arguments.length) {
-    case 0:
-      throw new Error('derive takes at least one argument');
-    case 1:
-      return deriveFactory(f);
-    case 2:
-      warnDeriveFn();
-      return deriveFactory(function () {
-        return f(unpack(a));
-      });
-    case 3:
-      warnDeriveFn();
-      return deriveFactory(function () {
-        return f(unpack(a), unpack(b));
-      });
-    case 4:
-      warnDeriveFn();
-      return deriveFactory(function () {
-        return f(unpack(a), unpack(b), unpack(c));
-      });
-    case 5:
-      warnDeriveFn();
-      return deriveFactory(function () {
-        return f(unpack(a),
-                 unpack(b),
-                 unpack(c),
-                 unpack(d));
-      });
-    default:
-      warnDeriveFn();
-      var args = util.slice(arguments, 1);
-      return deriveFactory(function () {
-        return f.apply(null, args.map(unpack));
-      });
+export function derive(f) {
+  if (typeof f !== 'function') {
+    throw Error('derive requires function');
   }
+  return new Derivation(f);
 }

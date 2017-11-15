@@ -659,8 +659,8 @@ describe("tickers", () => {
 
   it("should not cause parents to be investigated in the wrong order", () => {
     const a = derivable.atom(null);
-    const b = a.map(d => d.toString());
-    const c = a.map(_c => _c ? b.get() :  'a is null');
+    const b = a.derive(d => d.toString());
+    const c = a.derive(_c => _c ? b.get() :  'a is null');
 
     let expecting = 'a is null';
 
@@ -682,9 +682,7 @@ describe("tickers", () => {
 
     derivable.transact(() => {
       a.set('b');
-      a.react(d => {
-        console.log(d);
-      });
+      a.react(() => {});
     });
   });
 });

@@ -128,7 +128,7 @@ describe('the concurrent modification of _reactors bug', () => {
       A_success = true;
     }, { from: $A });
 
-    const $C = $A.map(a => a && $B.get());
+    const $C = $A.derive(a => a && $B.get());
 
     $C.react(() => {
       C_success = true;
