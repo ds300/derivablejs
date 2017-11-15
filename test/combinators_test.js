@@ -131,51 +131,6 @@ test('mOr method', () => {
   expect(a.mOr(b).get()).toBe(0);
 });
 
-test('and function', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(2);
-  const c = derivable.atom(3);
-  const result = derivable.and(a, b, c);
-  expect(result.get()).toBe(3);
-
-  c.set(0);
-  expect(result.get()).toBe(0);
-
-  b.set(false);
-  expect(result.get()).toBe(false);
-
-  a.set(null);
-  expect(result.get()).toBe(null);
-});
-
-test('and method', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(2);
-  expect(a.and(b).get()).toBe(2);
-});
-
-test('mAnd function', () => {
-  const a = derivable.atom(1);
-  const b = derivable.atom(2);
-  const c = derivable.atom(3);
-  const result = derivable.mAnd(a, b, c);
-  expect(result.get()).toBe(3);
-
-  b.set(null);
-  expect(result.get()).toBe(null);
-
-  a.set(false);
-  b.set(false);
-  c.set(0);
-  expect(result.get()).toBe(0);
-});
-
-test('mAnd method', () => {
-  const a = derivable.atom(0);
-  const b = derivable.atom(null);
-  expect(a.mAnd(b).get()).toBe(null);
-});
-
 test('is method', () => {
   const a = derivable.atom(1);
   const b = derivable.atom(1);

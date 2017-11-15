@@ -37,12 +37,6 @@ function andOrFn (breakOn) {
 
 function identity (x) { return x; }
 
-function complement (f) { return function (x) { return !f(x); }; }
-
 export var or = andOrFn(identity);
 
 export var mOr = andOrFn(util.some);
-
-export var and = andOrFn(complement(identity));
-
-export var mAnd = andOrFn(complement(util.some));

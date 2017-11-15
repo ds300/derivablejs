@@ -775,7 +775,7 @@ describe('the .mReact method', () => {
     expect(_a).toBe("House");
   });
 
-  it('merges any given when condition', () => {
+  it.only('merges any given when condition', () => {
     const a = derivable.atom(null);
     const when = derivable.atom(true);
 
