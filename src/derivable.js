@@ -10,12 +10,12 @@ export var derivablePrototype = {
      * Creates a derived value whose state will always be f applied to this
      * value
      */
-  derive: function (f, ...args) {
-    if (typeof f === 'function') {
-      return _derive(f, this, ...args);
-    } else {
-      throw Error('type error');
-    }
+  derive: function (f) {
+    return map(f, this);
+  },
+
+  mDerive: function (f) {
+    return mMap(f, this);
   },
 
   map(f) {
@@ -49,10 +49,6 @@ export var derivablePrototype = {
     return _derive(function () {
       return x.__equals(x.get(), unpack(other));
     });
-  },
-
-  mDerive: function (...args) {
-    return _derive(() => util.some(this.get()) ? this.derive(...args).get() : null);
   },
 
   withEquality: function (equals) {

@@ -1,7 +1,5 @@
 'use strict';
 
-const immutable = require('immutable');
-
 const derivable = require('../dist/derivable');
 
 const util = require('./util');
@@ -81,7 +79,7 @@ describe("a derivation", () => {
   it("can derive from more than one atom", () => {
     const order = util.label(derivable.atom(0), "O");
     const orderName = util.label(order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]), "ON");
-    const size = util.label(bytes.derive(orderUp, order), "!size!");
+    const size = util.label(bytes.derive(d => orderUp(d, order.get())), "!size!");
     const sizeString = derivable.derive(() => `${size.get()} ${orderName.get()}`);
 
     // size is in bytes when order is 0
@@ -99,49 +97,6 @@ describe("a derivation", () => {
     // size is in gbs when order is 2
     expect(size.get()).toBe(1);
     expect(sizeString.get()).toBe("1 gigabytes");
-  });
-
-  it("implements the derivable interface", () => {
-    const name = derivable.atom("smithe");
-    const size6 = name.derive(x => x.length === 6);
-    const startsWithS = name.derive(x => x[0] === "s");
-    const endsWithE = name.derive(x => x[x.length - 1] === "e");
-
-    expect(size6.get()).toBe(true);
-    expect(startsWithS.get()).toBe(true);
-    expect(endsWithE.get()).toBe(true);
-
-    name.set("smithy");
-
-    expect(size6.get()).toBe(true);
-    expect(startsWithS.get()).toBe(true);
-    expect(endsWithE.get()).toBe(false);
-
-    const nestedStuff = derivable.atom(immutable.fromJS({ a: { b: { c: false } } }));
-    const get = (x, y) => x.get(y);
-    const innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').derive(d => d == null ? 'not found' : d);
-
-    expect(innermost.get()).toBe(false);
-
-    nestedStuff.set(immutable.fromJS({ a: { b: { c: 'found' } } }));
-
-    expect(innermost.get()).toBe('found');
-
-    nestedStuff.set(immutable.fromJS({ a: { b: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(immutable.fromJS({ a: { d: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(immutable.fromJS({ d: { d: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(null);
-
-    expect(innermost.get()).toBe('not found');
   });
 
   it('can be re-instantiated with custom equality-checking', () => {
@@ -191,39 +146,6 @@ describe("the derive method", () => {
     expect(() => {
       derivable.atom("blah").derive(new Date());
     }).toThrow();
-  });
-
-  const add = (...args) => args.reduce((a, b) => a + b, 0);
-
-  it('can work with three args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3).get()).toBe(6);
-    expect(derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3)).get()).toBe(6);
-  });
-
-  it('can work with four args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4).get()).toBe(10);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4).get()
-    ).toBe(10);
-  });
-
-  it('can work with five args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5).get()).toBe(15);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5).get()
-    ).toBe(15);
-  });
-  it('can work with six args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5, 6).get()).toBe(21);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5, derivable.atom(6)).get()
-    ).toBe(21);
-  });
-  it('can work with seven args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5, 6, 7).get()).toBe(28);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5, derivable.atom(6), derivable.atom(7)).get()
-    ).toBe(28);
   });
 });
 

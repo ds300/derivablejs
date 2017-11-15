@@ -7,14 +7,8 @@ declare module derivable {
   export interface Derivable<T> {
 
     derive<E>(f: (value: T) => E): Derivable<E>;
-    derive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
-    derive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
-    derive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
     mDerive<E>(f: (value: T) => E): Derivable<E>;
-    mDerive<A, E>(f: (value: T, a: A) => E, a: (A | Derivable<A>)): Derivable<E>;
-    mDerive<A, B, E>(f: (value: T, a: A, b: B) => E, a: (A | Derivable<A>), b: (B | Derivable<B>)): Derivable<E>;
-    mDerive<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Derivable<E>;
 
     react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
@@ -70,21 +64,6 @@ declare module derivable {
   function atom<T>(value: T): Atom<T>;
 
   function derive<T>(f: () => T): Derivable<T>;
-
-  function derive<T, A>(f: (a: A) => T, a: A | Derivable<A>): Derivable<T>;
-
-  function derive<T, A, B>(f: (a: A, b: B) => T, a: A | Derivable<A>, b: B | Derivable<B>): Derivable<T>;
-
-  function derive<T, A, B, C>(f: (a: A, b: B, c: C) => T, a: A | Derivable<A>,
-    b: B | Derivable<B>, c: C | Derivable<C>): Derivable<T>;
-
-  function derive<T, A, B, C, D>(f: (a: A, b: B, c: C, d: D) => T, a: A | Derivable<A>,
-    b: B | Derivable<B>, c: C | Derivable<C>, d: D | Derivable<D>): Derivable<T>;
-  
-  function derive<T>(f: (...args: any[])=> T, ...args: any[]): Derivable<T>
-
-  function derive(sections: string[], ...values: any[]): Derivable<string>
-
 
   function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
 
