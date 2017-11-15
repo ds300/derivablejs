@@ -22,12 +22,19 @@ export var derivablePrototype = {
     });
   },
 
+  maybeDefault(def) {
+    if (!util.some(def)) {
+      throw Error('maybeDefault requires non-null value');
+    }
+    return this.derive(value => util.some(value) ? value : unpack(def));
+  },
+
   react: function (f, opts) {
     makeReactor(this, f, opts);
   },
 
   mReact: function (f, opts) {
-    var mWhen = derive(() => Boolean(this.get()));
+    var mWhen = this.derive(Boolean);
     if (opts && 'when' in opts && opts.when !== true) {
       var when = opts.when;
       if (typeof when === 'function' || when === false) {
@@ -37,7 +44,7 @@ export var derivablePrototype = {
       }
       mWhen = mWhen.derive(d => d && when.get());
     }
-    return this.react(f, util.assign({}, opts, {when: mWhen}));
+    makeReactor(this, f, util.assign({}, opts, {when: mWhen}));
   },
 
   is: function (other) {
