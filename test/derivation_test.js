@@ -1,7 +1,5 @@
 'use strict';
 
-const immutable = require('immutable');
-
 const derivable = require('../dist/derivable');
 
 const util = require('./util');
@@ -27,61 +25,10 @@ describe("a derivation", () => {
     expect(megaBytes.get()).toBe(1024);
   });
 
-  describe("can be created using the 'derive' function", () => {
-    const add = (...args) => args.reduce((a, b) => a + b, 0);
-
-    it('needs one argument', () => {
-      expect(() => {
-        derivable.derive();
-      }).toThrow();
-    });
-
-    it('using one arg', () => {
-      expect(derivable.derive(() => 0).get()).toBe(0);
-    });
-
-    it('using two args', () => {
-      expect(derivable.derive(add, 1).get()).toBe(1);
-      expect(derivable.derive(add, derivable.atom(1)).get()).toBe(1);
-    });
-
-    it('using three args', () => {
-      expect(derivable.derive(add, 1, 2).get()).toBe(3);
-      expect(derivable.derive(add, derivable.atom(1), derivable.atom(2)).get()).toBe(3);
-    });
-
-    it('using four args', () => {
-      expect(derivable.derive(add, 1, 2, 3).get()).toBe(6);
-      expect(
-        derivable.derive(add, derivable.atom(1), derivable.atom(2), derivable.atom(3)).get()
-      ).toBe(6);
-    });
-
-    it('using five args', () => {
-      expect(derivable.derive(add, 1, 2, 3, 4).get()).toBe(10);
-      expect(
-        derivable.derive(add, derivable.atom(1), derivable.atom(2), derivable.atom(3), 4).get()
-      ).toBe(10);
-    });
-
-    it('using six args', () => {
-      expect(derivable.derive(add, 1, 2, 3, 4, 5).get()).toBe(15);
-      expect(
-        derivable.derive(add, derivable.atom(1), derivable.atom(2), derivable.atom(3), 4, 5).get()
-      ).toBe(15);
-    });
-
-    it('using seven args', () => {
-      expect(derivable.derive(add, 1, 2, 3, 4, 5, 6).get()).toBe(21);
-      expect(derivable.derive(add, derivable.atom(1), derivable.atom(2),
-        derivable.atom(3), 4, 5, derivable.atom(6)).get()).toBe(21);
-    });
-  });
-
   it("can derive from more than one atom", () => {
     const order = util.label(derivable.atom(0), "O");
     const orderName = util.label(order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]), "ON");
-    const size = util.label(bytes.derive(orderUp, order), "!size!");
+    const size = util.label(bytes.derive(d => orderUp(d, order.get())), "!size!");
     const sizeString = derivable.derive(() => `${size.get()} ${orderName.get()}`);
 
     // size is in bytes when order is 0
@@ -99,49 +46,6 @@ describe("a derivation", () => {
     // size is in gbs when order is 2
     expect(size.get()).toBe(1);
     expect(sizeString.get()).toBe("1 gigabytes");
-  });
-
-  it("implements the derivable interface", () => {
-    const name = derivable.atom("smithe");
-    const size6 = name.derive(x => x.length === 6);
-    const startsWithS = name.derive(x => x[0] === "s");
-    const endsWithE = name.derive(x => x[x.length - 1] === "e");
-
-    expect(size6.get()).toBe(true);
-    expect(startsWithS.get()).toBe(true);
-    expect(endsWithE.get()).toBe(true);
-
-    name.set("smithy");
-
-    expect(size6.get()).toBe(true);
-    expect(startsWithS.get()).toBe(true);
-    expect(endsWithE.get()).toBe(false);
-
-    const nestedStuff = derivable.atom(immutable.fromJS({ a: { b: { c: false } } }));
-    const get = (x, y) => x.get(y);
-    const innermost = nestedStuff.mDerive(get, 'a').mDerive(get, 'b').mDerive(get, 'c').derive(d => d == null ? 'not found' : d);
-
-    expect(innermost.get()).toBe(false);
-
-    nestedStuff.set(immutable.fromJS({ a: { b: { c: 'found' } } }));
-
-    expect(innermost.get()).toBe('found');
-
-    nestedStuff.set(immutable.fromJS({ a: { b: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(immutable.fromJS({ a: { d: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(immutable.fromJS({ d: { d: { d: 'd' } } }));
-
-    expect(innermost.get()).toBe('not found');
-
-    nestedStuff.set(null);
-
-    expect(innermost.get()).toBe('not found');
   });
 
   it('can be re-instantiated with custom equality-checking', () => {
@@ -192,52 +96,19 @@ describe("the derive method", () => {
       derivable.atom("blah").derive(new Date());
     }).toThrow();
   });
-
-  const add = (...args) => args.reduce((a, b) => a + b, 0);
-
-  it('can work with three args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3).get()).toBe(6);
-    expect(derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3)).get()).toBe(6);
-  });
-
-  it('can work with four args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4).get()).toBe(10);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4).get()
-    ).toBe(10);
-  });
-
-  it('can work with five args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5).get()).toBe(15);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5).get()
-    ).toBe(15);
-  });
-  it('can work with six args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5, 6).get()).toBe(21);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5, derivable.atom(6)).get()
-    ).toBe(21);
-  });
-  it('can work with seven args', () => {
-    expect(derivable.atom(1).derive(add, 2, 3, 4, 5, 6, 7).get()).toBe(28);
-    expect(
-      derivable.atom(1).derive(add, derivable.atom(2), derivable.atom(3), 4, 5, derivable.atom(6), derivable.atom(7)).get()
-    ).toBe(28);
-  });
 });
 
-describe("mDerive", () => {
+describe("maybeDerive", () => {
   it('is like derive, but propagates nulls', () => {
     const thing = derivable.atom({ prop: 'val' });
-    const val = thing.mDerive(d => d.prop);
+    const val = thing.maybeDerive(d => d.prop);
 
     expect(val.get()).toBe('val');
     thing.set(null);
     expect(val.get() == null).toBeTruthy();
 
-    const foo = thing.mDerive(d => d.foo);
-    const bar = thing.mDerive(d => d.bar);
+    const foo = thing.maybeDerive(d => d.foo);
+    const bar = thing.maybeDerive(d => d.bar);
 
     expect(foo.get()).toBe(null);
     expect(bar.get()).toBe(null);
@@ -369,7 +240,7 @@ describe("derivations inside a transaction", () => {
 describe("nested derivables", () => {
   it("should work in the appropriate fashion", () => {
     const $$A = derivable.atom(null);
-    const $a = $$A.mDerive(d => d.get());
+    const $a = $$A.maybeDerive(d => d.get());
 
     expect($a.get() == null).toBeTruthy();
 
@@ -399,7 +270,7 @@ describe("nested derivables", () => {
 
   it("should let reactors adapt to changes in atoms", () => {
     const $$A = derivable.atom(null);
-    const $a = $$A.mDerive(d => d.get());
+    const $a = $$A.maybeDerive(d => d.get());
 
     const $B = derivable.atom('junk');
 
@@ -423,7 +294,7 @@ describe("nested derivables", () => {
 
   it("should not interfere with lifecycle control", () => {
     const $$A = derivable.atom(null);
-    const $a = $$A.mDerive(d => d.get());
+    const $a = $$A.maybeDerive(d => d.get());
 
     const $B = derivable.atom('junk');
 
@@ -448,7 +319,7 @@ describe("nested derivables", () => {
 
   it("should not interfere with boolean casting?!", () => {
     const $$Running = derivable.atom(null);
-    const $running = $$Running.mDerive(d => d.get());
+    const $running = $$Running.maybeDerive(d => d.get());
 
     let running = null;
     $running.derive(x => Boolean(x)).react(r => {
@@ -467,4 +338,63 @@ describe("nested derivables", () => {
 
     expect(running).toBeTruthy();
   });
+});
+
+test('derive derivable value with function', () => {
+  const a = derivable.atom(1);
+  const q = derivable.atom(10);
+  const b = a.derive(d => d + q.get());
+  const c = b.derive(d => d * q.get());
+  expect([b.get(), c.get()]).toEqual([11, 110]);
+
+  q.set(20);
+  expect([b.get(), c.get()]).toEqual([21, 420]);
+
+  a.set(null);
+  expect([b.get(), c.get()]).toEqual([20, 400]);
+
+  expect(() => {
+    derivable.map();
+  }).toThrow();
+});
+
+test('maybe derive derivable (non-null) value with function', () => {
+  const a = derivable.atom(1);
+  const q = derivable.atom(10);
+  const b = a.maybeDerive(d => d + q.get());
+  const c = b.maybeDerive(d => d * q.get());
+  expect([b.get(), c.get()]).toEqual([11, 110]);
+
+  q.set(20);
+  expect([b.get(), c.get()]).toEqual([21, 420]);
+
+  a.set(null);
+  expect([b.get(), c.get()]).toEqual([null, null]);
+
+  expect(() => {
+    derivable.map();
+  }).toThrow();
+});
+
+test('is method', () => {
+  const a = derivable.atom(1);
+  const b = derivable.atom(1);
+  const fst = a.is(b);
+  const snd = b.is(a);
+  expect(fst.get()).toBeTruthy();
+  expect(snd.get()).toBeTruthy();
+
+  a.set({ equals: () => true });
+  b.set({ equals: () => false });
+  expect(fst.get()).toBeTruthy();
+  expect(snd.get()).toBeFalsy();
+});
+
+test('maybe default prefers passed value or derivable over null or undefined', () => {
+  const a = derivable.atom(null);
+  const r = a.orDefault(2);
+  expect(r.get()).toBe(2);
+
+  a.set(1);
+  expect(r.get()).toBe(1);
 });

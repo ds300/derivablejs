@@ -126,42 +126,6 @@ describe("the `struct` function", () => {
   });
 });
 
-describe("lifting by using derive", () => {
-
-  const lift = f => derivable.derive.bind(null, f);
-
-  it("lifts a function which operates on values to operate on derivables", () => {
-    const plus = (a, b) => a + b;
-    const dPlus = lift(plus);
-
-    const a = derivable.atom(5);
-    const b = derivable.atom(10);
-    const c = dPlus(a, b);
-
-    expect(15).toEqual(c.get());
-  });
-
-  it("can be used in ordinary FP stuff", () => {
-    const cells = [0, 1, 2].map(derivable.atom);
-
-    const add = lift((a, b) => a + b);
-
-    const sum = cells.reduce(add);
-
-    let expected = 3;
-    let equalsExpected = false;
-    sum.react((x) => {
-      equalsExpected = x === expected;
-    });
-    expect(equalsExpected).toBeTruthy();
-
-    expected = 4;
-    equalsExpected = false;
-    cells[0].update(x => x + 1);
-    expect(equalsExpected).toBeTruthy();
-  });
-});
-
 describe("the `transact` function", () => {
   it("executes a function in the context of a transaction", () => {
     const a = derivable.atom("a");

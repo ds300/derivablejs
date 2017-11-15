@@ -659,8 +659,8 @@ describe("tickers", () => {
 
   it("should not cause parents to be investigated in the wrong order", () => {
     const a = derivable.atom(null);
-    const b = a.map(d => d.toString());
-    const c = a.map(_c => _c ? b.get() :  'a is null');
+    const b = a.derive(d => d.toString());
+    const c = a.derive(_c => _c ? b.get() :  'a is null');
 
     let expecting = 'a is null';
 
@@ -682,9 +682,7 @@ describe("tickers", () => {
 
     derivable.transact(() => {
       a.set('b');
-      a.react(d => {
-        console.log(d);
-      });
+      a.react(() => {});
     });
   });
 });
@@ -754,13 +752,13 @@ describe('the `when` optons to the `react` method', () => {
   });
 });
 
-describe('the .mReact method', () => {
+describe('the .maybeReact method', () => {
   it('only reacts when the thing in the derivable is not null or undefined', () => {
     const a = derivable.atom(null);
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     });
 
@@ -781,7 +779,7 @@ describe('the .mReact method', () => {
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     }, { when });
 
@@ -814,7 +812,7 @@ describe('the .mReact method', () => {
 
     let _a = "Tree";
 
-    a.mReact(d => {
+    a.maybeReact(d => {
       _a = d;
     }, { when , from, until });
 

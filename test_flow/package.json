@@ -5,9 +5,6 @@
   "scripts": {
     "test": "flow check"
   },
-  "dependencies": {
-    "derivable": "../"
-  },
   "devDependencies": {
     "flow-bin": "^0.59.0"
   }
