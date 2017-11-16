@@ -69,7 +69,7 @@ declare export function atomic<F: Function>(f: F): F;
 
 declare export function struct(obj: mixed): Derivable<mixed>;
 
-declare export function unpack(obj: mixed): mixed;
+declare export function unpack<T>(obj: Derivable<T> | T): T;
 
 declare export function isAtom(obj: mixed): boolean;
 
@@ -78,8 +78,6 @@ declare export function isDerivable(obj: mixed): boolean;
 declare export function isDerivation(obj: mixed): boolean;
 
 declare export function isProxy(obj: mixed): boolean;
-
-declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
 
 declare export function captureDereferences(fn: () => void): Array<Derivable<mixed>>;
 

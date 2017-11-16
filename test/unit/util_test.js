@@ -3,30 +3,32 @@
 require = require("@std/esm")(module);
 const util = require("../../src/util");
 
+const empty = {};
+
 test("the equals function checks equality for primitives", () => {
-  expect(util.equals(NaN, NaN)).toEqual(true);
-  expect(util.equals(4, 2 + 2)).toEqual(true);
-  expect(util.equals(0, 0)).toEqual(true);
-  expect(util.equals("blah", "bl" + "ah")).toEqual(true);
+  expect(util.equals(empty, NaN, NaN)).toEqual(true);
+  expect(util.equals(empty, 4, 2 + 2)).toEqual(true);
+  expect(util.equals(empty, 0, 0)).toEqual(true);
+  expect(util.equals(empty, "blah", "bl" + "ah")).toEqual(true);
 });
 
 test("the equals function checks identity but not equality for objects", () => {
-  expect(util.equals({}, {})).toEqual(false);
-  expect(util.equals([], [])).toEqual(false);
+  expect(util.equals(empty, {}, {})).toEqual(false);
+  expect(util.equals(empty, [], [])).toEqual(false);
   const arr = [];
   const obj = {};
-  expect(util.equals(arr, arr)).toEqual(true);
-  expect(util.equals(obj, obj)).toEqual(true);
+  expect(util.equals(empty, arr, arr)).toEqual(true);
+  expect(util.equals(empty, obj, obj)).toEqual(true);
 });
 
 test("the equals function uses .equals methods if present", () => {
-  expect(util.equals({ equals: () => false }, { equals: () => true })).toEqual(
-    false
-  );
+  expect(
+    util.equals(empty, { equals: () => false }, { equals: () => true })
+  ).toEqual(false);
 
-  expect(util.equals({ equals: () => true }, { equals: () => false })).toEqual(
-    true
-  );
+  expect(
+    util.equals(empty, { equals: () => true }, { equals: () => false })
+  ).toEqual(true);
 });
 
 test("the addToArray function adds elements to arrays if they aren't already in there", () => {
@@ -120,4 +122,9 @@ test("the setEquals function sets the _equals property of an object and returns 
   expect(obj).toEqual(res);
   expect(typeof obj._equals).toEqual("function");
   expect(obj._equals()).toEqual("hey!");
+});
+
+test("equals uses _equals method in context if specified", () => {
+  expect(util.equals({ _equals: () => true }, 1, 2)).toEqual(true);
+  expect(util.equals({ _equals: () => false }, 1, 2)).toEqual(false);
 });

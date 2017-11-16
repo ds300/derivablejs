@@ -48,7 +48,7 @@ export const derivablePrototype = {
   },
 
   is(other) {
-    return derive(() => this.__equals(this.get(), unpack(other)));
+    return derive(() => util.equals(this, this.get(), unpack(other)));
   },
 
   withEquality(equals) {
@@ -61,9 +61,5 @@ export const derivablePrototype = {
     }
 
     return util.setEquals(this._clone(), equals);
-  },
-
-  __equals(a, b) {
-    return (this._equals || util.equals)(a, b);
   }
 };

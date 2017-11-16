@@ -46,7 +46,7 @@ util.assign(Derivation.prototype, {
       parents.stopCapturingParents();
     }
 
-    if (!this.__equals(newVal, this._value)) {
+    if (!util.equals(this, newVal, this._value)) {
       this._state = CHANGED;
     } else {
       this._state = UNCHANGED;

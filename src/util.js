@@ -1,11 +1,5 @@
 export const assign = Object.assign;
 
-export function equals(a, b) {
-  return (
-    Object.is(a, b) || (a && typeof a.equals === "function" && a.equals(b))
-  );
-}
-
 export function addToArray(a, b) {
   const i = a.indexOf(b);
   if (i === -1) {
@@ -41,7 +35,17 @@ export function isDebug() {
   return DEBUG_MODE;
 }
 
+function defaultEquals(a, b) {
+  return (
+    Object.is(a, b) || (a && typeof a.equals === "function" && a.equals(b))
+  );
+}
+
 export function setEquals(derivable, eq) {
   derivable._equals = eq;
   return derivable;
+}
+
+export function equals(ctx, a, b) {
+  return (ctx._equals || defaultEquals)(a, b);
 }

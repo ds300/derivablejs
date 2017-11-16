@@ -1,7 +1,7 @@
 // @flow
 
-import type {Atom, Derivable} from '../derivable.js';
-import {atom, transaction, atomic, derive} from '../derivable.js';
+import type { Atom, Derivable } from "../derivable.js";
+import { atom, transaction, atomic, derive, unpack } from "../derivable.js";
 
 function testDeriveMethod() {
   const a: Atom<number> = atom(21);
@@ -39,7 +39,7 @@ function testOrDefaultMethod() {
   const a: Atom<?number> = atom(1);
   const b: Derivable<number> = a.orDefault(2);
   // $ExpectError
-  const c: Derivable<number> = a.orDefault('2');
+  const c: Derivable<number> = a.orDefault("2");
   // $ExpectError
   const d: Derivable<number> = a.orDefault(atom(2));
   // $ExpectError
@@ -47,11 +47,10 @@ function testOrDefaultMethod() {
 }
 
 function testDerive() {
-
   const a: Atom<number> = atom(21);
 
   // $ExpectError
-  a.set('ok');
+  a.set("ok");
 
   const b: Atom<?number> = atom(null);
 
@@ -75,8 +74,7 @@ function testDerive() {
 }
 
 function testReactions() {
-
-  let c: Atom<?{x: number}> = atom(null);
+  let c: Atom<?{ x: number }> = atom(null);
   const condition = atom(true);
 
   c.react(v => {
@@ -101,7 +99,7 @@ function testReactions() {
       return Boolean(v.x);
     },
     skipFirst: true,
-    once: false,
+    once: false
   });
 
   c.maybeReact(v => {
@@ -113,13 +111,11 @@ function testReactions() {
     when: condition,
     until: condition,
     skipFirst: true,
-    once: false,
+    once: false
   });
-
 }
 
 function testTransaction() {
-
   let plusOne = (a: number) => a + 1;
 
   let tPlusOne = transaction(plusOne);
@@ -141,18 +137,25 @@ function testTransaction() {
   transaction(42);
 
   // $ExpectError: arg should be a function
-  atomic('oops');
-
+  atomic("oops");
 }
 
 function testWithEquality() {
-
-  let a: Atom<{x: number}> = atom({x: 42})
-  let b: Derivable<{x: number}> = a.withEquality((a, b) => {
+  let a: Atom<{ x: number }> = atom({ x: 42 });
+  let b: Derivable<{ x: number }> = a.withEquality((a, b) => {
     return a.x === b.x;
   });
-  let c: Derivable<{x: number}> = a.withEquality((a, b) => {
+  let c: Derivable<{ x: number }> = a.withEquality((a, b) => {
     // $ExpectError: y does not exist
     return a.y === b.y;
   });
+}
+
+function testUnpack() {
+  const a: number = unpack(atom(1));
+  const b: number = unpack(1);
+  // $ExpectError
+  const c: number = unpack(atom("1"));
+  // $ExpectError
+  const d: number = unpack("1");
 }
