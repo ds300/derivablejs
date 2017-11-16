@@ -33,9 +33,6 @@
     ]
   },
   "@std/esm": "cjs",
-  "jest": {
-    "testRegex": ".*_test.js$"
-  },
   "keywords": [
     "immutable",
     "cursor",
