@@ -2,8 +2,6 @@
 
 const derivable = require("../dist/derivable");
 
-const util = require("./util");
-
 describe("a derivation", () => {
   const oneGigabyte = 1024 * 1024 * 1024;
 
@@ -24,15 +22,11 @@ describe("a derivation", () => {
   });
 
   it("can derive from more than one atom", () => {
-    const order = util.label(derivable.atom(0), "O");
-    const orderName = util.label(
-      order.derive(d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]),
-      "ON"
+    const order = derivable.atom(0);
+    const orderName = order.derive(
+      d => ["bytes", "kilobytes", "megabytes", "gigabytes"][d]
     );
-    const size = util.label(
-      bytes.derive(d => orderUp(d, order.get())),
-      "!size!"
-    );
+    const size = bytes.derive(d => orderUp(d, order.get()));
     const sizeString = derivable.derive(
       () => `${size.get()} ${orderName.get()}`
     );
