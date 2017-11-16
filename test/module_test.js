@@ -336,26 +336,6 @@ describe("the atomic function", () => {
   });
 });
 
-describe("the wrapPreviousState function", () => {
-  it("wraps a function of one argument, passing in previous arguments", () => {
-    const f = derivable.wrapPreviousState((a, b) => a + b, 0);
-
-    expect(f(1)).toBe(1);
-    expect(f(2)).toBe(3);
-    expect(f(3)).toBe(5);
-    expect(f(4)).toBe(7);
-    expect(f(5)).toBe(9);
-    expect(f(6)).toBe(11);
-  });
-
-  it("the init arg is optional", () => {
-    const f = derivable.wrapPreviousState((a, b) => a + (b || 10));
-
-    expect(f(1)).toBe(11);
-    expect(f(2)).toBe(3);
-  });
-});
-
 describe("the captureDereferences function", () => {
   it("executes the given function, returning an array of captured dereferences", () => {
     const a = derivable.atom("a");

@@ -30,12 +30,3 @@ if (global.__DERIVABLE_INIT_FLAG__) {
   );
 }
 global.__DERIVABLE_INIT_FLAG__ = true;
-
-export function wrapPreviousState(f, init) {
-  let lastState = init;
-  return function(newState) {
-    const result = f.call(this, newState, lastState);
-    lastState = newState;
-    return result;
-  };
-}

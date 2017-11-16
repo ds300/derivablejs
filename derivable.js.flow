@@ -79,8 +79,6 @@ declare export function isDerivation(obj: mixed): boolean;
 
 declare export function isProxy(obj: mixed): boolean;
 
-declare export function wrapPreviousState<A, B>(fn: (currentState: A, previousState: A) => B, init?: A): (currentState: A) => B;
-
 declare export function captureDereferences(fn: () => void): Array<Derivable<mixed>>;
 
 declare export function setDebugMode(debugMode: boolean): void;
