@@ -273,4 +273,18 @@ describe("the captureDereferences function", () => {
     });
     expect(_cab).toEqual([c, a, b]);
   });
+
+  test("capture also reactor controller", () => {
+    const a = derivable.atom(1);
+    const captured = derivable.captureDereferences(() => {
+      a.react(() => {});
+    });
+    expect(captured.length).toBe(2);
+    expect(captured[0].get()).toEqual({
+      from: true,
+      until: false,
+      when: true
+    });
+    expect(captured[1]).toBe(a);
+  });
 });

@@ -76,9 +76,6 @@ export function makeReactor(derivable, f, opts) {
   opts = util.assign(
     {
       once: false,
-      from: true,
-      until: false,
-      when: true,
       skipFirst: false
     },
     opts
@@ -86,74 +83,78 @@ export function makeReactor(derivable, f, opts) {
 
   let skipFirst = opts.skipFirst;
 
-  // coerce fn or bool to derivable<bool>
-  function condDerivable(fOrD, name) {
-    if (!types.isDerivable(fOrD)) {
-      if (typeof fOrD === "function") {
-        return derive(() => fOrD(derivable));
-      } else if (typeof fOrD === "boolean") {
-        return derive(() => fOrD);
-      } else {
-        throw Error(
-          `react ${name} condition must be derivable, got: ` +
-            JSON.stringify(fOrD)
-        );
-      }
-    }
-    return fOrD;
-  }
-
   // wrap reactor so f doesn't get a .this context, and to allow
   // stopping after one reaction if desired.
-  const reactor = new Reactor(derivable, function(val) {
+  const reactor = new Reactor(derivable, val => {
     if (skipFirst) {
       skipFirst = false;
     } else {
       f(val);
       if (opts.once) {
-        this.stop();
+        reactor.stop();
         controller.stop();
       }
     }
   });
 
-  // listen to when and until conditions, starting and stopping the
-  // reactor as appropriate, and stopping this controller when until
-  // condition becomes true
-  const $until = condDerivable(opts.until, "until");
-  const $when = condDerivable(opts.when, "when");
-
-  const $whenUntil = derive(() => {
-    return {
-      until: $until.get(),
-      when: $when.get()
-    };
-  });
-
-  const controller = new Reactor($whenUntil, function(conds) {
-    if (conds.until) {
-      reactor.stop();
-      this.stop();
-    } else if (conds.when) {
-      if (!reactor._active) {
-        reactor.start().force();
-      }
-    } else if (reactor._active) {
-      reactor.stop();
+  const assertCondition = (condition, name) => {
+    if (types.isDerivable(condition)) {
+      return condition;
     }
-  });
+    if (typeof condition === "function") {
+      return condition;
+    }
+    if (typeof condition === "undefined") {
+      return condition;
+    }
+    throw Error(
+      `react ${name} condition must be derivable or function, got: ` +
+        JSON.stringify(condition)
+    );
+  };
 
-  reactor._governor = controller;
+  const getCondition = (condition, def) =>
+    condition
+      ? typeof condition === "function" ? condition(derivable) : condition.get()
+      : def;
 
   // listen to from condition, starting the reactor controller
   // when appropriate
-  const $from = condDerivable(opts.from, "from");
-  const initiator = new Reactor($from, function(from) {
-    if (from) {
-      controller.start().force();
-      this.stop();
-    }
+  const $from = assertCondition(opts.from, "from");
+  // listen to when and until conditions, starting and stopping the
+  // reactor as appropriate, and stopping this controller when until
+  // condition becomes true
+  const $until = assertCondition(opts.until, "until");
+  const $when = assertCondition(opts.when, "when");
+
+  const $conds = derive(() => {
+    return {
+      from: getCondition($from, true),
+      until: getCondition($until, false),
+      when: getCondition($when, true)
+    };
   });
 
-  initiator.start().force();
+  let started = false;
+
+  const controller = new Reactor($conds, conds => {
+    if (conds.from) {
+      started = true;
+    }
+    if (started) {
+      if (conds.until) {
+        reactor.stop();
+        controller.stop();
+      } else if (conds.when) {
+        if (!reactor._active) {
+          reactor.start().force();
+        }
+      } else if (reactor._active) {
+        reactor.stop();
+      }
+    }
+  });
+  controller.start().force();
+
+  reactor._governor = controller;
 }

@@ -517,6 +517,21 @@ describe("anonymous reactors", () => {
   });
 });
 
+test("reactor do not create derivation for lifecycle function", () => {
+  const a = derivable.atom(1);
+  const from = derivable.atom(true);
+  const until = derivable.atom(false);
+  const when = derivable.atom(true);
+  a.react(() => {}, {
+    from: () => from.get(),
+    until: () => until.get(),
+    when: () => when.get()
+  });
+  expect(a._activeChildren[0]._governor._parent._parents).toEqual(
+    expect.arrayContaining([from, until, when])
+  );
+});
+
 describe("the .react method", () => {
   it("must have a function as the first argument", () => {
     expect(() => {
