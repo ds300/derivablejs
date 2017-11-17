@@ -43,7 +43,7 @@ function derive<T>(f: () => T): Derivable<T>;
 
 ### Transaction
 
-#### transact(fn)
+#### transact(() => void): void
 
 Executes passed function in the context of a transaction.
 
@@ -82,7 +82,7 @@ transact(() => {
 // $> My name is William Blake
 ```
 
-#### transaction(fn): Function
+#### transaction((...args) => void): (...args) => void
 
 Wraps passed function such that its body is executed in a transaction. Preserves
 its input and output semantics.
@@ -105,12 +105,12 @@ setTimeout(transaction(() => {
 // $> My name is William Blake
 ```
 
-#### atomically(fn)
+#### atomically(() => void): void
 
 As `transact` but will not create a (nested) transaction if already in a
 transaction.
 
-#### atomic(fn): Function
+#### atomic((...args) => void): (...args) => void
 
 As `transaction` but will not create a (nested) transaction if the returned
 function is invoked within a transaction.
@@ -119,17 +119,17 @@ function is invoked within a transaction.
 
 Creates a new ticker
 
-**t.tick()**
+**t.tick(): void**
 
 Runs all pending reactions
 
-**t.release()**
+**t.release(): void**
 
 Releases this ticker, rendering it useless
 
 ### Utils
 
-#### setDebugMode(debugMode: boolean)
+#### setDebugMode(debugMode: boolean): void
 
 Enable or disable debug mode.
 
@@ -140,24 +140,24 @@ logged such that it becomes easy to determine exactly which derivation is
 throwing. Creating errors is quite slow, so you probably should not keep this
 enabled for production.
 
-#### isAtom(value): boolean
+#### isAtom(value: mixed): boolean
 
 Returns true if passed value is an Atom.
 
-#### isDerivation(value): boolean
+#### isDerivation(value: mixed): boolean
 
 Returns true if passed value is a derivation, i.e. a derivable which is not an
 atom.
 
-#### isProxy(value): boolean
+#### isProxy(value: mixed): boolean
 
 Returns true if passed value is a proxy of atoms.
 
-#### isDerivable(value): boolean
+#### isDerivable(value: mixed): boolean
 
 Returns true if passed value is any of atoms or derivations.
 
-#### struct(objectOrArray): Derivable
+#### struct(value: Object | Array): Derivable
 
 Given some plain JavaScript `Object` or `Array` (or some nested combination
 thereof) containing one or more derivable things, returns a new derivable
@@ -185,11 +185,11 @@ c.set(`Chris`);
 // $> C stands for Chris
 ```
 
-#### unpack(value): any
+#### unpack(value: Derivable | mixed): mixed
 
 If passed value is derivable, returns value.get(), otherwise returns value.
 
-#### captureDereferences(fn): Array
+#### captureDereferences(() => void): Array
 
 <Derivable>
 
