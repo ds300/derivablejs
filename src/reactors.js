@@ -97,13 +97,12 @@ export function makeReactor(derivable, f, opts) {
     }
   });
 
-  // coerce fn or bool to derivable<bool>
   const assertCondition = (condition, name) => {
     if (types.isDerivable(condition)) {
       return condition;
     }
     if (typeof condition === "function") {
-      return derive(() => condition(derivable));
+      return condition;
     }
     if (typeof condition === "undefined") {
       return condition;
@@ -113,6 +112,11 @@ export function makeReactor(derivable, f, opts) {
         JSON.stringify(condition)
     );
   };
+
+  const getCondition = (condition, def) =>
+    condition
+      ? typeof condition === "function" ? condition(derivable) : condition.get()
+      : def;
 
   // listen to from condition, starting the reactor controller
   // when appropriate
@@ -125,9 +129,9 @@ export function makeReactor(derivable, f, opts) {
 
   const $conds = derive(() => {
     return {
-      from: $from ? $from.get() : true,
-      until: $until ? $until.get() : false,
-      when: $when ? $when.get() : true
+      from: getCondition($from, true),
+      until: getCondition($until, false),
+      when: getCondition($when, true)
     };
   });
 
