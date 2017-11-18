@@ -11,6 +11,16 @@ import {
   __Reactor
 } from "../derivable.js";
 
+const testAtom = () => {
+  const a: Atom<number> = atom(1);
+
+  a.update((d: number) => d + 1);
+  // $ExpectError
+  a.update((d: string) => d);
+  // $ExpectError
+  a.update(d => String(d));
+};
+
 function testDeriveMethod() {
   const a: Atom<number> = atom(21);
   const b: Atom<?number> = atom(21);
