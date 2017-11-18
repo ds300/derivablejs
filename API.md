@@ -1,34 +1,62 @@
-```
-type Derivable<T> = {
-  derive<E>(f: (value: T) => E): Derivable<E>;
-  maybeDerive<E>(f: $NonMaybeType<T> => E): Derivable<E>;
-  orDefault<E>(value: $NonMaybeType<E>): Derivable<$NonMaybeType<T> | E>;
-  react(f: (value: T) => void, options?: Lifecycle<T>): void;
-  maybeReact(f: (value: $NonMaybeType<T>) => void, options?: Lifecycle<T>): void;
-  get(): T;
-  is(other: mixed): Derivable<boolean>;
-  withEquality(equals: (a: T, b: T) => *): Derivable<T>;
-};
+## API
 
+### Atom
+
+Atoms are simple mutable references to immutable values. They represent the
+ground truth from which all else is derived.
+
+#### atom(value: mixed): Atom
+
+#### .set(value: mixed): void
+
+#### .get(): mixed
+
+#### .update(mixed => mixed): void
+
+#### .proxy(descriptor): Proxy
+
+#### .derive(mixed => mixed): Derivation
+
+#### .maybeDerive(mixed => mixed): Derivation
+
+#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+
+#### .react(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+#### .maybeReact(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+### Derivation
+
+Derivations are declarative transformations of values held in atoms. Unlike
+atoms, derivations cannot be modified in-place with a '.set' method. Their
+values change only when one or more of the values that they depend upon change.
+
+#### derive(() => mixed): Derivation
+
+#### .derive(mixed => mixed): Derivation
+
+#### .maybeDerive(mixed => mixed): Derivation
+
+#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+
+#### .react(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+#### .maybeReact(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+### Proxy
+
+```
 type CompositeProxy<T> = {
   get(): T;
   set(value: T): void;
-};
-
-type Lifecycle<T> = {
-  +from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
-  +when?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
-  +until?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
-  +skipFirst?: boolean;
-  +once?: boolean;
-};
-
-function atom<T>(value: T): Atom<T>;
-
-type Atom<T> = Derivable<T> & {
-  set(value: T): void;
-  update(f: (value: T, ...args: Array<mixed>) => T, ...args: Array<mixed>): void;
-  proxy<E>(proxy: Proxy<T, E>): Atom<E>;
 };
 
 proxy(descriptor: Proxy): CompositeProxy
@@ -37,9 +65,73 @@ type Proxy<ParentType, ChildType> = {
   get(source: ParentType): ChildType;
   set(source: ParentType, value: ChildType): ParentType;
 };
-
-function derive<T>(f: () => T): Derivable<T>;
 ```
+
+#### proxy(descriptor): Proxy
+
+#### .set(value: mixed): void
+
+#### .get(): mixed
+
+#### .update(mixed => mixed): void
+
+#### .proxy(descriptor): Proxy
+
+#### .derive(mixed => mixed): Derivation
+
+#### .maybeDerive(mixed => mixed): Derivation
+
+#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+
+#### .react(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+#### .maybeReact(mixed => void, opts: Lifecycle): void
+
+See [Reactions](#reactions).
+
+### Reactions
+
+Reaction allows you to react on changes happend in any derivable item (atom,
+derivation or proxy). Reaction method accepts callback and lifecycle options
+
+#### Lifecycle
+
+**from: Derivable<boolean> | (Derivable => boolean)**
+
+Used to determine the start of the reactor's lifecycle. When it becomes truthy,
+the reactor is initialized. After which point this property is not used.
+
+**when: Derivable<boolean> | (Derivable => boolean)**
+
+Causes the reactor to be started and stopped based on the truthiness of the
+given condition.
+
+**until: Derivable<boolean> | (Derivable => boolean)**
+
+Used to determine the end of a reactor's lifecycle. When it becomes truthy the
+reactor is killed, after which point the reactor will never be used again and is
+eligible for garbage collection.
+
+**skipFirst: boolean**
+
+Causes the first invocation (and only the first invocation) of the reactor to be
+ingored.
+
+**once: boolean**
+
+Causes the reactor to be killed immediately following its first invocation (not
+counting the skipped invocation, if `skipFirst` is set to true).
+
+#### .react(mixed => void, opts: Lifecycle): void
+
+Accept callback with current derivable value and [Lifecycle](#lifecycle).
+
+#### .maybeReact(mixed => void, opts: Lifecycle): void
+
+Accept callback which is called with current derivable value if the value is not
+null or undefined and [Lifecycle](#lifecycle).
 
 ### Transaction
 
