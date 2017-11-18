@@ -17,7 +17,7 @@ myAtom.get();
 // => `the string`
 ```
 
-#### atom(value: mixed): Atom
+#### `atom(value: mixed): Atom`
 
 Returns a new `Atom` containing `value`.
 
@@ -64,7 +64,7 @@ Derivations are declarative transformations of values held in atoms. Unlike
 atoms, derivations cannot be modified in-place with a '.set' method. Their
 values change only when one or more of the values that they depend upon change.
 
-#### derive(() => mixed): Derivation
+#### `derive(() => mixed): Derivation`
 
 Returns a new derivable encapsulating the result returned by `f` which should be
 pure aside from dereferencing one or more Derivables.
