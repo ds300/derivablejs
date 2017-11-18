@@ -1,7 +1,15 @@
 // @flow
 
 import type { Atom, Derivable } from "../derivable.js";
-import { atom, transaction, atomic, derive, unpack } from "../derivable.js";
+import {
+  atom,
+  transaction,
+  atomic,
+  derive,
+  unpack,
+  __captureDereferences,
+  __Reactor
+} from "../derivable.js";
 
 function testDeriveMethod() {
   const a: Atom<number> = atom(21);
@@ -159,3 +167,21 @@ function testUnpack() {
   // $ExpectError
   const d: number = unpack("1");
 }
+
+const testCaptureDereferences = () => {
+  const captured = __captureDereferences(() => {});
+
+  const items1: $ReadOnlyArray<mixed> = captured.map(d => d.get());
+  // $ExpectError: notMethod does not exists in derivable
+  const items2: $ReadOnlyArray<mixed> = captured.map(d => d.notMethod());
+};
+
+const testReactor = () => {
+  const r1 = new __Reactor(atom(1), (d: number) => {});
+  // $ExpectError: atom type is number
+  const r2 = new __Reactor(atom(1), (d: string) => {});
+
+  (r1.start(): void);
+  (r1.stop(): void);
+  (r1.force(): void);
+};

@@ -3,10 +3,10 @@ import * as util from "./util";
 import { CHANGED } from "./states";
 import { detach, derive } from "./derivation";
 
-export function Reactor(parent, react, governor) {
+export function Reactor(parent, react) {
   this._parent = parent;
   this.react = react;
-  this._governor = governor || null;
+  this._governor = null;
   this._active = false;
   this._reacting = false;
   this._type = types.REACTOR;
@@ -23,7 +23,6 @@ util.assign(Reactor.prototype, {
     util.addToArray(this._parent._activeChildren, this);
 
     this._parent.get();
-    return this;
   },
 
   _force(nextValue) {
@@ -42,8 +41,11 @@ util.assign(Reactor.prototype, {
 
   force() {
     this._force(this._parent.get());
+  },
 
-    return this;
+  stop() {
+    detach(this._parent, this);
+    this._active = false;
   },
 
   _maybeReact() {
@@ -59,12 +61,6 @@ util.assign(Reactor.prototype, {
         }
       }
     }
-  },
-
-  stop() {
-    detach(this._parent, this);
-    this._active = false;
-    return this;
   }
 });
 
@@ -147,14 +143,16 @@ export function makeReactor(derivable, f, opts) {
         controller.stop();
       } else if (conds.when) {
         if (!reactor._active) {
-          reactor.start().force();
+          reactor.start();
+          reactor.force();
         }
       } else if (reactor._active) {
         reactor.stop();
       }
     }
   });
-  controller.start().force();
+  controller.start();
+  controller.force();
 
   reactor._governor = controller;
 }
