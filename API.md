@@ -5,23 +5,50 @@
 Atoms are simple mutable references to immutable values. They represent the
 ground truth from which all else is derived.
 
+```js
+const myAtom = atom(`a string`);
+
+myAtom.get();
+// => `a string`
+
+myAtom.set("the string");
+
+myAtom.get();
+// => `the string`
+```
+
 #### atom(value: mixed): Atom
+
+Returns a new `Atom` containing `value`.
 
 #### `.set(value: mixed): void`
 
+Sets the value of this atom to be `value`.
+
 #### `.get(): mixed`
 
-#### `.update(mixed => mixed): void`
+Returns the current value of the atom.
+
+#### `.update((value: mixed, ...args) => mixed, ...args): void`
+
+Sets the value of this atom to be the value returned when `f` is applied to the
+current value of this and `...args`.
 
 #### `.proxy(descriptor): Proxy`
 
-See [Proxy](#proxy).
+Coming soon...
 
 #### `.derive(mixed => mixed): Derivation`
 
+See [Derivation](#derivation)
+
 #### `.maybeDerive(mixed => mixed): Derivation`
 
+See [Derivation](#derivation)
+
 #### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
+
+See [Derivation](#derivation)
 
 #### `.react(mixed => void, opts: Lifecycle): void`
 
@@ -39,11 +66,70 @@ values change only when one or more of the values that they depend upon change.
 
 #### derive(() => mixed): Derivation
 
+Returns a new derivable encapsulating the result returned by `f` which should be
+pure aside from dereferencing one or more Derivables.
+
+```js
+const x = atom(1);
+const y = atom(2);
+
+const z = derive(() => x.get() + y.get());
+
+z.get();
+// => 3
+
+x.set(2);
+z.get();
+// => 4
+```
+
 #### `.derive(mixed => mixed): Derivation`
+
+Creates a new derivation based on the application of `f` to the current value of
+this derivable. e.g.
+
+```js
+const x = atom(4);
+const twice = x.derive(d => d * 2);
+
+twice.get();
+// => 8
+```
 
 #### `.maybeDerive(mixed => mixed): Derivation`
 
-#### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
+Creates a new derivation based on the application of `f` to the current non-null
+value of this derivable.
+
+```js
+const x = atom(null);
+const twice = x.derive(d => d * 2);
+const maybeTwice = x.maybeDerive(d => d * 2);
+
+maybeTwice.get();
+// => null
+
+twice.get();
+// throws error because we try to multiply null by 2
+```
+
+#### `.orDefault(value: mixed | Derivable): Derivation`
+
+Creates a new derivation with non-null value of base derivable or `value` if
+base is `null` or `undefined`. Perfect combination with `maybeDerive` method.
+
+```js
+const x = atom(null);
+
+const twice = x.maybeDerive(d => d * 2).orDefault(2);
+
+twice.get();
+// => 2
+
+x.set(3);
+twice.get();
+// => 6
+```
 
 #### `.react(mixed => void, opts: Lifecycle): void`
 
@@ -55,45 +141,7 @@ See [Reactions](#reactions).
 
 ### Proxy
 
-```
-type CompositeProxy<T> = {
-  get(): T;
-  set(value: T): void;
-};
-
-proxy(descriptor: Proxy): CompositeProxy
-
-type Proxy<ParentType, ChildType> = {
-  get(source: ParentType): ChildType;
-  set(source: ParentType, value: ChildType): ParentType;
-};
-```
-
-#### `proxy(descriptor): Proxy`
-
-#### `.set(value: mixed): void`
-
-#### `.get(): mixed`
-
-#### `.update(mixed => mixed): void`
-
-#### `.proxy(descriptor): Proxy`
-
-See [Proxy](#proxy).
-
-#### `.derive(mixed => mixed): Derivation`
-
-#### `.maybeDerive(mixed => mixed): Derivation`
-
-#### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
-
-#### `.react(mixed => void, opts: Lifecycle): void`
-
-See [Reactions](#reactions).
-
-#### `.maybeReact(mixed => void, opts: Lifecycle): void`
-
-See [Reactions](#reactions).
+Coming soon...
 
 ### Reactions
 
