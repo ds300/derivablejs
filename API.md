@@ -7,25 +7,27 @@ ground truth from which all else is derived.
 
 #### atom(value: mixed): Atom
 
-#### .set(value: mixed): void
+#### `.set(value: mixed): void`
 
-#### .get(): mixed
+#### `.get(): mixed`
 
-#### .update(mixed => mixed): void
+#### `.update(mixed => mixed): void`
 
-#### .proxy(descriptor): Proxy
+#### `.proxy(descriptor): Proxy`
 
-#### .derive(mixed => mixed): Derivation
+See [Proxy](#proxy).
 
-#### .maybeDerive(mixed => mixed): Derivation
+#### `.derive(mixed => mixed): Derivation`
 
-#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+#### `.maybeDerive(mixed => mixed): Derivation`
 
-#### .react(mixed => void, opts: Lifecycle): void
+#### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
+
+#### `.react(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
-#### .maybeReact(mixed => void, opts: Lifecycle): void
+#### `.maybeReact(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
@@ -37,17 +39,17 @@ values change only when one or more of the values that they depend upon change.
 
 #### derive(() => mixed): Derivation
 
-#### .derive(mixed => mixed): Derivation
+#### `.derive(mixed => mixed): Derivation`
 
-#### .maybeDerive(mixed => mixed): Derivation
+#### `.maybeDerive(mixed => mixed): Derivation`
 
-#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+#### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
 
-#### .react(mixed => void, opts: Lifecycle): void
+#### `.react(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
-#### .maybeReact(mixed => void, opts: Lifecycle): void
+#### `.maybeReact(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
@@ -67,27 +69,29 @@ type Proxy<ParentType, ChildType> = {
 };
 ```
 
-#### proxy(descriptor): Proxy
+#### `proxy(descriptor): Proxy`
 
-#### .set(value: mixed): void
+#### `.set(value: mixed): void`
 
-#### .get(): mixed
+#### `.get(): mixed`
 
-#### .update(mixed => mixed): void
+#### `.update(mixed => mixed): void`
 
-#### .proxy(descriptor): Proxy
+#### `.proxy(descriptor): Proxy`
 
-#### .derive(mixed => mixed): Derivation
+See [Proxy](#proxy).
 
-#### .maybeDerive(mixed => mixed): Derivation
+#### `.derive(mixed => mixed): Derivation`
 
-#### .orDefault(mixed | Atom | Derivation | Proxy): Derivation
+#### `.maybeDerive(mixed => mixed): Derivation`
 
-#### .react(mixed => void, opts: Lifecycle): void
+#### `.orDefault(mixed | Atom | Derivation | Proxy): Derivation`
+
+#### `.react(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
-#### .maybeReact(mixed => void, opts: Lifecycle): void
+#### `.maybeReact(mixed => void, opts: Lifecycle): void`
 
 See [Reactions](#reactions).
 
@@ -124,18 +128,18 @@ ingored.
 Causes the reactor to be killed immediately following its first invocation (not
 counting the skipped invocation, if `skipFirst` is set to true).
 
-#### .react(mixed => void, opts: Lifecycle): void
+#### `.react(mixed => void, opts: Lifecycle): void`
 
 Accept callback with current derivable value and [Lifecycle](#lifecycle).
 
-#### .maybeReact(mixed => void, opts: Lifecycle): void
+#### `.maybeReact(mixed => void, opts: Lifecycle): void`
 
 Accept callback which is called with current derivable value if the value is not
 null or undefined and [Lifecycle](#lifecycle).
 
 ### Transaction
 
-#### transact(() => void): void
+#### `transact(() => void): void`
 
 Executes passed function in the context of a transaction.
 
@@ -174,7 +178,7 @@ transact(() => {
 // $> My name is William Blake
 ```
 
-#### transaction((...args) => void): (...args) => void
+#### `transaction((...args) => void): (...args) => void`
 
 Wraps passed function such that its body is executed in a transaction. Preserves
 its input and output semantics.
@@ -197,7 +201,7 @@ setTimeout(transaction(() => {
 // $> My name is William Blake
 ```
 
-#### atomically(() => void): void
+#### `atomically(() => void): void`
 
 As `transact` but will not create a (nested) transaction if already in a
 transaction.
@@ -207,7 +211,7 @@ transaction.
 As `transaction` but will not create a (nested) transaction if the returned
 function is invoked within a transaction.
 
-#### ticker(): t
+#### `ticker(): t`
 
 Creates a new ticker
 
@@ -221,7 +225,7 @@ Releases this ticker, rendering it useless
 
 ### Utils
 
-#### setDebugMode(debugMode: boolean): void
+#### `setDebugMode(debugMode: boolean): void`
 
 Enable or disable debug mode.
 
@@ -232,24 +236,24 @@ logged such that it becomes easy to determine exactly which derivation is
 throwing. Creating errors is quite slow, so you probably should not keep this
 enabled for production.
 
-#### isAtom(value: mixed): boolean
+#### `isAtom(value: mixed): boolean`
 
 Returns true if passed value is an Atom.
 
-#### isDerivation(value: mixed): boolean
+#### `isDerivation(value: mixed): boolean`
 
 Returns true if passed value is a derivation, i.e. a derivable which is not an
 atom.
 
-#### isProxy(value: mixed): boolean
+#### `isProxy(value: mixed): boolean`
 
 Returns true if passed value is a proxy of atoms.
 
-#### isDerivable(value: mixed): boolean
+#### `isDerivable(value: mixed): boolean`
 
 Returns true if passed value is any of atoms or derivations.
 
-#### struct(value: Object | Array): Derivable
+#### `struct(value: Object | Array): Derivable`
 
 Given some plain JavaScript `Object` or `Array` (or some nested combination
 thereof) containing one or more derivable things, returns a new derivable
@@ -277,13 +281,11 @@ c.set(`Chris`);
 // $> C stands for Chris
 ```
 
-#### unpack(value: Derivable | mixed): mixed
+#### `unpack(value: Derivable | mixed): mixed`
 
 If passed value is derivable, returns value.get(), otherwise returns value.
 
-#### captureDereferences(() => void): Array
-
-<Derivable>
+#### `captureDereferences(() => void): Array<Derivable>`
 
 Returns array of all changed derivables with reactions inside passed function.
 e.g.
