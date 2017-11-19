@@ -14,7 +14,6 @@ export function Atom(value) {
   this._state = UNCHANGED;
   this._type = ATOM;
   this._equals = null;
-  return this;
 }
 
 util.assign(Atom.prototype, {
