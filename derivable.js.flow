@@ -1,6 +1,6 @@
 // @flow
 
-export type Derivable<T> = {
+export interface Derivable<T> {
 
   derive<E>(f: (value: T) => E): Derivable<E>;
 
@@ -19,7 +19,7 @@ export type Derivable<T> = {
   withEquality(equals: (a: T, b: T) => *): Derivable<T>;
 };
 
-export type Atom<T> = Derivable<T> & {
+export interface Atom<T> extends Derivable<T> {
 
   set(value: T): void;
 
@@ -28,21 +28,21 @@ export type Atom<T> = Derivable<T> & {
   proxy<E>(proxy: Proxy<T, E>): Atom<E>;
 };
 
-export type Proxy<ParentType, ChildType> = {
+export interface Proxy<ParentType, ChildType> {
 
   get(source: ParentType): ChildType;
 
   set(source: ParentType, value: ChildType): ParentType;
 };
 
-export type CompositeProxy<T> = {
+export interface CompositeProxy<T> {
 
   get(): T;
 
   set(value: T): void;
 };
 
-export type Lifecycle<T> = {
+export interface Lifecycle<T> {
 
   +from?: (((d: Derivable<T>) => boolean) | Derivable<boolean>);
 
@@ -54,6 +54,13 @@ export type Lifecycle<T> = {
 
   +once?: boolean;
 };
+
+export interface Ticker {
+
+  tick(): void;
+
+  release(): void;
+}
 
 declare export function atom<T>(value: T): Atom<T>;
 
@@ -79,15 +86,18 @@ declare export function isDerivation(obj: mixed): boolean;
 
 declare export function isProxy(obj: mixed): boolean;
 
-declare export function captureDereferences(fn: () => void): Array<Derivable<mixed>>;
-
 declare export function setDebugMode(debugMode: boolean): void;
 
-declare type Ticker = {
-
-  tick(): void;
-
-  release(): void;
-}
-
 declare export function ticker(): Ticker;
+
+
+// Private
+
+declare export function __captureDereferences(fn: () => void): $ReadOnlyArray<Derivable<mixed>>;
+
+declare export class __Reactor<T> {
+  constructor(derivable: Derivable<T>, (value: T) => void): __Reactor<T>;
+  start(): void;
+  force(): void;
+  stop(): void;
+}

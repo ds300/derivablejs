@@ -15,10 +15,12 @@ export {
   atomic,
   atomically
 } from "./transactions";
-export { Reactor as __Reactor } from "./reactors";
-export { captureDereferences } from "./parents";
 
 export { atom, proxy, derive, setDebugMode };
+
+// Private API
+export { Reactor as __Reactor } from "./reactors";
+export { captureDereferences as __captureDereferences } from "./parents";
 
 assign(Derivation.prototype, derivablePrototype);
 assign(Proxy.prototype, derivablePrototype, mutablePrototype);
