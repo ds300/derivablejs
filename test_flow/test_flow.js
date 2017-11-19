@@ -1,8 +1,9 @@
 // @flow
 
-import type { Atom, Derivable } from "../derivable.js";
+import type { Atom, Derivable, Proxy } from "../derivable.js";
 import {
   atom,
+  proxy,
   transaction,
   atomic,
   derive,
@@ -13,6 +14,47 @@ import {
 
 const testAtom = () => {
   const a: Atom<number> = atom(1);
+
+  a.update((d: number) => d + 1);
+  // $ExpectError
+  a.update((d: string) => d);
+  // $ExpectError
+  a.update(d => String(d));
+  // $ExpectError
+  a.update();
+
+  a.update((d, x) => d + x, 1);
+  // $ExpectError
+  a.update((d, x) => d + x, "1");
+
+  a.update((d, x, y) => d + x + y, 1, 2);
+  // $ExpectError
+  a.update((d, x, y) => d + x + y, 1, "2");
+
+  a.update((d, x, y, z) => d + x + y + z, 1, 2, 3);
+  // $ExpectError
+  a.update((d, x, y, z) => d + x + y + z, 1, 2, "3");
+
+  a.update((d, x, y, z, u) => d + x + y + z + u, 1, 2, 3, 4);
+  // $ExpectError
+  a.update((d, x, y, z, u) => d + x + y + z + u, 1, 2, 3, "4");
+
+  // TODO should be an error
+  a.update((d, x, y, z, u, w) => d + x + y + u + w, 1, 2, 3, 4);
+  // $ExpectError
+  a.update((d, x, y, z, u, w) => d + x + y + u + w, 1, 2, 3, 4, 5);
+};
+
+const testProxy = () => {
+  const a: Proxy<number> = proxy({ get: () => 1, set: (d: number) => {} });
+  // $ExpectError
+  const b: Proxy<number> = proxy({ get: () => "1", set: (d: number) => {} });
+  // $ExpectError
+  const c: Proxy<number> = proxy({ get: () => 1, set: (d: string) => {} });
+
+  const d: number = a.get();
+  // $ExpectError
+  const e: string = a.get();
 
   a.update((d: number) => d + 1);
   // $ExpectError

@@ -1,12 +1,13 @@
 "use strict";
 
 const derivable = require("../dist/derivable");
+const { atom, derive, proxy } = derivable;
 
 describe("the `is*` fns", () => {
   it("just work, don't worry about it", () => {
-    const a = derivable.atom(0);
-    const d = a.derive(x => x * 2);
-    const p = a.proxy({ get: x => x * 2, set: (_, x) => x / 2 });
+    const a = atom(0);
+    const d = derive(() => a.get() * 2);
+    const p = proxy({ get: () => a.get() * 2, set: x => a.set(x / 2) });
 
     expect(derivable.isAtom(a)).toBeTruthy();
     expect(derivable.isAtom(d)).toBeFalsy();
