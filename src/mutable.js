@@ -1,5 +1,3 @@
-import { Proxy } from "./proxy";
-
 export const mutablePrototype = {
   update(f, a, b, c, d) {
     switch (arguments.length) {
@@ -18,16 +16,5 @@ export const mutablePrototype = {
       default:
         throw Error("update method accepts only 5 arguments");
     }
-  },
-
-  proxy(monoProxyMapping) {
-    return new Proxy({
-      get: () => {
-        return monoProxyMapping.get(this.get());
-      },
-      set: val => {
-        this.set(monoProxyMapping.set(this.get(), val));
-      }
-    });
   }
 };

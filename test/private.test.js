@@ -1,13 +1,14 @@
 "use strict";
 
 const derivable = require("../dist/derivable");
+const { atom, derive, proxy } = derivable;
 
 test("__Reactor call passed function on derivable change after starting", () => {
-  const a = derivable.atom(1);
-  const b = a.derive(d => d + 100);
-  const c = a.proxy({
-    get: d => d + 1,
-    set: d => d - 1
+  const a = atom(1);
+  const b = derive(() => a.get() + 100);
+  const c = proxy({
+    get: () => a.get() + 1,
+    set: d => a.set(d - 1)
   });
 
   const react = jest.fn();
