@@ -21,7 +21,6 @@ effects management, and a healthy side-salad of immutability.
   * [With Immutable](#with-immutable)
   * [Debugging](#debugging)
   * [Examples](#examples)
-  * [Browser](#browser)
 * [Contributing](#contributing)
 * [Inspiration <3](#inspiration-3)
 * [License](#license)
@@ -236,18 +235,6 @@ more info.
 ### Examples
 
 [See here](https://github.com/ds300/derivablejs/tree/master/examples)
-
-### Browser
-
-Either with browserify/webpack/common-js-bundler-du-jour, or clone the repo, run
-`npm install && npm run build`, then grab the UMD bundle from
-`dist/derivable.umd[.min].js` (source maps are also available).
-
-```js
-import { withEquality } from "derivable";
-
-const { atom, derive, ..._ } = withEquality(myCustomEqualityChecker);
-```
 
 ## Contributing
 
