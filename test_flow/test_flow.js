@@ -1,9 +1,9 @@
 // @flow
 
-import type { Atom, Derivable, Proxy } from "../derivable.js";
+import type { Atom, Derivable, Lens } from "../derivable.js";
 import {
   atom,
-  proxy,
+  lens,
   transaction,
   atomic,
   derive,
@@ -45,12 +45,12 @@ const testAtom = () => {
   a.update((d, x, y, z, u, w) => d + x + y + u + w, 1, 2, 3, 4, 5);
 };
 
-const testProxy = () => {
-  const a: Proxy<number> = proxy({ get: () => 1, set: (d: number) => {} });
+const testLens = () => {
+  const a: Lens<number> = lens({ get: () => 1, set: (d: number) => {} });
   // $ExpectError
-  const b: Proxy<number> = proxy({ get: () => "1", set: (d: number) => {} });
+  const b: Lens<number> = lens({ get: () => "1", set: (d: number) => {} });
   // $ExpectError
-  const c: Proxy<number> = proxy({ get: () => 1, set: (d: string) => {} });
+  const c: Lens<number> = lens({ get: () => 1, set: (d: string) => {} });
 
   const d: number = a.get();
   // $ExpectError

@@ -1,13 +1,13 @@
 "use strict";
 
 const derivable = require("../dist/derivable");
-const { atom, derive, proxy } = derivable;
+const { atom, derive, lens } = derivable;
 
 describe("the `is*` fns", () => {
   it("just work, don't worry about it", () => {
     const a = atom(0);
     const d = derive(() => a.get() * 2);
-    const p = proxy({ get: () => a.get() * 2, set: x => a.set(x / 2) });
+    const p = lens({ get: () => a.get() * 2, set: x => a.set(x / 2) });
 
     expect(derivable.isAtom(a)).toBeTruthy();
     expect(derivable.isAtom(d)).toBeFalsy();
@@ -17,9 +17,9 @@ describe("the `is*` fns", () => {
     expect(derivable.isDerivation(d)).toBeTruthy();
     expect(derivable.isDerivation(p)).toBeTruthy();
 
-    expect(derivable.isProxy(a)).toBeFalsy();
-    expect(derivable.isProxy(p)).toBeTruthy();
-    expect(derivable.isProxy(d)).toBeFalsy();
+    expect(derivable.isLens(a)).toBeFalsy();
+    expect(derivable.isLens(p)).toBeTruthy();
+    expect(derivable.isLens(d)).toBeFalsy();
 
     expect(derivable.isDerivable(a)).toBeTruthy();
     expect(derivable.isDerivable(d)).toBeTruthy();

@@ -1,10 +1,10 @@
 "use strict";
 
-const { atom, proxy } = require("../dist/derivable");
+const { atom, lens } = require("../dist/derivable");
 
 test("can be re-instantiated with custom equality-checking", () => {
   const a = atom(5);
-  const amod2map = proxy({
+  const amod2map = lens({
     get: () => ({ a: a.get() % 2 }),
     set: d => a.set(d.a)
   });
@@ -47,7 +47,7 @@ test("can be re-instantiated with custom equality-checking", () => {
 test("allow multiple atoms to be proxied over", () => {
   const $FirstName = atom("John");
   const $LastName = atom("Steinbeck");
-  const $Name = proxy({
+  const $Name = lens({
     get: () => $FirstName.get() + " " + $LastName.get(),
     set: val => {
       const _val$split = val.split(" ");
@@ -80,7 +80,7 @@ test("runs `set` opeartions atomically", () => {
     numReactions++;
   });
 
-  proxy({
+  lens({
     get: () => {},
     set: () => {
       a.set("A");
