@@ -107,7 +107,7 @@ function testMaybeDeriveMethod() {
   const c = a.maybeDerive(v => v * 2);
   const d = b.maybeDerive(v => v * 2);
 
-  const e: number = c.get();
+  const e: ?number = c.get();
 
   // $ExpectError
   const f: string = c.get();
