@@ -4,7 +4,7 @@ export interface Derivable<T> {
 
   derive<E>(f: (value: T) => E): Derivable<E>;
 
-  maybeDerive<E>(f: $NonMaybeType<T> => E): Derivable<E>;
+  maybeDerive<E>(f: $NonMaybeType<T> => E): Derivable<?E>;
 
   orDefault<E>(value: $NonMaybeType<E>): Derivable<$NonMaybeType<T> | E>;
 
