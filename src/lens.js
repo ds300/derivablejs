@@ -3,8 +3,8 @@ import * as types from "./types";
 import { Derivation } from "./derivation";
 import { atomically } from "./transactions";
 
-export function Lens(descriptor) {
-  Derivation.call(this, descriptor.get);
+export function Lens(descriptor, meta) {
+  Derivation.call(this, descriptor.get, meta);
   this._descriptor = descriptor;
   this._type = types.LENS;
 }
@@ -21,6 +21,6 @@ util.assign(Lens.prototype, Derivation.prototype, {
   }
 });
 
-export function lens(descriptor) {
-  return new Lens(descriptor);
+export function lens(descriptor, meta) {
+  return new Lens(descriptor, meta);
 }

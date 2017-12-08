@@ -32,6 +32,7 @@
     "es5/no-rest-parameters": 0,
     "es5/no-template-literals": 0,
     "es5/no-spread": 0,
-    "es5/no-destructuring": 0
+    "es5/no-destructuring": 0,
+    "es5/no-default-parameters": 0
   }
 }

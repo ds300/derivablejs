@@ -3,7 +3,7 @@ import * as parents from "./parents";
 import * as types from "./types";
 import { CHANGED, UNCHANGED, UNKNOWN, DISCONNECTED } from "./states";
 
-export function Derivation(deriver) {
+export function Derivation(deriver, meta = null) {
   this._deriver = deriver;
   this._parents = null;
   this._type = types.DERIVATION;
@@ -11,6 +11,7 @@ export function Derivation(deriver) {
   this._equals = null;
   this._activeChildren = [];
   this._state = DISCONNECTED;
+  this._meta = meta;
 
   if (util.isDebug()) {
     this.stack = Error().stack;
@@ -116,9 +117,9 @@ export function detach(parent, child) {
   }
 }
 
-export function derive(f) {
+export function derive(f, meta) {
   if (typeof f !== "function") {
     throw Error("derive requires function");
   }
-  return new Derivation(f);
+  return new Derivation(f, meta);
 }
