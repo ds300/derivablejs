@@ -27,7 +27,7 @@ describe("the `is*` fns", () => {
   });
 });
 
-describe("the `transact` function", () => {
+describe.skip("the `transact` function", () => {
   it("executes a function in the context of a transaction", () => {
     const a = derivable.atom("a");
     const b = derivable.atom("b");
@@ -72,7 +72,7 @@ describe("the `transact` function", () => {
   });
 });
 
-describe("the `transaction` function", () => {
+describe.skip("the `transaction` function", () => {
   it("wraps a function such that its body is executed in a txn", () => {
     const a = derivable.atom("a");
     const b = derivable.atom("b");
@@ -174,7 +174,7 @@ describe("the atomically function", () => {
     expect(numReactions).toBe(1);
   });
 
-  it("doesn't create new transactions if already in a transaction", () => {
+  it.skip("doesn't create new transactions if already in a transaction", () => {
     const $A = derivable.atom("a");
 
     derivable.transact(() => {
@@ -215,7 +215,7 @@ describe("the atomic function", () => {
     expect(res).toBe(3);
   });
 
-  it("doesn't create new transactions if already in a transaction", () => {
+  it.skip("doesn't create new transactions if already in a transaction", () => {
     const $A = derivable.atom("a");
 
     derivable.transact(() => {

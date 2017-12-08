@@ -42,7 +42,7 @@ test("update with arguments", () => {
   }).toThrow();
 });
 
-test("can take on temporary values inside a transaction", () => {
+test.skip("can take on temporary values inside a transaction", () => {
   const a = atom("a");
   transact(abort1 => {
     a.set("b");
@@ -58,7 +58,7 @@ test("can take on temporary values inside a transaction", () => {
   expect(a.get()).toBe("a");
 });
 
-test("should be able to go back to its original value with no ill effects", () => {
+test.skip("should be able to go back to its original value with no ill effects", () => {
   const a = atom("a");
   let reacted = false;
   a.react(
@@ -80,7 +80,7 @@ test("should be able to go back to its original value with no ill effects", () =
   expect(reacted).toBe(false);
 });
 
-test("can keep transaction values if they are't aborted", () => {
+test.skip("can keep transaction values if they are't aborted", () => {
   const a = atom("a");
   transact(() => {
     a.set("b");
