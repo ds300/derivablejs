@@ -28,18 +28,16 @@ export interface Atom<T> extends Derivable<T> {
   update<A, B>(f: (value: T, A, B) => T, A, B): void;
   update<A, B, C>(f: (value: T, A, B, C) => T, A, B, C): void;
   update<A, B, C, D>(f: (value: T, A, B, C, D) => T, A, B, C, D): void;
-
-  proxy<E>(proxy: Proxy<T, E>): Atom<E>;
 };
 
-export interface ProxyDescriptor<T> {
+export interface Lens<T> extends Atom<T> {}
+
+export interface LensDescriptor<T> {
 
   get(): T;
 
   set(value: T): void;
 };
-
-export interface Proxy<T> extends Atom<T> {}
 
 export interface Lifecycle<T> {
 
@@ -65,7 +63,7 @@ declare export function atom<T>(value: T): Atom<T>;
 
 declare export function derive<T>(f: () => T): Derivable<T>;
 
-declare export function proxy<T>(descriptor: ProxyDescriptor<T>): Proxy<T>;
+declare export function lens<T>(descriptor: LensDescriptor<T>): Lens<T>;
 
 declare export function transact(f: () => void): void;
 
@@ -85,7 +83,7 @@ declare export function isDerivable(obj: mixed): boolean;
 
 declare export function isDerivation(obj: mixed): boolean;
 
-declare export function isProxy(obj: mixed): boolean;
+declare export function isLens(obj: mixed): boolean;
 
 declare export function setDebugMode(debugMode: boolean): void;
 

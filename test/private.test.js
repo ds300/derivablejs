@@ -1,12 +1,12 @@
 "use strict";
 
 const derivable = require("../dist/derivable");
-const { atom, derive, proxy } = derivable;
+const { atom, derive, lens } = derivable;
 
 test("__Reactor call passed function on derivable change after starting", () => {
   const a = atom(1);
   const b = derive(() => a.get() + 100);
-  const c = proxy({
+  const c = lens({
     get: () => a.get() + 1,
     set: d => a.set(d - 1)
   });
@@ -15,7 +15,7 @@ test("__Reactor call passed function on derivable change after starting", () => 
 
   const ar = new derivable.__Reactor(a, d => react("atom", d));
   const br = new derivable.__Reactor(b, d => react("derivation", d));
-  const cr = new derivable.__Reactor(c, d => react("proxy", d));
+  const cr = new derivable.__Reactor(c, d => react("lens", d));
 
   a.set(10);
 
@@ -28,7 +28,7 @@ test("__Reactor call passed function on derivable change after starting", () => 
   expect(react.mock.calls).toEqual([
     ["atom", 20],
     ["derivation", 120],
-    ["proxy", 21]
+    ["lens", 21]
   ]);
 });
 
