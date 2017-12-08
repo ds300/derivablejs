@@ -8,13 +8,7 @@ import { assign, setDebugMode } from "./util";
 
 export { isDerivable, isAtom, isProxy, isDerivation } from "./types";
 export { unpack, struct } from "./unpack.js";
-export {
-  transact,
-  transaction,
-  ticker,
-  atomic,
-  atomically
-} from "./transactions";
+export { ticker, atomic, atomically } from "./transactions";
 
 export { atom, proxy, derive, setDebugMode };
 
