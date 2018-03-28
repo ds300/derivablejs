@@ -1,7 +1,3 @@
-/**
- * This TypeScript file was generated from derivable.api.edn.
- * Please change that file and re-run `grunt docs` to modify this file.
- */
 declare module derivable {
 
   export interface Derivable<T> {
@@ -10,7 +6,7 @@ declare module derivable {
 
     maybeDerive<E>(f: (value: T) => E): Derivable<E>;
 
-    orDefault<E>(E): Derivable<T | E>
+    orDefault<E>(value: E): Derivable<T | E>
 
     react(f: (value: T) => void, options?: Lifecycle<T>): void;
 
@@ -20,26 +16,23 @@ declare module derivable {
 
     is(other: any): Derivable<boolean>;
 
-    withEquality(equals: (a: any, b: any) => boolean): this;
+    withEquality(equals: (a: T, b: T) => boolean): this;
   }
 
   export interface Atom<T> extends Derivable<T> {
 
-    set<E>(value: E): Atom<E>;
+    set(value: T): void;
 
-    update<E>(f: (value: T, ...args: any[]) => E, ...args: any[]): Atom<E>;
-
-    proxy<E>(proxy: Proxy<T, E>): Atom<E>;
+    update(f: (value: T) => T): void;
+    update<A>(f: (value: T, a: A) => T, a: A): void;
+    update<A, B>(f: (value: T, a: A, b: B) => T, a: A, b: B): void;
+    update<A, B, C>(f: (value: T, a: A, b: B, c: C) => T, a: A, b: B, c: C): void;
+    update<A, B, C, D>(f: (value: T, a: A, b: B, c: C, d: D) => T, a: A, b: B, c: C, d: D): void;
   }
 
-  export interface Proxy<ParentType, ChildType> {
+  export interface Lens<T> extends Atom<T> {}
 
-    get(source: ParentType): ChildType;
-
-    set(source: ParentType, value: ChildType): ParentType;
-  }
-
-  export interface CompositeProxy<T> {
+  export interface LensDescriptor<T> {
 
     get(): T;
 
@@ -63,15 +56,15 @@ declare module derivable {
 
   function derive<T>(f: () => T): Derivable<T>;
 
-  function proxy<T>(proxy: CompositeProxy<T>): Atom<T>;
+  function lens<T>(descriptor: LensDescriptor<T>): Lens<T>;
 
   function transact(f: () => void): void;
 
-  function transaction(f: (...args: any[]) => any): (...args: any[]) => any;
+  function transaction<F extends Function>(f: F): F;
 
   function atomically(f: () => void): void;
 
-  function atomic(f: (...args: any[]) => any): (...args: any[]) => any;
+  function atomic<F extends Function>(f: F): F;
 
   function struct(obj: any): Derivable<any>;
 
@@ -83,9 +76,7 @@ declare module derivable {
 
   function isDerivation(obj: any): boolean;
 
-  function isProxy(obj: any): boolean;
-
-  function captureDereferences(fn: () => void): Derivable<any>[];
+  function isLens(obj: any): boolean;
 
   function setDebugMode(debugMode: boolean): void;
 
