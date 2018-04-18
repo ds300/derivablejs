@@ -775,7 +775,7 @@ describe("tickers", () => {
     a.set(null);
   });
 
-  it("can be created in reactors", () => {
+  it.skip("can be created in reactors", () => {
     const a = derivable.atom("a");
 
     derivable.transact(() => {
