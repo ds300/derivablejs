@@ -3444,6 +3444,10 @@ rxjs@^5.5.2:
   dependencies:
     symbol-observable "1.0.1"
 
+s-js@^0.4.8:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/s-js/-/s-js-0.4.8.tgz#cf6fbf4604ece2cbc2abc4aceb3087cbaf83be4d"
+
 safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
